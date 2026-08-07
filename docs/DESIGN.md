@@ -64,7 +64,7 @@ graph/
   nodes/
     area/      ar-xxxx-<slug>.md
     item/      it-xxxx-<slug>.md
-    question/  qn-xxxx-<slug>.md
+    thread/    th-xxxx-<slug>.md
     decision/  dc-xxxx-<slug>.md
     claim/     cl-xxxx-<slug>.md
     doc/       do-xxxx-<slug>.md
@@ -88,8 +88,8 @@ graph/
 | type | is | key fields beyond the common set |
 |---|---|---|
 | `area` | subject vocabulary — systems, domains, the coarse attachment surface | charter body |
-| `item` | unit of work — arc, feature, slice, debt, process task | `kind`, `status` (idea/ready/in-flight/blocked/done/dropped), `acceptance[]`, `write_set[]` |
-| `question` | a fork awaiting ruling | `status` (open/queued/ruled/withdrawn) |
+| `item` | unit of work — arc, feature, slice, debt, process task | `kind`, `status` (sketch/shaped/ready/in-flight/done/dropped; **blocked is derived, never stored**), `acceptance[]`, `write_set[]` |
+| `thread` | an open strand needing the user — a fork to pick, a discussion to have, a topic that may spawn intermediate work (a spike, a research task) before it can resolve | `status` (open/queued/resolved/parked) |
 | `decision` | a ruling | `status` (in-force/superseded), `ratified{by, date}` |
 | `claim` | a falsifiable statement something leans on | `status` (asserted/measured/ratified/refuted), `method` |
 | `doc` | registered prose artifact — journal entry, spike report, audit, brief | `kind`, optional `path` into the host repo (body may live at the path — journals stay where they are) |
@@ -123,6 +123,13 @@ Notes:
   to the site and a `depends-on` to the heir. No dedicated type.
 - **Journal entries** register as `doc` nodes wrapping their existing path —
   the journal's narrative form is untouched **[ratified]**; it gains edges.
+- **Threads, not questions** (user, 2026-08-07). The queue's unit is whatever
+  needs the user's input — as small as picking A/B/C, as large as a discussion
+  that spawns a spike before it can be answered. A thread `depends-on` the
+  intermediate items it spawns, and only surfaces as answerable once they land.
+- **Upcoming work enters as `sketch`** — anticipated relationships recorded as
+  ordinary edges, details refined (bumping `v`) as threads resolve. `ready` is
+  the stored intent; whether anything still blocks it is always derived.
 - Lifecycle distinction that earns `claim` its own type: a decision *could have
   gone otherwise* and is **superseded**; a claim has a truth-maker outside
   anyone's will and is **refuted**. Queries against unverified assistant
@@ -134,8 +141,8 @@ Notes:
 |---|---|---|
 | `about` | any → area \| file | subject attachment (claims require ≥1) |
 | `part-of` | item → item, area → area | hierarchy; a slice names its arc |
-| `depends-on` | item → item \| question \| decision | blocked-by when target is undone/unruled |
-| `settles` | decision → question | the ruling that closes a fork |
+| `depends-on` | item \| thread → item \| thread \| decision | blocked-by while the target is unlanded/unresolved — an item waiting on an open thread, a thread waiting on a spike |
+| `settles` | decision → thread | the ruling that closes a thread |
 | `supports` | claim \| doc → decision \| item \| claim | evidence leaned on |
 | `refutes` | claim \| doc → claim \| decision | falsification |
 | `supersedes` | X → X (same type) | replacement; target status flips |
@@ -187,7 +194,7 @@ repo. At write time the verb stamps the file's current git blob. Consequences:
 |---|---|
 | C1 | a claim with no `about` edge is rejected |
 | C2 | a claim with no `source` is rejected unless provenance is `user` |
-| C3 | an assistant-provenance decision may not `settle` or `supersede` a user-provenance target; the verb instead mints a **queued question** (a contest is surfaced, never written) |
+| C3 | an assistant-provenance decision may not `settle` or `supersede` a user-provenance target; the verb refuses and points at the queue (a contest is surfaced as a thread, never written) |
 | C4 | `supersedes` across types is rejected |
 | C5 | a new edge to a refuted/superseded target requires `--acknowledge` |
 | C6 | freehand Write/Edit under `graph/` is denied by the host hook; only the tool mutates graph files |
@@ -207,7 +214,7 @@ q link <src> <rel> <dst>    add an edge   (stamps automatically)
 q set <node> k=v            mutate fields (status, title, ...) — bumps v, logs
 q edit <node>               body edit via file handoff — bumps v, logs
 q open <node>               render the neighborhood brief (context payload)
-q rule <question> "<text>"  mint decision + settles edge (--by user marks ratification)
+q rule <thread> "<text>"    mint decision + settles edge (--by user marks ratification)
 q claim "<text>" --source <doc> --about <area>     extraction-on-citation
 q refute <claim> --by <node>                       status flip + edge + blast list
 q affirm <edge|node>        re-stamp after review
@@ -217,7 +224,7 @@ q reindex                   rebuild .index from files + log
 ```
 
 Later, in need-order: `q queue` (single-thread topic queue — push/order/pop
-question nodes) · `q reserve` / `q release` (write-set reservations for
+thread nodes) · `q reserve` / `q release` (write-set reservations for
 dispatch, the two-parallel-sessions mediator) · `q brief <item>` (generated
 dispatch brief: neighborhood as read-first, write-set complement as
 do-not-touch, acceptance as RETURN spec) · `q handoff` (rendered session-close
@@ -230,7 +237,8 @@ threshold) · `q view` (static HTML UI over the whole graph).
 | query | answers |
 |---|---|
 | `ready` | items with status ready, no live blocker, write-set free — "what can I dispatch right now" |
-| `queue` | the topic queue, in order |
+| `queue` | threads awaiting the user whose prerequisites have landed — answerable now |
+| `shaping` | upcoming work (sketch/shaped) with the threads and items blocking each |
 | `behind` | stale edges by severity (§ 6) |
 | `blast <node>` | reverse closure over `supports`/`source` — who leans on this |
 | `contested` | assistant-provenance writes touching user-provenance targets |
@@ -286,3 +294,8 @@ it.
    existing homes; `doc` nodes wrap paths. Inline bodies allowed for small
    notes.
 5. **Binary name.** `q` as the invocation (`quarry` the formal name).
+
+**RATIFIED 2026-08-07 (user):** Rust · edges in source-node frontmatter ·
+every content edit bumps · doc bodies stay at host paths · binary `q`. The
+thread model (§ 4) replaced `question` the same day, from the user's
+description of how their queue actually works.

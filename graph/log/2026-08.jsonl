@@ -1,0 +1,31 @@
+{"actor":"claude-fable-5","node":"ar-bu4u","note":null,"op":"create","title":"schema","ts":"2026-08-07T11:04:40Z","type":"area","v":1}
+{"actor":"claude-fable-5","node":"ar-jtfn","note":null,"op":"create","title":"storage","ts":"2026-08-07T11:04:40Z","type":"area","v":1}
+{"actor":"claude-fable-5","node":"ar-c7f5","note":null,"op":"create","title":"cli","ts":"2026-08-07T11:04:40Z","type":"area","v":1}
+{"actor":"claude-fable-5","node":"ar-xa38","note":null,"op":"create","title":"process","ts":"2026-08-07T11:04:40Z","type":"area","v":1}
+{"actor":"claude-fable-5","node":"ar-z6we","note":null,"op":"create","title":"ui","ts":"2026-08-07T11:04:40Z","type":"area","v":1}
+{"actor":"claude-fable-5","node":"dc-my9w","note":null,"op":"create","title":"quarry is standalone; host repos own their graph data","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-w9vx","note":null,"op":"create","title":"claims are extracted retroactively, never minted while writing","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-3kzj","note":null,"op":"create","title":"per-node monotone versioning; every ref stamps its target","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-5kxt","note":null,"op":"create","title":"implementation is Rust; the binary is q","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-rf7m","note":null,"op":"create","title":"edges live in source-node frontmatter; backlinks are queries","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-vyu5","note":null,"op":"create","title":"every content edit bumps v","ts":"2026-08-07T11:04:40Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-9m5c","note":null,"op":"create","title":"threads replace questions; the queue surfaces answerable threads","ts":"2026-08-07T11:04:41Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"dc-p4k8","note":null,"op":"create","title":"journal stays narrative prose; doc nodes wrap host paths","ts":"2026-08-07T11:04:41Z","type":"decision","v":1}
+{"actor":"claude-fable-5","node":"th-j9uu","note":null,"op":"create","title":"reservation model for two parallel main sessions","ts":"2026-08-07T11:04:59Z","type":"thread","v":1}
+{"actor":"claude-fable-5","node":"th-ngby","note":null,"op":"create","title":"shape of the generated UI","ts":"2026-08-07T11:05:00Z","type":"thread","v":1}
+{"actor":"claude-fable-5","node":"th-dm4a","note":null,"op":"create","title":"hook and skill integration for Claude sessions","ts":"2026-08-07T11:05:00Z","type":"thread","v":1}
+{"actor":"claude-fable-5","node":"it-7fhd","note":null,"op":"create","title":"v0 walking skeleton","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-wkcq","note":null,"op":"create","title":"post-v0 verb suite","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-nnyv","note":null,"op":"create","title":"q queue verb","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-au4b","note":null,"op":"create","title":"q reserve and q release","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-hrbq","note":null,"op":"create","title":"q brief generation","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-37q5","note":null,"op":"create","title":"q handoff and q wrap","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","node":"it-rb3w","note":null,"op":"create","title":"q view static HTML","ts":"2026-08-07T11:05:00Z","type":"item","v":1}
+{"actor":"claude-fable-5","at":1,"node":"it-nnyv","op":"link","rel":"part-of","to":"it-wkcq","ts":"2026-08-07T11:05:00Z","v":2}
+{"actor":"claude-fable-5","at":1,"node":"it-au4b","op":"link","rel":"part-of","to":"it-wkcq","ts":"2026-08-07T11:05:00Z","v":2}
+{"actor":"claude-fable-5","at":1,"node":"it-hrbq","op":"link","rel":"part-of","to":"it-wkcq","ts":"2026-08-07T11:05:00Z","v":2}
+{"actor":"claude-fable-5","at":1,"node":"it-37q5","op":"link","rel":"part-of","to":"it-wkcq","ts":"2026-08-07T11:05:00Z","v":2}
+{"actor":"claude-fable-5","at":1,"node":"it-rb3w","op":"link","rel":"part-of","to":"it-wkcq","ts":"2026-08-07T11:05:00Z","v":2}
+{"actor":"claude-fable-5","at":1,"node":"it-au4b","op":"link","rel":"depends-on","to":"th-j9uu","ts":"2026-08-07T11:05:00Z","v":3}
+{"actor":"claude-fable-5","at":1,"node":"it-rb3w","op":"link","rel":"depends-on","to":"th-ngby","ts":"2026-08-07T11:05:01Z","v":3}
+{"actor":"claude-fable-5","node":"do-umyy","note":null,"op":"create","title":"quarry design document","ts":"2026-08-07T11:05:01Z","type":"doc","v":1}
