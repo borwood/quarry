@@ -444,21 +444,21 @@ fn session_injection_binds_and_rewrites() {
     let s = temp_store();
     quarry::coord::write_adopt_request(&s, "geo").unwrap();
     let input = r#"{"session_id":"chat-abc","tool_name":"Bash","tool_input":{"command":"q wrap","description":"lint"}}"#;
-    let out = quarry::teach::session_inject(&s, input).expect("injects after adopt");
+    let out = quarry::teach::session_hook_output(&s, input).expect("injects after adopt");
     let cmd = out["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap();
     assert_eq!(cmd, "export QUARRY_SESSION=geo; q wrap");
     assert_eq!(out["hookSpecificOutput"]["updatedInput"]["description"].as_str().unwrap(), "lint");
     // binding persisted: no pending request, still injects; PowerShell prefix
     let input2 = r#"{"session_id":"chat-abc","tool_name":"PowerShell","tool_input":{"command":"q view"}}"#;
-    let out2 = quarry::teach::session_inject(&s, input2).expect("bound");
+    let out2 = quarry::teach::session_hook_output(&s, input2).expect("bound");
     let cmd2 = out2["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap();
     assert_eq!(cmd2, "$env:QUARRY_SESSION='geo'; q view");
     // unbound chat: no-op
     let input3 = r#"{"session_id":"chat-other","tool_name":"Bash","tool_input":{"command":"ls"}}"#;
-    assert!(quarry::teach::session_inject(&s, input3).is_none());
+    assert!(quarry::teach::session_hook_output(&s, input3).is_none());
     // non-shell tools: no-op even when bound
     let input4 = r#"{"session_id":"chat-abc","tool_name":"Write","tool_input":{"file_path":"x"}}"#;
-    assert!(quarry::teach::session_inject(&s, input4).is_none());
+    assert!(quarry::teach::session_hook_output(&s, input4).is_none());
 }
 
 #[test]
@@ -474,4 +474,41 @@ fn purview_overlap_detection() {
     assert_eq!(overlaps[0].1, vec![b.front.id.clone()]);
     let none = quarry::coord::purview_overlaps(&s, &[c.front.id.clone()]);
     assert!(none.is_empty());
+}
+
+#[test]
+fn alert_computation_closed_list() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![area.front.id.clone()], None).unwrap();
+    // an arrival filed into geo's purview by bodies (stays sketch), plus a
+    // dependency that bodies lands, unblocking geo's item
+    let mut arrival = NewArgs::bare("item", "density convention");
+    arrival.about = vec![area.front.id.clone()];
+    let arrival = ops::new_node(&s, arrival).unwrap();
+    let dep = ops::new_node(&s, NewArgs::bare("item", "materials api shape")).unwrap();
+    let mut mine = NewArgs::bare("item", "gait bake");
+    mine.about = vec![area.front.id.clone()];
+    mine.status = Some("ready".into());
+    let mine = ops::new_node(&s, mine).unwrap();
+    ops::link(&s, &mine.front.id, "depends-on", &dep.front.id, false, None).unwrap();
+    // the landing actually happens (event stream and node state agree in production)
+    ops::set(&s, &dep.front.id, &["status=done".to_string()], None).unwrap();
+
+    let all = s.load_all().unwrap();
+    let ids: Vec<&str> = vec![area.front.id.as_str()];
+    let log = vec![
+        serde_json::json!({"ts":"2099-01-01T00:00:01Z","op":"create","node":arrival.front.id,"session":"bodies","title":"density convention"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:02Z","op":"steal","node":"it-zzzz","session":"bodies","from_session":"geo","from_item":mine.front.id,"reason":"urgent hotfix"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:03Z","op":"set","node":dep.front.id,"session":"bodies","fields":["status=done"]}),
+        serde_json::json!({"ts":"2000-01-01T00:00:00Z","op":"create","node":arrival.front.id,"session":"bodies"}),
+    ];
+    let lines = quarry::teach::alerts_between(&all, &log, "geo", &ids, "2098-12-31T00:00:00Z");
+    assert_eq!(lines.len(), 3, "got: {:?}", lines);
+    assert!(lines[0].contains("new from bodies"));
+    assert!(lines[1].contains("your lease") && lines[1].contains("urgent hotfix"));
+    assert!(lines[2].contains("unblocked") && lines[2].contains("gait bake"));
+    // own-session events never alert
+    let own = quarry::teach::alerts_between(&all, &log, "bodies", &ids, "2098-12-31T00:00:00Z");
+    assert!(own.iter().all(|l| !l.contains("new from bodies")), "got: {:?}", own);
 }

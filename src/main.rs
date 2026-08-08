@@ -508,7 +508,7 @@ fn main() -> Result<()> {
                 let mut input = String::new();
                 std::io::stdin().read_to_string(&mut input)?;
                 if let Ok(store) = Store::discover() {
-                    if let Some(out) = quarry::teach::session_inject(&store, &input) {
+                    if let Some(out) = quarry::teach::session_hook_output(&store, &input) {
                         println!("{}", serde_json::to_string(&out)?);
                     }
                 }

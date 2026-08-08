@@ -5,9 +5,12 @@
 //! lives in the graph.
 
 use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use crate::model::Node;
 
 pub const GUIDE: &str = r#"QUARRY — THE JUDGMENT LAYER
 (mechanics live in `q --help` and `q <verb> --help`; this is when and why)
@@ -125,44 +128,214 @@ event log stay honest.
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
 
-/// Session identity injection (PreToolUse on Bash|PowerShell). If this chat's
-/// session_id is bound to a q session — or an adopt-request is pending, which
-/// this call consumes and binds — rewrite the shell command to carry
-/// QUARRY_SESSION via hookSpecificOutput.updatedInput. Returns the hook
-/// output JSON to print, or None for a no-op. When the process env already
-/// carries QUARRY_SESSION (launcher-owned identity), this is a no-op:
-/// launcher wins, injection is the fallback.
-pub fn session_inject(store: &crate::store::Store, input: &str) -> Option<serde_json::Value> {
-    if std::env::var("QUARRY_SESSION").map_or(false, |s| !s.trim().is_empty()) {
-        return None;
-    }
+/// The session hook (PreToolUse on Bash|PowerShell), doing two jobs in one
+/// output envelope:
+/// 1. Identity injection — if this chat's session_id is bound (or an
+///    adopt-request is pending, consumed and bound here), rewrite the shell
+///    command to carry QUARRY_SESSION via updatedInput. Launcher env wins:
+///    when the process already carries QUARRY_SESSION, no injection.
+/// 2. Cross-session alerts — when the session is known by either path,
+///    throttled additionalContext deltas: filed into your purview, your
+///    lease stolen, your work unblocked. Silence is the default state.
+pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<serde_json::Value> {
     let v: serde_json::Value = serde_json::from_str(input).ok()?;
-    let chat_id = v.get("session_id")?.as_str()?;
-    let tool = v.get("tool_name")?.as_str()?;
-    if !matches!(tool, "Bash" | "PowerShell") {
+    let chat_id = v.get("session_id").and_then(|x| x.as_str());
+    let tool = v.get("tool_name").and_then(|x| x.as_str()).unwrap_or("");
+    if let Some(cid) = chat_id {
+        if let Some(req) = crate::coord::take_adopt_request(store) {
+            let _ = crate::coord::bind_chat(store, cid, &req);
+        }
+    }
+    let env_sess = std::env::var("QUARRY_SESSION").ok().filter(|s| !s.trim().is_empty());
+    let bound = chat_id.and_then(|cid| crate::coord::chat_binding(store, cid));
+    let session = env_sess.clone().or_else(|| bound.clone());
+    let mut updated_input: Option<serde_json::Map<String, serde_json::Value>> = None;
+    if env_sess.is_none() && matches!(tool, "Bash" | "PowerShell") {
+        if let Some(qs) = &bound {
+            if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
+                if let Some(cmd) = ti.get("command").and_then(|c| c.as_str()) {
+                    let prefix = match tool {
+                        "Bash" => format!("export QUARRY_SESSION={}; ", qs),
+                        _ => format!("$env:QUARRY_SESSION='{}'; ", qs),
+                    };
+                    let mut u = ti.clone();
+                    u.insert("command".into(), serde_json::json!(format!("{}{}", prefix, cmd)));
+                    updated_input = Some(u);
+                }
+            }
+        }
+    }
+    let alert = session.as_deref().and_then(|s| alerts(store, s));
+    if updated_input.is_none() && alert.is_none() {
         return None;
     }
-    if let Some(req) = crate::coord::take_adopt_request(store) {
-        let _ = crate::coord::bind_chat(store, chat_id, &req);
+    let mut hso = serde_json::Map::new();
+    hso.insert("hookEventName".into(), serde_json::json!("PreToolUse"));
+    if let Some(u) = updated_input {
+        hso.insert("updatedInput".into(), serde_json::Value::Object(u));
     }
-    let q_session = crate::coord::chat_binding(store, chat_id)?;
-    let tool_input = v.get("tool_input")?.as_object()?.clone();
-    let command = tool_input.get("command")?.as_str()?.to_string();
-    let prefix = match tool {
-        "Bash" => format!("export QUARRY_SESSION={}; ", q_session),
-        _ => format!("$env:QUARRY_SESSION='{}'; ", q_session),
-    };
-    let mut updated = tool_input;
-    updated.insert(
-        "command".into(),
-        serde_json::json!(format!("{}{}", prefix, command)),
-    );
-    Some(serde_json::json!({
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "updatedInput": updated
+    if let Some(a) = alert {
+        hso.insert("additionalContext".into(), serde_json::json!(a));
+    }
+    Some(serde_json::json!({ "hookSpecificOutput": serde_json::Value::Object(hso) }))
+}
+
+#[derive(Serialize, Deserialize, Default, Clone)]
+struct AlertCursor {
+    cursor: String,
+    checked: String,
+}
+
+fn cursors_path(store: &crate::store::Store) -> PathBuf {
+    store.root.join("graph").join(".alert-cursors.json")
+}
+
+/// Throttled alert check: at most every 180s per session; first call only
+/// plants the cursor (never dumps history); cursor advances on every check.
+fn alerts(store: &crate::store::Store, session: &str) -> Option<String> {
+    use std::collections::BTreeMap;
+    let now = crate::store::Store::now();
+    let mut map: BTreeMap<String, AlertCursor> = fs::read_to_string(cursors_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    let write = |m: &BTreeMap<String, AlertCursor>| {
+        if let Ok(s) = serde_json::to_string_pretty(m) {
+            let _ = fs::write(cursors_path(store), s + "\n");
         }
-    }))
+    };
+    let Some(cur) = map.get(session).cloned() else {
+        map.insert(session.into(), AlertCursor { cursor: now.clone(), checked: now });
+        write(&map);
+        return None;
+    };
+    {
+        use time::format_description::well_known::Rfc3339;
+        if let Ok(t) = time::OffsetDateTime::parse(&cur.checked, &Rfc3339) {
+            if (time::OffsetDateTime::now_utc() - t).whole_seconds() < 180 {
+                return None;
+            }
+        }
+    }
+    let all = store.load_all().ok()?;
+    let reg = crate::coord::load_sessions(store);
+    let lines = if let Some(p) = reg.get(session) {
+        let ids: Vec<&str> = p.areas.iter().map(|s| s.as_str()).collect();
+        let log = store.read_log().ok()?;
+        alerts_between(&all, &log, session, &ids, &cur.cursor)
+    } else {
+        vec![]
+    };
+    map.insert(session.into(), AlertCursor { cursor: now.clone(), checked: now });
+    write(&map);
+    if lines.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "quarry [session {}] — since your last check:\n{}\n(details: q session resume)",
+            session,
+            lines.iter().map(|l| format!("  · {}", l)).collect::<Vec<_>>().join("\n")
+        ))
+    }
+}
+
+/// The pure alert computation — the ratified closed list, nothing else:
+/// (a) filed into your purview by another session, (b) your lease stolen
+/// (with the logged reason), (c) your work unblocked by another session's
+/// landing. Citation staleness stays pull-only by ruling.
+pub fn alerts_between(
+    all: &[Node],
+    log: &[serde_json::Value],
+    session: &str,
+    area_ids: &[&str],
+    cursor: &str,
+) -> Vec<String> {
+    use crate::model::Node as N;
+    let title_of = |id: &str| {
+        all.iter()
+            .find(|n| n.front.id == id)
+            .map(|n| n.front.title.clone())
+            .unwrap_or_else(|| id.to_string())
+    };
+    let mut out: Vec<String> = Vec::new();
+    for ev in log {
+        let ts = ev.get("ts").and_then(|x| x.as_str()).unwrap_or("");
+        if ts <= cursor {
+            continue;
+        }
+        let ev_sess = ev.get("session").and_then(|x| x.as_str());
+        let op = ev.get("op").and_then(|x| x.as_str()).unwrap_or("");
+        let node_id = ev.get("node").and_then(|x| x.as_str()).unwrap_or("");
+        let node: Option<&N> = all.iter().find(|n| n.front.id == node_id);
+        match op {
+            "create" => {
+                if ev_sess.map_or(false, |s| s != session) {
+                    if let Some(n) = node {
+                        if crate::coord::in_purview(n, area_ids)
+                            && !matches!(n.front.status.as_str(), "done" | "dropped" | "resolved" | "superseded")
+                        {
+                            out.push(format!(
+                                "new from {}: \"{}\" [{}] — q open {}",
+                                ev_sess.unwrap_or("?"),
+                                n.front.title,
+                                n.front.status,
+                                n.front.id
+                            ));
+                        }
+                    }
+                }
+            }
+            "steal" => {
+                if ev.get("from_session").and_then(|x| x.as_str()) == Some(session) {
+                    let victim = ev.get("from_item").and_then(|x| x.as_str()).unwrap_or("?");
+                    let reason = ev
+                        .get("reason")
+                        .and_then(|x| x.as_str())
+                        .unwrap_or("no reason recorded");
+                    out.push(format!(
+                        "your lease on \"{}\" was taken by {}: {}",
+                        title_of(victim),
+                        ev_sess.unwrap_or("?"),
+                        reason
+                    ));
+                }
+            }
+            "set" => {
+                let landed = ev
+                    .get("fields")
+                    .and_then(|f| f.as_array())
+                    .map_or(false, |fs| {
+                        fs.iter().any(|x| {
+                            matches!(x.as_str(), Some("status=done") | Some("status=resolved"))
+                        })
+                    })
+                    || (ev.get("field").and_then(|x| x.as_str()) == Some("status")
+                        && matches!(ev.get("to").and_then(|x| x.as_str()), Some("done") | Some("resolved")));
+                if landed && ev_sess.map_or(false, |s| s != session) {
+                    for d in all.iter().filter(|d| {
+                        d.front.edges.iter().any(|e| e.rel == "depends-on" && e.to == node_id)
+                            && crate::coord::in_purview(d, area_ids)
+                            && crate::queries::live_blockers(all, d).is_empty()
+                    }) {
+                        out.push(format!(
+                            "unblocked: \"{}\" — {} landed \"{}\"",
+                            d.front.title,
+                            ev_sess.unwrap_or("?"),
+                            title_of(node_id)
+                        ));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    out.dedup();
+    if out.len() > 6 {
+        let extra = out.len() - 6;
+        out.truncate(6);
+        out.push(format!("…and {} more (q session resume)", extra));
+    }
+    out
 }
 
 /// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be

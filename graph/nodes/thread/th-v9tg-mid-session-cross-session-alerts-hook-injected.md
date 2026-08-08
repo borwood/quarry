@@ -2,8 +2,8 @@
 id: th-v9tg
 type: thread
 title: mid-session cross-session alerts, hook-injected
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: assistant
 created: 2026-08-08T13:46:31Z
 actor: claude-fable-5

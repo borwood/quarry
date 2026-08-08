@@ -80,3 +80,6 @@
 {"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-08T21:36:36Z","node":"it-f8qc","v":3,"actor":"claude-fable-5","note":"built: q session adopt + q hook session (PreToolUse Bash|PowerShell) — consumes adopt-request, binds chat session_id, injects QUARRY_SESSION via updatedInput; launcher env wins when present; wired by q init --claude"}
 {"ts":"2026-08-08T21:36:55Z","node":"it-f8qc","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
 {"ts":"2026-08-08T21:37:05Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T22:00:27Z","node":"dc-sgyu","v":1,"op":"create","type":"decision","title":"cross-session alerts ride the session hook, closed list, silence default","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-sgyu","ts":"2026-08-08T22:00:27Z","node":"th-v9tg","v":2,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-v9tg","at":2,"ts":"2026-08-08T22:00:27Z","node":"dc-sgyu","v":2,"actor":"claude-fable-5"}
