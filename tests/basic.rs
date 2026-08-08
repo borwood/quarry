@@ -460,3 +460,18 @@ fn session_injection_binds_and_rewrites() {
     let input4 = r#"{"session_id":"chat-abc","tool_name":"Write","tool_input":{"file_path":"x"}}"#;
     assert!(quarry::teach::session_inject(&s, input4).is_none());
 }
+
+#[test]
+fn purview_overlap_detection() {
+    let s = temp_store();
+    let a = ops::new_node(&s, NewArgs::bare("area", "worldgen")).unwrap();
+    let b = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
+    let c = ops::new_node(&s, NewArgs::bare("area", "bodies")).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![a.front.id.clone(), b.front.id.clone()], None).unwrap();
+    let overlaps = quarry::coord::purview_overlaps(&s, &[b.front.id.clone(), c.front.id.clone()]);
+    assert_eq!(overlaps.len(), 1);
+    assert_eq!(overlaps[0].0, "geo");
+    assert_eq!(overlaps[0].1, vec![b.front.id.clone()]);
+    let none = quarry::coord::purview_overlaps(&s, &[c.front.id.clone()]);
+    assert!(none.is_empty());
+}

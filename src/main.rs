@@ -609,8 +609,25 @@ fn main() -> Result<()> {
                         .filter_map(|id| all.iter().find(|n| &n.front.id == id))
                         .map(|n| n.front.title.clone())
                         .collect();
+                    let overlaps = coord::purview_overlaps(&store, &ids);
                     coord::save_session(&store, &name, ids, charter)?;
                     println!("✔ session {} covers: {}", name, titles.join(" · "));
+                    for (other, shared) in overlaps {
+                        if other == name {
+                            continue;
+                        }
+                        let shared_titles: Vec<String> = shared
+                            .iter()
+                            .filter_map(|id| all.iter().find(|n| &n.front.id == id))
+                            .map(|n| n.front.title.clone())
+                            .collect();
+                        println!(
+                            "  ⚠ purview overlaps session {} on: {} — legal (shared areas exist), but confirm it is deliberate; co-writes there want --shared leases.",
+                            other,
+                            shared_titles.join(", ")
+                        );
+                    }
+                    println!("  if THIS chat is to be the session: q session adopt {}", name);
                     if launcher {
                         let path = store.root.join(format!("{}-session.cmd", name));
                         std::fs::write(

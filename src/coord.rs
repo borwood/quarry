@@ -62,6 +62,27 @@ pub fn save_session(
     Ok(())
 }
 
+/// Where a proposed purview intersects existing sessions' purviews.
+/// Overlap is legal (shared areas exist) — but it must be seen, not slipped.
+pub fn purview_overlaps(store: &Store, areas: &[String]) -> Vec<(String, Vec<String>)> {
+    load_sessions(store)
+        .into_iter()
+        .filter_map(|(name, p)| {
+            let shared: Vec<String> = p
+                .areas
+                .iter()
+                .filter(|a| areas.contains(a))
+                .cloned()
+                .collect();
+            if shared.is_empty() {
+                None
+            } else {
+                Some((name, shared))
+            }
+        })
+        .collect()
+}
+
 pub fn load_leases(store: &Store) -> Vec<Lease> {
     fs::read_to_string(leases_path(store))
         .ok()
