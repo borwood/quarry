@@ -25,7 +25,9 @@ its blockers). Before designing anything, `q open` the areas and items it
 touches — the neighborhood brief IS the context payload, and it shows what
 changed behind every stale ref. Close a session by reviewing behind and
 affirming ONLY what you actually re-read: affirm is a recorded act of
-review, never a way to silence a marker. In conversation, refer to nodes by
+review, never a way to silence a marker. `q wrap` runs the whole boundary
+lint — owed threads, stale refs, in-flight work, unfiled nodes, unrecorded
+rulings, uncommitted graph changes. In conversation, refer to nodes by
 TITLE — ids belong in commands, not in prose to the user.
 
 PROVENANCE HONESTY
@@ -49,6 +51,10 @@ discussion, a topic that needs a spike before it can be answered. Queue it
 rather than asking ad hoc; give it depends-on edges to any intermediate
 work it spawns, and it will surface only when answerable. Record the user's
 ruling with the rule verb; the thread resolves and its dependents unblock.
+OWNERSHIP IS DATA: the queue is the COMPLETE list of what the user owes.
+If the user owes a call and no thread exists, mint one — never track a
+user obligation in prose or memory. The hard edge is C3: agents cannot
+settle what the queue holds.
 
 ITEMS — SKETCH EARLY, DERIVE BLOCKAGE
 Upcoming work enters as sketch the moment it is anticipated, with its
@@ -132,25 +138,29 @@ pub fn install_claude(root: &Path) -> Result<Vec<String>> {
     } else {
         json!({})
     };
+    let exe_quoted = cmd.trim_end_matches(" hook guard").to_string();
     let obj = settings
         .as_object_mut()
         .ok_or_else(|| anyhow!(".claude/settings.json is not a JSON object"))?;
-    let hooks = obj.entry("hooks").or_insert_with(|| json!({}));
-    let pre = hooks
+    let hooks = obj
+        .entry("hooks")
+        .or_insert_with(|| json!({}))
         .as_object_mut()
-        .ok_or_else(|| anyhow!("settings 'hooks' is not an object"))?
+        .ok_or_else(|| anyhow!("settings 'hooks' is not an object"))?;
+    let mut changed = false;
+
+    let pre = hooks
         .entry("PreToolUse")
-        .or_insert_with(|| json!([]));
-    let arr = pre
+        .or_insert_with(|| json!([]))
         .as_array_mut()
         .ok_or_else(|| anyhow!("settings 'hooks.PreToolUse' is not an array"))?;
-    let already = arr
+    if pre
         .iter()
-        .any(|e| serde_json::to_string(e).unwrap_or_default().contains("hook guard"));
-    if already {
+        .any(|e| serde_json::to_string(e).unwrap_or_default().contains("hook guard"))
+    {
         actions.push("guard hook already present in .claude/settings.json".into());
     } else {
-        arr.push(json!({
+        pre.push(json!({
             "matcher": "Write|Edit|NotebookEdit",
             "hooks": [{
                 "type": "command",
@@ -159,8 +169,36 @@ pub fn install_claude(root: &Path) -> Result<Vec<String>> {
                 "statusMessage": "quarry: guarding graph/"
             }]
         }));
-        fs::write(&settings_path, serde_json::to_string_pretty(&settings)? + "\n")?;
         actions.push(format!(".claude/settings.json: PreToolUse guard added ({})", cmd));
+        changed = true;
+    }
+
+    let orient_cmd = format!("{} hook orient", exe_quoted);
+    let ss = hooks
+        .entry("SessionStart")
+        .or_insert_with(|| json!([]))
+        .as_array_mut()
+        .ok_or_else(|| anyhow!("settings 'hooks.SessionStart' is not an array"))?;
+    if ss
+        .iter()
+        .any(|e| serde_json::to_string(e).unwrap_or_default().contains("hook orient"))
+    {
+        actions.push("orient hook already present in .claude/settings.json".into());
+    } else {
+        ss.push(json!({
+            "hooks": [{
+                "type": "command",
+                "command": orient_cmd,
+                "timeout": 10,
+                "statusMessage": "quarry: orienting"
+            }]
+        }));
+        actions.push(format!(".claude/settings.json: SessionStart orient added ({})", orient_cmd));
+        changed = true;
+    }
+
+    if changed {
+        fs::write(&settings_path, serde_json::to_string_pretty(&settings)? + "\n")?;
     }
     Ok(actions)
 }

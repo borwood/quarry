@@ -164,6 +164,8 @@ name their --source doc.")]
         #[command(subcommand)]
         which: Query,
     },
+    /// Boundary-time lint: what is owed, dangling, in flight, or unrecorded
+    Wrap,
     /// Render the whole graph as one self-contained HTML page (graph/view/index.html)
     View {
         /// Open the rendered page in the default browser
@@ -183,6 +185,8 @@ name their --source doc.")]
 enum HookCmd {
     /// PreToolUse guard: denies freehand Write/Edit under graph/ (C6)
     Guard,
+    /// SessionStart orientation: one-line graph summary for a fresh session
+    Orient,
 }
 
 #[derive(Subcommand)]
@@ -295,7 +299,123 @@ fn main() -> Result<()> {
                     std::process::exit(2);
                 }
             }
+            HookCmd::Orient => {
+                // Best-effort: a hook must never fail a session over a missing graph.
+                if let Ok(store) = Store::discover() {
+                    if let Ok(all) = store.load_all() {
+                        let queue = queries::queue(&all);
+                        let ready = queries::ready(&all);
+                        let behind = queries::behind(&store, &all);
+                        let titles: Vec<String> =
+                            queue.iter().map(|n| format!("\"{}\"", n.front.title)).collect();
+                        println!(
+                            "quarry: {} nodes · owed to the user: {}{} · ready to dispatch: {} · behind: {}",
+                            all.len(),
+                            queue.len(),
+                            if titles.is_empty() { String::new() } else { format!(" ({})", titles.join(", ")) },
+                            ready.len(),
+                            behind.len()
+                        );
+                        println!("orient with: q query queue · q query ready · q query shaping · q guide");
+                    }
+                }
+            }
         },
+        Cmd::Wrap => {
+            let store = Store::discover()?;
+            let all = store.load_all()?;
+            println!("wrap — boundary lint:");
+            let queued: Vec<_> = all
+                .iter()
+                .filter(|n| n.front.ty == "thread" && n.front.status == "queued")
+                .collect();
+            let answerable: Vec<_> = queued
+                .iter()
+                .filter(|n| queries::live_blockers(&all, n).is_empty())
+                .collect();
+            println!(
+                "  owed to the user: {} answerable, {} blocked on intermediate work",
+                answerable.len(),
+                queued.len() - answerable.len()
+            );
+            for n in &answerable {
+                println!("    {}", line(n));
+            }
+            let behind = queries::behind(&store, &all);
+            if behind.is_empty() {
+                println!("  behind: none — every ref current");
+            } else {
+                println!("  behind: {} stale ref(s), worst severity {}", behind.len(), behind[0].severity);
+                for e in behind.iter().take(5) {
+                    println!(
+                        "    [sev {}] \"{}\" -[{}]→ \"{}\" ({})",
+                        e.severity, e.src_title, e.rel, e.to_title, e.reason
+                    );
+                }
+            }
+            let inflight: Vec<_> = all
+                .iter()
+                .filter(|n| n.front.ty == "item" && n.front.status == "in-flight")
+                .collect();
+            if !inflight.is_empty() {
+                println!("  in-flight items ({}) — land, park, or hand off before stopping:", inflight.len());
+                for n in inflight {
+                    println!("    {}", line(n));
+                }
+            }
+            let unfiled: Vec<_> = all
+                .iter()
+                .filter(|n| {
+                    n.front.ty != "area"
+                        && !n.front.edges.iter().any(|e| {
+                            e.rel == "about"
+                                && all.iter().any(|t| t.front.id == e.to && t.front.ty == "area")
+                        })
+                })
+                .collect();
+            if !unfiled.is_empty() {
+                println!("  unfiled ({}) — the map cannot place these; q link <id> about <area>:", unfiled.len());
+                for n in unfiled {
+                    println!("    {}", line(n));
+                }
+            }
+            let unver = queries::unverified(&all);
+            if !unver.is_empty() {
+                println!("  unverified assistant claims ({}):", unver.len());
+                for n in unver {
+                    println!("    {}", line(n));
+                }
+            }
+            let log = store.read_log()?;
+            let last_user = log.iter().rev().find(|ev| {
+                ev.get("node")
+                    .and_then(|v| v.as_str())
+                    .and_then(|id| all.iter().find(|n| n.front.id == id))
+                    .map_or(false, |n| n.front.provenance == "user")
+            });
+            match last_user {
+                Some(ev) => println!(
+                    "  last write to a user-provenance node: {} — if the user has ruled anything since, record it: q rule <thread> \"...\" --by user",
+                    ev.get("ts").and_then(|v| v.as_str()).unwrap_or("?")
+                ),
+                None => println!(
+                    "  no user-provenance writes on record — if the user has ruled anything, record it: q rule <thread> \"...\" --by user"
+                ),
+            }
+            if let Ok(out) = std::process::Command::new("git")
+                .current_dir(&store.root)
+                .args(["status", "--porcelain", "--", "graph"])
+                .output()
+            {
+                let dirty = String::from_utf8_lossy(&out.stdout).lines().count();
+                if dirty > 0 {
+                    println!(
+                        "  graph/ has {} uncommitted change(s) — commit them with the work they belong to",
+                        dirty
+                    );
+                }
+            }
+        }
         Cmd::New {
             ty,
             title,
@@ -331,6 +451,14 @@ fn main() -> Result<()> {
                 },
             )?;
             println!("✔ {}", line(&node));
+            let filed = node.front.ty == "area"
+                || node.front.edges.iter().any(|e| e.rel == "about" && e.to.starts_with("ar-"));
+            if !filed {
+                println!(
+                    "  note: unfiled — the map cannot place it. Attach it: q link {} about <area>",
+                    node.front.id
+                );
+            }
         }
         Cmd::Link {
             src,

@@ -51,6 +51,22 @@ pub fn render(store: &Store) -> Result<String> {
         })
         .collect::<Result<Vec<_>>>()?;
 
+    // Markdown bodies of path-backed docs, embedded for in-app reading.
+    // Only .md files — source code is deliberately not viewable in-app.
+    let mut doc_content = serde_json::Map::new();
+    for n in &all {
+        if n.front.ty == "doc" {
+            if let Some(p) = &n.front.path {
+                if p.to_lowercase().ends_with(".md") {
+                    if let Ok(text) = std::fs::read_to_string(store.root.join(p)) {
+                        let capped: String = text.chars().take(200_000).collect();
+                        doc_content.insert(p.clone(), json!(capped));
+                    }
+                }
+            }
+        }
+    }
+
     let root_name = store
         .root
         .file_name()
@@ -62,6 +78,7 @@ pub fn render(store: &Store) -> Result<String> {
         "root": root_name,
         "nodes": nodes,
         "file_current": file_current,
+        "doc_content": doc_content,
         "events": events,
     });
     let data_str = serde_json::to_string(&data)?.replace("</", "<\\/");
@@ -170,6 +187,17 @@ h3.part .arrow { color: var(--muted); font-weight: 400; }
 .empty { color: var(--muted); font-style: italic; }
 .crumb { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; display: block; }
 .evd { color: var(--ink2); font-size: 12.5px; }
+.mdview { max-width: 84ch; color: var(--ink); font-size: 13.5px; }
+.mdview h2, .mdview h3, .mdview h4, .mdview h5 { margin: 18px 0 6px; line-height: 1.3; }
+.mdview h2 { font-size: 16px; } .mdview h3 { font-size: 14.5px; } .mdview h4, .mdview h5 { font-size: 13.5px; }
+.mdview p { margin: 6px 0; }
+.mdview ul { margin: 6px 0; padding-left: 20px; }
+.mdview pre { background: var(--page); border: 1px solid var(--grid); border-radius: 8px;
+  padding: 10px 12px; overflow-x: auto; font-size: 12.5px; font-family: ui-monospace, Consolas, monospace; }
+.mdview blockquote { border-left: 3px solid var(--grid); margin: 8px 0; padding: 2px 12px; color: var(--ink2); }
+.mdview hr { border: 0; border-top: 1px solid var(--grid); margin: 14px 0; }
+.mdview table { margin: 8px 0; }
+.mdview td { font-size: 12.5px; }
 </style>
 </head>
 <body>
@@ -284,6 +312,52 @@ function blockers(n){
       : t.type==='thread' ? t.status!=='resolved' : t.type==='decision' ? t.status!=='in-force' : false);
 }
 function statusDot(sev){ return '<span class="'+(sev===0?'ok':'sev'+sev)+'"><span class="dot"></span></span>'; }
+function mdInline(s){
+  return s.replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+function md(src){
+  const lines = esc(src).split('\n');
+  let out = [], inCode = false, inList = false, inTable = false;
+  const close = () => {
+    if (inList) { out.push('</ul>'); inList = false; }
+    if (inTable) { out.push('</tbody></table>'); inTable = false; }
+  };
+  for (const ln of lines) {
+    if (ln.startsWith('```')) { close(); out.push(inCode ? '</pre>' : '<pre>'); inCode = !inCode; continue; }
+    if (inCode) { out.push(ln); continue; }
+    if (ln.trim().startsWith('|')) {
+      if (inList) { out.push('</ul>'); inList = false; }
+      const cells = ln.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      if (cells.every(c => /^:?-{2,}:?$/.test(c) || c === '')) continue;
+      if (!inTable) { out.push('<table class="tbl"><tbody>'); inTable = true; }
+      out.push('<tr>' + cells.map(c => '<td>'+mdInline(c)+'</td>').join('') + '</tr>');
+      continue;
+    }
+    let m;
+    if (m = ln.match(/^(#+) (.*)/)) {
+      close();
+      const lvl = Math.min(m[1].length + 1, 5);
+      out.push('<h'+lvl+'>'+mdInline(m[2])+'</h'+lvl+'>');
+      continue;
+    }
+    if (/^\s*[-*] /.test(ln)) {
+      if (inTable) { out.push('</tbody></table>'); inTable = false; }
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push('<li>'+mdInline(ln.replace(/^\s*[-*] /, ''))+'</li>');
+      continue;
+    }
+    if (/^> ?/.test(ln) && ln.startsWith('>')) { close(); out.push('<blockquote>'+mdInline(ln.replace(/^> ?/, ''))+'</blockquote>'); continue; }
+    if (/^---+\s*$/.test(ln)) { close(); out.push('<hr>'); continue; }
+    if (/^\s*$/.test(ln)) { close(); continue; }
+    close();
+    out.push('<p>'+mdInline(ln)+'</p>');
+  }
+  close();
+  if (inCode) out.push('</pre>');
+  return out.join('\n');
+}
 function evDetail(ev){
   if (ev.op==='create') return 'create "'+esc(ev.title||'')+'"';
   if (ev.op==='link') return 'link -['+esc(ev.rel||'?')+']→ '+esc(ev.to||'?');
@@ -368,6 +442,10 @@ function viewNode(id){
   if ((n.acceptance||[]).length) html += '<h3 class="part">Acceptance</h3><ul style="margin:0;padding-left:18px">'
     + n.acceptance.map(a => '<li>'+esc(a)+'</li>').join('')+'</ul>';
   if (n.body) html += '<div class="body">'+esc(n.body)+'</div>';
+  if (n.type === 'doc' && n.path && DATA.doc_content[n.path] !== undefined) {
+    html += '<h3 class="part">Document — <code>'+esc(n.path)+'</code></h3>'
+      + '<div class="mdview">'+md(DATA.doc_content[n.path])+'</div>';
+  }
   const bl = blockers(n);
   if (bl.length) html += '<h3 class="part">Blocked on</h3>'+tbl(NODE_HD, bl.map(x => nodeRow(x)));
   if ((n.edges||[]).length) {
@@ -429,7 +507,8 @@ function viewState(){
   const shaping = DATA.nodes.filter(n => n.type==='item' && ['sketch','shaped'].includes(n.status)).sort(byUpdatedDesc);
   const behind = behindAll();
   const sevLabel = {1:'upstream refuted/superseded',2:'dangling',3:'target changed',4:'file drifted'};
-  let html = panelT('Queue — answerable now'+(blockedQ ? ' ('+blockedQ+' more blocked on spikes)' : ''),
+  let html = panelT('<span title="The complete list of what is owed by the user: queued threads whose prerequisites have landed. Agents cannot settle these (C3) — only a user ruling resolves them.">Owed to you — answerable now</span>'
+      +(blockedQ ? ' ('+blockedQ+' more blocked on spikes)' : ''),
       NODE_HD, queue.map(n => nodeRow(n)), 'nothing awaits the user');
   html += panelT('Ready to dispatch', NODE_HD, ready.map(n => nodeRow(n)), 'nothing dispatchable');
   html += panelT('Shaping — upcoming work', NODE_HD.concat('Blocked on'),
@@ -468,6 +547,14 @@ function route(){
 }
 window.addEventListener('hashchange', route);
 document.getElementById('rootname').textContent = DATA.root;
+{
+  const owed = DATA.nodes.filter(n => n.type==='thread' && n.status==='queued' && blockers(n).length===0).length;
+  if (owed > 0) {
+    const nav = document.getElementById('nav-state');
+    nav.innerHTML = 'State · <b>'+owed+' for you</b>';
+    nav.title = owed+' thread(s) await your ruling — agents cannot settle them';
+  }
+}
 document.getElementById('gen').textContent = 'generated '+DATA.generated+' · '+DATA.nodes.length+' nodes';
 const searchEl = document.getElementById('search'), resultsEl = document.getElementById('results');
 searchEl.addEventListener('input', () => {

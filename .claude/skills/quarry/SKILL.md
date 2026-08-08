@@ -19,7 +19,10 @@ its blockers). Before designing anything, `q open` the areas and items it
 touches — the neighborhood brief IS the context payload, and it shows what
 changed behind every stale ref. Close a session by reviewing behind and
 affirming ONLY what you actually re-read: affirm is a recorded act of
-review, never a way to silence a marker.
+review, never a way to silence a marker. `q wrap` runs the whole boundary
+lint — owed threads, stale refs, in-flight work, unfiled nodes, unrecorded
+rulings, uncommitted graph changes. In conversation, refer to nodes by
+TITLE — ids belong in commands, not in prose to the user.
 
 PROVENANCE HONESTY
 Your analyses and proposals are assistant-provenance — the default. Mark
@@ -42,6 +45,10 @@ discussion, a topic that needs a spike before it can be answered. Queue it
 rather than asking ad hoc; give it depends-on edges to any intermediate
 work it spawns, and it will surface only when answerable. Record the user's
 ruling with the rule verb; the thread resolves and its dependents unblock.
+OWNERSHIP IS DATA: the queue is the COMPLETE list of what the user owes.
+If the user owes a call and no thread exists, mint one — never track a
+user obligation in prose or memory. The hard edge is C3: agents cannot
+settle what the queue holds.
 
 ITEMS — SKETCH EARLY, DERIVE BLOCKAGE
 Upcoming work enters as sketch the moment it is anticipated, with its
@@ -54,7 +61,9 @@ Cite nodes and files with edges; stamps are automatic. behind is
 information, not noise: severity 1 means something you cite was refuted or
 superseded — read it before building further. When a claim falls, blast
 enumerates everything leaning on it. That list IS the correction; there is
-no sweep.
+no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
+behind, work unblocked, threads made answerable — with the command that
+addresses each. Do the homework (or queue it) before moving on.
 
 EDGE MATRIX (names only)
 about (anything → area or file) · part-of (hierarchy) · depends-on

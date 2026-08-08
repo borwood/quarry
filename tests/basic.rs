@@ -274,3 +274,21 @@ fn homework_helpers() {
     assert_eq!(un.len(), 1);
     assert_eq!(un[0].front.id, it.front.id);
 }
+
+#[test]
+fn doc_markdown_content_embeds_in_view() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::write(s.root.join("NOTES.md"), "# Heading One
+
+| a | b |
+|---|---|
+| 1 | 2 |
+").unwrap();
+    let mut d = NewArgs::bare("doc", "notes");
+    d.path = Some("NOTES.md".into());
+    ops::new_node(&s, d).unwrap();
+    let html = quarry::view::render(&s).unwrap();
+    assert!(html.contains("Heading One"), "md content embedded");
+    assert!(html.contains("doc_content"));
+}

@@ -45,3 +45,4 @@
 {"ts":"2026-08-08T06:45:18Z","node":"dc-q8p3","v":1,"op":"create","type":"decision","title":"affirm-only restamps do not bump v","actor":"claude-fable-5","note":null}
 {"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-q8p3","ts":"2026-08-08T06:45:18Z","node":"th-uvu9","v":2,"actor":"claude-fable-5"}
 {"op":"link","rel":"settles","to":"th-uvu9","at":2,"ts":"2026-08-08T06:45:18Z","node":"dc-q8p3","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T07:08:38Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}

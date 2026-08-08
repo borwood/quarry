@@ -231,14 +231,26 @@ q log <node>                per-node history from the event log
 q reindex                   rebuild .index from files + log
 ```
 
+**Built since v0:** `q view` (map-first single-file HTML render; markdown
+bodies of path-backed `.md` docs render in-app — source code deliberately
+does not) · `q wrap` (boundary-time lint: owed threads, stale refs,
+in-flight items, unfiled nodes, last user-provenance write, uncommitted
+graph changes) · `q guide` · `q hook guard` (C6) · `q hook orient`
+(SessionStart one-liner).
+
 Later, in need-order: `q queue` (single-thread topic queue — push/order/pop
 thread nodes) · `q reserve` / `q release` (write-set reservations for
 dispatch, the two-parallel-sessions mediator) · `q brief <item>` (generated
 dispatch brief: neighborhood as read-first, write-set complement as
 do-not-touch, acceptance as RETURN spec) · `q handoff` (rendered session-close
-view; replaces the hand-rewritten close block) · `q wrap` (dangling-state
-lint: open reservations, unanswered queue, behind-edges above severity
-threshold) · `q view` (static HTML UI over the whole graph).
+view; replaces the hand-rewritten close block).
+
+**Ownership is data.** What the user owes is exactly the set of queued
+threads — if the user owes a call and no thread exists, minting one is the
+fix; prose and memory never carry user obligations. C3 is the hard edge
+(agents cannot settle the queue); the honesty of `--by user` itself is a
+logged, auditable contract rather than a technically enforced one — the
+tool has no user identity, so the log trail is the guard.
 
 ## 10. Canned queries — [proposed]
 

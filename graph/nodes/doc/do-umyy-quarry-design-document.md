@@ -8,7 +8,7 @@ provenance: assistant
 created: 2026-08-07T11:05:01Z
 actor: claude-fable-5
 path: docs/DESIGN.md
-blob: d2d0a655d363
+blob: cd9ed06a128b
 edges:
 - rel: about
   to: ar-bu4u
