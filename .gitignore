@@ -6,3 +6,4 @@ graph/.intents.json
 graph/.sessions-live.json
 graph/.chat-sessions.json
 graph/.adopt-request.json
+graph/.alert-cursors.json
