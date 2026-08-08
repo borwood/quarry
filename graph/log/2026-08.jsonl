@@ -69,3 +69,4 @@
 {"ts":"2026-08-08T21:03:24Z","node":"do-n47r","v":1,"op":"create","type":"doc","title":"quarry journal charter","actor":"claude-fable-5","note":null}
 {"ts":"2026-08-08T21:04:03Z","node":"do-48jf","v":1,"op":"create","type":"doc","title":"the graph catches its builder","actor":"claude-fable-5","note":null}
 {"op":"set","fields":["status=done"],"from_status":"shaped","ts":"2026-08-08T21:04:03Z","node":"it-3wef","v":3,"actor":"claude-fable-5","note":"protocol layer shipped: doc kind=protocol triggers, inline+gate tiers, session memoization, q resume, --field registry, steal reason gate; 17 tests green"}
+{"ts":"2026-08-08T21:04:16Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}

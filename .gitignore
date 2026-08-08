@@ -2,3 +2,4 @@ target/
 graph/.index/
 graph/view/
 graph/.reservations.json
+graph/.intents.json
