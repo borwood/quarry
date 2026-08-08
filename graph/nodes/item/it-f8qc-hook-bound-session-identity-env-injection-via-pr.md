@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: depends-on
   to: it-ubqe
-  at: 1
+  at: 2
 ---
 
 User-proposed (clobber lineage): a Claude chat session id becomes associated with a q session; the PreToolUse hook injects QUARRY_SESSION into Bash/PowerShell commands so agents never think about it. Design depends on verified hook capabilities (the spike). Candidate binding flow: agent runs q session adopt <name> writing an adopt-request; the next PreToolUse hook (which knows the chat session_id) consumes it and binds.
