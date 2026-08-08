@@ -238,6 +238,10 @@ enum SessionCmd {
         /// Also write a <name>-session.cmd launcher at the repo root
         #[arg(long)]
         launcher: bool,
+        /// This chat only — not expected to be re-entered (persistence is
+        /// the default; ephemeral is the marked case)
+        #[arg(long)]
+        ephemeral: bool,
     },
     /// List registered sessions and their areas
     List,
@@ -515,6 +519,16 @@ fn main() -> Result<()> {
             }
             HookCmd::Orient => {
                 // Best-effort: a hook must never fail a session over a missing graph.
+                let chat_id = {
+                    use std::io::{IsTerminal, Read as _};
+                    let mut s = String::new();
+                    if !std::io::stdin().is_terminal() {
+                        let _ = std::io::stdin().read_to_string(&mut s);
+                    }
+                    serde_json::from_str::<serde_json::Value>(&s)
+                        .ok()
+                        .and_then(|v| v.get("session_id").and_then(|x| x.as_str()).map(String::from))
+                };
                 if let Ok(store) = Store::discover() {
                     if let Ok(all) = store.load_all() {
                         let queue = queries::queue(&all);
@@ -568,6 +582,18 @@ fn main() -> Result<()> {
                                 "session '{}' has no registered purview — q session set <name> --areas <area>...",
                                 coord::current_session().unwrap_or_default()
                             );
+                        } else {
+                            let bound = chat_id
+                                .as_deref()
+                                .and_then(|cid| coord::chat_binding(&store, cid));
+                            let reg = coord::load_sessions(&store);
+                            if bound.is_none() && !reg.is_empty() {
+                                let names: Vec<&str> = reg.keys().map(|s| s.as_str()).collect();
+                                println!(
+                                    "unbound chat in a multi-session repo (sessions: {}). Before substantive work, ask the user: adopt one of these (q session adopt <name>), or define a new session — and if new, is it meant to persist across chats and be re-entered, or is it ephemeral, for this chat only?",
+                                    names.join(" · ")
+                                );
+                            }
                         }
                         println!("orient with: q query queue · q query ready · q query shaping · q guide");
                     }
@@ -601,7 +627,7 @@ fn main() -> Result<()> {
         Cmd::Session { which } => {
             let store = Store::discover()?;
             match which {
-                SessionCmd::Set { name, areas, charter, launcher } => {
+                SessionCmd::Set { name, areas, charter, launcher, ephemeral } => {
                     let all = store.load_all()?;
                     let ids = coord::resolve_area_ids(&store, &all, &areas)?;
                     let titles: Vec<String> = ids
@@ -610,8 +636,13 @@ fn main() -> Result<()> {
                         .map(|n| n.front.title.clone())
                         .collect();
                     let overlaps = coord::purview_overlaps(&store, &ids);
-                    coord::save_session(&store, &name, ids, charter)?;
-                    println!("✔ session {} covers: {}", name, titles.join(" · "));
+                    coord::save_session(&store, &name, ids, charter, ephemeral)?;
+                    println!(
+                        "✔ session {} covers: {}{}",
+                        name,
+                        titles.join(" · "),
+                        if ephemeral { "  (ephemeral — this chat only)" } else { "" }
+                    );
                     for (other, shared) in overlaps {
                         if other == name {
                             continue;
@@ -937,6 +968,25 @@ fn main() -> Result<()> {
                 None => println!(
                     "  no user-provenance writes on record — if the user has ruled anything, record it: q rule <thread> \"...\" --by user"
                 ),
+            }
+            {
+                use time::format_description::well_known::Rfc3339;
+                for (name, p) in coord::load_sessions(&store) {
+                    if !p.ephemeral {
+                        continue;
+                    }
+                    if let Some(ts) = coord::last_seen(&store, &name) {
+                        if let Ok(t) = time::OffsetDateTime::parse(&ts, &Rfc3339) {
+                            let days = (time::OffsetDateTime::now_utc() - t).whole_days();
+                            if days >= 7 {
+                                println!(
+                                    "  ephemeral session {} inactive {}d — a retirement flow is pending the archival design; for now it lingers in graph/sessions.json",
+                                    name, days
+                                );
+                            }
+                        }
+                    }
+                }
             }
             let leases = coord::load_leases(&store);
             if !leases.is_empty() {

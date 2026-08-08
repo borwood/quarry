@@ -85,15 +85,21 @@ consequential, or authoring-shaped acts — never for frequent verbs.
 SESSIONS AND PARALLEL WORK
 A main session's identity is its PURVIEW — a named set of areas in the
 committed registry. The q CLI is agent-operated: the user never authors a
-session by hand. WHEN THE USER ASKS FOR A NEW SESSION ("start a q session
-covering X"): mint or verify the areas, register the purview (session
-set — heed its overlap warning; distinct concerns are the point, and any
-deliberate overlap wants --shared leases there), emit the launcher for
-the user's future chats, then make THIS chat the session: q session
-adopt <name> (binds on the next shell call and injects the env
-automatically). Future incarnations either start via the launcher (env
-carries identity; /clear keeps it) or the user names the session in chat
-and the agent adopts again. WAKING AS A SESSION: run q session resume —
+session by hand. SESSIONS PERSIST BY DEFAULT — defining one makes it
+re-enterable forever, via the optional launcher script or by the user
+saying "you're <name>" and the agent adopting; ephemeral (this chat only)
+is the marked odd case, asked about at creation. WHEN THE USER ASKS FOR A
+NEW SESSION ("start a q session covering X"): ask whether it should
+persist across chats or is ephemeral; mint or verify the areas; register
+the purview (session set — heed its overlap warning; distinct concerns
+are the point, and deliberate overlap wants --shared leases there); offer
+the launcher as a convenience, not a default; then make THIS chat the
+session: q session adopt <name> (binds on the next shell call, env
+injected automatically). WHEN A CHAT STARTS UNBOUND in a repo that has
+sessions and the user launches into substantive work: before the first
+graph write or dispatch, ask — adopt an existing session, or define a new
+one (persistent or ephemeral)? The orient hook reminds you of exactly
+this. WAKING AS A SESSION: run q session resume —
 the derived handoff: holdings, your session's recent acts, arrivals from
 other sessions, what the user is owed. Nobody writes a close block; the
 wake brief is derived from the log and cannot be stale. Sessions start LEASELESS: browsing, design, and graph writes

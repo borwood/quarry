@@ -352,7 +352,7 @@ fn purview_scoping() {
     i2.status = Some("ready".into());
     ops::new_node(&s, i2).unwrap();
 
-    quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None, false).unwrap();
     let reg = quarry::coord::load_sessions(&s);
     assert!(reg.contains_key("geo"));
     let all = s.load_all().unwrap();
@@ -467,7 +467,7 @@ fn purview_overlap_detection() {
     let a = ops::new_node(&s, NewArgs::bare("area", "worldgen")).unwrap();
     let b = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
     let c = ops::new_node(&s, NewArgs::bare("area", "bodies")).unwrap();
-    quarry::coord::save_session(&s, "geo", vec![a.front.id.clone(), b.front.id.clone()], None).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![a.front.id.clone(), b.front.id.clone()], None, false).unwrap();
     let overlaps = quarry::coord::purview_overlaps(&s, &[b.front.id.clone(), c.front.id.clone()]);
     assert_eq!(overlaps.len(), 1);
     assert_eq!(overlaps[0].0, "geo");
@@ -480,7 +480,7 @@ fn purview_overlap_detection() {
 fn alert_computation_closed_list() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
-    quarry::coord::save_session(&s, "geo", vec![area.front.id.clone()], None).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![area.front.id.clone()], None, false).unwrap();
     // an arrival filed into geo's purview by bodies (stays sketch), plus a
     // dependency that bodies lands, unblocking geo's item
     let mut arrival = NewArgs::bare("item", "density convention");
@@ -511,4 +511,15 @@ fn alert_computation_closed_list() {
     // own-session events never alert
     let own = quarry::teach::alerts_between(&all, &log, "bodies", &ids, "2098-12-31T00:00:00Z");
     assert!(own.iter().all(|l| !l.contains("new from bodies")), "got: {:?}", own);
+}
+
+#[test]
+fn ephemeral_flag_roundtrip() {
+    let s = temp_store();
+    let a = ops::new_node(&s, NewArgs::bare("area", "scratch zone")).unwrap();
+    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, true).unwrap();
+    quarry::coord::save_session(&s, "geo2", vec![a.front.id.clone()], None, false).unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(reg["audit"].ephemeral);
+    assert!(!reg["geo2"].ephemeral);
 }

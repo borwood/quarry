@@ -18,6 +18,10 @@ pub struct Purview {
     pub areas: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub charter: Option<String>,
+    /// Sessions persist by default — defining one makes it re-enterable
+    /// (launcher or adopt). Ephemeral is the marked odd case: this chat only.
+    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
+    pub ephemeral: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -55,9 +59,10 @@ pub fn save_session(
     name: &str,
     areas: Vec<String>,
     charter: Option<String>,
+    ephemeral: bool,
 ) -> Result<()> {
     let mut reg = load_sessions(store);
-    reg.insert(name.to_string(), Purview { areas, charter });
+    reg.insert(name.to_string(), Purview { areas, charter, ephemeral });
     fs::write(sessions_path(store), serde_json::to_string_pretty(&reg)? + "\n")?;
     Ok(())
 }

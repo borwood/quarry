@@ -83,3 +83,4 @@
 {"ts":"2026-08-08T22:00:27Z","node":"dc-sgyu","v":1,"op":"create","type":"decision","title":"cross-session alerts ride the session hook, closed list, silence default","actor":"claude-fable-5","note":null}
 {"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-sgyu","ts":"2026-08-08T22:00:27Z","node":"th-v9tg","v":2,"actor":"claude-fable-5"}
 {"op":"link","rel":"settles","to":"th-v9tg","at":2,"ts":"2026-08-08T22:00:27Z","node":"dc-sgyu","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T22:43:48Z","node":"dc-b73w","v":1,"op":"create","type":"decision","title":"sessions persist by default; ephemeral is the marked case; unbound chats ask","actor":"claude-fable-5","note":null}
