@@ -233,9 +233,14 @@ enum SessionCmd {
         areas: Vec<String>,
         #[arg(long)]
         charter: Option<String>,
+        /// Also write a <name>-session.cmd launcher at the repo root
+        #[arg(long)]
+        launcher: bool,
     },
     /// List registered sessions and their areas
     List,
+    /// The derived wake brief: holdings, your recent acts, arrivals, owed
+    Resume,
 }
 
 #[derive(Subcommand)]
@@ -353,6 +358,16 @@ fn print_gate(g: &quarry::protocol::Gate) {
     }
     println!("\nYour intent is saved. Do the work under the protocol, then run: q resume {}", g.token);
     println!("(args are remembered; to change them, re-run the original command — this session is now cleared for this rule)");
+}
+
+fn human_age(secs: i64) -> String {
+    if secs < 3600 {
+        format!("{}m ago", secs / 60)
+    } else if secs < 86400 {
+        format!("{}h ago", secs / 3600)
+    } else {
+        format!("{}d ago", secs / 86400)
+    }
 }
 
 fn line(n: &Node) -> String {
@@ -571,7 +586,7 @@ fn main() -> Result<()> {
         Cmd::Session { which } => {
             let store = Store::discover()?;
             match which {
-                SessionCmd::Set { name, areas, charter } => {
+                SessionCmd::Set { name, areas, charter, launcher } => {
                     let all = store.load_all()?;
                     let ids = coord::resolve_area_ids(&store, &all, &areas)?;
                     let titles: Vec<String> = ids
@@ -581,7 +596,133 @@ fn main() -> Result<()> {
                         .collect();
                     coord::save_session(&store, &name, ids, charter)?;
                     println!("✔ session {} covers: {}", name, titles.join(" · "));
-                    println!("  set QUARRY_SESSION={} in that session's environment.", name);
+                    if launcher {
+                        let path = store.root.join(format!("{}-session.cmd", name));
+                        std::fs::write(
+                            &path,
+                            format!("@echo off\r\nset QUARRY_SESSION={}\r\nclaude %*\r\n", name),
+                        )?;
+                        println!("  ✔ launcher written: {}", path.display());
+                        println!("  run it to start a chat that IS this session; /clear keeps the identity, switching roles means relaunching.");
+                    } else {
+                        println!(
+                            "  launch with: cmd /c \"set QUARRY_SESSION={} && claude\"  (or --launcher to write a script)",
+                            name
+                        );
+                    }
+                }
+                SessionCmd::Resume => {
+                    let all = store.load_all()?;
+                    let Some(sess) = coord::current_session() else {
+                        anyhow::bail!("no QUARRY_SESSION set — launch via a session launcher, or ask the user which session this chat is and relaunch")
+                    };
+                    let reg = coord::load_sessions(&store);
+                    let Some(p) = reg.get(&sess) else {
+                        anyhow::bail!("session '{}' is not registered — q session set {} --areas <area>...", sess, sess)
+                    };
+                    println!(
+                        "resuming session {}{}",
+                        sess,
+                        p.charter.as_ref().map(|c| format!(" — {}", c)).unwrap_or_default()
+                    );
+                    let area_titles: Vec<String> = p
+                        .areas
+                        .iter()
+                        .filter_map(|id| all.iter().find(|n| &n.front.id == id))
+                        .map(|n| n.front.title.clone())
+                        .collect();
+                    println!("  purview: {}", area_titles.join(" · "));
+                    if let Some(ts) = coord::last_seen(&store, &sess) {
+                        use time::format_description::well_known::Rfc3339;
+                        let age_s = time::OffsetDateTime::parse(&ts, &Rfc3339)
+                            .ok()
+                            .map(|t| (time::OffsetDateTime::now_utc() - t).whole_seconds());
+                        match age_s {
+                            Some(a) if a < 120 => println!(
+                                "  ⚠ an incarnation of {} was active {}s ago — if another chat holds this identity, close one before writing.",
+                                sess, a
+                            ),
+                            Some(a) => println!("  last active: {}", human_age(a)),
+                            None => {}
+                        }
+                    }
+                    let ids: Vec<&str> = p.areas.iter().map(|s| s.as_str()).collect();
+                    let leases = coord::load_leases(&store);
+                    let mine: Vec<_> = leases.iter().filter(|l| l.session == sess).collect();
+                    if !mine.is_empty() {
+                        println!("  holdings:");
+                        for l in mine {
+                            let done = all
+                                .iter()
+                                .find(|n| n.front.id == l.item)
+                                .map_or(false, |n| matches!(n.front.status.as_str(), "done" | "dropped"));
+                            println!(
+                                "    \"{}\" holds {:?}{}",
+                                l.item_title,
+                                l.globs,
+                                if done { format!(" — item done; release: q release {}", l.item) } else { String::new() }
+                            );
+                        }
+                    }
+                    let inflight: Vec<_> = all
+                        .iter()
+                        .filter(|n| n.front.ty == "item" && n.front.status == "in-flight" && coord::in_purview(n, &ids))
+                        .collect();
+                    if !inflight.is_empty() {
+                        println!("  in-flight in purview:");
+                        for n in inflight {
+                            println!("    {}", line(n));
+                        }
+                    }
+                    let log = store.read_log()?;
+                    let my_events: Vec<&serde_json::Value> = log
+                        .iter()
+                        .filter(|ev| ev.get("session").and_then(|v| v.as_str()) == Some(sess.as_str()))
+                        .collect();
+                    let my_last_ts = my_events.last().and_then(|ev| ev.get("ts").and_then(|v| v.as_str())).unwrap_or("");
+                    if !my_events.is_empty() {
+                        println!("  your session's recent acts:");
+                        for ev in my_events.iter().rev().take(8).rev() {
+                            let node = ev.get("node").and_then(|v| v.as_str()).unwrap_or("?");
+                            let title = all.iter().find(|n| n.front.id == node).map(|n| n.front.title.as_str()).unwrap_or(node);
+                            let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
+                            let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("").split('T').nth(1).unwrap_or("");
+                            println!("    {} {} \"{}\"", ts, op, title);
+                        }
+                    }
+                    let mut arrivals: Vec<&Node> = Vec::new();
+                    for ev in log.iter().filter(|ev| {
+                        ev.get("ts").and_then(|v| v.as_str()).map_or(false, |t| t > my_last_ts)
+                            && ev.get("session").and_then(|v| v.as_str()).map_or(true, |s| s != sess)
+                    }) {
+                        if let Some(id) = ev.get("node").and_then(|v| v.as_str()) {
+                            if let Some(n) = all.iter().find(|n| n.front.id == id) {
+                                if coord::in_purview(n, &ids)
+                                    && !matches!(n.front.status.as_str(), "done" | "dropped" | "resolved")
+                                    && !arrivals.iter().any(|a| a.front.id == n.front.id)
+                                {
+                                    arrivals.push(n);
+                                }
+                            }
+                        }
+                    }
+                    if !arrivals.is_empty() {
+                        println!("  arrived in your purview since your last act:");
+                        for n in arrivals {
+                            println!("    {}", line(n));
+                        }
+                    }
+                    let owed: Vec<&Node> = queries::queue(&all)
+                        .into_iter()
+                        .filter(|n| coord::in_purview(n, &ids))
+                        .collect();
+                    if !owed.is_empty() {
+                        println!("  owed to the user in your purview:");
+                        for n in owed {
+                            println!("    {}", line(n));
+                        }
+                    }
+                    println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
                 }
                 SessionCmd::List => {
                     let all = store.load_all()?;

@@ -428,3 +428,13 @@ fn extra_fields_roundtrip() {
     assert_eq!(d2.front.extra.get("on").and_then(|v| v.as_str()), Some("new"));
     assert_eq!(d2.front.extra.get("lenses").and_then(|v| v.as_str()), Some("ai-native"));
 }
+
+#[test]
+fn session_heartbeat_roundtrip() {
+    let s = temp_store();
+    assert!(quarry::coord::last_seen(&s, "geo").is_none());
+    quarry::coord::touch_session(&s, "geo");
+    let ts = quarry::coord::last_seen(&s, "geo").expect("touched");
+    assert!(ts.contains('T'));
+    assert!(quarry::coord::last_seen(&s, "bodies").is_none());
+}

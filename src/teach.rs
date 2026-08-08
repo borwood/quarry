@@ -90,8 +90,15 @@ consequential, or authoring-shaped acts — never for frequent verbs.
 
 SESSIONS AND PARALLEL WORK
 A main session's identity is its PURVIEW — a named set of areas in the
-committed registry (the session verb). Set QUARRY_SESSION so events carry
-attribution. Sessions start LEASELESS: browsing, design, and graph writes
+committed registry (the session verb). Identity is LAUNCHER-OWNED:
+QUARRY_SESSION is set by the per-role launcher script before the chat
+starts (a new session kind = q session set <name> --areas ... --launcher,
+then start chats via the emitted script; /clear keeps the identity,
+switching roles means relaunching). WAKING AS A SESSION: run q session
+resume — the derived handoff: your holdings, your session's recent acts,
+what arrived in your purview from other sessions since, and what the user
+is owed. Nobody writes a close block; the wake brief is derived from the
+log and cannot be stale. Sessions start LEASELESS: browsing, design, and graph writes
 never need a lease. Reserve AT DISPATCH — when an agent is about to touch
 files — attaching the lease to the item it serves. Exclusive is the
 default; a shared lease marks a co-write zone where presence-awareness

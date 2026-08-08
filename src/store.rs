@@ -165,6 +165,9 @@ impl Store {
                 }
             }
         }
+        if let Some(sess) = ev.get("session").and_then(|v| v.as_str()) {
+            crate::coord::touch_session(self, sess);
+        }
         let res = (|| -> Result<()> {
             use std::io::Write;
             let mut f = fs::OpenOptions::new().create(true).append(true).open(&shard)?;

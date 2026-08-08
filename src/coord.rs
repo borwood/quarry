@@ -210,6 +210,29 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
+fn live_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".sessions-live.json")
+}
+
+/// Best-effort heartbeat: write verbs touch this so a fresh incarnation can
+/// tell whether "its" session was active moments ago (double-chat tell).
+pub fn touch_session(store: &Store, session: &str) {
+    let mut map: BTreeMap<String, String> = fs::read_to_string(live_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    map.insert(session.to_string(), Store::now());
+    if let Ok(s) = serde_json::to_string_pretty(&map) {
+        let _ = fs::write(live_path(store), s + "\n");
+    }
+}
+
+pub fn last_seen(store: &Store, session: &str) -> Option<String> {
+    let map: BTreeMap<String, String> =
+        serde_json::from_str(&fs::read_to_string(live_path(store)).ok()?).ok()?;
+    map.get(session).cloned()
+}
+
 /// Resolve the current session's purview to concrete area ids, if registered.
 pub fn purview<'a>(store: &Store, all: &'a [Node]) -> Option<(String, Vec<&'a Node>)> {
     let sess = current_session()?;

@@ -2,8 +2,8 @@
 id: th-mcwa
 type: thread
 title: how does a fresh chat discover it is an incarnation of an existing session?
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: assistant
 created: 2026-08-08T13:46:31Z
 actor: claude-fable-5

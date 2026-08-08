@@ -242,8 +242,10 @@ orient` (SessionStart summary + purview block) · `q find` (text search) ·
 Later, in need-order: `q queue` (single-thread topic queue — push/order/pop
 thread nodes) · `q brief <item>` (generated dispatch brief: neighborhood as
 read-first, write-set complement as do-not-touch, acceptance as RETURN
-spec) · `q handoff` (rendered session-close view; replaces the
-hand-rewritten close block).
+spec). *`q handoff` is RETIRED (2026-08-08): with per-session event
+attribution, the handoff is derived at wake (`q session resume`) instead of
+written at close — a wake brief computed from the log cannot be stale,
+wrong, or forgotten.*
 
 **The protocol layer (RATIFIED 2026-08-08 — quarry is an engine; project
 protocol is content).** House rules live in the host graph as doc nodes,
