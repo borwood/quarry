@@ -185,3 +185,25 @@ fn thread_blocked_on_spike_leaves_queue() {
     let all = s.load_all().unwrap();
     assert_eq!(queries::queue(&all).len(), 1, "spike landed; thread answerable");
 }
+
+#[test]
+fn hook_guard_denies_graph_writes_only() {
+    let windows_path = "{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"B:\\\\repos\\\\x\\\\graph\\\\nodes\\\\claim\\\\cl-1.md\"}}";
+    let deny = quarry::teach::guard(windows_path);
+    assert!(deny.is_some());
+    assert!(deny.unwrap().contains("C6"));
+    let log = quarry::teach::guard(
+        r#"{"tool_name":"Write","tool_input":{"file_path":"B:/repos/x/graph/log/2026-08.jsonl"}}"#,
+    );
+    assert!(log.is_some());
+    let src = quarry::teach::guard(
+        r#"{"tool_name":"Edit","tool_input":{"file_path":"B:/repos/x/src/main.rs"}}"#,
+    );
+    assert!(src.is_none());
+    let read = quarry::teach::guard(
+        r#"{"tool_name":"Read","tool_input":{"file_path":"B:/repos/x/graph/nodes/a.md"}}"#,
+    );
+    assert!(read.is_none());
+    let garbage = quarry::teach::guard("not json");
+    assert!(garbage.is_none());
+}

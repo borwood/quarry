@@ -73,7 +73,7 @@ pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()
     };
     if !ok {
         bail!(
-            "edge not allowed: {} -[{}]-> {}",
+            "edge not allowed: {} -[{}]-> {} — run `q guide` for the edge matrix",
             src_ty,
             rel,
             dst_ty.unwrap_or("file")

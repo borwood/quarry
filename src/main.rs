@@ -7,8 +7,19 @@ use quarry::queries;
 use quarry::render;
 use quarry::store::Store;
 
+const TOP_HELP: &str = "\
+GETTING ORIENTED (session start):
+  q query queue      threads awaiting the user, answerable now
+  q query ready      items dispatchable right now
+  q query shaping    upcoming work and its blockers
+  q guide            the judgment layer: when to mint what, provenance, session shape
+
+Run `q <verb> --help` for flags and examples. Files under graph/ are never
+edited by hand — every write goes through a verb, which bumps versions,
+stamps refs, and enforces the constraints.";
+
 #[derive(Parser)]
-#[command(name = "q", version, about = "quarry — a work graph for AI-native development")]
+#[command(name = "q", version, about = "quarry — a work graph for AI-native development", after_help = TOP_HELP)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -17,8 +28,18 @@ struct Cli {
 #[derive(Subcommand)]
 enum Cmd {
     /// Bootstrap graph/ in the current directory
-    Init,
+    Init {
+        /// Also install the Claude teaching surfaces: the generated skill and
+        /// the graph/ guard hook (re-run after upgrading the tool)
+        #[arg(long)]
+        claude: bool,
+    },
     /// Mint a node
+    #[command(after_help = "EXAMPLES:
+  q new area \"hydrology\"
+  q new thread \"finite or pinned oceans?\" --provenance user --status queued --about hydrology
+  q new item \"water body graph\" --kind slice --about hydrology --acceptance \"bodies persist\"
+  q new doc \"S11 results\" --path docs/spikes/S11-results.md --about hydrology")]
     New {
         /// area | item | thread | decision | claim | doc
         ty: String,
@@ -51,6 +72,11 @@ enum Cmd {
         note: Option<String>,
     },
     /// Add an edge (stamps the target's version / file blob automatically)
+    #[command(after_help = "EXAMPLES:
+  q link it-4k7f depends-on th-j9uu       # item waits on a thread
+  q link th-j9uu depends-on it-8m2x       # thread waits on its spike
+  q link cl-9x2m supports dc-my9w         # evidence a decision leans on
+  q link it-4k7f about file:src/water/body.rs:42   # blob-stamped file ref")]
     Link {
         src: String,
         /// about | part-of | depends-on | settles | supports | refutes | supersedes | source
@@ -81,6 +107,11 @@ enum Cmd {
         note: Option<String>,
     },
     /// Resolve a thread with a decision (--by user records the user's ruling)
+    #[command(after_help = "EXAMPLES:
+  q rule th-j9uu \"reservations are per-session leases\" --by user
+The decision inherits the thread's subject attachments; the thread resolves
+and anything depending on it unblocks. C3: an assistant may not settle a
+user-provenance thread without --by user.")]
     Rule {
         thread: String,
         text: String,
@@ -90,6 +121,11 @@ enum Cmd {
         title: Option<String>,
     },
     /// Extract a claim (extraction-on-citation)
+    #[command(after_help = "EXAMPLES:
+  q claim \"halo is 4-11 cells\" --about hydrology --source s11-results --method \"ring differencing\"
+Extract a claim only when something depends on the statement or kills it —
+never while writing prose. C1: at least one --about. C2: non-user claims
+name their --source doc.")]
     Claim {
         text: String,
         #[arg(long = "about", required = true)]
@@ -128,6 +164,19 @@ enum Cmd {
         #[command(subcommand)]
         which: Query,
     },
+    /// Print the judgment-layer primer (when to mint what, provenance, session shape)
+    Guide,
+    /// Hook entry points (wired by `q init --claude`)
+    Hook {
+        #[command(subcommand)]
+        which: HookCmd,
+    },
+}
+
+#[derive(Subcommand)]
+enum HookCmd {
+    /// PreToolUse guard: denies freehand Write/Edit under graph/ (C6)
+    Guard,
 }
 
 #[derive(Subcommand)]
@@ -171,12 +220,30 @@ fn line(n: &Node) -> String {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
-        Cmd::Init => {
+        Cmd::Init { claude } => {
             let cwd = std::env::current_dir()?;
             Store::init(&cwd)?;
             println!("✔ graph/ initialized at {}", cwd.display());
             println!("  suggested .gitignore lines: graph/.index/  graph/view/");
+            if claude {
+                for a in quarry::teach::install_claude(&cwd)? {
+                    println!("  ✔ {}", a);
+                }
+                println!("  note: the hook names this q binary by absolute path — re-run `q init --claude` if the binary moves.");
+            }
         }
+        Cmd::Guide => print!("{}", quarry::teach::GUIDE),
+        Cmd::Hook { which } => match which {
+            HookCmd::Guard => {
+                use std::io::Read as _;
+                let mut input = String::new();
+                std::io::stdin().read_to_string(&mut input)?;
+                if let Some(msg) = quarry::teach::guard(&input) {
+                    eprintln!("{}", msg);
+                    std::process::exit(2);
+                }
+            }
+        },
         Cmd::New {
             ty,
             title,

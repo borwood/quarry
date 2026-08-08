@@ -348,7 +348,8 @@ pub fn rule(
     args.body = text.to_string();
     args.ratified_by = by;
     let decision = new_node(store, args)?;
-    link(store, &decision.front.id, "settles", &thread.front.id, true, None)?;
+    // Resolve the thread BEFORE stamping the settles edge, so the decision
+    // cites the resolved version and rulings never leave a behind marker.
     let all2 = store.load_all()?;
     let mut t = store.find(&all2, &thread.front.id)?.clone();
     let from = t.front.status.clone();
@@ -359,6 +360,7 @@ pub fn rule(
         json!({"op": "set", "field": "status", "from": from, "to": "resolved", "cause": decision.front.id}),
         None,
     )?;
+    link(store, &decision.front.id, "settles", &thread.front.id, true, None)?;
     Ok(decision)
 }
 

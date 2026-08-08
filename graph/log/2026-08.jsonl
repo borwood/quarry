@@ -29,3 +29,10 @@
 {"actor":"claude-fable-5","at":1,"node":"it-au4b","op":"link","rel":"depends-on","to":"th-j9uu","ts":"2026-08-07T11:05:00Z","v":3}
 {"actor":"claude-fable-5","at":1,"node":"it-rb3w","op":"link","rel":"depends-on","to":"th-ngby","ts":"2026-08-07T11:05:01Z","v":3}
 {"actor":"claude-fable-5","node":"do-umyy","note":null,"op":"create","title":"quarry design document","ts":"2026-08-07T11:05:01Z","type":"doc","v":1}
+{"ts":"2026-08-08T00:55:58Z","node":"dc-r8de","v":1,"op":"create","type":"decision","title":"teaching surfaces: one authority per fact, shipped by the binary","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"settles","to":"th-dm4a","at":1,"ts":"2026-08-08T00:55:58Z","node":"dc-r8de","v":2,"actor":"claude-fable-5"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-r8de","ts":"2026-08-08T00:55:58Z","node":"th-dm4a","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T00:55:59Z","node":"it-vwjp","v":1,"op":"create","type":"item","title":"teaching surfaces slice","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"depends-on","to":"dc-r8de","at":2,"ts":"2026-08-08T00:55:59Z","node":"it-vwjp","v":2,"actor":"claude-fable-5"}
+{"op":"affirm","restamped":1,"ts":"2026-08-08T00:56:41Z","node":"dc-r8de","v":3,"actor":"brennan-volter"}
+{"op":"affirm","restamped":1,"ts":"2026-08-08T00:57:02Z","node":"it-vwjp","v":3,"actor":"brennan-volter"}
