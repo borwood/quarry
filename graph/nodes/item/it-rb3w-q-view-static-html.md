@@ -2,7 +2,7 @@
 id: it-rb3w
 type: item
 title: q view static HTML
-v: 3
+v: 4
 status: sketch
 provenance: assistant
 created: 2026-08-07T11:05:00Z
@@ -17,5 +17,5 @@ edges:
   at: 1
 - rel: depends-on
   to: th-ngby
-  at: 1
+  at: 3
 ---

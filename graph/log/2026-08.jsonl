@@ -39,3 +39,6 @@
 {"ts":"2026-08-08T01:57:43Z","node":"it-uba6","v":1,"op":"create","type":"item","title":"spike: map-first view prototype","actor":"claude-fable-5","note":null}
 {"op":"link","rel":"depends-on","to":"it-uba6","at":1,"ts":"2026-08-08T01:57:43Z","node":"th-ngby","v":2,"actor":"claude-fable-5"}
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-08T01:57:43Z","node":"it-uba6","v":2,"actor":"claude-fable-5","note":"rendered; 8 tests green; page opens locally"}
+{"op":"affirm","restamped":1,"ts":"2026-08-08T06:20:48Z","node":"th-ngby","v":3,"actor":"claude-fable-5"}
+{"op":"affirm","restamped":1,"ts":"2026-08-08T06:20:48Z","node":"it-rb3w","v":4,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T06:20:48Z","node":"th-uvu9","v":1,"op":"create","type":"thread","title":"should affirm-only restamps bump v?","actor":"claude-fable-5","note":null}

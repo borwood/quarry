@@ -319,9 +319,10 @@ function viewMap(){
     }));
     html += '<div class="tile"><h2><a href="#/n/'+a.id+'">'+esc(a.title)+'</a></h2>'
       + '<p class="charter">'+esc((a.body||'').split('\n')[0])+'</p>';
+    const builtRows = dec.concat(claims).concat(itemsD).sort(byUpdatedDesc);
     html += '<div class="sect"><div class="hd">Built — decisions in force ('+dec.length
       +') · claims ('+claims.length+') · shipped ('+itemsD.length+')</div>'
-      + tbl(NODE_HD, dec.map(n => nodeRow(n)))+'</div>';
+      + tbl(NODE_HD, builtRows.map(n => nodeRow(n)))+'</div>';
     if (itemsB.length || threads.length) {
       html += '<div class="sect becoming"><div class="hd">Becoming</div>'
         + tbl(NODE_HD, itemsB.concat(threads).map(n => nodeRow(n)))+'</div>';

@@ -2,7 +2,7 @@
 id: th-ngby
 type: thread
 title: shape of the generated UI
-v: 2
+v: 3
 status: queued
 provenance: user
 created: 2026-08-07T11:05:00Z
@@ -13,7 +13,7 @@ edges:
   at: 1
 - rel: depends-on
   to: it-uba6
-  at: 1
+  at: 2
 ---
 
 Browsable view of the whole graph: areas as map, staleness as visual weight. Static HTML first?
