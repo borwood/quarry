@@ -91,6 +91,16 @@ It versions, attaches, and goes stale like everything else. Engine-native
 gates also exist: a steal demands --reason. Gates are for rare,
 consequential, or authoring-shaped acts — never for frequent verbs.
 
+ARCHIVING — SETTLED LEAVES LEAVE THE DEFAULT VIEW, NEVER THE GRAPH
+Archived is a flag: ids resolve, edges hold, blast and behind always see
+everything. Only settled statuses archive (status decides, never age);
+parents with live children refuse — a parent indexes its archived
+offspring, so aging leaves are found through the thing they were part of.
+Docs and journals never archive (they are the record); areas retire by
+status. Every surface that hides archived content says how many it hid and
+how to reach them — nothing hides silently. Superseded decisions are
+routine archive candidates; wrap lists what qualifies.
+
 SESSIONS AND PARALLEL WORK
 A main session's identity is its PURVIEW — a named set of areas in the
 committed registry. The q CLI is agent-operated: the user never authors a
@@ -108,7 +118,10 @@ injected automatically). WHEN A CHAT STARTS UNBOUND in a repo that has
 sessions and the user launches into substantive work: before the first
 graph write or dispatch, ask — adopt an existing session, or define a new
 one (persistent or ephemeral)? The orient hook reminds you of exactly
-this. WAKING AS A SESSION: run q session resume —
+this. AT THE WRAP OF AN EPHEMERAL SESSION, retiring it is the default
+close act — do it and say so (q session retire); if its purview proved
+durable during the session, instead offer converting it to a durable
+session and let the user choose. WAKING AS A SESSION: run q session resume —
 the derived handoff: holdings, your session's recent acts, arrivals from
 other sessions, what the user is owed. Nobody writes a close block; the
 wake brief is derived from the log and cannot be stale. Sessions start LEASELESS: browsing, design, and graph writes

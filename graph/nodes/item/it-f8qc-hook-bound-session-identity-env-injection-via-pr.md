@@ -8,6 +8,7 @@ provenance: assistant
 created: 2026-08-08T21:34:15Z
 actor: claude-fable-5
 kind: feature
+archived: true
 edges:
 - rel: about
   to: ar-xa38

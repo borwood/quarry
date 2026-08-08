@@ -10,6 +10,7 @@ actor: claude-fable-5
 kind: spike
 acceptance:
 - 'landing view answers: main areas, built vs becoming, drill area to item to file'
+archived: true
 edges:
 - rel: about
   to: ar-z6we

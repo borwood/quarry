@@ -11,6 +11,7 @@ kind: slice
 acceptance:
 - founding decisions recorded in quarry's own graph
 - 6 tests green by name
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

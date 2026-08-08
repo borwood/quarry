@@ -263,6 +263,22 @@ enriches the logged event). Unknown frontmatter fields are preserved
 verbatim and settable (`--field k=v`, `q set k=v`) — the project's field
 registry, never interpreted by the engine.
 
+**Archival (RATIFIED 2026-08-08).** Archived is a **flag, never a file
+move** — ids resolve, edges hold, `blast`/`behind` always see everything
+(correctness surfaces never filter). Only **settled statuses** qualify
+(status decides, never age; age may prompt); **parents with live children
+refuse** — a parent indexes its archived offspring, so aging leaves are
+found through what they were part of. Docs and journals never archive
+(they are the record); areas retire by status; superseded decisions are
+routine candidates. **No surface hides silently**: the CLI brief counts
+hidden neighbors (`--all` reaches them), the view collapses long settled
+lists past a protocol-configurable count (`on=view`, `collapse=N`) and
+shows archived counts with a merge-in toggle, `find` labels archived
+matches. Archiving does not bump `v` (bookkeeping, not content — the
+affirm rationale). Session retirement (`q session retire`): registry entry
+removed, leases released, last rites logged; the default close act for an
+ephemeral session at wrap, with durable conversion as the alternative.
+
 **Ownership is data.** What the user owes is exactly the set of queued
 threads — if the user owes a call and no thread exists, minting one is the
 fix; prose and memory never carry user obligations. C3 is the hard edge

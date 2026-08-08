@@ -2,11 +2,12 @@
 id: th-hese
 type: thread
 title: 'archiving and retiring content: when does anything leave the live graph?'
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-08T22:53:39Z
 actor: claude-fable-5
+archived: true
 edges:
 - rel: about
   to: ar-xa38

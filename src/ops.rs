@@ -134,6 +134,7 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
         acceptance: a.acceptance,
         write_set: vec![],
         aliases: vec![],
+        archived: false,
         edges,
         extra,
     };
@@ -471,6 +472,72 @@ pub fn refute(
         .filter_map(|id| all2.iter().find(|n| &n.front.id == id).cloned())
         .collect();
     Ok((c2, nodes))
+}
+
+/// Archive (or --undo): a presentation flag, never a removal. Only settled
+/// statuses qualify; parents with live children never do — a parent indexes
+/// its archived offspring. Docs/journals are the record and never archive;
+/// areas retire by status. No version bump: archiving is bookkeeping, not
+/// content (the affirm-no-bump ruling's rationale), so citers stay current.
+pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
+    let all = store.load_all()?;
+    let mut node = store.find(&all, key)?.clone();
+    if undo {
+        if !node.front.archived {
+            bail!("\"{}\" is not archived", node.front.title);
+        }
+        node.front.archived = false;
+        store.save(&node)?;
+        store.log_event(json!({
+            "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+            "op": "unarchive", "actor": Store::actor()
+        }))?;
+        return Ok(node);
+    }
+    if node.front.archived {
+        bail!("\"{}\" is already archived", node.front.title);
+    }
+    match node.front.ty.as_str() {
+        "area" => bail!("areas never archive — they are the map; retire one with status=retired"),
+        "doc" => bail!("docs and journals never archive — they are the record"),
+        _ => {}
+    }
+    if !matches!(
+        node.front.status.as_str(),
+        "done" | "dropped" | "resolved" | "refuted" | "superseded"
+    ) {
+        bail!(
+            "only settled statuses archive; \"{}\" is [{}] — archive follows status, never age",
+            node.front.title,
+            node.front.status
+        );
+    }
+    let live_children: Vec<&Node> = all
+        .iter()
+        .filter(|c| {
+            !c.front.archived
+                && c.front.edges.iter().any(|e| e.rel == "part-of" && e.to == node.front.id)
+        })
+        .collect();
+    if !live_children.is_empty() {
+        bail!(
+            "\"{}\" has {} live child(ren) — parents index their offspring; archive the leaves first ({})",
+            node.front.title,
+            live_children.len(),
+            live_children
+                .iter()
+                .map(|c| c.front.id.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+    node.front.archived = true;
+    store.save(&node)?;
+    store.log_event(json!({
+        "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+        "op": "archive", "actor": Store::actor()
+    }))?;
+    Ok(node)
 }
 
 /// Re-stamp behind edges (and a path-backed doc's blob) after actual review.

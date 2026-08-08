@@ -523,3 +523,54 @@ fn ephemeral_flag_roundtrip() {
     assert!(reg["audit"].ephemeral);
     assert!(!reg["geo2"].ephemeral);
 }
+
+#[test]
+fn archive_rules_and_hierarchy() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let doc = ops::new_node(&s, NewArgs::bare("doc", "S11 results")).unwrap();
+    // areas and docs never archive
+    assert!(ops::archive(&s, &area.front.id, false).is_err());
+    assert!(ops::archive(&s, &doc.front.id, false).is_err());
+    // live status refuses
+    let mut live = NewArgs::bare("item", "in flight work");
+    live.status = Some("in-flight".into());
+    let live = ops::new_node(&s, live).unwrap();
+    let err = ops::archive(&s, &live.front.id, false).unwrap_err();
+    assert!(err.to_string().contains("settled"), "got: {}", err);
+    // parent with live child refuses; child then parent succeeds
+    let mut parent = NewArgs::bare("item", "the arc");
+    parent.status = Some("done".into());
+    let parent = ops::new_node(&s, parent).unwrap();
+    let mut child = NewArgs::bare("item", "the slice");
+    child.status = Some("done".into());
+    let child = ops::new_node(&s, child).unwrap();
+    ops::link(&s, &child.front.id, "part-of", &parent.front.id, false, None).unwrap();
+    let err = ops::archive(&s, &parent.front.id, false).unwrap_err();
+    assert!(err.to_string().contains("live child"), "got: {}", err);
+    let all = s.load_all().unwrap();
+    let v_before = s.find(&all, &child.front.id).unwrap().front.v;
+    let c2 = ops::archive(&s, &child.front.id, false).unwrap();
+    assert!(c2.front.archived);
+    assert_eq!(c2.front.v, v_before, "archiving must not bump v");
+    ops::archive(&s, &parent.front.id, false).unwrap();
+    // undo restores
+    let c3 = ops::archive(&s, &child.front.id, true).unwrap();
+    assert!(!c3.front.archived);
+}
+
+#[test]
+fn session_retire_removes_registry_and_leases() {
+    let s = temp_store();
+    let a = ops::new_node(&s, NewArgs::bare("area", "scratch")).unwrap();
+    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, true).unwrap();
+    let mut it = NewArgs::bare("item", "audit probe");
+    it.status = Some("in-flight".into());
+    let it = ops::new_node(&s, it).unwrap();
+    quarry::coord::reserve(&s, &it, "audit", "t", vec!["docs/audit/**".into()], false, false, None).unwrap();
+    assert_eq!(quarry::coord::load_leases(&s).len(), 1);
+    quarry::coord::retire_session(&s, "audit", "t").unwrap();
+    assert!(!quarry::coord::load_sessions(&s).contains_key("audit"));
+    assert!(quarry::coord::load_leases(&s).is_empty());
+    assert!(quarry::coord::retire_session(&s, "audit", "t").is_err(), "double retire errors");
+}

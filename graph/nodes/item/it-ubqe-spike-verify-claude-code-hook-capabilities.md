@@ -12,6 +12,7 @@ acceptance:
 - session_id availability per hook event confirmed
 - PreToolUse input-modification capability confirmed or refuted
 - C:/Program Files/Git/clear session_id and env behavior confirmed
+archived: true
 edges:
 - rel: about
   to: ar-xa38

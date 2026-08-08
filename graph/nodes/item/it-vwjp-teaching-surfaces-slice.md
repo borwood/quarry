@@ -13,6 +13,7 @@ acceptance:
 - guard denies graph/ writes with corrective message (exit 2 verified)
 - q guide prints the embedded primer
 - top-level and per-verb help carry examples
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

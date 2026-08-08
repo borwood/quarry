@@ -160,8 +160,20 @@ name their --source doc.")]
         #[arg(long)]
         to: Option<String>,
     },
-    /// Render a node's neighborhood brief
-    Open { node: String },
+    /// Archive a settled node (a flag, never a removal; --undo restores).
+    /// Only settled statuses; parents with live children refuse — archive
+    /// the leaves and find them through the parent.
+    Archive {
+        node: String,
+        #[arg(long)]
+        undo: bool,
+    },
+    /// Render a node's neighborhood brief (--all includes archived neighbors)
+    Open {
+        node: String,
+        #[arg(long)]
+        all: bool,
+    },
     /// Per-node history from the event log
     Log { node: String },
     /// Canned queries
@@ -250,6 +262,9 @@ enum SessionCmd {
     /// Bind THIS chat to a session when no launcher env is set (takes effect
     /// on the next tool call, via the session hook)
     Adopt { name: String },
+    /// Retire a session: registry entry removed, leases released, last
+    /// rites logged (the default close act for an ephemeral session)
+    Retire { name: String },
 }
 
 #[derive(Subcommand)]
@@ -621,7 +636,8 @@ fn main() -> Result<()> {
                 } else {
                     "  (matched in body)"
                 };
-                println!("{}{}", line(n), where_);
+                let arch = if n.front.archived { "  [ARCHIVED]" } else { "" };
+                println!("{}{}{}", line(n), arch, where_);
             }
         }
         Cmd::Session { which } => {
@@ -796,6 +812,10 @@ fn main() -> Result<()> {
                     println!("✔ adopt request written for session {}.", name);
                     println!("  the next shell tool call binds this chat and injects QUARRY_SESSION automatically (120s window).");
                     println!("  prefer launcher-owned identity for new chats: the {}-session launcher.", name);
+                }
+                SessionCmd::Retire { name } => {
+                    coord::retire_session(&store, &name, &Store::actor())?;
+                    println!("✔ session {} retired — registry entry removed, leases released, last rites logged.", name);
                 }
                 SessionCmd::List => {
                     let all = store.load_all()?;
@@ -986,6 +1006,47 @@ fn main() -> Result<()> {
                             }
                         }
                     }
+                }
+            }
+            {
+                let archivable: Vec<&Node> = all
+                    .iter()
+                    .filter(|n| {
+                        !n.front.archived
+                            && !matches!(n.front.ty.as_str(), "area" | "doc")
+                            && matches!(
+                                n.front.status.as_str(),
+                                "done" | "dropped" | "resolved" | "refuted" | "superseded"
+                            )
+                            && !all.iter().any(|c| {
+                                !c.front.archived
+                                    && c.front.edges.iter().any(|e| e.rel == "part-of" && e.to == n.front.id)
+                            })
+                    })
+                    .collect();
+                if !archivable.is_empty() {
+                    println!(
+                        "  archivable ({} settled leaf/childless node(s)) — q archive <node>; parents index their archived offspring:",
+                        archivable.len()
+                    );
+                    for n in archivable.iter().take(6) {
+                        println!("    {}", line(n));
+                    }
+                    if archivable.len() > 6 {
+                        println!("    …and {} more", archivable.len() - 6);
+                    }
+                }
+            }
+            if let Some(sess) = coord::current_session() {
+                if coord::load_sessions(&store).get(&sess).map_or(false, |p| p.ephemeral) {
+                    println!(
+                        "  this session ({}) is EPHEMERAL — the default close act is retirement: q session retire {}",
+                        sess, sess
+                    );
+                    println!(
+                        "    (if its purview proved durable this session, instead convert: q session set {} --areas ... without --ephemeral, and say so)",
+                        sess
+                    );
                 }
             }
             let leases = coord::load_leases(&store);
@@ -1184,9 +1245,19 @@ fn main() -> Result<()> {
                 println!("✔ restamped {} ref(s)", count);
             }
         }
-        Cmd::Open { node } => {
+        Cmd::Archive { node, undo } => {
             let store = Store::discover()?;
-            print!("{}", render::open(&store, &node)?);
+            let n = ops::archive(&store, &node, undo)?;
+            if undo {
+                println!("✔ restored to default surfaces: {}", line(&n));
+            } else {
+                println!("✔ archived: {}", line(&n));
+                println!("  still reachable — ids resolve, edges hold, blast/behind see it; surfaces show counts of what they hide.");
+            }
+        }
+        Cmd::Open { node, all } => {
+            let store = Store::discover()?;
+            print!("{}", render::open(&store, &node, all)?);
         }
         Cmd::Log { node } => {
             let store = Store::discover()?;

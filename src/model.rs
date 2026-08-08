@@ -140,6 +140,10 @@ pub struct Front {
     pub write_set: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub aliases: Vec<String>,
+    /// Archived: settled and demoted from default surfaces — never gone.
+    /// Ids resolve, edges hold, blast/behind always see everything.
+    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
+    pub archived: bool,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub edges: Vec<Edge>,
     /// Project-declared fields (the protocol layer's registry): preserved

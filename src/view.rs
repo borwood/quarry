@@ -73,6 +73,19 @@ pub fn render(store: &Store) -> Result<String> {
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "project".into());
 
+    // Presentation config from the protocol layer: a doc node kind=protocol
+    // with on=view may declare collapse=<N> (default 8).
+    let collapse = crate::protocol::matching(&all, "view", None, None)
+        .iter()
+        .find_map(|n| {
+            n.front
+                .extra
+                .get("collapse")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<usize>().ok())
+        })
+        .unwrap_or(8);
+
     let data = json!({
         "generated": Store::now(),
         "root": root_name,
@@ -80,6 +93,7 @@ pub fn render(store: &Store) -> Result<String> {
         "file_current": file_current,
         "doc_content": doc_content,
         "events": events,
+        "config": { "collapse": collapse },
     });
     let data_str = serde_json::to_string(&data)?.replace("</", "<\\/");
     Ok(TEMPLATE.replace("__QUARRY_DATA__", &data_str))
@@ -198,6 +212,9 @@ h3.part .arrow { color: var(--muted); font-weight: 400; }
 .mdview hr { border: 0; border-top: 1px solid var(--grid); margin: 14px 0; }
 .mdview table { margin: 8px 0; }
 .mdview td { font-size: 12.5px; }
+tr.arch { opacity: .55; }
+.morebar { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.morebar a { color: var(--ink2); text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -268,12 +285,32 @@ function tbl(headers, rows){
   return '<table class="tbl"><thead><tr>'+headers.map(h => '<th>'+h+'</th>').join('')
     + '</tr></thead><tbody>'+rows.join('')+'</tbody></table>';
 }
+window.VS = window.VS || {arch: {}, exp: {}};
+/// Collapsible row group: shows at most config.collapse live rows, always
+/// COUNTS what it hides (more + archived) with reach-them toggles — no
+/// surface hides content silently.
+function collapsible(key, rowObjs, headers){
+  const lim = (DATA.config && DATA.config.collapse) || 8;
+  const archN = rowObjs.filter(r => r.a).length;
+  const showA = !!VS.arch[key];
+  let list = showA ? rowObjs : rowObjs.filter(r => !r.a);
+  let hidden = 0;
+  if (!VS.exp[key] && list.length > lim) { hidden = list.length - lim; list = list.slice(0, lim); }
+  let html = tbl(headers, list.map(r => r.tr));
+  const bits = [];
+  if (hidden) bits.push('<a href="#" onclick="VS.exp[&quot;'+key+'&quot;]=1;route();return false">show '+hidden+' more</a>');
+  if (archN && !showA) bits.push('<a href="#" onclick="VS.arch[&quot;'+key+'&quot;]=1;route();return false">show '+archN+' archived</a>');
+  if (archN && showA) bits.push('<a href="#" onclick="delete VS.arch[&quot;'+key+'&quot;];route();return false">hide archived</a>');
+  if (bits.length) html += '<div class="morebar">'+bits.join(' · ')+'</div>';
+  return html;
+}
+function rowObj(n, extraCell){ return {a: !!n.archived, tr: nodeRow(n, extraCell)}; }
 const NODE_HD = ['Type','Title','Status',
   '<span title="Node version — bumps on every content edit (affirm-only restamps excepted)">V</span>',
   '<span title="Last event in this node’s log; bold = within 24h">Updated</span>'];
 const STAMP_HD = '<span title="What this ref was written against — the target’s version (or file blob) at link time. Behind = the target moved since; review, then affirm.">Stamp</span>';
 function nodeRow(n, extraCell){
-  return '<tr><td class="ty">'+esc(n.type)+(n.kind?' · '+esc(n.kind):'')+'</td>'
+  return '<tr'+(n.archived?' class="arch" title="archived — settled and demoted from default surfaces; still fully linked"':'')+'><td class="ty">'+esc(n.type)+(n.kind?' · '+esc(n.kind):'')+'</td>'
     + '<td>'+titleLink(n)+'</td><td>'+bubble(n.status)+'</td>'
     + '<td class="vcol">v'+n.v+'</td>'+whenCell(updatedOf(n))
     + (extraCell !== undefined ? '<td>'+extraCell+'</td>' : '') + '</tr>';
@@ -399,10 +436,10 @@ function viewMap(){
     const builtRows = dec.concat(claims).concat(itemsD).sort(byUpdatedDesc);
     html += '<div class="sect"><div class="hd" title="What is settled in this area: decisions in force, live claims, shipped work.">Built — decisions in force ('+dec.length
       +') · claims ('+claims.length+') · shipped ('+itemsD.length+')</div>'
-      + tbl(NODE_HD, builtRows.map(n => nodeRow(n)))+'</div>';
+      + collapsible('built-'+a.id, builtRows.map(n => rowObj(n)), NODE_HD)+'</div>';
     if (itemsB.length || threads.length) {
       html += '<div class="sect becoming"><div class="hd" title="What is in motion or planned here: work items by status, and threads awaiting the user. Dashed = not yet settled.">Becoming</div>'
-        + tbl(NODE_HD, itemsB.concat(threads).map(n => nodeRow(n)))+'</div>';
+        + collapsible('bec-'+a.id, itemsB.concat(threads).map(n => rowObj(n)), NODE_HD)+'</div>';
     }
     const cp = Object.entries(coupling);
     if (cp.length) html += '<div class="coupling"><span title="Derived coupling: work filed in this area holds depends-on or supports edges into nodes filed in these areas. ×N = how many such edges. Computed from real edges, never hand-drawn.">leans on</span>: '
@@ -414,7 +451,7 @@ function viewMap(){
   const unfiled = DATA.nodes.filter(n => n.type!=='area' && areasOf(n).length===0);
   if (unfiled.length) {
     html += '<div class="tile"><h2>unfiled</h2><p class="charter">nodes with no area attachment — the map cannot place what nobody filed</p>'
-      + tbl(NODE_HD, unfiled.sort(byUpdatedDesc).map(n => nodeRow(n)))+'</div>';
+      + collapsible('unfiled', unfiled.sort(byUpdatedDesc).map(n => rowObj(n)), NODE_HD)+'</div>';
   }
   html += '</div>';
   return html;
@@ -442,6 +479,7 @@ function viewNode(id){
   if ((n.acceptance||[]).length) html += '<h3 class="part">Acceptance</h3><ul style="margin:0;padding-left:18px">'
     + n.acceptance.map(a => '<li>'+esc(a)+'</li>').join('')+'</ul>';
   if (n.body) html += '<div class="body">'+esc(n.body)+'</div>';
+  if (n.archived) html += '<p class="meta">⚑ ARCHIVED — settled and demoted from default surfaces; every edge and query still reaches it.</p>';
   if (n.type === 'doc' && n.path && DATA.doc_content[n.path] !== undefined) {
     html += '<h3 class="part">Document — <code>'+esc(n.path)+'</code></h3>'
       + '<div class="mdview">'+md(DATA.doc_content[n.path])+'</div>';
@@ -455,25 +493,26 @@ function viewNode(id){
       const s = edgeState(e);
       const stamp = statusDot(s.sev)+'<span class="rel">'+esc(s.label)+'</span>';
       if (e.to.startsWith('file:')) {
-        rows.push('<tr><td class="rel">'+esc(e.rel)+'</td><td class="ty">file</td>'
-          + '<td colspan="2"><code>'+esc(e.to.slice(5))+'</code></td><td></td><td>'+stamp+'</td></tr>');
+        rows.push({a: false, tr: '<tr><td class="rel">'+esc(e.rel)+'</td><td class="ty">file</td>'
+          + '<td colspan="2"><code>'+esc(e.to.slice(5))+'</code></td><td></td><td>'+stamp+'</td></tr>'});
       } else {
         const t = byId[e.to];
         if (t) {
-          rows.push('<tr><td class="rel">'+esc(e.rel)+'</td><td class="ty">'+esc(t.type)+'</td>'
+          let tr = '<tr'+(t.archived?' class="arch"':'')+'><td class="rel">'+esc(e.rel)+'</td><td class="ty">'+esc(t.type)+'</td>'
             + '<td>'+titleLink(t)+'</td><td>'+bubble(t.status)+'</td>'+whenCell(updatedOf(t))
-            + '<td>'+stamp+'</td></tr>');
+            + '<td>'+stamp+'</td></tr>';
           if (s.sev===1 || s.sev===3) {
             eventsFor(e.to, e.at).forEach(d =>
-              rows.push('<tr><td></td><td colspan="5" class="delta">· '+d+'</td></tr>'));
+              tr += '<tr'+(t.archived?' class="arch"':'')+'><td></td><td colspan="5" class="delta">· '+d+'</td></tr>');
           }
+          rows.push({a: !!t.archived, tr});
         } else {
-          rows.push('<tr><td class="rel">'+esc(e.rel)+'</td><td class="ty">?</td>'
-            + '<td colspan="3"><span class="id">'+esc(e.to)+'</span> (missing)</td><td>'+stamp+'</td></tr>');
+          rows.push({a: false, tr: '<tr><td class="rel">'+esc(e.rel)+'</td><td class="ty">?</td>'
+            + '<td colspan="3"><span class="id">'+esc(e.to)+'</span> (missing)</td><td>'+stamp+'</td></tr>'});
         }
       }
     }
-    html += tbl(['Rel','Type','Target','Status','Updated',STAMP_HD], rows);
+    html += collapsible('edges-'+n.id, rows, ['Rel','Type','Target','Status','Updated',STAMP_HD]);
   }
   const inbound = backlinks[n.id]||[];
   if (inbound.length) {
@@ -483,12 +522,12 @@ function viewNode(id){
       const stale = (typeof b.at==='number' && n.v > b.at)
         ? statusDot(3)+'<span class="rel">cited at v'+b.at+', this is v'+n.v+'</span>'
         : statusDot(0)+'<span class="rel">current</span>';
-      return '<tr><td class="rel">'+esc(b.rel)+' ←</td><td class="ty">'+esc(m.type)+'</td>'
+      return {a: !!m.archived, tr: '<tr'+(m.archived?' class="arch"':'')+'><td class="rel">'+esc(b.rel)+' ←</td><td class="ty">'+esc(m.type)+'</td>'
         + '<td>'+titleLink(m)+'</td><td>'+bubble(m.status)+'</td>'+whenCell(updatedOf(m))
-        + '<td>'+stale+'</td></tr>';
+        + '<td>'+stale+'</td></tr>'};
     });
-    html += tbl(['Rel','Type','From','Status','Updated',
-      '<span title="Whether the citing node’s stamp still matches this node’s version — stale means the citer has not reviewed this node’s newer state.">Citation</span>'], rows);
+    html += collapsible('back-'+n.id, rows, ['Rel','Type','From','Status','Updated',
+      '<span title="Whether the citing node’s stamp still matches this node’s version — stale means the citer has not reviewed this node’s newer state.">Citation</span>']);
   }
   html += '</div>';
   return html;
@@ -529,7 +568,8 @@ function viewAll(){
   let html = '';
   for (const ty of order) {
     const ns = DATA.nodes.filter(n => n.type===ty).sort(byUpdatedDesc);
-    if (ns.length) html += panelT(ty+' ('+ns.length+')', NODE_HD, ns.map(n => nodeRow(n)), '');
+    if (ns.length) html += '<div class="panel"><h2>'+ty+' ('+ns.length+')</h2>'
+      + collapsible('all-'+ty, ns.map(n => rowObj(n)), NODE_HD) + '</div>';
   }
   return html;
 }
@@ -563,8 +603,9 @@ searchEl.addEventListener('input', () => {
   const hits = DATA.nodes.filter(n =>
     n.id.includes(q) || n.title.toLowerCase().includes(q) || (n.body||'').toLowerCase().includes(q)
   ).slice(0, 20);
-  resultsEl.innerHTML = hits.map(n => '<a href="#/n/'+n.id+'"><span class="ty">'+esc(n.type)
-    +'</span> <span class="id">'+esc(n.id)+'</span> '+esc(n.title)+' '+bubble(n.status)+'</a>').join('')
+  resultsEl.innerHTML = hits.map(n => '<a href="#/n/'+n.id+'"'+(n.archived?' style="opacity:.55"':'')+'><span class="ty">'+esc(n.type)
+    +'</span> <span class="id">'+esc(n.id)+'</span> '+esc(n.title)+' '+bubble(n.status)
+    +(n.archived?' <span class="rel">[archived]</span>':'')+'</a>').join('')
     || '<a class="empty">no match</a>';
   resultsEl.hidden = false;
 });

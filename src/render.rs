@@ -58,8 +58,10 @@ fn event_line(e: &serde_json::Value) -> String {
 }
 
 /// The neighborhood brief: the node, its edges with staleness (and the log
-/// delta for anything behind), and its backlinks.
-pub fn open(store: &Store, key: &str) -> Result<String> {
+/// delta for anything behind), and its backlinks. Archived neighbors are
+/// hidden by default but always COUNTED with the reach-them hint — nothing
+/// hides silently (`show_all` includes them).
+pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     let all = store.load_all()?;
     let n = store.find(&all, key)?;
     let log = store.read_log()?;
@@ -67,8 +69,12 @@ pub fn open(store: &Store, key: &str) -> Result<String> {
 
     writeln!(
         s,
-        "■ {}  {}  v{}  [{}]",
-        n.front.id, n.front.ty, n.front.v, n.front.status
+        "■ {}  {}  v{}  [{}]{}",
+        n.front.id,
+        n.front.ty,
+        n.front.v,
+        n.front.status,
+        if n.front.archived { "  ARCHIVED" } else { "" }
     )?;
     writeln!(s, "  {}", n.front.title)?;
     let mut meta = format!(
@@ -105,9 +111,22 @@ pub fn open(store: &Store, key: &str) -> Result<String> {
         }
     }
 
+    let mut hidden_edges = 0usize;
     if !n.front.edges.is_empty() {
         writeln!(s, "\n  edges:")?;
         for e in &n.front.edges {
+            if !show_all {
+                if let At::V(_) = &e.at {
+                    if all
+                        .iter()
+                        .find(|t| t.front.id == e.to)
+                        .map_or(false, |t| t.front.archived)
+                    {
+                        hidden_edges += 1;
+                        continue;
+                    }
+                }
+            }
             match &e.at {
                 At::V(v) => {
                     let t = all.iter().find(|t| t.front.id == e.to);
@@ -152,14 +171,30 @@ pub fn open(store: &Store, key: &str) -> Result<String> {
         }
     }
 
-    let backlinks: Vec<(&Node, &crate::model::Edge)> = all
+    if hidden_edges > 0 {
+        writeln!(
+            s,
+            "  ({} archived edge target(s) hidden — q open {} --all)",
+            hidden_edges, n.front.id
+        )?;
+    }
+
+    let backlinks_all: Vec<(&Node, &crate::model::Edge)> = all
         .iter()
         .flat_map(|m| m.front.edges.iter().map(move |e| (m, e)))
         .filter(|(_, e)| e.to == n.front.id)
         .collect();
-    if !backlinks.is_empty() {
+    let hidden_back = backlinks_all
+        .iter()
+        .filter(|(m, _)| m.front.archived && !show_all)
+        .count();
+    let backlinks: Vec<&(&Node, &crate::model::Edge)> = backlinks_all
+        .iter()
+        .filter(|(m, _)| show_all || !m.front.archived)
+        .collect();
+    if !backlinks.is_empty() || hidden_back > 0 {
         writeln!(s, "\n  backlinks:")?;
-        for (m, e) in backlinks {
+        for &(m, e) in backlinks {
             let stale = match &e.at {
                 At::V(v) if n.front.v > *v => {
                     format!("  ⚠ cited at v{}, this is v{}", v, n.front.v)
@@ -170,6 +205,13 @@ pub fn open(store: &Store, key: &str) -> Result<String> {
                 s,
                 "    {:<10} ← {} \"{}\" [{}]{}",
                 e.rel, m.front.id, m.front.title, m.front.status, stale
+            )?;
+        }
+        if hidden_back > 0 {
+            writeln!(
+                s,
+                "    ({} archived backlink(s) hidden — q open {} --all)",
+                hidden_back, n.front.id
             )?;
         }
     }

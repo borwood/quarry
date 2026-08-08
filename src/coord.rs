@@ -67,6 +67,39 @@ pub fn save_session(
     Ok(())
 }
 
+/// Retire a session: registry entry removed, its leases released, its
+/// heartbeat cleared — the logged event is its last rites. The default close
+/// act for an ephemeral session at wrap; available to any session by
+/// deliberate choice.
+pub fn retire_session(store: &Store, name: &str, actor: &str) -> Result<()> {
+    let mut reg = load_sessions(store);
+    if reg.remove(name).is_none() {
+        bail!("session '{}' is not registered", name);
+    }
+    fs::write(sessions_path(store), serde_json::to_string_pretty(&reg)? + "\n")?;
+    let mut leases = load_leases(store);
+    let before = leases.len();
+    leases.retain(|l| l.session != name);
+    if leases.len() != before {
+        save_leases(store, &leases)?;
+    }
+    let mut live: BTreeMap<String, String> = fs::read_to_string(live_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    if live.remove(name).is_some() {
+        let _ = fs::write(
+            live_path(store),
+            serde_json::to_string_pretty(&live).unwrap_or_default() + "\n",
+        );
+    }
+    store.log_event(json!({
+        "ts": Store::now(), "node": format!("session:{}", name), "v": 0,
+        "op": "retire-session", "actor": actor, "released_leases": before - leases.len()
+    }))?;
+    Ok(())
+}
+
 /// Where a proposed purview intersects existing sessions' purviews.
 /// Overlap is legal (shared areas exist) — but it must be seen, not slipped.
 pub fn purview_overlaps(store: &Store, areas: &[String]) -> Vec<(String, Vec<String>)> {

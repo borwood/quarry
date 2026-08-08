@@ -12,6 +12,7 @@ acceptance:
 - project-authored instructions ride trigger points (verb x type x kind), emitted programmatically
 - unknown frontmatter fields preserved; protocol-declared fields settable and rendered
 - 'per-rule delivery tier: inline vs gate (intent-token), design pending user reaction'
+archived: true
 edges:
 - rel: about
   to: ar-xa38
