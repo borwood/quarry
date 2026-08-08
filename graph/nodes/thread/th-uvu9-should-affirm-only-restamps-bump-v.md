@@ -2,8 +2,8 @@
 id: th-uvu9
 type: thread
 title: should affirm-only restamps bump v?
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: assistant
 created: 2026-08-08T06:20:48Z
 actor: claude-fable-5

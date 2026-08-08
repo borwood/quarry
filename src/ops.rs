@@ -487,7 +487,14 @@ pub fn affirm(store: &Store, key: &str, only_to: Option<String>) -> Result<usize
         if let Some(nb) = new_blob {
             node.front.blob = Some(nb);
         }
-        bump(store, &mut node, json!({"op": "affirm", "restamped": count}), None)?;
+        // Ruled 2026-08-08 (user, settles th-uvu9): an affirm that only
+        // restamps does NOT bump v — a restamp is bookkeeping, not content,
+        // so review never cascades review. Logged, but the version holds.
+        store.save(&node)?;
+        store.log_event(json!({
+            "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+            "op": "affirm", "restamped": count, "actor": Store::actor()
+        }))?;
     }
     Ok(count)
 }

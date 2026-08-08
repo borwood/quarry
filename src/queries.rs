@@ -242,6 +242,48 @@ pub fn unverified<'a>(all: &'a [Node]) -> Vec<&'a Node> {
         .collect()
 }
 
+/// Citers of `id` whose stamp is now behind the target's version — the
+/// staleness homework a bump creates.
+pub fn citers_behind<'a>(all: &'a [Node], id: &str) -> Vec<(&'a Node, &'a crate::model::Edge)> {
+    let Some(target) = all.iter().find(|n| n.front.id == id) else {
+        return vec![];
+    };
+    let mut out = Vec::new();
+    for n in all {
+        for e in &n.front.edges {
+            if e.to == id {
+                if let At::V(v) = &e.at {
+                    if target.front.v > *v {
+                        out.push((n, e));
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Nodes whose blockage just cleared because `id` reached a satisfied state —
+/// the flow homework a resolution creates. Empty if `id` still blocks.
+pub fn unblocked_by<'a>(all: &'a [Node], id: &str) -> Vec<&'a Node> {
+    let Some(target) = all.iter().find(|n| n.front.id == id) else {
+        return vec![];
+    };
+    let satisfied = match target.front.ty.as_str() {
+        "item" => matches!(target.front.status.as_str(), "done" | "dropped"),
+        "thread" => target.front.status == "resolved",
+        "decision" => target.front.status == "in-force",
+        _ => false,
+    };
+    if !satisfied {
+        return vec![];
+    }
+    all.iter()
+        .filter(|n| n.front.edges.iter().any(|e| e.rel == "depends-on" && e.to == id))
+        .filter(|n| live_blockers(all, n).is_empty())
+        .collect()
+}
+
 /// Events for one node, oldest first.
 pub fn node_log(store: &Store, id: &str) -> Result<Vec<serde_json::Value>> {
     Ok(store

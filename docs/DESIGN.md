@@ -171,6 +171,14 @@ Notes:
 - **`q affirm`** re-stamps an edge at the target's current version after a
   human or agent has actually re-read it — reviewing is cheap, and the review
   is *recorded*, so "behind" never becomes ambient noise that gets ignored.
+  **RATIFIED 2026-08-08 (user, settles the affirm-ripple thread): an affirm
+  that only restamps does not bump `v`.** A restamp is bookkeeping, not
+  content — review must never cascade review. This narrows "every content
+  edit bumps" by one clause; the affirm is still logged.
+- **Mutating verbs report the homework an action creates**, in the verb's own
+  output: citers put behind (with the affirm command that clears each after
+  review), work unblocked, threads made answerable, sources newly blocked.
+  Consequences arrive in-loop, programmatically — never via primed context.
 - **Rendered context interleaves the delta.** `q open` shows each behind-edge
   with the log notes between `at` and `v`: *"you cite this at v2; v3: status
   asserted → refuted (S14 measurement)."* The reader learns what changed at

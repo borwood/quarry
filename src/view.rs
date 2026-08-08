@@ -240,7 +240,10 @@ function tbl(headers, rows){
   return '<table class="tbl"><thead><tr>'+headers.map(h => '<th>'+h+'</th>').join('')
     + '</tr></thead><tbody>'+rows.join('')+'</tbody></table>';
 }
-const NODE_HD = ['Type','Title','Status','V','Updated'];
+const NODE_HD = ['Type','Title','Status',
+  '<span title="Node version — bumps on every content edit (affirm-only restamps excepted)">V</span>',
+  '<span title="Last event in this node’s log; bold = within 24h">Updated</span>'];
+const STAMP_HD = '<span title="What this ref was written against — the target’s version (or file blob) at link time. Behind = the target moved since; review, then affirm.">Stamp</span>';
 function nodeRow(n, extraCell){
   return '<tr><td class="ty">'+esc(n.type)+(n.kind?' · '+esc(n.kind):'')+'</td>'
     + '<td>'+titleLink(n)+'</td><td>'+bubble(n.status)+'</td>'
@@ -320,17 +323,17 @@ function viewMap(){
     html += '<div class="tile"><h2><a href="#/n/'+a.id+'">'+esc(a.title)+'</a></h2>'
       + '<p class="charter">'+esc((a.body||'').split('\n')[0])+'</p>';
     const builtRows = dec.concat(claims).concat(itemsD).sort(byUpdatedDesc);
-    html += '<div class="sect"><div class="hd">Built — decisions in force ('+dec.length
+    html += '<div class="sect"><div class="hd" title="What is settled in this area: decisions in force, live claims, shipped work.">Built — decisions in force ('+dec.length
       +') · claims ('+claims.length+') · shipped ('+itemsD.length+')</div>'
       + tbl(NODE_HD, builtRows.map(n => nodeRow(n)))+'</div>';
     if (itemsB.length || threads.length) {
-      html += '<div class="sect becoming"><div class="hd">Becoming</div>'
+      html += '<div class="sect becoming"><div class="hd" title="What is in motion or planned here: work items by status, and threads awaiting the user. Dashed = not yet settled.">Becoming</div>'
         + tbl(NODE_HD, itemsB.concat(threads).map(n => nodeRow(n)))+'</div>';
     }
     const cp = Object.entries(coupling);
-    if (cp.length) html += '<div class="coupling">leans on: '
+    if (cp.length) html += '<div class="coupling"><span title="Derived coupling: work filed in this area holds depends-on or supports edges into nodes filed in these areas. ×N = how many such edges. Computed from real edges, never hand-drawn.">leans on</span>: '
       + cp.map(([id,c]) => '<a href="#/n/'+id+'">'+esc(byId[id].title)+'</a> ×'+c).join(' · ')+'</div>';
-    if (docs.length) html += '<div class="coupling">docs: '
+    if (docs.length) html += '<div class="coupling"><span title="Registered prose attached to this area — journal entries, spike reports, design docs. Click to see what cites them.">docs</span>: '
       + docs.map(d => '<a href="#/n/'+d.id+'">'+esc(d.title)+'</a>').join(' · ')+'</div>';
     html += '</div>';
   }
@@ -392,7 +395,7 @@ function viewNode(id){
         }
       }
     }
-    html += tbl(['Rel','Type','Target','Status','Updated','Stamp'], rows);
+    html += tbl(['Rel','Type','Target','Status','Updated',STAMP_HD], rows);
   }
   const inbound = backlinks[n.id]||[];
   if (inbound.length) {
@@ -406,7 +409,8 @@ function viewNode(id){
         + '<td>'+titleLink(m)+'</td><td>'+bubble(m.status)+'</td>'+whenCell(updatedOf(m))
         + '<td>'+stale+'</td></tr>';
     });
-    html += tbl(['Rel','Type','From','Status','Updated','Citation'], rows);
+    html += tbl(['Rel','Type','From','Status','Updated',
+      '<span title="Whether the citing node’s stamp still matches this node’s version — stale means the citer has not reviewed this node’s newer state.">Citation</span>'], rows);
   }
   html += '</div>';
   return html;

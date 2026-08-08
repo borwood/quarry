@@ -222,3 +222,55 @@ fn view_renders_every_node() {
     assert!(html.contains("finite or pinned?"));
     assert!(html.contains("__QUARRY_DATA__") == false);
 }
+
+#[test]
+fn affirm_only_restamps_does_not_bump() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let c = ops::claim(
+        &s,
+        "halo bounded",
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    ops::set(&s, &area.front.id, &["title=hydrology".to_string()], None).unwrap();
+    let v_before = c.front.v;
+    let n = ops::affirm(&s, &c.front.id, None).unwrap();
+    assert_eq!(n, 1);
+    let all = s.load_all().unwrap();
+    let c2 = s.find(&all, &c.front.id).unwrap();
+    assert_eq!(c2.front.v, v_before, "affirm-only restamp must not bump v");
+    assert!(queries::behind(&s, &all).is_empty());
+}
+
+#[test]
+fn homework_helpers() {
+    let s = temp_store();
+    let mut th = NewArgs::bare("thread", "which layout?");
+    th.provenance = Some("user".into());
+    th.status = Some("queued".into());
+    let th = ops::new_node(&s, th).unwrap();
+    let mut it = NewArgs::bare("item", "build the layout");
+    it.status = Some("ready".into());
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &th.front.id, false, None).unwrap();
+
+    // bumping the thread puts the item's stamp behind
+    ops::set(&s, &th.front.id, &["title=which storage layout?".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let behind = queries::citers_behind(&all, &th.front.id);
+    assert_eq!(behind.len(), 1);
+    assert_eq!(behind[0].0.front.id, it.front.id);
+    // thread not resolved: nothing unblocked yet
+    assert!(queries::unblocked_by(&all, &th.front.id).is_empty());
+
+    ops::rule(&s, &th.front.id, "flat files", Some("user".into()), None).unwrap();
+    let all = s.load_all().unwrap();
+    let un = queries::unblocked_by(&all, &th.front.id);
+    assert_eq!(un.len(), 1);
+    assert_eq!(un[0].front.id, it.front.id);
+}

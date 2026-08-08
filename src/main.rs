@@ -218,9 +218,41 @@ fn read_body(body: Option<String>, body_file: Option<String>) -> Result<String> 
 
 fn line(n: &Node) -> String {
     format!(
-        "{}  v{:<2} [{:<9}] {}",
-        n.front.id, n.front.v, n.front.status, n.front.title
+        "\"{}\" — {} [{}] v{} ({})",
+        n.front.title, n.front.ty, n.front.status, n.front.v, n.front.id
     )
+}
+
+/// After a mutation, report the homework it created: citers now behind (with
+/// the command that clears each after review) and work the change unblocked.
+fn print_homework(store: &Store, touched: &[&str]) {
+    let Ok(all) = store.load_all() else { return };
+    let mut lines: Vec<String> = Vec::new();
+    for &id in touched {
+        let Ok(target) = store.find(&all, id) else { continue };
+        for (citer, e) in queries::citers_behind(&all, id) {
+            lines.push(format!(
+                "⚠ behind: \"{}\" -[{}]→ \"{}\" (cited {}, now v{}). Review the change, then: q affirm {} --to {}",
+                citer.front.title, e.rel, target.front.title, e.at, target.front.v,
+                citer.front.id, target.front.id
+            ));
+        }
+        for n in queries::unblocked_by(&all, id) {
+            let what = match (n.front.ty.as_str(), n.front.status.as_str()) {
+                ("thread", "queued") => "answerable in the queue",
+                ("thread", _) => "unblocked",
+                ("item", "ready") => "dispatchable",
+                _ => "unblocked (still shaping)",
+            };
+            lines.push(format!("✔ {}: \"{}\" ({})", what, n.front.title, n.front.id));
+        }
+    }
+    if !lines.is_empty() {
+        println!("homework:");
+        for l in lines {
+            println!("  {}", l);
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -310,11 +342,27 @@ fn main() -> Result<()> {
             let store = Store::discover()?;
             let edge = ops::link(&store, &src, &rel, &dst, acknowledge, note)?;
             println!("✔ {} -[{}]-> {} (at {})", src, edge.rel, edge.to, edge.at);
+            let all = store.load_all()?;
+            let src_id = store.find(&all, &src)?.front.id.clone();
+            if edge.rel == "depends-on" {
+                if let Ok(t) = store.find(&all, &edge.to) {
+                    let blocking = !queries::live_blockers(&all, store.find(&all, &src_id)?).is_empty();
+                    if blocking {
+                        println!(
+                            "  note: \"{}\" is now blocked on \"{}\" — it leaves ready/queue views until that lands.",
+                            store.find(&all, &src_id)?.front.title, t.front.title
+                        );
+                    }
+                }
+            }
+            drop(all);
+            print_homework(&store, &[src_id.as_str(), edge.to.as_str()]);
         }
         Cmd::Set { node, fields, note } => {
             let store = Store::discover()?;
             let n = ops::set(&store, &node, &fields, note)?;
             println!("✔ {}", line(&n));
+            print_homework(&store, &[n.front.id.as_str()]);
         }
         Cmd::Edit {
             node,
@@ -329,6 +377,7 @@ fn main() -> Result<()> {
             }
             let n = ops::edit_body(&store, &node, body, note)?;
             println!("✔ {}", line(&n));
+            print_homework(&store, &[n.front.id.as_str()]);
         }
         Cmd::Rule {
             thread,
@@ -340,6 +389,10 @@ fn main() -> Result<()> {
             let d = ops::rule(&store, &thread, &text, by, title)?;
             println!("✔ {}", line(&d));
             println!("  thread resolved.");
+            let all = store.load_all()?;
+            let th_id = store.find(&all, &thread)?.front.id.clone();
+            drop(all);
+            print_homework(&store, &[th_id.as_str(), d.front.id.as_str()]);
         }
         Cmd::Claim {
             text,
@@ -356,7 +409,7 @@ fn main() -> Result<()> {
         Cmd::Refute { claim, by, note } => {
             let store = Store::discover()?;
             let (c, blast) = ops::refute(&store, &claim, &by, note)?;
-            println!("✔ {} is now refuted", c.front.id);
+            println!("✔ \"{}\" is now refuted ({})", c.front.title, c.front.id);
             if blast.is_empty() {
                 println!("  nothing leaned on it.");
             } else {
@@ -365,6 +418,7 @@ fn main() -> Result<()> {
                     println!("    {}", line(&n));
                 }
             }
+            print_homework(&store, &[c.front.id.as_str()]);
         }
         Cmd::Affirm { node, to } => {
             let store = Store::discover()?;
@@ -428,8 +482,8 @@ fn main() -> Result<()> {
                     }
                     for e in b {
                         println!(
-                            "[sev {}] {} \"{}\" -[{}]-> {} \"{}\"  at {} now {}  ({})",
-                            e.severity, e.src_id, e.src_title, e.rel, e.to, e.to_title, e.at, e.current, e.reason
+                            "[sev {}] \"{}\" -[{}]→ \"{}\"  at {} now {}  ({})  [{} → {}]",
+                            e.severity, e.src_title, e.rel, e.to_title, e.at, e.current, e.reason, e.src_id, e.to
                         );
                     }
                 }
