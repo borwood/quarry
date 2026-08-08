@@ -155,6 +155,16 @@ impl Store {
                 Err(_) => break, // stale lock — proceed rather than wedge
             }
         }
+        let mut ev = ev;
+        if let Some(obj) = ev.as_object_mut() {
+            if !obj.contains_key("session") {
+                if let Ok(s) = std::env::var("QUARRY_SESSION") {
+                    if !s.trim().is_empty() {
+                        obj.insert("session".into(), serde_json::json!(s));
+                    }
+                }
+            }
+        }
         let res = (|| -> Result<()> {
             use std::io::Write;
             let mut f = fs::OpenOptions::new().create(true).append(true).open(&shard)?;

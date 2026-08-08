@@ -292,3 +292,75 @@ fn doc_markdown_content_embeds_in_view() {
     assert!(html.contains("Heading One"), "md content embedded");
     assert!(html.contains("doc_content"));
 }
+
+#[test]
+fn glob_overlap_heuristic() {
+    use quarry::coord::globs_overlap;
+    assert!(globs_overlap("crates/**", "crates/dc-sim/**"));
+    assert!(globs_overlap("crates/dc-sim/**", "crates/**"));
+    assert!(!globs_overlap("crates/dc-worldgen/**", "crates/dc-sim/**"));
+    assert!(globs_overlap("docs/design/*.md", "docs/**"));
+    assert!(globs_overlap("*.rs", "src/main.rs"), "bare wildcard is conservative");
+    assert!(!globs_overlap("docs/a/**", "docs/b/**"));
+}
+
+#[test]
+fn leases_exclusive_shared_steal() {
+    let s = temp_store();
+    let a = ops::new_node(&s, NewArgs::bare("item", "geo pass work")).unwrap();
+    let b = ops::new_node(&s, NewArgs::bare("item", "bodies gait work")).unwrap();
+    let c = ops::new_node(&s, NewArgs::bare("item", "sdk docs from geo")).unwrap();
+    let d = ops::new_node(&s, NewArgs::bare("item", "sdk docs from bodies")).unwrap();
+
+    quarry::coord::reserve(&s, &a, "geo", "t", vec!["crates/dc-worldgen/**".into()], false, false).unwrap();
+    // disjoint: fine
+    quarry::coord::reserve(&s, &b, "bodies", "t", vec!["crates/dc-sim/body/**".into()], false, false).unwrap();
+    // overlapping exclusive from another session: denied, names holder
+    let mut e = NewArgs::bare("item", "bodies wants worldgen");
+    e.status = Some("sketch".into());
+    let e = ops::new_node(&s, e).unwrap();
+    let err = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, false)
+        .unwrap_err();
+    assert!(err.to_string().contains("C7"), "got: {}", err);
+    assert!(err.to_string().contains("geo"));
+    // shared + shared coexist with visibility
+    quarry::coord::reserve(&s, &c, "geo", "t", vec!["docs/sdk/**".into()], true, false).unwrap();
+    let out = quarry::coord::reserve(&s, &d, "bodies", "t", vec!["docs/sdk/**".into()], true, false).unwrap();
+    assert_eq!(out.co_holders.len(), 1);
+    assert_eq!(out.co_holders[0].session, "geo");
+    // steal is allowed and reported
+    let out = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, true).unwrap();
+    assert_eq!(out.stolen.len(), 1);
+    assert_eq!(out.stolen[0].session, "geo");
+    // release: own lease only
+    let err = quarry::coord::release(&s, &b, "geo", "t").unwrap_err();
+    assert!(err.to_string().contains("bodies"));
+    quarry::coord::release(&s, &b, "bodies", "t").unwrap();
+}
+
+#[test]
+fn purview_scoping() {
+    let s = temp_store();
+    let geo = ops::new_node(&s, NewArgs::bare("area", "worldgen passes")).unwrap();
+    let bod = ops::new_node(&s, NewArgs::bare("area", "bodies")).unwrap();
+    let mut i1 = NewArgs::bare("item", "erosion pass");
+    i1.about = vec![geo.front.id.clone()];
+    i1.status = Some("ready".into());
+    ops::new_node(&s, i1).unwrap();
+    let mut i2 = NewArgs::bare("item", "gait clip");
+    i2.about = vec![bod.front.id.clone()];
+    i2.status = Some("ready".into());
+    ops::new_node(&s, i2).unwrap();
+
+    quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None).unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(reg.contains_key("geo"));
+    let all = s.load_all().unwrap();
+    let ids: Vec<&str> = reg["geo"].areas.iter().map(|x| x.as_str()).collect();
+    let mine: Vec<_> = queries::ready(&all)
+        .into_iter()
+        .filter(|n| quarry::coord::in_purview(n, &ids))
+        .collect();
+    assert_eq!(mine.len(), 1);
+    assert_eq!(mine[0].front.title, "erosion pass");
+}

@@ -2,8 +2,8 @@
 id: th-j9uu
 type: thread
 title: reservation model for two parallel main sessions
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-07T11:04:59Z
 actor: claude-fable-5

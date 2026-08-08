@@ -234,16 +234,16 @@ q reindex                   rebuild .index from files + log
 **Built since v0:** `q view` (map-first single-file HTML render; markdown
 bodies of path-backed `.md` docs render in-app — source code deliberately
 does not) · `q wrap` (boundary-time lint: owed threads, stale refs,
-in-flight items, unfiled nodes, last user-provenance write, uncommitted
-graph changes) · `q guide` · `q hook guard` (C6) · `q hook orient`
-(SessionStart one-liner).
+in-flight items, unfiled nodes, last user-provenance write, leases,
+uncommitted graph changes) · `q guide` · `q hook guard` (C6) · `q hook
+orient` (SessionStart summary + purview block) · `q find` (text search) ·
+`q session` (purview registry) · `q reserve` / `q release` (leases, § 11).
 
 Later, in need-order: `q queue` (single-thread topic queue — push/order/pop
-thread nodes) · `q reserve` / `q release` (write-set reservations for
-dispatch, the two-parallel-sessions mediator) · `q brief <item>` (generated
-dispatch brief: neighborhood as read-first, write-set complement as
-do-not-touch, acceptance as RETURN spec) · `q handoff` (rendered session-close
-view; replaces the hand-rewritten close block).
+thread nodes) · `q brief <item>` (generated dispatch brief: neighborhood as
+read-first, write-set complement as do-not-touch, acceptance as RETURN
+spec) · `q handoff` (rendered session-close view; replaces the
+hand-rewritten close block).
 
 **Ownership is data.** What the user owes is exactly the set of queued
 threads — if the user owes a call and no thread exists, minting one is the
@@ -265,13 +265,34 @@ tool has no user identity, so the log trail is the guard.
 | `idle` | nodes with no inbound edges after N days — built-and-nothing-calls-it |
 | `unverified` | claims with provenance assistant and no `supports`/`method` — the corrections-#101 class, on demand |
 
-## 11. Concurrency — [proposed]
+## 11. Concurrency — [ratified 2026-08-08, the session/lease model]
 
-Two main sessions with disjoint concerns are the supported topology
-**[ratified]**. Node files have single-writer character in practice (disjoint
-write-sets), the log append takes a file lock, and reservations (C7) make the
-write-set contract visible instead of conventional. The index is per-checkout
-and disposable.
+Two main sessions with disjoint concerns are the supported topology.
+**Sessions are purviews; leases are per-item plumbing.**
+
+- A session's durable identity is a **named purview** over areas
+  (`graph/sessions.json`, committed; `QUARRY_SESSION` stamps every event
+  for attribution). Purviews scope orientation (`--mine`).
+- **Sessions start leaseless.** Browsing, design, and graph writes never
+  conflict (tool-minted ids, per-node files, locked log). A lease guards
+  *code write-sets* and is acquired **at dispatch**, attached to the item it
+  serves — which is why item-attachment is sound: when a lease is needed,
+  its item necessarily exists. A session holds several concurrently.
+- **Globs are the truth** of a write-set (`**` covers files the work will
+  create); overlap detection is a conservative static-prefix test that errs
+  toward denial. **Exclusive is the default; `--shared` marks co-write
+  zones** (shared∩shared coexists with mutual visibility; exclusive∩anything
+  denies naming the holder). **Release is explicit only** — wrap nags stale
+  and done-item leases; `--steal` exists but is loud and logged.
+- **Presence over prevention in the overlap zones**: events carry session
+  stamps; a verb writing a node another session touched within 24h says so;
+  orient shows foreign leases and arrivals in your purview.
+- **Cross-session requests need no new machinery**: an item filed into the
+  other purview's areas with `depends-on` from the requester's blocked item,
+  plus an optional supporting analysis doc. The target's orientation
+  surfaces it; ordinary homework notifies both sides when it lands.
+- Leases live in `graph/.reservations.json` (gitignored, machine-local);
+  only the meaningful acts — reserve, release, steal — enter the event log.
 
 ## 12. The UI — [ratified as a goal; design deferred]
 

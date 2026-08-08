@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+use quarry::coord;
 use quarry::model::Node;
 use quarry::ops::{self, NewArgs};
 use quarry::queries;
@@ -166,6 +167,32 @@ name their --source doc.")]
     },
     /// Boundary-time lint: what is owed, dangling, in flight, or unrecorded
     Wrap,
+    /// Search nodes by id, title, or body text
+    Find { text: String },
+    /// Session purviews (the committed registry of who covers which areas)
+    Session {
+        #[command(subcommand)]
+        which: SessionCmd,
+    },
+    /// Lease a write-set for an item at dispatch time (C7)
+    #[command(after_help = "EXAMPLES:
+  q reserve \"water body graph\" --files \"crates/dc-worldgen/**\"
+  q reserve \"sdk docs pass\" --files \"docs/sdk/**\" --shared
+Exclusive by default: an overlapping foreign lease denies, naming the
+holder. --shared marks a co-write zone (shared leases coexist, with mutual
+visibility). --steal overrides loudly and is logged. Release explicitly
+when the arc lands; sessions start leaseless and reserve at dispatch.")]
+    Reserve {
+        item: String,
+        #[arg(long = "files", required = true)]
+        files: Vec<String>,
+        #[arg(long)]
+        shared: bool,
+        #[arg(long)]
+        steal: bool,
+    },
+    /// Release an item's lease
+    Release { item: String },
     /// Render the whole graph as one self-contained HTML page (graph/view/index.html)
     View {
         /// Open the rendered page in the default browser
@@ -190,13 +217,37 @@ enum HookCmd {
 }
 
 #[derive(Subcommand)]
+enum SessionCmd {
+    /// Register or update a session's purview
+    Set {
+        name: String,
+        #[arg(long = "areas", required = true)]
+        areas: Vec<String>,
+        #[arg(long)]
+        charter: Option<String>,
+    },
+    /// List registered sessions and their areas
+    List,
+}
+
+#[derive(Subcommand)]
 enum Query {
     /// Items dispatchable right now
-    Ready,
+    Ready {
+        /// Restrict to the current session's purview (QUARRY_SESSION)
+        #[arg(long)]
+        mine: bool,
+    },
     /// Upcoming work (sketch/shaped) and what blocks each piece
-    Shaping,
+    Shaping {
+        #[arg(long)]
+        mine: bool,
+    },
     /// Threads awaiting the user, answerable now
-    Queue,
+    Queue {
+        #[arg(long)]
+        mine: bool,
+    },
     /// Stale edges by severity
     Behind,
     /// Who leans on this node (transitively)
@@ -259,6 +310,55 @@ fn print_homework(store: &Store, touched: &[&str]) {
     }
 }
 
+/// Presence: warn when another session touched this node recently (24h).
+fn presence_note(store: &Store, id: &str) {
+    let Some(mine) = coord::current_session() else { return };
+    let Ok(log) = store.read_log() else { return };
+    let cutoff = {
+        use time::format_description::well_known::Rfc3339;
+        let t = time::OffsetDateTime::now_utc() - time::Duration::days(1);
+        t.format(&Rfc3339).unwrap_or_default()
+    };
+    if let Some(ev) = log.iter().rev().find(|ev| {
+        ev.get("node").and_then(|v| v.as_str()) == Some(id)
+            && ev.get("ts").and_then(|v| v.as_str()).map_or(false, |ts| ts > cutoff.as_str())
+            && ev
+                .get("session")
+                .and_then(|v| v.as_str())
+                .map_or(false, |s| s != mine)
+    }) {
+        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("?");
+        let sess = ev.get("session").and_then(|v| v.as_str()).unwrap_or("?");
+        let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
+        println!("  note: session {} touched this node ({} at {})", sess, op, ts);
+    }
+}
+
+/// Purview-filter a node list when --mine is set; explain if unset/unregistered.
+fn scope_mine<'a>(
+    store: &Store,
+    all: &'a [Node],
+    nodes: Vec<&'a Node>,
+    mine: bool,
+) -> Vec<&'a Node> {
+    if !mine {
+        return nodes;
+    }
+    match coord::purview(store, all) {
+        Some((_, areas)) => {
+            let ids: Vec<&str> = areas.iter().map(|a| a.front.id.as_str()).collect();
+            nodes
+                .into_iter()
+                .filter(|n| coord::in_purview(n, &ids))
+                .collect()
+        }
+        None => {
+            eprintln!("(--mine ignored: set QUARRY_SESSION and register it with q session set)");
+            nodes
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
@@ -316,11 +416,154 @@ fn main() -> Result<()> {
                             ready.len(),
                             behind.len()
                         );
+                        if let Some((sess, areas)) = coord::purview(&store, &all) {
+                            let ids: Vec<&str> = areas.iter().map(|a| a.front.id.as_str()).collect();
+                            let mine_q = queue.iter().filter(|n| coord::in_purview(n, &ids)).count();
+                            let mine_r = ready.iter().filter(|n| coord::in_purview(n, &ids)).count();
+                            let names: Vec<&str> = areas.iter().map(|a| a.front.title.as_str()).collect();
+                            println!(
+                                "session {} purview ({}): {} answerable thread(s), {} ready item(s) — scope with --mine",
+                                sess, names.join(", "), mine_q, mine_r
+                            );
+                            let leases = coord::load_leases(&store);
+                            for l in leases.iter().filter(|l| l.session != sess) {
+                                println!(
+                                    "live lease elsewhere: session {} holds {:?} (\"{}\")",
+                                    l.session, l.globs, l.item_title
+                                );
+                            }
+                            if let Ok(log) = store.read_log() {
+                                for n in all.iter().filter(|n| coord::in_purview(n, &ids)) {
+                                    if let Some(ev) = log.iter().find(|ev| {
+                                        ev.get("op").and_then(|v| v.as_str()) == Some("create")
+                                            && ev.get("node").and_then(|v| v.as_str()) == Some(n.front.id.as_str())
+                                            && ev.get("session").and_then(|v| v.as_str()).map_or(false, |s| s != sess)
+                                    }) {
+                                        let from = ev.get("session").and_then(|v| v.as_str()).unwrap_or("?");
+                                        if !matches!(n.front.status.as_str(), "done" | "dropped" | "resolved") {
+                                            println!(
+                                                "new in your purview from session {}: \"{}\" [{}]",
+                                                from, n.front.title, n.front.status
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        } else if coord::current_session().is_some() {
+                            println!(
+                                "session '{}' has no registered purview — q session set <name> --areas <area>...",
+                                coord::current_session().unwrap_or_default()
+                            );
+                        }
                         println!("orient with: q query queue · q query ready · q query shaping · q guide");
                     }
                 }
             }
         },
+        Cmd::Find { text } => {
+            let store = Store::discover()?;
+            let all = store.load_all()?;
+            let q = text.to_lowercase();
+            let hits: Vec<&Node> = all
+                .iter()
+                .filter(|n| {
+                    n.front.id.contains(&q)
+                        || n.front.title.to_lowercase().contains(&q)
+                        || n.body.to_lowercase().contains(&q)
+                })
+                .collect();
+            if hits.is_empty() {
+                println!("no node matches \"{}\".", text);
+            }
+            for n in hits {
+                let where_ = if n.front.title.to_lowercase().contains(&q) || n.front.id.contains(&q) {
+                    ""
+                } else {
+                    "  (matched in body)"
+                };
+                println!("{}{}", line(n), where_);
+            }
+        }
+        Cmd::Session { which } => {
+            let store = Store::discover()?;
+            match which {
+                SessionCmd::Set { name, areas, charter } => {
+                    let all = store.load_all()?;
+                    let ids = coord::resolve_area_ids(&store, &all, &areas)?;
+                    let titles: Vec<String> = ids
+                        .iter()
+                        .filter_map(|id| all.iter().find(|n| &n.front.id == id))
+                        .map(|n| n.front.title.clone())
+                        .collect();
+                    coord::save_session(&store, &name, ids, charter)?;
+                    println!("✔ session {} covers: {}", name, titles.join(" · "));
+                    println!("  set QUARRY_SESSION={} in that session's environment.", name);
+                }
+                SessionCmd::List => {
+                    let all = store.load_all()?;
+                    let reg = coord::load_sessions(&store);
+                    if reg.is_empty() {
+                        println!("no sessions registered — q session set <name> --areas <area>...");
+                    }
+                    for (name, p) in reg {
+                        let titles: Vec<String> = p
+                            .areas
+                            .iter()
+                            .filter_map(|id| all.iter().find(|n| &n.front.id == id))
+                            .map(|n| n.front.title.clone())
+                            .collect();
+                        println!(
+                            "{}: {}{}",
+                            name,
+                            titles.join(" · "),
+                            p.charter.map(|c| format!(" — {}", c)).unwrap_or_default()
+                        );
+                    }
+                }
+            }
+        }
+        Cmd::Reserve {
+            item,
+            files,
+            shared,
+            steal,
+        } => {
+            let store = Store::discover()?;
+            let sess = coord::current_session().ok_or_else(|| {
+                anyhow::anyhow!("no QUARRY_SESSION set — leases need a session identity (q session set <name> --areas ..., then export QUARRY_SESSION=<name>)")
+            })?;
+            let all = store.load_all()?;
+            let node = store.find(&all, &item)?.clone();
+            let out = coord::reserve(&store, &node, &sess, &Store::actor(), files.clone(), shared, steal)?;
+            println!(
+                "✔ lease: \"{}\" holds {:?}{} (session {})",
+                node.front.title,
+                files,
+                if shared { " [shared]" } else { "" },
+                sess
+            );
+            for s in out.stolen {
+                println!(
+                    "  ⚠ STOLEN from session {} (\"{}\", held {:?} since {}) — logged; tell them.",
+                    s.session, s.item_title, s.globs, s.since
+                );
+            }
+            for c in out.co_holders {
+                println!(
+                    "  co-writing with session {} (\"{}\", {:?}) — coordinate at file level.",
+                    c.session, c.item_title, c.globs
+                );
+            }
+        }
+        Cmd::Release { item } => {
+            let store = Store::discover()?;
+            let sess = coord::current_session()
+                .ok_or_else(|| anyhow::anyhow!("no QUARRY_SESSION set"))?;
+            let all = store.load_all()?;
+            let node = store.find(&all, &item)?.clone();
+            coord::release(&store, &node, &sess, &Store::actor())?;
+            println!("✔ released: \"{}\"", node.front.title);
+        }
         Cmd::Wrap => {
             let store = Store::discover()?;
             let all = store.load_all()?;
@@ -401,6 +644,31 @@ fn main() -> Result<()> {
                 None => println!(
                     "  no user-provenance writes on record — if the user has ruled anything, record it: q rule <thread> \"...\" --by user"
                 ),
+            }
+            let leases = coord::load_leases(&store);
+            if !leases.is_empty() {
+                let sess = coord::current_session().unwrap_or_default();
+                println!("  leases:");
+                for l in &leases {
+                    let owner = if l.session == sess { "yours" } else { "theirs" };
+                    let done = all
+                        .iter()
+                        .find(|n| n.front.id == l.item)
+                        .map_or(false, |n| matches!(n.front.status.as_str(), "done" | "dropped"));
+                    println!(
+                        "    [{}] \"{}\" holds {:?}{} since {}{}",
+                        owner,
+                        l.item_title,
+                        l.globs,
+                        if l.shared { " [shared]" } else { "" },
+                        l.since,
+                        if done && l.session == sess {
+                            format!(" — item is done; release it: q release {}", l.item)
+                        } else {
+                            String::new()
+                        }
+                    );
+                }
             }
             if let Ok(out) = std::process::Command::new("git")
                 .current_dir(&store.root)
@@ -490,6 +758,7 @@ fn main() -> Result<()> {
             let store = Store::discover()?;
             let n = ops::set(&store, &node, &fields, note)?;
             println!("✔ {}", line(&n));
+            presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
         }
         Cmd::Edit {
@@ -505,6 +774,7 @@ fn main() -> Result<()> {
             }
             let n = ops::edit_body(&store, &node, body, note)?;
             println!("✔ {}", line(&n));
+            presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
         }
         Cmd::Rule {
@@ -569,25 +839,49 @@ fn main() -> Result<()> {
             let store = Store::discover()?;
             let all = store.load_all()?;
             match which {
-                Query::Ready => {
-                    let r = queries::ready(&all);
-                    if r.is_empty() {
+                Query::Ready { mine } => {
+                    let leases = coord::load_leases(&store);
+                    let sess = coord::current_session().unwrap_or_default();
+                    let r = scope_mine(&store, &all, queries::ready(&all), mine);
+                    let mut shown = 0;
+                    for n in r {
+                        let foreign: Vec<&coord::Lease> = leases
+                            .iter()
+                            .filter(|l| l.session != sess && !l.shared)
+                            .filter(|l| {
+                                n.front.write_set.iter().any(|w| {
+                                    l.globs.iter().any(|g| coord::globs_overlap(w, g))
+                                })
+                            })
+                            .collect();
+                        if foreign.is_empty() {
+                            println!("{}", line(n));
+                            shown += 1;
+                        } else {
+                            println!(
+                                "{}  ⚠ write-set leased by session {} (\"{}\")",
+                                line(n),
+                                foreign[0].session,
+                                foreign[0].item_title
+                            );
+                        }
+                    }
+                    if shown == 0 {
                         println!("nothing dispatchable.");
                     }
-                    for n in r {
-                        println!("{}", line(n));
-                    }
                 }
-                Query::Shaping => {
-                    for (n, blockers) in queries::shaping(&all) {
+                Query::Shaping { mine } => {
+                    let items: Vec<&Node> =
+                        queries::shaping(&all).into_iter().map(|(n, _)| n).collect();
+                    for n in scope_mine(&store, &all, items, mine) {
                         println!("{}", line(n));
-                        for b in blockers {
-                            println!("    blocked on {} \"{}\" [{}]", b.front.id, b.front.title, b.front.status);
+                        for b in queries::live_blockers(&all, n) {
+                            println!("    blocked on \"{}\" [{}] ({})", b.front.title, b.front.status, b.front.id);
                         }
                     }
                 }
-                Query::Queue => {
-                    let q = queries::queue(&all);
+                Query::Queue { mine } => {
+                    let q = scope_mine(&store, &all, queries::queue(&all), mine);
                     if q.is_empty() {
                         println!("queue is empty.");
                     }
@@ -595,7 +889,7 @@ fn main() -> Result<()> {
                         .iter()
                         .filter(|n| n.front.ty == "thread" && n.front.status == "queued")
                         .count()
-                        - q.len();
+                        .saturating_sub(queries::queue(&all).len());
                     for n in &q {
                         println!("{}", line(n));
                     }

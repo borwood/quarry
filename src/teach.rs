@@ -71,6 +71,19 @@ no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
 behind, work unblocked, threads made answerable — with the command that
 addresses each. Do the homework (or queue it) before moving on.
 
+SESSIONS AND PARALLEL WORK
+A main session's identity is its PURVIEW — a named set of areas in the
+committed registry (the session verb). Set QUARRY_SESSION so events carry
+attribution. Sessions start LEASELESS: browsing, design, and graph writes
+never need a lease. Reserve AT DISPATCH — when an agent is about to touch
+files — attaching the lease to the item it serves. Exclusive is the
+default; a shared lease marks a co-write zone where presence-awareness
+replaces mutual exclusion. Release explicitly when the arc lands (wrap
+nags); a steal is always loud and logged. Cross-session requests need no
+machinery: file an item into the other purview's areas with a depends-on
+from your blocked item — their orientation surfaces it, and homework
+reports to both sides when it lands.
+
 EDGE MATRIX (names only)
 about (anything → area or file) · part-of (hierarchy) · depends-on
 (item/thread → item/thread/decision) · settles (decision → thread) ·

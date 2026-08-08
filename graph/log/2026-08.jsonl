@@ -46,3 +46,11 @@
 {"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-q8p3","ts":"2026-08-08T06:45:18Z","node":"th-uvu9","v":2,"actor":"claude-fable-5"}
 {"op":"link","rel":"settles","to":"th-uvu9","at":2,"ts":"2026-08-08T06:45:18Z","node":"dc-q8p3","v":2,"actor":"claude-fable-5"}
 {"ts":"2026-08-08T07:08:38Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T07:19:08Z","node":"th-vpbh","v":1,"op":"create","type":"thread","title":"where do conversation-born claims source from — a quarry journal?","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-08T13:46:31Z","node":"dc-qeup","v":1,"op":"create","type":"decision","title":"sessions are purviews; leases are per-item, at dispatch, explicit-release","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-qeup","ts":"2026-08-08T13:46:31Z","node":"th-j9uu","v":2,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-j9uu","at":2,"ts":"2026-08-08T13:46:31Z","node":"dc-qeup","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-08T13:46:31Z","node":"it-au4b","v":4,"actor":"claude-fable-5","note":"built: q session / q reserve / q release, shared mode, steal, purview scoping, presence notes, q find; 14 tests green"}
+{"ts":"2026-08-08T13:46:31Z","node":"th-mcwa","v":1,"op":"create","type":"thread","title":"how does a fresh chat discover it is an incarnation of an existing session?","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-08T13:46:31Z","node":"th-v9tg","v":1,"op":"create","type":"thread","title":"mid-session cross-session alerts, hook-injected","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-08T13:46:52Z","node":"it-au4b","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5"}

@@ -1,3 +1,4 @@
+pub mod coord;
 pub mod model;
 pub mod ops;
 pub mod queries;
