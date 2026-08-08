@@ -55,3 +55,8 @@
 {"ts":"2026-08-08T13:46:31Z","node":"th-v9tg","v":1,"op":"create","type":"thread","title":"mid-session cross-session alerts, hook-injected","actor":"claude-fable-5","note":null}
 {"ts":"2026-08-08T13:46:52Z","node":"it-au4b","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
 {"ts":"2026-08-08T13:47:04Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T14:42:51Z","node":"dc-mdgh","v":1,"op":"create","type":"decision","title":"q view map-first shape ratified","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-mdgh","ts":"2026-08-08T14:42:51Z","node":"th-ngby","v":4,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-ngby","at":4,"ts":"2026-08-08T14:42:51Z","node":"dc-mdgh","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-08T14:42:51Z","node":"it-rb3w","v":5,"actor":"claude-fable-5","note":"shipped as the th-ngby spike + iterations; ratified"}
+{"ts":"2026-08-08T14:42:51Z","node":"it-rb3w","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
