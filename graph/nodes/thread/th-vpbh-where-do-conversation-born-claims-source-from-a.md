@@ -2,8 +2,8 @@
 id: th-vpbh
 type: thread
 title: where do conversation-born claims source from — a quarry journal?
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: assistant
 created: 2026-08-08T07:19:08Z
 actor: claude-fable-5

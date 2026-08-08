@@ -146,7 +146,7 @@ Notes:
 | `supports` | claim \| doc → decision \| item \| claim | evidence leaned on |
 | `refutes` | claim \| doc → claim \| decision | falsification |
 | `supersedes` | X → X (same type) | replacement; target status flips |
-| `source` | claim → doc | where the claim was extracted from |
+| `source` | claim → doc \| file | grounding: where the claim was extracted or read from |
 
 - Edges are stored **on the source node only**; backlinks are an index query.
   A one-directional pointer is fine when the inverter is free — the disease was
@@ -201,7 +201,7 @@ repo. At write time the verb stamps the file's current git blob. Consequences:
 | # | rule |
 |---|---|
 | C1 | a claim with no `about` edge is rejected |
-| C2 | a claim with no `source` is rejected unless provenance is `user` |
+| C2 | a claim needs **grounding**: a `source` (doc or `file:`), a `method`, or user provenance — no free-floating assistant assertions (revised from source-doc-only, RATIFIED 2026-08-08) |
 | C3 | an assistant-provenance decision may not `settle` or `supersede` a user-provenance target; the verb refuses and points at the queue (a contest is surfaced as a thread, never written) |
 | C4 | `supersedes` across types is rejected |
 | C5 | a new edge to a refuted/superseded target requires `--acknowledge` |

@@ -385,8 +385,13 @@ pub fn claim(
             derive_provenance(&actor)
         }
     });
-    if source.is_none() && prov != "user" {
-        bail!("C2: a non-user claim needs --source <doc> (extraction-on-citation: a claim is extracted from somewhere)");
+    // C2 revised (ruled 2026-08-08): grounding, not documents. A claim must
+    // carry a source (doc or file:), a method, or user provenance — the
+    // guard is against free-floating assistant assertions.
+    if source.is_none() && method.is_none() && prov != "user" {
+        bail!(
+            "C2: an assistant claim needs grounding — --source <doc or file:path> (where it was extracted or read from), --method \"...\" (how it was measured), or user provenance. No free-floating assertions."
+        );
     }
     let mut args = NewArgs::bare("claim", &truncate_title(text, 72));
     args.body = text.to_string();

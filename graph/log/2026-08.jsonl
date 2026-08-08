@@ -60,3 +60,9 @@
 {"op":"link","rel":"settles","to":"th-ngby","at":4,"ts":"2026-08-08T14:42:51Z","node":"dc-mdgh","v":2,"actor":"claude-fable-5"}
 {"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-08T14:42:51Z","node":"it-rb3w","v":5,"actor":"claude-fable-5","note":"shipped as the th-ngby spike + iterations; ratified"}
 {"ts":"2026-08-08T14:42:51Z","node":"it-rb3w","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T20:28:03Z","node":"dc-b6g8","v":1,"op":"create","type":"decision","title":"journal adopted; C2 is grounding, not documents","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-b6g8","ts":"2026-08-08T20:28:03Z","node":"th-vpbh","v":2,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-vpbh","at":2,"ts":"2026-08-08T20:28:03Z","node":"dc-b6g8","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T20:28:03Z","node":"dc-9hgd","v":1,"op":"create","type":"decision","title":"quarry is an engine; project protocol is content","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-08T20:28:03Z","node":"it-3wef","v":1,"op":"create","type":"item","title":"protocol layer: verb-riding instructions and declared fields","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"depends-on","to":"dc-9hgd","at":1,"ts":"2026-08-08T20:28:23Z","node":"it-3wef","v":2,"actor":"claude-fable-5"}

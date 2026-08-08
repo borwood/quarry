@@ -41,9 +41,12 @@ CLAIMS — EXTRACT, NEVER MINT WHILE WRITING
 Prose stays prose: journals, spike reports, and design notes are docs,
 written normally and registered whole. A claim node exists only when
 something depends on a statement or kills it — extract it at that moment,
-with its source doc and its subjects. If you are not building on it or
-refuting it, it is not a claim yet. The graph's population rate should
-track rulings and reuse, not writing volume.
+with its subjects and its GROUNDING: a source doc, a source file (the code
+it was read off, blob-stamped), a method (how it was measured), or user
+provenance. No free-floating assistant assertions (C2). A journal entry
+written later can be attached as a source after the fact — never stop
+mid-flow to manufacture one. If you are not building on it or refuting it,
+it is not a claim yet.
 
 THREADS — ANYTHING THAT NEEDS THE USER
 A thread is a strand needing user input: a pick between options, a

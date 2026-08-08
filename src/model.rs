@@ -69,6 +69,7 @@ pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()
         ("refutes", Some(d)) => matches!(src_ty, "claim" | "doc") && matches!(d, "claim" | "decision"),
         ("supersedes", Some(d)) => src_ty == d,
         ("source", Some(d)) => src_ty == "claim" && d == "doc",
+        ("source", None) => src_ty == "claim",
         _ => false,
     };
     if !ok {

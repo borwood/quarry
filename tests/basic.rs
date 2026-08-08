@@ -364,3 +364,24 @@ fn purview_scoping() {
     assert_eq!(mine.len(), 1);
     assert_eq!(mine[0].front.title, "erosion pass");
 }
+
+#[test]
+fn c2_grounding_forms() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::write(s.root.join("evidence.rs"), "fn observed() {}
+").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+
+    // free-floating assistant claim: denied
+    let err = ops::claim(&s, "vibes", vec![area.front.id.clone()], None, None, Some("assistant".into()), None)
+        .unwrap_err();
+    assert!(err.to_string().contains("C2"), "got: {}", err);
+    // method alone grounds it
+    ops::claim(&s, "measured thing", vec![area.front.id.clone()], None,
+        Some("log inspection".into()), None, None).unwrap();
+    // a file: source grounds it (matrix widened), blob-stamped
+    let c = ops::claim(&s, "read off the code", vec![area.front.id.clone()],
+        Some("file:evidence.rs".into()), None, Some("assistant".into()), None).unwrap();
+    assert!(c.front.edges.iter().any(|e| e.rel == "source" && e.to == "file:evidence.rs"));
+}
