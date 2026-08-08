@@ -5,6 +5,16 @@ use crate::model::*;
 use crate::store::Store;
 
 pub fn derive_provenance(actor: &str) -> String {
+    // The CLI is agent-operated (ruled 2026-08-08): an unattributed write
+    // defaults to ASSISTANT. Without this, a fresh agent with QUARRY_ACTOR
+    // unset falls back to the git user.name — a human name — and silently
+    // mints assistant work as user provenance, corrupting the one field the
+    // whole system treats as hard. User provenance is explicit (--provenance
+    // user / --by user) or comes from a deliberate non-claude QUARRY_ACTOR;
+    // it is never inferred from a git config.
+    if std::env::var("QUARRY_ACTOR").map_or(true, |s| s.trim().is_empty()) {
+        return "assistant".into();
+    }
     if actor.to_lowercase().contains("claude") {
         "assistant".into()
     } else {
