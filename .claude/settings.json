@@ -11,6 +11,17 @@
             "statusMessage": "quarry: guarding graph/"
           }
         ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"B:/repos/borwood/quarry/target/release/q.exe\" hook session",
+            "timeout": 10,
+            "statusMessage": "quarry: session identity"
+          }
+        ]
       }
     ],
     "SessionStart": [

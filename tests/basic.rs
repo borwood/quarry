@@ -438,3 +438,25 @@ fn session_heartbeat_roundtrip() {
     assert!(ts.contains('T'));
     assert!(quarry::coord::last_seen(&s, "bodies").is_none());
 }
+
+#[test]
+fn session_injection_binds_and_rewrites() {
+    let s = temp_store();
+    quarry::coord::write_adopt_request(&s, "geo").unwrap();
+    let input = r#"{"session_id":"chat-abc","tool_name":"Bash","tool_input":{"command":"q wrap","description":"lint"}}"#;
+    let out = quarry::teach::session_inject(&s, input).expect("injects after adopt");
+    let cmd = out["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap();
+    assert_eq!(cmd, "export QUARRY_SESSION=geo; q wrap");
+    assert_eq!(out["hookSpecificOutput"]["updatedInput"]["description"].as_str().unwrap(), "lint");
+    // binding persisted: no pending request, still injects; PowerShell prefix
+    let input2 = r#"{"session_id":"chat-abc","tool_name":"PowerShell","tool_input":{"command":"q view"}}"#;
+    let out2 = quarry::teach::session_inject(&s, input2).expect("bound");
+    let cmd2 = out2["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap();
+    assert_eq!(cmd2, "$env:QUARRY_SESSION='geo'; q view");
+    // unbound chat: no-op
+    let input3 = r#"{"session_id":"chat-other","tool_name":"Bash","tool_input":{"command":"ls"}}"#;
+    assert!(quarry::teach::session_inject(&s, input3).is_none());
+    // non-shell tools: no-op even when bound
+    let input4 = r#"{"session_id":"chat-abc","tool_name":"Write","tool_input":{"file_path":"x"}}"#;
+    assert!(quarry::teach::session_inject(&s, input4).is_none());
+}

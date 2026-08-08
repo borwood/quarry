@@ -35,9 +35,12 @@ CLAIMS — EXTRACT, NEVER MINT WHILE WRITING
 Prose stays prose: journals, spike reports, and design notes are docs,
 written normally and registered whole. A claim node exists only when
 something depends on a statement or kills it — extract it at that moment,
-with its source doc and its subjects. If you are not building on it or
-refuting it, it is not a claim yet. The graph's population rate should
-track rulings and reuse, not writing volume.
+with its subjects and its GROUNDING: a source doc, a source file (the code
+it was read off, blob-stamped), a method (how it was measured), or user
+provenance. No free-floating assistant assertions (C2). A journal entry
+written later can be attached as a source after the fact — never stop
+mid-flow to manufacture one. If you are not building on it or refuting it,
+it is not a claim yet.
 
 THREADS — ANYTHING THAT NEEDS THE USER
 A thread is a strand needing user input: a pick between options, a
@@ -64,6 +67,40 @@ enumerates everything leaning on it. That list IS the correction; there is
 no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
 behind, work unblocked, threads made answerable — with the command that
 addresses each. Do the homework (or queue it) before moving on.
+
+PROJECT PROTOCOL — HOUSE RULES AS CONTENT
+Quarry is an engine; this project's house rules are content, living IN the
+graph. A protocol entry is a doc node, kind=protocol: its body is the
+instruction; its fields pick the trigger (on=<verb>, node_type=<type>,
+node_kind=<kind>) and the delivery tier. tier=inline rides the verb's
+confirmation. tier=gate intercepts the FIRST matching attempt per session:
+read the delivered context, do the work under it, then run q resume
+<token> (your args are remembered). Author protocol like any doc:
+  q new doc "journal charter" --kind protocol --body-file charter.md \
+    --field on=new --field node_kind=journal --field tier=gate --about <area>
+It versions, attaches, and goes stale like everything else. Engine-native
+gates also exist: a steal demands --reason. Gates are for rare,
+consequential, or authoring-shaped acts — never for frequent verbs.
+
+SESSIONS AND PARALLEL WORK
+A main session's identity is its PURVIEW — a named set of areas in the
+committed registry (the session verb). Identity is LAUNCHER-OWNED:
+QUARRY_SESSION is set by the per-role launcher script before the chat
+starts (a new session kind = q session set <name> --areas ... --launcher,
+then start chats via the emitted script; /clear keeps the identity,
+switching roles means relaunching). WAKING AS A SESSION: run q session
+resume — the derived handoff: your holdings, your session's recent acts,
+what arrived in your purview from other sessions since, and what the user
+is owed. Nobody writes a close block; the wake brief is derived from the
+log and cannot be stale. Sessions start LEASELESS: browsing, design, and graph writes
+never need a lease. Reserve AT DISPATCH — when an agent is about to touch
+files — attaching the lease to the item it serves. Exclusive is the
+default; a shared lease marks a co-write zone where presence-awareness
+replaces mutual exclusion. Release explicitly when the arc lands (wrap
+nags); a steal is always loud and logged. Cross-session requests need no
+machinery: file an item into the other purview's areas with a depends-on
+from your blocked item — their orientation surfaces it, and homework
+reports to both sides when it lands.
 
 EDGE MATRIX (names only)
 about (anything → area or file) · part-of (hierarchy) · depends-on

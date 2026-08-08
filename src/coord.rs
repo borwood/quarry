@@ -233,6 +233,59 @@ pub fn last_seen(store: &Store, session: &str) -> Option<String> {
     map.get(session).cloned()
 }
 
+fn bindings_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".chat-sessions.json")
+}
+
+fn adopt_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".adopt-request.json")
+}
+
+/// Bind a Claude chat session_id to a q session (machine-local).
+pub fn bind_chat(store: &Store, chat_id: &str, q_session: &str) -> Result<()> {
+    let mut map: BTreeMap<String, String> = fs::read_to_string(bindings_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    map.insert(chat_id.to_string(), q_session.to_string());
+    fs::write(bindings_path(store), serde_json::to_string_pretty(&map)? + "\n")?;
+    Ok(())
+}
+
+pub fn chat_binding(store: &Store, chat_id: &str) -> Option<String> {
+    let map: BTreeMap<String, String> =
+        serde_json::from_str(&fs::read_to_string(bindings_path(store)).ok()?).ok()?;
+    map.get(chat_id).cloned()
+}
+
+/// `q session adopt` writes this; the NEXT PreToolUse hook (which knows the
+/// chat's session_id) consumes it and binds. TTL 120s; single pending slot.
+pub fn write_adopt_request(store: &Store, q_session: &str) -> Result<()> {
+    fs::write(
+        adopt_path(store),
+        serde_json::to_string_pretty(&serde_json::json!({
+            "session": q_session, "ts": Store::now()
+        }))? + "\n",
+    )?;
+    Ok(())
+}
+
+pub fn take_adopt_request(store: &Store) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(&fs::read_to_string(adopt_path(store)).ok()?).ok()?;
+    let _ = fs::remove_file(adopt_path(store));
+    let ts = v.get("ts")?.as_str()?;
+    let fresh = {
+        use time::format_description::well_known::Rfc3339;
+        let cutoff = time::OffsetDateTime::now_utc() - time::Duration::seconds(120);
+        ts > cutoff.format(&Rfc3339).ok()?.as_str()
+    };
+    if fresh {
+        v.get("session")?.as_str().map(|s| s.to_string())
+    } else {
+        None
+    }
+}
+
 /// Resolve the current session's purview to concrete area ids, if registered.
 pub fn purview<'a>(store: &Store, all: &'a [Node]) -> Option<(String, Vec<&'a Node>)> {
     let sess = current_session()?;

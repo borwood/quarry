@@ -222,6 +222,8 @@ enum HookCmd {
     Guard,
     /// SessionStart orientation: one-line graph summary for a fresh session
     Orient,
+    /// PreToolUse on Bash|PowerShell: inject the bound session's env
+    Session,
 }
 
 #[derive(Subcommand)]
@@ -241,6 +243,9 @@ enum SessionCmd {
     List,
     /// The derived wake brief: holdings, your recent acts, arrivals, owed
     Resume,
+    /// Bind THIS chat to a session when no launcher env is set (takes effect
+    /// on the next tool call, via the session hook)
+    Adopt { name: String },
 }
 
 #[derive(Subcommand)]
@@ -498,6 +503,16 @@ fn main() -> Result<()> {
                     std::process::exit(2);
                 }
             }
+            HookCmd::Session => {
+                use std::io::Read as _;
+                let mut input = String::new();
+                std::io::stdin().read_to_string(&mut input)?;
+                if let Ok(store) = Store::discover() {
+                    if let Some(out) = quarry::teach::session_inject(&store, &input) {
+                        println!("{}", serde_json::to_string(&out)?);
+                    }
+                }
+            }
             HookCmd::Orient => {
                 // Best-effort: a hook must never fail a session over a missing graph.
                 if let Ok(store) = Store::discover() {
@@ -723,6 +738,16 @@ fn main() -> Result<()> {
                         }
                     }
                     println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
+                }
+                SessionCmd::Adopt { name } => {
+                    let reg = coord::load_sessions(&store);
+                    if !reg.contains_key(&name) {
+                        anyhow::bail!("session '{}' is not registered — q session set {} --areas <area>...", name, name);
+                    }
+                    coord::write_adopt_request(&store, &name)?;
+                    println!("✔ adopt request written for session {}.", name);
+                    println!("  the next shell tool call binds this chat and injects QUARRY_SESSION automatically (120s window).");
+                    println!("  prefer launcher-owned identity for new chats: the {}-session launcher.", name);
                 }
                 SessionCmd::List => {
                     let all = store.load_all()?;

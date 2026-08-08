@@ -2,8 +2,8 @@
 id: it-ubqe
 type: item
 title: 'spike: verify Claude Code hook capabilities'
-v: 1
-status: in-flight
+v: 2
+status: done
 provenance: assistant
 created: 2026-08-08T21:34:15Z
 actor: claude-fable-5

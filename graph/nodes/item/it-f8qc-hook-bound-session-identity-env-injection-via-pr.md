@@ -2,8 +2,8 @@
 id: it-f8qc
 type: item
 title: 'hook-bound session identity: env injection via PreToolUse'
-v: 2
-status: sketch
+v: 3
+status: done
 provenance: assistant
 created: 2026-08-08T21:34:15Z
 actor: claude-fable-5

@@ -121,6 +121,46 @@ event log stay honest.
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
 
+/// Session identity injection (PreToolUse on Bash|PowerShell). If this chat's
+/// session_id is bound to a q session — or an adopt-request is pending, which
+/// this call consumes and binds — rewrite the shell command to carry
+/// QUARRY_SESSION via hookSpecificOutput.updatedInput. Returns the hook
+/// output JSON to print, or None for a no-op. When the process env already
+/// carries QUARRY_SESSION (launcher-owned identity), this is a no-op:
+/// launcher wins, injection is the fallback.
+pub fn session_inject(store: &crate::store::Store, input: &str) -> Option<serde_json::Value> {
+    if std::env::var("QUARRY_SESSION").map_or(false, |s| !s.trim().is_empty()) {
+        return None;
+    }
+    let v: serde_json::Value = serde_json::from_str(input).ok()?;
+    let chat_id = v.get("session_id")?.as_str()?;
+    let tool = v.get("tool_name")?.as_str()?;
+    if !matches!(tool, "Bash" | "PowerShell") {
+        return None;
+    }
+    if let Some(req) = crate::coord::take_adopt_request(store) {
+        let _ = crate::coord::bind_chat(store, chat_id, &req);
+    }
+    let q_session = crate::coord::chat_binding(store, chat_id)?;
+    let tool_input = v.get("tool_input")?.as_object()?.clone();
+    let command = tool_input.get("command")?.as_str()?.to_string();
+    let prefix = match tool {
+        "Bash" => format!("export QUARRY_SESSION={}; ", q_session),
+        _ => format!("$env:QUARRY_SESSION='{}'; ", q_session),
+    };
+    let mut updated = tool_input;
+    updated.insert(
+        "command".into(),
+        serde_json::json!(format!("{}{}", prefix, command)),
+    );
+    Some(serde_json::json!({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "updatedInput": updated
+        }
+    }))
+}
+
 /// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be
 /// blocked, None to allow. Input is the hook's stdin JSON.
 pub fn guard(input: &str) -> Option<String> {
@@ -207,6 +247,26 @@ pub fn install_claude(root: &Path) -> Result<Vec<String>> {
             }]
         }));
         actions.push(format!(".claude/settings.json: PreToolUse guard added ({})", cmd));
+        changed = true;
+    }
+
+    let session_cmd = format!("{} hook session", exe_quoted);
+    if pre
+        .iter()
+        .any(|e| serde_json::to_string(e).unwrap_or_default().contains("hook session"))
+    {
+        actions.push("session hook already present in .claude/settings.json".into());
+    } else {
+        pre.push(json!({
+            "matcher": "Bash|PowerShell",
+            "hooks": [{
+                "type": "command",
+                "command": session_cmd,
+                "timeout": 10,
+                "statusMessage": "quarry: session identity"
+            }]
+        }));
+        actions.push(format!(".claude/settings.json: PreToolUse session injection added ({})", session_cmd));
         changed = true;
     }
 
