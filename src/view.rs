@@ -127,8 +127,10 @@ main { max-width: 1240px; margin: 0 auto; padding: 20px; }
 .charter { color: var(--ink2); font-size: 12.5px; margin: 0 0 10px; }
 .sect { margin-top: 12px; }
 .sect .hd { font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 4px; }
-.becoming { border-left: 2px dashed var(--grid); padding-left: 10px; }
+  color: var(--muted); margin-bottom: 6px; display: inline-block;
+  padding-bottom: 2px; border-bottom: 1px solid var(--grid); }
+.becoming .hd { border-bottom-style: dashed; border-bottom-color: var(--muted); color: var(--ink2); }
+.becoming .hd::before { content: '▹ '; color: var(--muted); }
 table.tbl { border-collapse: collapse; width: 100%; }
 .tbl th { text-align: left; font-size: 10.5px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted); font-weight: 600;
@@ -157,11 +159,14 @@ table.tbl { border-collapse: collapse; width: 100%; }
 .node { padding: 18px 22px; }
 .node h2 { margin: 0; font-size: 17px; }
 .meta { color: var(--muted); font-size: 12.5px; margin: 4px 0 0; }
-.body { margin: 14px 0; color: var(--ink2); max-width: 76ch; white-space: pre-wrap; }
+.body { margin: 14px 0; color: var(--ink); background: var(--page);
+  border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px;
+  max-width: 76ch; white-space: pre-wrap; }
 .rel { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .delta { color: var(--muted); font-size: 12px; padding-left: 14px; }
 h3.part { font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); margin: 22px 0 6px; }
+  color: var(--ink2); margin: 22px 0 6px; }
+h3.part .arrow { color: var(--muted); font-weight: 400; }
 .empty { color: var(--muted); font-style: italic; }
 .crumb { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; display: block; }
 .evd { color: var(--ink2); font-size: 12.5px; }
@@ -362,7 +367,7 @@ function viewNode(id){
   const bl = blockers(n);
   if (bl.length) html += '<h3 class="part">Blocked on</h3>'+tbl(NODE_HD, bl.map(x => nodeRow(x)));
   if ((n.edges||[]).length) {
-    html += '<h3 class="part">Edges</h3>';
+    html += '<h3 class="part">Edges <span class="arrow">→</span></h3>';
     const rows = [];
     for (const e of n.edges) {
       const s = edgeState(e);
@@ -390,7 +395,7 @@ function viewNode(id){
   }
   const inbound = backlinks[n.id]||[];
   if (inbound.length) {
-    html += '<h3 class="part">Backlinks</h3>';
+    html += '<h3 class="part"><span class="arrow">←</span> Backlinks</h3>';
     const rows = inbound.map(b => {
       const m = byId[b.from];
       const stale = (typeof b.at==='number' && n.v > b.at)
