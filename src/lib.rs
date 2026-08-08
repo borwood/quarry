@@ -4,3 +4,4 @@ pub mod queries;
 pub mod render;
 pub mod store;
 pub mod teach;
+pub mod view;

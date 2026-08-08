@@ -164,6 +164,12 @@ name their --source doc.")]
         #[command(subcommand)]
         which: Query,
     },
+    /// Render the whole graph as one self-contained HTML page (graph/view/index.html)
+    View {
+        /// Open the rendered page in the default browser
+        #[arg(long)]
+        open: bool,
+    },
     /// Print the judgment-layer primer (when to mint what, provenance, session shape)
     Guide,
     /// Hook entry points (wired by `q init --claude`)
@@ -230,6 +236,20 @@ fn main() -> Result<()> {
                     println!("  ✔ {}", a);
                 }
                 println!("  note: the hook names this q binary by absolute path — re-run `q init --claude` if the binary moves.");
+            }
+        }
+        Cmd::View { open } => {
+            let store = Store::discover()?;
+            let path = quarry::view::write(&store)?;
+            println!("✔ rendered {}", path.display());
+            if open {
+                #[cfg(windows)]
+                std::process::Command::new("cmd")
+                    .args(["/C", "start", ""])
+                    .arg(&path)
+                    .spawn()?;
+                #[cfg(not(windows))]
+                std::process::Command::new("open").arg(&path).spawn()?;
             }
         }
         Cmd::Guide => print!("{}", quarry::teach::GUIDE),

@@ -36,3 +36,6 @@
 {"op":"link","rel":"depends-on","to":"dc-r8de","at":2,"ts":"2026-08-08T00:55:59Z","node":"it-vwjp","v":2,"actor":"claude-fable-5"}
 {"op":"affirm","restamped":1,"ts":"2026-08-08T00:56:41Z","node":"dc-r8de","v":3,"actor":"brennan-volter"}
 {"op":"affirm","restamped":1,"ts":"2026-08-08T00:57:02Z","node":"it-vwjp","v":3,"actor":"brennan-volter"}
+{"ts":"2026-08-08T01:57:43Z","node":"it-uba6","v":1,"op":"create","type":"item","title":"spike: map-first view prototype","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"depends-on","to":"it-uba6","at":1,"ts":"2026-08-08T01:57:43Z","node":"th-ngby","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-08T01:57:43Z","node":"it-uba6","v":2,"actor":"claude-fable-5","note":"rendered; 8 tests green; page opens locally"}

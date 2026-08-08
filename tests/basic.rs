@@ -207,3 +207,18 @@ fn hook_guard_denies_graph_writes_only() {
     let garbage = quarry::teach::guard("not json");
     assert!(garbage.is_none());
 }
+
+#[test]
+fn view_renders_every_node() {
+    let s = temp_store();
+    let a = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let mut th = NewArgs::bare("thread", "finite or pinned?");
+    th.provenance = Some("user".into());
+    th.about = vec![a.front.id.clone()];
+    let th = ops::new_node(&s, th).unwrap();
+    let html = quarry::view::render(&s).unwrap();
+    assert!(html.contains(&a.front.id));
+    assert!(html.contains(&th.front.id));
+    assert!(html.contains("finite or pinned?"));
+    assert!(html.contains("__QUARRY_DATA__") == false);
+}
