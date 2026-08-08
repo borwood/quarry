@@ -74,6 +74,20 @@ no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
 behind, work unblocked, threads made answerable — with the command that
 addresses each. Do the homework (or queue it) before moving on.
 
+PROJECT PROTOCOL — HOUSE RULES AS CONTENT
+Quarry is an engine; this project's house rules are content, living IN the
+graph. A protocol entry is a doc node, kind=protocol: its body is the
+instruction; its fields pick the trigger (on=<verb>, node_type=<type>,
+node_kind=<kind>) and the delivery tier. tier=inline rides the verb's
+confirmation. tier=gate intercepts the FIRST matching attempt per session:
+read the delivered context, do the work under it, then run q resume
+<token> (your args are remembered). Author protocol like any doc:
+  q new doc "journal charter" --kind protocol --body-file charter.md \
+    --field on=new --field node_kind=journal --field tier=gate --about <area>
+It versions, attaches, and goes stale like everything else. Engine-native
+gates also exist: a steal demands --reason. Gates are for rare,
+consequential, or authoring-shaped acts — never for frequent verbs.
+
 SESSIONS AND PARALLEL WORK
 A main session's identity is its PURVIEW — a named set of areas in the
 committed registry (the session verb). Set QUARRY_SESSION so events carry

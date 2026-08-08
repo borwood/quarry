@@ -142,6 +142,11 @@ pub struct Front {
     pub aliases: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub edges: Vec<Edge>,
+    /// Project-declared fields (the protocol layer's registry): preserved
+    /// verbatim, settable via `q set k=v` / `q new --field k=v`, owned by
+    /// the host project's protocol — never by the engine.
+    #[serde(flatten, skip_serializing_if = "std::collections::BTreeMap::is_empty", default)]
+    pub extra: std::collections::BTreeMap<String, serde_yaml::Value>,
 }
 
 #[derive(Clone, Debug)]

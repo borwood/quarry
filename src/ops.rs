@@ -34,6 +34,8 @@ pub struct NewArgs {
     pub ratified_by: Option<String>,
     pub body: String,
     pub acceptance: Vec<String>,
+    /// Project-declared fields, "k=v" (protocol layer).
+    pub fields: Vec<String>,
     pub note: Option<String>,
 }
 
@@ -51,9 +53,20 @@ impl NewArgs {
             ratified_by: None,
             body: String::new(),
             acceptance: vec![],
+            fields: vec![],
             note: None,
         }
     }
+}
+
+fn parse_project_field(f: &str) -> Result<(String, serde_yaml::Value)> {
+    let (k, v) = f
+        .split_once('=')
+        .ok_or_else(|| anyhow!("expected field=value, got '{}'", f))?;
+    if k.is_empty() || !k.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        bail!("field name '{}' must be alphanumeric/underscore", k);
+    }
+    Ok((k.to_string(), serde_yaml::Value::String(v.to_string())))
 }
 
 pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
@@ -89,6 +102,11 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
         by: by.clone(),
         date: Store::today(),
     });
+    let mut extra = std::collections::BTreeMap::new();
+    for f in &a.fields {
+        let (k, v) = parse_project_field(f)?;
+        extra.insert(k, v);
+    }
     let front = Front {
         id: id.clone(),
         ty: a.ty.clone(),
@@ -107,6 +125,7 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
         write_set: vec![],
         aliases: vec![],
         edges,
+        extra,
     };
     let file = store
         .nodes_dir()
@@ -284,10 +303,12 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                     date: Store::today(),
                 })
             }
-            _ => bail!(
-                "field '{}' not settable (status, title, kind, method, path, acceptance+, ratified)",
-                k
-            ),
+            _ => {
+                // Project-declared field (protocol layer): preserved, visible,
+                // never interpreted by the engine.
+                let (key, val) = parse_project_field(f)?;
+                node.front.extra.insert(key, val);
+            }
         }
     }
     let mut ev = json!({"op": "set", "fields": fields});

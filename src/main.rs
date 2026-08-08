@@ -69,9 +69,14 @@ enum Cmd {
         body_file: Option<String>,
         #[arg(long = "acceptance")]
         acceptance: Vec<String>,
+        /// Project-declared field, k=v (protocol layer) — repeatable
+        #[arg(long = "field")]
+        fields: Vec<String>,
         #[arg(long)]
         note: Option<String>,
     },
+    /// Execute a gated intent by its one-time token
+    Resume { token: String },
     /// Add an edge (stamps the target's version / file blob automatically)
     #[command(after_help = "EXAMPLES:
   q link it-4k7f depends-on th-j9uu       # item waits on a thread
@@ -190,6 +195,9 @@ when the arc lands; sessions start leaseless and reserve at dispatch.")]
         shared: bool,
         #[arg(long)]
         steal: bool,
+        /// Required with --steal: why the override is justified (logged)
+        #[arg(long)]
+        reason: Option<String>,
     },
     /// Release an item's lease
     Release { item: String },
@@ -269,6 +277,82 @@ fn read_body(body: Option<String>, body_file: Option<String>) -> Result<String> 
         (None, Some(f)) => Ok(std::fs::read_to_string(f)?),
         (None, None) => Ok(String::new()),
     }
+}
+
+/// The full `new` intent, serializable so a gate can save and resume it.
+#[derive(serde::Serialize, serde::Deserialize)]
+struct NewCliArgs {
+    ty: String,
+    title: String,
+    kind: Option<String>,
+    status: Option<String>,
+    provenance: Option<String>,
+    about: Vec<String>,
+    path: Option<String>,
+    method: Option<String>,
+    ratified: Option<String>,
+    body: Option<String>,
+    body_file: Option<String>,
+    acceptance: Vec<String>,
+    fields: Vec<String>,
+    note: Option<String>,
+}
+
+fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
+    let body = read_body(a.body, a.body_file)?;
+    let node = ops::new_node(
+        store,
+        NewArgs {
+            ty: a.ty,
+            title: a.title,
+            kind: a.kind,
+            status: a.status,
+            provenance: a.provenance,
+            about: a.about,
+            path: a.path,
+            method: a.method,
+            ratified_by: a.ratified,
+            body,
+            acceptance: a.acceptance,
+            fields: a.fields,
+            note: a.note,
+        },
+    )?;
+    println!("✔ {}", line(&node));
+    let filed = node.front.ty == "area"
+        || node.front.edges.iter().any(|e| e.rel == "about" && e.to.starts_with("ar-"));
+    if !filed {
+        println!(
+            "  note: unfiled — the map cannot place it. Attach it: q link {} about <area>",
+            node.front.id
+        );
+    }
+    if let Ok(all) = store.load_all() {
+        for (title, text) in quarry::protocol::inline_texts(
+            &all,
+            "new",
+            Some(node.front.ty.as_str()),
+            node.front.kind.as_deref(),
+        ) {
+            println!("\nprotocol — {}:", title);
+            for l in text.lines() {
+                println!("  {}", l);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn print_gate(g: &quarry::protocol::Gate) {
+    println!("⏸ gated: this act carries project protocol, delivered once per session.");
+    for (title, body) in &g.rules {
+        println!("\n── {} ──", title);
+        for l in body.lines() {
+            println!("{}", l);
+        }
+    }
+    println!("\nYour intent is saved. Do the work under the protocol, then run: q resume {}", g.token);
+    println!("(args are remembered; to change them, re-run the original command — this session is now cleared for this rule)");
 }
 
 fn line(n: &Node) -> String {
@@ -527,6 +611,7 @@ fn main() -> Result<()> {
             files,
             shared,
             steal,
+            reason,
         } => {
             let store = Store::discover()?;
             let sess = coord::current_session().ok_or_else(|| {
@@ -534,7 +619,32 @@ fn main() -> Result<()> {
             })?;
             let all = store.load_all()?;
             let node = store.find(&all, &item)?.clone();
-            let out = coord::reserve(&store, &node, &sess, &Store::actor(), files.clone(), shared, steal)?;
+            // Engine-native consequence gate: a steal demands its reason —
+            // the required response IS the proof of engagement, and it lands
+            // in the logged event.
+            if steal && reason.is_none() {
+                let leases = coord::load_leases(&store);
+                println!("⏸ gated: --steal overrides another session's lease. Who you are overriding:");
+                for l in leases.iter().filter(|l| l.session != sess) {
+                    println!(
+                        "  session {} holds {:?} for \"{}\" (since {}, actor {})",
+                        l.session, l.globs, l.item_title, l.since, l.actor
+                    );
+                }
+                println!("\nIf the override is justified, re-run the same command adding: --reason \"why\"");
+                println!("The reason is logged on the steal event — the holder will read it.");
+                std::process::exit(2);
+            }
+            let out = coord::reserve(
+                &store,
+                &node,
+                &sess,
+                &Store::actor(),
+                files.clone(),
+                shared,
+                steal,
+                reason.as_deref(),
+            )?;
             println!(
                 "✔ lease: \"{}\" holds {:?}{} (session {})",
                 node.front.title,
@@ -697,35 +807,49 @@ fn main() -> Result<()> {
             body,
             body_file,
             acceptance,
+            fields,
             note,
         } => {
             let store = Store::discover()?;
-            let body = read_body(body, body_file)?;
-            let node = ops::new_node(
+            let a = NewCliArgs {
+                ty,
+                title,
+                kind,
+                status,
+                provenance,
+                about,
+                path,
+                method,
+                ratified,
+                body,
+                body_file,
+                acceptance,
+                fields,
+                note,
+            };
+            let all = store.load_all()?;
+            if let Some(g) = quarry::protocol::gate_if_needed(
                 &store,
-                NewArgs {
-                    ty,
-                    title,
-                    kind,
-                    status,
-                    provenance,
-                    about,
-                    path,
-                    method,
-                    ratified_by: ratified,
-                    body,
-                    acceptance,
-                    note,
-                },
-            )?;
-            println!("✔ {}", line(&node));
-            let filed = node.front.ty == "area"
-                || node.front.edges.iter().any(|e| e.rel == "about" && e.to.starts_with("ar-"));
-            if !filed {
-                println!(
-                    "  note: unfiled — the map cannot place it. Attach it: q link {} about <area>",
-                    node.front.id
-                );
+                &all,
+                "new",
+                Some(a.ty.as_str()),
+                a.kind.as_deref(),
+                serde_json::to_value(&a)?,
+            )? {
+                print_gate(&g);
+                std::process::exit(2);
+            }
+            do_new(&store, a)?;
+        }
+        Cmd::Resume { token } => {
+            let store = Store::discover()?;
+            let intent = quarry::protocol::take_intent(&store, &token)?;
+            match intent.verb.as_str() {
+                "new" => {
+                    let a: NewCliArgs = serde_json::from_value(intent.args)?;
+                    do_new(&store, a)?;
+                }
+                other => anyhow::bail!("token holds an unsupported verb '{}'", other),
             }
         }
         Cmd::Link {

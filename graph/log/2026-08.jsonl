@@ -66,3 +66,6 @@
 {"ts":"2026-08-08T20:28:03Z","node":"dc-9hgd","v":1,"op":"create","type":"decision","title":"quarry is an engine; project protocol is content","actor":"claude-fable-5","note":null}
 {"ts":"2026-08-08T20:28:03Z","node":"it-3wef","v":1,"op":"create","type":"item","title":"protocol layer: verb-riding instructions and declared fields","actor":"claude-fable-5","note":null}
 {"op":"link","rel":"depends-on","to":"dc-9hgd","at":1,"ts":"2026-08-08T20:28:23Z","node":"it-3wef","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-08T21:03:24Z","node":"do-n47r","v":1,"op":"create","type":"doc","title":"quarry journal charter","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-08T21:04:03Z","node":"do-48jf","v":1,"op":"create","type":"doc","title":"the graph catches its builder","actor":"claude-fable-5","note":null}
+{"op":"set","fields":["status=done"],"from_status":"shaped","ts":"2026-08-08T21:04:03Z","node":"it-3wef","v":3,"actor":"claude-fable-5","note":"protocol layer shipped: doc kind=protocol triggers, inline+gate tiers, session memoization, q resume, --field registry, steal reason gate; 17 tests green"}

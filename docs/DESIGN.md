@@ -245,6 +245,22 @@ read-first, write-set complement as do-not-touch, acceptance as RETURN
 spec) · `q handoff` (rendered session-close view; replaces the
 hand-rewritten close block).
 
+**The protocol layer (RATIFIED 2026-08-08 — quarry is an engine; project
+protocol is content).** House rules live in the host graph as doc nodes,
+`kind: protocol`: body = instruction; extra fields pick the trigger
+(`on`/`node_type`/`node_kind`) and delivery tier. `inline` rides the verb's
+confirmation output. `gate` intercepts the first matching attempt per
+(session, rule): context delivered, intent saved under a one-time arg-bound
+token (~1h TTL, `graph/.intents.json`), executed by `q resume <token>` —
+session memoization means gates degrade to inline within a session, so the
+channel never ritualizes. Gates are for authoring-shaped acts (a charter
+must precede the writing) and rare consequential verbs; frequent verbs stay
+inline — habituation devalues gates globally. Engine-native gates:
+`--steal` demands `--reason` (the required response proves engagement and
+enriches the logged event). Unknown frontmatter fields are preserved
+verbatim and settable (`--field k=v`, `q set k=v`) — the project's field
+registry, never interpreted by the engine.
+
 **Ownership is data.** What the user owes is exactly the set of queued
 threads — if the user owes a call and no thread exists, minting one is the
 fix; prose and memory never carry user obligations. C3 is the hard edge

@@ -2,8 +2,8 @@
 id: it-3wef
 type: item
 title: 'protocol layer: verb-riding instructions and declared fields'
-v: 2
-status: shaped
+v: 3
+status: done
 provenance: assistant
 created: 2026-08-08T20:28:03Z
 actor: claude-fable-5

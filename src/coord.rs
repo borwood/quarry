@@ -114,6 +114,7 @@ pub fn reserve(
     globs: Vec<String>,
     shared: bool,
     steal: bool,
+    reason: Option<&str>,
 ) -> Result<ReserveOutcome> {
     if globs.is_empty() {
         bail!("a lease needs at least one --files glob (use ** to cover files the work will create)");
@@ -161,7 +162,8 @@ pub fn reserve(
             store.log_event(json!({
                 "ts": Store::now(), "node": item.front.id, "v": item.front.v,
                 "op": "steal", "from_session": v.session, "from_item": v.item,
-                "globs": v.globs, "actor": actor, "session": session
+                "globs": v.globs, "actor": actor, "session": session,
+                "reason": reason
             }))?;
         }
     }

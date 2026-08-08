@@ -312,24 +312,24 @@ fn leases_exclusive_shared_steal() {
     let c = ops::new_node(&s, NewArgs::bare("item", "sdk docs from geo")).unwrap();
     let d = ops::new_node(&s, NewArgs::bare("item", "sdk docs from bodies")).unwrap();
 
-    quarry::coord::reserve(&s, &a, "geo", "t", vec!["crates/dc-worldgen/**".into()], false, false).unwrap();
+    quarry::coord::reserve(&s, &a, "geo", "t", vec!["crates/dc-worldgen/**".into()], false, false, None).unwrap();
     // disjoint: fine
-    quarry::coord::reserve(&s, &b, "bodies", "t", vec!["crates/dc-sim/body/**".into()], false, false).unwrap();
+    quarry::coord::reserve(&s, &b, "bodies", "t", vec!["crates/dc-sim/body/**".into()], false, false, None).unwrap();
     // overlapping exclusive from another session: denied, names holder
     let mut e = NewArgs::bare("item", "bodies wants worldgen");
     e.status = Some("sketch".into());
     let e = ops::new_node(&s, e).unwrap();
-    let err = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, false)
+    let err = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, false, None)
         .unwrap_err();
     assert!(err.to_string().contains("C7"), "got: {}", err);
     assert!(err.to_string().contains("geo"));
     // shared + shared coexist with visibility
-    quarry::coord::reserve(&s, &c, "geo", "t", vec!["docs/sdk/**".into()], true, false).unwrap();
-    let out = quarry::coord::reserve(&s, &d, "bodies", "t", vec!["docs/sdk/**".into()], true, false).unwrap();
+    quarry::coord::reserve(&s, &c, "geo", "t", vec!["docs/sdk/**".into()], true, false, None).unwrap();
+    let out = quarry::coord::reserve(&s, &d, "bodies", "t", vec!["docs/sdk/**".into()], true, false, None).unwrap();
     assert_eq!(out.co_holders.len(), 1);
     assert_eq!(out.co_holders[0].session, "geo");
     // steal is allowed and reported
-    let out = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, true).unwrap();
+    let out = quarry::coord::reserve(&s, &e, "bodies", "t", vec!["crates/dc-worldgen/deep/**".into()], false, true, Some("test steal")).unwrap();
     assert_eq!(out.stolen.len(), 1);
     assert_eq!(out.stolen[0].session, "geo");
     // release: own lease only
@@ -384,4 +384,47 @@ fn c2_grounding_forms() {
     let c = ops::claim(&s, "read off the code", vec![area.front.id.clone()],
         Some("file:evidence.rs".into()), None, Some("assistant".into()), None).unwrap();
     assert!(c.front.edges.iter().any(|e| e.rel == "source" && e.to == "file:evidence.rs"));
+}
+
+#[test]
+fn protocol_gate_memoizes_and_resumes() {
+    let s = temp_store();
+    // a protocol entry: gate journal-kind doc creation
+    let mut p = NewArgs::bare("doc", "journal charter");
+    p.kind = Some("protocol".into());
+    p.fields = vec!["on=new".into(), "node_type=doc".into(), "node_kind=journal".into(), "tier=gate".into()];
+    p.body = "write narrative, not changelog".into();
+    ops::new_node(&s, p).unwrap();
+    let all = s.load_all().unwrap();
+
+    let args = serde_json::json!({"any": "intent"});
+    let g = quarry::protocol::gate_if_needed(&s, &all, "new", Some("doc"), Some("journal"), args.clone())
+        .unwrap()
+        .expect("first attempt gates");
+    assert_eq!(g.rules.len(), 1);
+    assert!(g.rules[0].1.contains("narrative"));
+    // memoized: second attempt in same session does not gate
+    let again = quarry::protocol::gate_if_needed(&s, &all, "new", Some("doc"), Some("journal"), args.clone()).unwrap();
+    assert!(again.is_none(), "session memo clears the gate");
+    // non-matching kind never gates
+    let other = quarry::protocol::gate_if_needed(&s, &all, "new", Some("doc"), Some("spike"), args).unwrap();
+    assert!(other.is_none());
+    // the token resumes exactly once
+    let intent = quarry::protocol::take_intent(&s, &g.token).unwrap();
+    assert_eq!(intent.verb, "new");
+    assert!(quarry::protocol::take_intent(&s, &g.token).is_err(), "single use");
+}
+
+#[test]
+fn extra_fields_roundtrip() {
+    let s = temp_store();
+    let mut d = NewArgs::bare("doc", "charter");
+    d.kind = Some("protocol".into());
+    d.fields = vec!["on=new".into(), "tier=inline".into()];
+    let d = ops::new_node(&s, d).unwrap();
+    ops::set(&s, &d.front.id, &["lenses=ai-native".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let d2 = s.find(&all, &d.front.id).unwrap();
+    assert_eq!(d2.front.extra.get("on").and_then(|v| v.as_str()), Some("new"));
+    assert_eq!(d2.front.extra.get("lenses").and_then(|v| v.as_str()), Some("ai-native"));
 }

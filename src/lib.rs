@@ -1,6 +1,7 @@
 pub mod coord;
 pub mod model;
 pub mod ops;
+pub mod protocol;
 pub mod queries;
 pub mod render;
 pub mod store;
