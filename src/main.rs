@@ -134,8 +134,9 @@ Extract a claim only when something depends on the statement or kills it —
 never while writing prose. C1: at least one --about. C2: non-user claims
 name their --source doc. A landing counts as dependence: register a landed
 capability as a SPINE claim (--source file:<the code>), titled name-first
-in the project's register (`name`: what it provides) — titles feed the
-relatedness lexicon, so a well-named spine surfaces itself to future work.")]
+in the project's register (`name`: what it provides) — systematic,
+intention-revealing names. Titles feed the relatedness lexicon, so a
+well-named spine surfaces itself to future work.")]
     Claim {
         text: String,
         #[arg(long = "about", required = true)]
