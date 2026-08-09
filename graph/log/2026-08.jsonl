@@ -142,3 +142,5 @@
 {"op":"body","ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":5,"actor":"claude"}
 {"op":"body","ts":"2026-08-09T07:42:43Z","node":"it-vjbn","v":2,"actor":"claude"}
 {"ts":"2026-08-09T07:42:43Z","node":"dc-nwba","v":1,"op":"create","type":"decision","title":"no engine tags: areas are the vocabulary; the field registry carries experiments","actor":"claude","note":null}
+{"ts":"2026-08-09T07:54:21Z","node":"it-twdm","v":1,"op":"create","type":"item","title":"the dispatch chain: brief gates reserve, lease gates write","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"it-hrbq","at":3,"ts":"2026-08-09T07:54:21Z","node":"it-twdm","v":2,"actor":"claude"}
