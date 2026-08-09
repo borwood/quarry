@@ -189,3 +189,5 @@
 {"ts":"2026-08-09T08:54:11Z","node":"it-twdm","v":5,"op":"archive","actor":"claude"}
 {"ts":"2026-08-09T08:54:11Z","node":"it-vjbn","v":5,"op":"archive","actor":"claude"}
 {"ts":"2026-08-09T08:54:11Z","node":"it-x8ms","v":6,"op":"archive","actor":"claude"}
+{"ts":"2026-08-09T14:56:06Z","node":"it-nmhu","v":1,"op":"create","type":"item","title":"log-index cursors: retire the timestamp blind spot","actor":"claude","note":null}
+{"op":"set","fields":["status=done"],"from_status":"ready","ts":"2026-08-09T14:58:26Z","node":"it-nmhu","v":2,"actor":"claude","note":"Shipped: Cursor enum (Index | legacy Ts, untagged), cursor_index converts legacy stamps by counting events at-or-before (old semantics, no re-delivery), touch_area and the alert bus both scan by log position, cursors store positions. The watermark test now asserts the same-second catch with the sleep removed. Clears the watch-list entry recorded on the area-gate item."}

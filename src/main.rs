@@ -429,7 +429,7 @@ fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
             continue;
         }
         let Ok(n) = store.find(&all, key) else { continue };
-        if n.front.ty == "area" && coord::area_cursor(store, &sess, &n.front.id).is_none() {
+        if n.front.ty == "area" && !coord::has_area_read(store, &sess, &n.front.id) {
             unread.push((n.front.id.clone(), n.front.title.clone()));
         }
     }

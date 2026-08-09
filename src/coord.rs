@@ -280,7 +280,35 @@ pub fn session_key() -> String {
     current_session().unwrap_or_else(|| "unbound".into())
 }
 
-type AreaReads = BTreeMap<String, BTreeMap<String, String>>;
+/// A machine-local cursor over the event log. Log-INDEX based (user-ruled
+/// 2026-08-09): the log is append-only, so "events after position N" is
+/// exact — second-granularity timestamps could permanently hide a foreign
+/// event landing the same second as the cursor. Legacy timestamp cursors
+/// deserialize as Ts and convert on first read.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum Cursor {
+    Index(u64),
+    Ts(String),
+}
+
+/// Resolve a cursor to a log position; a legacy timestamp counts the events
+/// at-or-before its stamp (matching the old `>` scan, so nothing re-delivers).
+pub fn cursor_index(c: &Cursor, log: &[serde_json::Value]) -> usize {
+    match c {
+        Cursor::Index(i) => *i as usize,
+        Cursor::Ts(t) => log
+            .iter()
+            .filter(|ev| {
+                ev.get("ts")
+                    .and_then(|v| v.as_str())
+                    .map_or(false, |ts| ts <= t.as_str())
+            })
+            .count(),
+    }
+}
+
+type AreaReads = BTreeMap<String, BTreeMap<String, Cursor>>;
 
 fn load_area_reads(store: &Store) -> AreaReads {
     fs::read_to_string(area_reads_path(store))
@@ -289,20 +317,28 @@ fn load_area_reads(store: &Store) -> AreaReads {
         .unwrap_or_default()
 }
 
-pub fn area_cursor(store: &Store, sess: &str, area_id: &str) -> Option<String> {
-    load_area_reads(store).get(sess)?.get(area_id).cloned()
+/// Has this session read (or been delivered) this area at all?
+pub fn has_area_read(store: &Store, sess: &str, area_id: &str) -> bool {
+    load_area_reads(store)
+        .get(sess)
+        .map_or(false, |m| m.contains_key(area_id))
+}
+
+fn record_area_read_at(store: &Store, sess: &str, area_id: &str, index: usize) {
+    let mut m = load_area_reads(store);
+    m.entry(sess.to_string())
+        .or_default()
+        .insert(area_id.to_string(), Cursor::Index(index as u64));
+    if let Ok(s) = serde_json::to_string_pretty(&m) {
+        let _ = fs::write(area_reads_path(store), s + "\n");
+    }
 }
 
 /// Record that this session has read (or been delivered) this area's
 /// neighborhood — machine-local; the committed log stays mutations-only.
 pub fn record_area_read(store: &Store, sess: &str, area_id: &str) {
-    let mut m = load_area_reads(store);
-    m.entry(sess.to_string())
-        .or_default()
-        .insert(area_id.to_string(), Store::now());
-    if let Ok(s) = serde_json::to_string_pretty(&m) {
-        let _ = fs::write(area_reads_path(store), s + "\n");
-    }
+    let idx = store.read_log().map(|l| l.len()).unwrap_or(0);
+    record_area_read_at(store, sess, area_id, idx);
 }
 
 /// The per-(session, area) watermark surface (user-ruled 2026-08-09).
@@ -319,23 +355,22 @@ pub enum AreaTouch {
 
 /// Check (and advance) a session's watermark over one area. Own-session
 /// events advance silently; foreign create/set/link/body events on nodes in
-/// the area come back as delta lines, capped, each said once. Known blind
-/// spot: second-granularity timestamps can hide a foreign write landing the
-/// same second as the cursor — accepted, watch-listed.
+/// the area come back as delta lines, capped, each said once. Exact by
+/// construction: the cursor is a log position, not a timestamp.
 pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> AreaTouch {
-    let Some(cursor) = area_cursor(store, sess, area_id) else {
+    let Some(cur) = load_area_reads(store)
+        .get(sess)
+        .and_then(|m| m.get(area_id))
+        .cloned()
+    else {
         return AreaTouch::FirstTouch;
     };
     let Ok(log) = store.read_log() else {
-        record_area_read(store, sess, area_id);
         return AreaTouch::Current;
     };
+    let from = cursor_index(&cur, &log);
     let mut lines: Vec<(String, String)> = Vec::new(); // node id → line
-    for ev in &log {
-        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
-        if ts <= cursor.as_str() {
-            continue;
-        }
+    for ev in log.iter().skip(from) {
         let ev_key = ev
             .get("session")
             .and_then(|v| v.as_str())
@@ -368,7 +403,7 @@ pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> Are
             lines.push((id.to_string(), line));
         }
     }
-    record_area_read(store, sess, area_id);
+    record_area_read_at(store, sess, area_id, log.len());
     if lines.is_empty() {
         AreaTouch::Current
     } else {

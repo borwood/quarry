@@ -242,9 +242,12 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     Some(serde_json::json!({ "hookSpecificOutput": serde_json::Value::Object(hso) }))
 }
 
-#[derive(Serialize, Deserialize, Default, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 struct AlertCursor {
-    cursor: String,
+    /// Log position (legacy timestamp cursors convert on first read).
+    cursor: crate::coord::Cursor,
+    /// Wall-clock throttle stamp — stays a timestamp; it gates check
+    /// frequency, not log position.
     checked: String,
 }
 
@@ -267,7 +270,13 @@ fn alerts(store: &crate::store::Store, session: &str) -> Option<String> {
         }
     };
     let Some(cur) = map.get(session).cloned() else {
-        map.insert(session.into(), AlertCursor { cursor: now.clone(), checked: now });
+        // First check plants the cursor at the log's current end — history
+        // is never dumped.
+        let end = store.read_log().map(|l| l.len()).unwrap_or(0);
+        map.insert(
+            session.into(),
+            AlertCursor { cursor: crate::coord::Cursor::Index(end as u64), checked: now },
+        );
         write(&map);
         return None;
     };
@@ -281,14 +290,17 @@ fn alerts(store: &crate::store::Store, session: &str) -> Option<String> {
     }
     let all = store.load_all().ok()?;
     let reg = crate::coord::load_sessions(store);
+    let log = store.read_log().ok()?;
     let lines = if let Some(p) = reg.get(session) {
         let ids: Vec<&str> = p.areas.iter().map(|s| s.as_str()).collect();
-        let log = store.read_log().ok()?;
-        alerts_between(&all, &log, session, &ids, &cur.cursor)
+        alerts_between(&all, &log, session, &ids, crate::coord::cursor_index(&cur.cursor, &log))
     } else {
         vec![]
     };
-    map.insert(session.into(), AlertCursor { cursor: now.clone(), checked: now });
+    map.insert(
+        session.into(),
+        AlertCursor { cursor: crate::coord::Cursor::Index(log.len() as u64), checked: now },
+    );
     write(&map);
     if lines.is_empty() {
         None
@@ -310,7 +322,7 @@ pub fn alerts_between(
     log: &[serde_json::Value],
     session: &str,
     area_ids: &[&str],
-    cursor: &str,
+    from: usize,
 ) -> Vec<String> {
     use crate::model::Node as N;
     let title_of = |id: &str| {
@@ -320,11 +332,7 @@ pub fn alerts_between(
             .unwrap_or_else(|| id.to_string())
     };
     let mut out: Vec<String> = Vec::new();
-    for ev in log {
-        let ts = ev.get("ts").and_then(|x| x.as_str()).unwrap_or("");
-        if ts <= cursor {
-            continue;
-        }
+    for ev in log.iter().skip(from) {
         let ev_sess = ev.get("session").and_then(|x| x.as_str());
         let op = ev.get("op").and_then(|x| x.as_str()).unwrap_or("");
         let node_id = ev.get("node").and_then(|x| x.as_str()).unwrap_or("");

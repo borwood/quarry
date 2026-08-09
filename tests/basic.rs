@@ -498,19 +498,23 @@ fn alert_computation_closed_list() {
     let all = s.load_all().unwrap();
     let ids: Vec<&str> = vec![area.front.id.as_str()];
     let log = vec![
+        serde_json::json!({"ts":"2000-01-01T00:00:00Z","op":"create","node":arrival.front.id,"session":"bodies"}),
         serde_json::json!({"ts":"2099-01-01T00:00:01Z","op":"create","node":arrival.front.id,"session":"bodies","title":"density convention"}),
         serde_json::json!({"ts":"2099-01-01T00:00:02Z","op":"steal","node":"it-zzzz","session":"bodies","from_session":"geo","from_item":mine.front.id,"reason":"urgent hotfix"}),
         serde_json::json!({"ts":"2099-01-01T00:00:03Z","op":"set","node":dep.front.id,"session":"bodies","fields":["status=done"]}),
-        serde_json::json!({"ts":"2000-01-01T00:00:00Z","op":"create","node":arrival.front.id,"session":"bodies"}),
     ];
-    let lines = quarry::teach::alerts_between(&all, &log, "geo", &ids, "2098-12-31T00:00:00Z");
+    // cursor is a log INDEX: position 1 skips the pre-cursor event exactly
+    let lines = quarry::teach::alerts_between(&all, &log, "geo", &ids, 1);
     assert_eq!(lines.len(), 3, "got: {:?}", lines);
     assert!(lines[0].contains("new from bodies"));
     assert!(lines[1].contains("your lease") && lines[1].contains("urgent hotfix"));
     assert!(lines[2].contains("unblocked") && lines[2].contains("gait bake"));
     // own-session events never alert
-    let own = quarry::teach::alerts_between(&all, &log, "bodies", &ids, "2098-12-31T00:00:00Z");
+    let own = quarry::teach::alerts_between(&all, &log, "bodies", &ids, 1);
     assert!(own.iter().all(|l| !l.contains("new from bodies")), "got: {:?}", own);
+    // legacy timestamp cursors convert by counting events at-or-before
+    let legacy = quarry::coord::Cursor::Ts("2098-12-31T00:00:00Z".into());
+    assert_eq!(quarry::coord::cursor_index(&legacy, &log), 1);
 }
 
 #[test]
@@ -612,8 +616,8 @@ fn area_watermark_lifecycle() {
     assert!(matches!(touch_area(&s, &all, "geo", &aid), AreaTouch::FirstTouch));
     record_area_read(&s, "geo", &aid);
     assert!(matches!(touch_area(&s, &all, "geo", &aid), AreaTouch::Current));
-    // a foreign (unbound) write lands in the area after the cursor
-    std::thread::sleep(std::time::Duration::from_millis(1100)); // second-resolution timestamps
+    // a foreign (unbound) write lands in the area — SAME SECOND as the
+    // cursor: the log-index cursor catches what a timestamp cursor missed
     let mut it = NewArgs::bare("item", "erosion pass");
     it.about = vec![aid.clone()];
     ops::new_node(&s, it).unwrap();
