@@ -23,8 +23,13 @@ machine.
 
 - **Single-thread replies.** One topic per message, kept short — the user
   pulls the next thread. Multi-topic work still happens; reporting it does
-  not all arrive at once. (User ruling, 2026-08-09, asked for repeatedly
-  across sessions.)
+  not all arrive at once. End replies with a short options list drawn from
+  open threads. (User ruling, 2026-08-09, asked for repeatedly across
+  sessions.)
+- **Confirm before building.** When the user reflects on an approach, settle
+  the pattern in conversation before writing graph or code — don't jump to
+  correcting. An explicit go-ahead ("let's settle this") green-lights the
+  writes. (User ruling, 2026-08-09.)
 - **`QUARRY_ACTOR` is auto-injected by the session hook** (from the model
   recorded at SessionStart) for chats running in this repo — don't set it by
   hand. Export it manually only when working from outside hook coverage

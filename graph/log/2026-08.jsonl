@@ -136,3 +136,7 @@
 {"ts":"2026-08-09T07:14:53Z","node":"it-e6q8","v":1,"op":"create","type":"item","title":"wrap reviews session-touched nodes","actor":"claude","note":null}
 {"op":"set","fields":["status=dropped"],"from_status":"sketch","ts":"2026-08-09T07:14:53Z","node":"it-ttv5","v":2,"actor":"claude","note":"Superseded by the wrap-review design after user critique: text matching mislinks, corpus sweeps do not scale under parallel work. The concern (rulings obsoleting sketch work) lives on in the wrap surface + rule-time judgment."}
 {"ts":"2026-08-09T07:14:53Z","node":"it-ttv5","v":2,"op":"archive","actor":"claude"}
+{"ts":"2026-08-09T07:36:42Z","node":"it-vjbn","v":1,"op":"create","type":"item","title":"mint-time relatedness surface","actor":"claude","note":null}
+{"ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":3,"op":"unarchive","actor":"claude"}
+{"op":"set","fields":["status=sketch"],"from_status":"dropped","ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":4,"actor":"claude","note":"Restored: the drop was wrong. DESIGN.md section 9 defines q queue as a single-thread topic queue (push/order/pop thread nodes) — a distinct feature, not the canned query. The drop was asserted from the bodyless title without consulting the design doc: the same disease as the q handoff miscitation, caught when DESIGN.md was actually read."}
+{"op":"body","ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":5,"actor":"claude"}
