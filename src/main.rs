@@ -327,6 +327,25 @@ struct NewCliArgs {
     note: Option<String>,
 }
 
+/// Mint-time surfaces: the bodyless-sketch nudge and the relatedness
+/// touches-line — an index for judgment, silence the default state.
+fn print_mint_surfaces(store: &Store, node: &Node) {
+    if node.front.ty == "item" && node.body.trim().is_empty() {
+        println!(
+            "  note: bodyless sketch — a title-only node leaves the next reader nothing to open; one sentence of intent is the floor: q edit {} --body \"...\"",
+            node.front.id
+        );
+    }
+    let Ok(all) = store.load_all() else { return };
+    let touches = quarry::queries::relatedness(&all, node);
+    if !touches.is_empty() {
+        println!("  touches — review and judge; link only what genuinely relates:");
+        for (t, why) in touches {
+            println!("    \"{}\" [{} {}] — {}", t.front.title, t.front.ty, t.front.id, why);
+        }
+    }
+}
+
 fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
     let body = read_body(a.body, a.body_file)?;
     let node = ops::new_node(
@@ -356,6 +375,7 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
             node.front.id
         );
     }
+    print_mint_surfaces(store, &node);
     if let Ok(all) = store.load_all() {
         for (title, text) in quarry::protocol::inline_texts(
             &all,
@@ -1212,6 +1232,7 @@ fn main() -> Result<()> {
             let d = ops::rule(&store, &thread, &text, by, title)?;
             println!("✔ {}", line(&d));
             println!("  thread resolved.");
+            print_mint_surfaces(&store, &d);
             let all = store.load_all()?;
             let th_id = store.find(&all, &thread)?.front.id.clone();
             drop(all);
@@ -1228,6 +1249,7 @@ fn main() -> Result<()> {
             let store = Store::discover()?;
             let n = ops::claim(&store, &text, about, source, method, provenance, status)?;
             println!("✔ {}", line(&n));
+            print_mint_surfaces(&store, &n);
         }
         Cmd::Refute { claim, by, note } => {
             let store = Store::discover()?;

@@ -576,6 +576,48 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn relatedness_forward_and_reverse() {
+    let s = temp_store();
+    // forward: a sketch item exists; a new decision's body names its concept —
+    // the it-37q5 incident, mechanized
+    let zombie = ops::new_node(&s, NewArgs::bare("item", "q handoff and q wrap")).unwrap();
+    let mut d = NewArgs::bare("decision", "handoffs are derived at wake");
+    d.body = "the planned q handoff verb is retired; resume renders the wake brief".into();
+    d.provenance = Some("user".into());
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == zombie.front.id),
+        "the obsoleted sketch surfaces at mint: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // reverse: an old body mentions a concept that only now earns a node
+    let mut old = NewArgs::bare("doc", "worldgen notes");
+    old.body = "the deepcell pipeline feeds refinement through core-sample stages".into();
+    let old = ops::new_node(&s, old).unwrap();
+    let core = ops::new_node(&s, NewArgs::bare("item", "core-sample pipeline")).unwrap();
+    let all = s.load_all().unwrap();
+    let cn = s.find(&all, &core.front.id).unwrap();
+    let rel = queries::relatedness(&all, cn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == old.front.id),
+        "prior mentions surface when the concept earns nodehood: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+    // never self, never boundary-crossing token embeddings
+    assert!(rel.iter().all(|(n, _)| n.front.id != cn.front.id));
+
+    // silence default: an unrelated node surfaces nothing
+    let quiet = ops::new_node(&s, NewArgs::bare("thread", "unrelated topic entirely")).unwrap();
+    let all = s.load_all().unwrap();
+    let qn = s.find(&all, &quiet.front.id).unwrap();
+    assert!(queries::relatedness(&all, qn).is_empty(), "silence is the default");
+}
+
+#[test]
 fn actor_recording_and_safety_prefix() {
     let s = temp_store();
     assert!(quarry::coord::chat_actor(&s, "chat-1").is_none());

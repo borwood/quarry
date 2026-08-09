@@ -2,8 +2,8 @@
 id: it-vjbn
 type: item
 title: mint-time relatedness surface
-v: 4
-status: ready
+v: 5
+status: done
 provenance: user
 created: 2026-08-09T07:36:42Z
 actor: claude

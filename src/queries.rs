@@ -242,6 +242,125 @@ pub fn unverified<'a>(all: &'a [Node]) -> Vec<&'a Node> {
         .collect()
 }
 
+/// Graph-generic vocabulary excluded from relatedness matching: on any
+/// quarry graph these words appear everywhere and carry no subject signal.
+const GENERIC_TOKENS: &[&str] = &[
+    "quarry", "graph", "session", "sessions", "node", "nodes", "area", "areas",
+    "item", "items", "thread", "threads", "claim", "claims", "decision",
+    "decisions", "doc", "docs", "verb", "verbs", "surface", "status", "user",
+    "assistant", "title", "titles", "about", "content", "record", "records",
+];
+
+/// Distinctive tokens of a title: length ≥ 5, hyphen-compounds kept
+/// (core-sample, deep-time), generic graph vocabulary dropped.
+fn sig_tokens(title: &str) -> Vec<String> {
+    let lower = title.to_lowercase();
+    let mut out: Vec<String> = Vec::new();
+    for raw in lower.split(|c: char| !(c.is_ascii_alphanumeric() || c == '-')) {
+        let t = raw.trim_matches('-');
+        if t.len() >= 5 && !GENERIC_TOKENS.contains(&t) && !out.iter().any(|x| x == t) {
+            out.push(t.to_string());
+        }
+    }
+    out
+}
+
+/// Word-boundary containment: `word` occurs in `text` not embedded in a
+/// longer token ("wrap" must not hit "wrapper").
+fn contains_word(text: &str, word: &str) -> bool {
+    if word.is_empty() {
+        return false;
+    }
+    let mut start = 0;
+    while let Some(pos) = text[start..].find(word) {
+        let i = start + pos;
+        let before_ok = text[..i]
+            .chars()
+            .last()
+            .map_or(true, |c| !(c.is_ascii_alphanumeric() || c == '-'));
+        let j = i + word.len();
+        let after_ok = text[j..]
+            .chars()
+            .next()
+            .map_or(true, |c| !(c.is_ascii_alphanumeric() || c == '-'));
+        if before_ok && after_ok {
+            return true;
+        }
+        start = j;
+    }
+    false
+}
+
+/// Mint-time relatedness: an index of candidates the new node's text touches,
+/// for the minting agent to review — never auto-linked. Forward: the existing
+/// title lexicon matched against the new node's title+body (backticked spans
+/// strengthen). Reverse: the new title's distinctive tokens matched against
+/// existing bodies — prior mentions of a concept that just earned its node.
+/// Archived nodes, areas, and already-linked neighbors are excluded; the
+/// strongest few qualify (silence is the default).
+pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> {
+    let new_text = format!("{} {}", node.front.title, node.body).to_lowercase();
+    let new_title_toks: Vec<String> = sig_tokens(&node.front.title)
+        .into_iter()
+        .filter(|t| t.len() >= 6)
+        .collect();
+    let backticked: Vec<String> = node
+        .body
+        .split('`')
+        .skip(1)
+        .step_by(2)
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| s.len() >= 4 && s.len() <= 60)
+        .collect();
+    let mut scored: Vec<(i32, &Node, String)> = Vec::new();
+    for cand in all {
+        if cand.front.id == node.front.id || cand.front.archived || cand.front.ty == "area" {
+            continue;
+        }
+        if node.front.edges.iter().any(|e| e.to == cand.front.id)
+            || cand.front.edges.iter().any(|e| e.to == node.front.id)
+        {
+            continue;
+        }
+        let title_lower = cand.front.title.to_lowercase();
+        let toks = sig_tokens(&cand.front.title);
+        let hits: Vec<&String> = toks.iter().filter(|t| contains_word(&new_text, t)).collect();
+        let full_title = title_lower.len() >= 8 && new_text.contains(&title_lower);
+        let tick = backticked
+            .iter()
+            .any(|b| title_lower.contains(b.as_str()) || toks.iter().any(|t| t == b));
+        if full_title || hits.len() >= 2 || hits.iter().any(|t| t.len() >= 6) || tick {
+            let why = if full_title {
+                "mentions its title".to_string()
+            } else if let Some(t) = hits.first() {
+                format!("mentions '{}'", t)
+            } else {
+                "backtick reference".to_string()
+            };
+            let score = hits.len() as i32 + if full_title { 2 } else { 0 } + if tick { 2 } else { 0 };
+            scored.push((score, cand, why));
+            continue;
+        }
+        if !cand.body.is_empty() {
+            let cbody = cand.body.to_lowercase();
+            let rhits: Vec<&String> = new_title_toks
+                .iter()
+                .filter(|t| contains_word(&cbody, t))
+                .collect();
+            if !rhits.is_empty() {
+                scored.push((
+                    rhits.len() as i32,
+                    cand,
+                    format!("its body mentions '{}'", rhits[0]),
+                ));
+            }
+        }
+    }
+    scored.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.front.id.cmp(&b.1.front.id)));
+    scored.truncate(4);
+    scored.into_iter().map(|(_, n, w)| (n, w)).collect()
+}
+
 /// Citers of `id` whose stamp is now behind the target's version — the
 /// staleness homework a bump creates.
 pub fn citers_behind<'a>(all: &'a [Node], id: &str) -> Vec<(&'a Node, &'a crate::model::Edge)> {

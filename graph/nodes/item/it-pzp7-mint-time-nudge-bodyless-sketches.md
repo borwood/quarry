@@ -2,8 +2,8 @@
 id: it-pzp7
 type: item
 title: 'mint-time nudge: bodyless sketches'
-v: 3
-status: ready
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-09T06:30:01Z
 actor: claude

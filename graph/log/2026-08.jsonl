@@ -171,3 +171,5 @@
 {"ts":"2026-08-09T08:34:37Z","node":"it-twdm","v":4,"op":"affirm","restamped":1,"actor":"claude"}
 {"ts":"2026-08-09T08:34:37Z","node":"it-vjbn","v":4,"op":"affirm","restamped":1,"actor":"claude"}
 {"ts":"2026-08-09T08:34:37Z","node":"it-x8ms","v":5,"op":"affirm","restamped":1,"actor":"claude"}
+{"op":"set","fields":["status=done"],"from_status":"ready","ts":"2026-08-09T08:40:47Z","node":"it-pzp7","v":4,"actor":"claude","note":"Shipped: q new item with an empty body prints the one-sentence-floor nudge."}
+{"op":"set","fields":["status=done"],"from_status":"ready","ts":"2026-08-09T08:40:47Z","node":"it-vjbn","v":5,"actor":"claude","note":"Shipped: forward title-lexicon match plus reverse match-at-nodehood, on new/claim/rule mint paths; top-4, silence default, boundary-aware tokens, backtick strengthener."}
