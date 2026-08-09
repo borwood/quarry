@@ -2,7 +2,7 @@
 id: do-aurk
 type: doc
 title: deepcraft process autopsy
-v: 1
+v: 2
 status: registered
 provenance: assistant
 created: 2026-08-08T22:53:39Z
@@ -13,6 +13,9 @@ blob: cec8a7d61c0d
 edges:
 - rel: about
   to: ar-xa38
+  at: 1
+- rel: about
+  to: ar-favb
   at: 1
 ---
 

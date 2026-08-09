@@ -107,3 +107,15 @@
 {"ts":"2026-08-08T23:25:11Z","node":"it-ubqe","v":2,"op":"archive","actor":"claude-fable-5"}
 {"ts":"2026-08-08T23:25:11Z","node":"it-vwjp","v":3,"op":"archive","actor":"claude-fable-5"}
 {"ts":"2026-08-08T23:25:22Z","node":"do-umyy","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-09T05:12:37Z","node":"ar-favb","v":1,"op":"create","type":"area","title":"deepcraft salvage","actor":"claude","note":null}
+{"ts":"2026-08-09T05:12:49Z","node":"dc-jytf","v":1,"op":"create","type":"decision","title":"the migration is salvage, not succession","actor":"claude","note":null}
+{"ts":"2026-08-09T05:12:49Z","node":"dc-b5mh","v":1,"op":"create","type":"decision","title":"product naming deferred; internal component names now, on the suite pattern","actor":"claude","note":null}
+{"ts":"2026-08-09T05:12:49Z","node":"dc-mcz8","v":1,"op":"create","type":"decision","title":"core-sample names the runtime deepcell-to-refinement pipeline","actor":"claude","note":null}
+{"ts":"2026-08-09T05:13:02Z","node":"do-89t9","v":1,"op":"create","type":"doc","title":"worldgen modes and component seams (salvage pre-planning)","actor":"claude","note":null}
+{"ts":"2026-08-09T05:13:03Z","node":"th-x9b2","v":1,"op":"create","type":"thread","title":"internal names for the remaining components","actor":"claude","note":null}
+{"ts":"2026-08-09T05:13:03Z","node":"th-n2d9","v":1,"op":"create","type":"thread","title":"does the journal ambition (four lenses, blogworthy flags) carry into the salvage?","actor":"claude","note":null}
+{"ts":"2026-08-09T05:13:15Z","node":"it-pf2w","v":1,"op":"create","type":"item","title":"day zero: stand up the fresh repo","actor":"claude","note":null}
+{"ts":"2026-08-09T05:13:24Z","node":"th-sjus","v":1,"op":"create","type":"thread","title":"product naming: how do the engine and the plugin packs discriminate by brand?","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"th-n2d9","at":1,"ts":"2026-08-09T05:13:24Z","node":"it-pf2w","v":2,"actor":"claude"}
+{"op":"link","rel":"about","to":"ar-favb","at":1,"ts":"2026-08-09T05:13:24Z","node":"do-aurk","v":2,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"it-pf2w","at":2,"ts":"2026-08-09T05:13:32Z","node":"th-sjus","v":2,"actor":"claude"}
