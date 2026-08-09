@@ -8,3 +8,4 @@ graph/.chat-sessions.json
 graph/.adopt-request.json
 graph/.alert-cursors.json
 graph/.chat-actors.json
+graph/.area-reads.json
