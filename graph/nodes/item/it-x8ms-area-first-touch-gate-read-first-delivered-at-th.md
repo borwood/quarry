@@ -2,7 +2,7 @@
 id: it-x8ms
 type: item
 title: 'area-first-touch gate: read-first delivered at the first write into an area'
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-09T08:02:50Z
@@ -20,4 +20,4 @@ edges:
   at: 1
 ---
 
-Settled 2026-08-09. The choke point is the about-attachment: the first write into an area per session intercepts unless the area was already opened this session. Memoization is per (session, area), so it fires rarely by construction and never ritualizes. The payload is DERIVED — the area's read-first (charter, in-force decisions, registered docs, open threads; essentially q open output), never a hand-authored body that could stale. q open records (session, area, area-version) in machine-local session state alongside gate memoization — the committed log stays mutations-only. Diligent path: open first, gate passes silently, zero friction. Backstop path: intercept, deliver, q resume with saved args. Flagged extension (assistant, strike if unwanted): drift re-fire — if the area neighborhood changed after the recorded open, the gate fires with only the delta (interleave-the-delta philosophy, section 6).
+Settled 2026-08-09. The choke point is the about-attachment: the first write into an area per session intercepts unless the area was already opened this session. Memoization is per (session, area), so it fires rarely by construction and never ritualizes. The payload is DERIVED — the area's read-first (charter, in-force decisions, registered docs, open threads; essentially q open output), never a hand-authored body that could stale. q open records the read in machine-local session state alongside gate memoization — the committed log stays mutations-only. Diligent path: open first, gate passes silently, zero friction. Backstop path: intercept, deliver, q resume with saved args. PER-AREA WATERMARK (user refinement, 2026-08-09, replacing the one-time drift re-fire): the read record generalizes to a per (session, area) watermark over the event log. Own-session events advance it silently; any verb touching the area with foreign events beyond the watermark prints the delta INLINE (not a gate) and advances the watermark on delivery — each change said once. First touch with no watermark = the full read-first gate; thereafter, a continuous drift surface. Catches mid-session foreign drift that existing surfaces miss (same-node 24h presence notes are node-scoped; arrivals and hook alerts are boundary-time). Silence default; scan is log-tail-since-watermark, watch-listed like the alert scan.

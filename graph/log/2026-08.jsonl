@@ -145,3 +145,4 @@
 {"ts":"2026-08-09T07:54:21Z","node":"it-twdm","v":1,"op":"create","type":"item","title":"the dispatch chain: brief gates reserve, lease gates write","actor":"claude","note":null}
 {"op":"link","rel":"depends-on","to":"it-hrbq","at":3,"ts":"2026-08-09T07:54:21Z","node":"it-twdm","v":2,"actor":"claude"}
 {"ts":"2026-08-09T08:02:50Z","node":"it-x8ms","v":1,"op":"create","type":"item","title":"area-first-touch gate: read-first delivered at the first write into an area","actor":"claude","note":null}
+{"op":"body","ts":"2026-08-09T08:06:32Z","node":"it-x8ms","v":2,"actor":"claude"}
