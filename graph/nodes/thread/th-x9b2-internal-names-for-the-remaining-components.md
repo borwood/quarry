@@ -2,8 +2,8 @@
 id: th-x9b2
 type: thread
 title: internal names for the remaining components
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-09T05:13:03Z
 actor: claude

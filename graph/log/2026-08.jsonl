@@ -119,3 +119,10 @@
 {"op":"link","rel":"depends-on","to":"th-n2d9","at":1,"ts":"2026-08-09T05:13:24Z","node":"it-pf2w","v":2,"actor":"claude"}
 {"op":"link","rel":"about","to":"ar-favb","at":1,"ts":"2026-08-09T05:13:24Z","node":"do-aurk","v":2,"actor":"claude"}
 {"op":"link","rel":"depends-on","to":"it-pf2w","at":2,"ts":"2026-08-09T05:13:32Z","node":"th-sjus","v":2,"actor":"claude"}
+{"ts":"2026-08-09T06:19:35Z","node":"dc-j634","v":1,"op":"create","type":"decision","title":"naming follows the deep-core / pure-core register","actor":"claude","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-j634","ts":"2026-08-09T06:19:35Z","node":"th-x9b2","v":2,"actor":"claude"}
+{"op":"link","rel":"settles","to":"th-x9b2","at":2,"ts":"2026-08-09T06:19:35Z","node":"dc-j634","v":2,"actor":"claude"}
+{"ts":"2026-08-09T06:19:48Z","node":"dc-ubdu","v":1,"op":"create","type":"decision","title":"refinement is a sub-feature of core-sample, not a top-level seam","actor":"claude","note":null}
+{"ts":"2026-08-09T06:19:48Z","node":"dc-qhru","v":1,"op":"create","type":"decision","title":"a game is a plugin pack; the engine ships opinionated plugins; marketplace is opt-in","actor":"claude","note":null}
+{"ts":"2026-08-09T06:19:48Z","node":"th-n8h6","v":1,"op":"create","type":"thread","title":"settle the working names: deep-time, pure-lands, brickolage, augury","actor":"claude","note":null}
+{"ts":"2026-08-09T06:20:15Z","node":"do-89t9","v":1,"op":"affirm","restamped":1,"actor":"claude"}

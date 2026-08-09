@@ -8,7 +8,7 @@ provenance: assistant
 created: 2026-08-09T05:13:02Z
 actor: claude
 path: docs/salvage-worldgen-modes.md
-blob: efc2bea88f1c
+blob: '559801026642'
 edges:
 - rel: about
   to: ar-favb
