@@ -140,3 +140,5 @@
 {"ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":3,"op":"unarchive","actor":"claude"}
 {"op":"set","fields":["status=sketch"],"from_status":"dropped","ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":4,"actor":"claude","note":"Restored: the drop was wrong. DESIGN.md section 9 defines q queue as a single-thread topic queue (push/order/pop thread nodes) — a distinct feature, not the canned query. The drop was asserted from the bodyless title without consulting the design doc: the same disease as the q handoff miscitation, caught when DESIGN.md was actually read."}
 {"op":"body","ts":"2026-08-09T07:36:55Z","node":"it-nnyv","v":5,"actor":"claude"}
+{"op":"body","ts":"2026-08-09T07:42:43Z","node":"it-vjbn","v":2,"actor":"claude"}
+{"ts":"2026-08-09T07:42:43Z","node":"dc-nwba","v":1,"op":"create","type":"decision","title":"no engine tags: areas are the vocabulary; the field registry carries experiments","actor":"claude","note":null}
