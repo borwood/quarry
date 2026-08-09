@@ -14,6 +14,7 @@ ratified:
 acceptance:
 - first write into an area not opened this session intercepts with the area's derived read-first; q resume executes the saved intent
 - a same-session q open of the area satisfies the gate silently; the committed event log gains no read events
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

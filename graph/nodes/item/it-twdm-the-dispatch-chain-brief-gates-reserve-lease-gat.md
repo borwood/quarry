@@ -14,6 +14,7 @@ ratified:
 acceptance:
 - q reserve refuses unless a brief-render event for the item exists in this session's log
 - 'PreToolUse hook checks code writes against live lease coverage: warn for main sessions, deny for dispatched agents'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

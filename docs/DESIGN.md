@@ -207,6 +207,7 @@ repo. At write time the verb stamps the file's current git blob. Consequences:
 | C5 | a new edge to a refuted/superseded target requires `--acknowledge` |
 | C6 | freehand Write/Edit under `graph/` is denied by the host hook; only the tool mutates graph files |
 | C7 | reserving a `write_set` overlapping a live reservation is refused with the holder named |
+| C8 | reserving an item requires a same-session `q brief` render — a lease follows a brief (built 2026-08-09; the guard hook's lease layer closes the chain: foreign exclusive zones deny writes, dispatched writes outside their leased set deny under `QUARRY_DISPATCH`, scope creep warns the holder) |
 
 C3 is the mechanization of the costliest deepcraft failure class (a user
 design silently reconciled away by an implementation slice).
@@ -239,10 +240,21 @@ uncommitted graph changes) · `q guide` · `q hook guard` (C6) · `q hook
 orient` (SessionStart summary + purview block) · `q find` (text search) ·
 `q session` (purview registry) · `q reserve` / `q release` (leases, § 11).
 
-Later, in need-order: `q queue` (single-thread topic queue — push/order/pop
-thread nodes) · `q brief <item>` (generated dispatch brief: neighborhood as
-read-first, write-set complement as do-not-touch, acceptance as RETURN
-spec). *`q handoff` is RETIRED (2026-08-08): with per-session event
+**Built 2026-08-09 (the attention surfaces and the dispatch chain):**
+`q brief <item>` (the derived dispatch brief — read-first at pinned
+versions, write-set complement as do-not-touch, acceptance as RETURN spec,
+`on=brief` protocol riders, actor rules; every render logs `op=brief`) ·
+`q queue` (single-thread topic queue: push/pop/front/drop over thread
+nodes, resolved threads auto-prune) · mint-time surfaces (bodyless-sketch
+nudge; the relatedness touches-line — forward title-lexicon match plus
+reverse match-at-nodehood, an index for judgment, never an auto-link) ·
+the area-first-touch gate (`q open` on an area records the read
+machine-locally; minting into an unread area intercepts with the derived
+read-first and a resume token) · per-(session, area) watermarks (foreign
+content drift since your recorded read prints inline on area-touching
+verbs — pull-paced, not an alert) · wrap's session-touched review (every
+node this session wrote, listed for a final look; the wrap event is the
+cursor). *`q handoff` is RETIRED (2026-08-08): with per-session event
 attribution, the handoff is derived at wake (`q session resume`) instead of
 written at close — a wake brief computed from the log cannot be stale,
 wrong, or forgotten.*

@@ -68,6 +68,23 @@ no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
 behind, work unblocked, threads made answerable — with the command that
 addresses each. Do the homework (or queue it) before moving on.
 
+ATTENTION SURFACES — DELIVERY AT CHOKE POINTS
+Structure guarantees delivery and recorded acknowledgment, not reading;
+these surfaces put the load-bearing material in channels the work cannot
+avoid. Minting prints a TOUCHES line — candidates your new node's text
+relates to (and prior mentions of a concept that just earned its node):
+review and judge, link only what genuinely relates, never treat the list
+as complete. The first write into an area you have not read this session
+GATES with the area's derived read-first (a prior q open of the area
+passes silently — open first and you never see the gate); after that,
+foreign drift in an area prints inline when your own verb touches it.
+DISPATCH IS A CHAIN: q brief renders the derived brief (if it reads
+wrong, fix the graph and re-render — never hand-compose dispatch
+context), C8 makes reserve follow a same-session brief, and the write
+hook holds code writes to the leased set. The user's single-thread
+conversation order lives in q queue (push/pop/front/drop) — it is
+working state; what the user owes stays the graph's queued threads.
+
 PROJECT PROTOCOL — HOUSE RULES AS CONTENT
 Quarry is an engine; this project's house rules are content, living IN the
 graph. A protocol entry is a doc node, kind=protocol: its body is the
