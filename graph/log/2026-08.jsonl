@@ -196,3 +196,17 @@
 {"ts":"2026-08-09T15:38:19Z","node":"th-gdtn","v":1,"op":"create","type":"thread","title":"how PRDs, tech specs, and spine landmarks live in the graph","actor":"claude","note":null}
 {"op":"link","rel":"depends-on","to":"dc-9hgd","at":1,"ts":"2026-08-09T15:38:42Z","node":"th-qv27","v":2,"actor":"claude","note":"setup seeds ARE protocol content — the runbook designs against this ruling"}
 {"op":"link","rel":"depends-on","to":"dc-w9vx","at":1,"ts":"2026-08-09T15:38:42Z","node":"th-gdtn","v":2,"actor":"claude","note":"the landmark-minting question must reconcile with extract-on-citation"}
+{"ts":"2026-08-09T16:57:03Z","node":"dc-grrb","v":1,"op":"create","type":"decision","title":"spine landmarks: land-time extraction, presence prompts, never gates","actor":"claude","note":null}
+{"ts":"2026-08-09T16:57:03Z","node":"dc-dsdm","v":1,"op":"create","type":"decision","title":"instill depth at the surface","actor":"claude","note":null}
+{"op":"body","ts":"2026-08-09T16:57:21Z","node":"th-gdtn","v":3,"actor":"claude","note":"narrowed after the spine half was ruled"}
+{"ts":"2026-08-09T16:57:21Z","node":"th-ejn6","v":1,"op":"create","type":"thread","title":"leaseless code writes: where does the lease boundary actually sit?","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"dc-qeup","at":2,"ts":"2026-08-09T16:57:36Z","node":"th-ejn6","v":2,"actor":"claude","note":"the boundary question must reconcile with the ratified lease model"}
+{"ts":"2026-08-09T16:57:36Z","node":"cl-qm6t","v":1,"op":"create","type":"claim","title":"the dispatch chain gates reserve on briefs and holds code writes to lea…","actor":"claude","note":null}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"29cef7c24f2a","ts":"2026-08-09T16:57:36Z","node":"cl-qm6t","v":2,"actor":"claude"}
+{"ts":"2026-08-09T16:57:36Z","node":"cl-c34g","v":1,"op":"create","type":"claim","title":"the area gate and per-area watermarks deliver read-firsts and foreign d…","actor":"claude","note":null}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"485806b91937","ts":"2026-08-09T16:57:36Z","node":"cl-c34g","v":2,"actor":"claude"}
+{"ts":"2026-08-09T16:57:37Z","node":"cl-en99","v":1,"op":"create","type":"claim","title":"mint-time relatedness matches the title lexicon forward and nodehood re…","actor":"claude","note":null}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"55d711c396b3","ts":"2026-08-09T16:57:37Z","node":"cl-en99","v":2,"actor":"claude"}
+{"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:58Z","node":"cl-qm6t","v":3,"actor":"claude"}
+{"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:59Z","node":"cl-c34g","v":3,"actor":"claude"}
+{"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:59Z","node":"cl-en99","v":3,"actor":"claude"}

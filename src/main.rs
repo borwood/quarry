@@ -131,7 +131,10 @@ user-provenance thread without --by user.")]
   q claim \"halo is 4-11 cells\" --about hydrology --source s11-results --method \"ring differencing\"
 Extract a claim only when something depends on the statement or kills it —
 never while writing prose. C1: at least one --about. C2: non-user claims
-name their --source doc.")]
+name their --source doc. A landing counts as dependence: register a landed
+capability as a SPINE claim (--source file:<the code>), titled in the
+project's naming register — titles feed the relatedness lexicon, so a
+well-named spine surfaces itself to future work. Backtick concept names.")]
     Claim {
         text: String,
         #[arg(long = "about", required = true)]
@@ -414,6 +417,32 @@ fn area_watermarks(store: &Store, node_id: &str) {
             coord::AreaTouch::Current => {}
         }
     }
+}
+
+/// Land-time landmark check (ratified 2026-08-09): when an item lands, does
+/// anything in the graph cite the files it held? PRESENCE of citation only,
+/// and a prompt, never a gate — a blocked done breeds Goodhart claims.
+fn spine_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
+    if item.front.ty != "item" {
+        return;
+    }
+    let Ok(all) = store.load_all() else { return };
+    let globs = globs.unwrap_or_else(|| {
+        coord::load_leases(store)
+            .iter()
+            .find(|l| l.item == item.front.id)
+            .map(|l| l.globs.clone())
+            .unwrap_or_else(|| item.front.write_set.clone())
+    });
+    if globs.is_empty() || quarry::queries::files_cited(&all, &globs) {
+        return;
+    }
+    println!(
+        "  landed uncited: no claim or doc cites {:?}. If this work left a durable capability, register its spine while the diff is warm:",
+        globs
+    );
+    println!("    q claim \"<the capability, named in the project's register>\" --about <area> --source file:<path>");
+    println!("  Skip freely if nothing durable landed — a claim minted to silence this line is Goodhart, worse than silence. Presence is checked; quality is judged at review.");
 }
 
 /// The area-first-touch gate (user-agreed 2026-08-09): minting into an area
@@ -1089,8 +1118,13 @@ fn main() -> Result<()> {
                 .ok_or_else(|| anyhow::anyhow!("no QUARRY_SESSION set"))?;
             let all = store.load_all()?;
             let node = store.find(&all, &item)?.clone();
+            let held = coord::load_leases(&store)
+                .iter()
+                .find(|l| l.item == node.front.id)
+                .map(|l| l.globs.clone());
             coord::release(&store, &node, &sess, &Store::actor())?;
             println!("✔ released: \"{}\"", node.front.title);
+            spine_check(&store, &node, held);
         }
         Cmd::Queue { which } => {
             let store = Store::discover()?;
@@ -1349,6 +1383,26 @@ fn main() -> Result<()> {
                         println!("    {}", line(n));
                     }
                 }
+                // Landmark backstop: items landed this session whose held
+                // files nothing cites — spine or no spine, decided while warm.
+                let leases = coord::load_leases(&store);
+                for id in &touched_ids {
+                    if let Some(n) = all.iter().find(|n| &n.front.id == id) {
+                        if n.front.ty == "item" && n.front.status == "done" {
+                            let globs = leases
+                                .iter()
+                                .find(|l| &l.item == id)
+                                .map(|l| l.globs.clone())
+                                .unwrap_or_else(|| n.front.write_set.clone());
+                            if !globs.is_empty() && !queries::files_cited(&all, &globs) {
+                                println!(
+                                    "  landed uncited: \"{}\" held {:?} and nothing cites those files — spine or no spine? (q claim --source file:...)",
+                                    n.front.title, globs
+                                );
+                            }
+                        }
+                    }
+                }
             }
             if let Some(sess) = coord::current_session() {
                 if coord::load_sessions(&store).get(&sess).map_or(false, |p| p.ephemeral) {
@@ -1493,6 +1547,9 @@ fn main() -> Result<()> {
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
             area_watermarks(&store, &n.front.id);
+            if fields.iter().any(|f| f == "status=done") {
+                spine_check(&store, &n, None);
+            }
         }
         Cmd::Edit {
             node,

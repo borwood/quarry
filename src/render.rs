@@ -192,6 +192,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         .iter()
         .filter(|(m, _)| show_all || !m.front.archived)
         .collect();
+    let has_claim_backlink = backlinks.iter().any(|(m, _)| m.front.ty == "claim");
     if !backlinks.is_empty() || hidden_back > 0 {
         writeln!(s, "\n  backlinks:")?;
         for &(m, e) in backlinks {
@@ -212,6 +213,12 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
                 s,
                 "    ({} archived backlink(s) hidden — q open {} --all)",
                 hidden_back, n.front.id
+            )?;
+        }
+        if n.front.ty == "area" && has_claim_backlink {
+            writeln!(
+                s,
+                "  (claim backlinks are this area's load-bearing bones — build from spine before handrolling anew)"
             )?;
         }
     }
@@ -296,6 +303,10 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
                 ("thread", "open") | ("thread", "queued") => {
                     writeln!(s, "      open thread: \"{}\" ({}) — NOT yours to settle", n.front.title, n.front.id)?;
                 }
+                ("claim", "asserted") | ("claim", "measured") | ("claim", "ratified") => {
+                    writeln!(s, "      spine: \"{}\" [{}] ({} v{})", n.front.title, n.front.status, n.front.id, n.front.v)?;
+                    cited += 1;
+                }
                 _ => {}
             }
         }
@@ -345,6 +356,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     }
 
     writeln!(s, "\nACTOR RULES:")?;
+    writeln!(s, "  · Build from spine: the claims above are load-bearing capabilities — design from these bones before proposing new structure.")?;
     writeln!(s, "  · All graph writes go through q verbs; your work logs under QUARRY_ACTOR (auto-injected).")?;
     writeln!(s, "  · C3: you may not settle or supersede user-provenance nodes; if a call belongs to the user, queue a thread.")?;
     writeln!(s, "  · Cite what you build on (q link ... / q claim --source ...); harvest is judged from the diff, not the report.")?;

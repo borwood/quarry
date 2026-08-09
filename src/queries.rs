@@ -403,6 +403,26 @@ pub fn unblocked_by<'a>(all: &'a [Node], id: &str) -> Vec<&'a Node> {
         .collect()
 }
 
+/// Does any claim or doc cite files under these globs? The land-time
+/// landmark check is PRESENCE of citation, never quality — quality is
+/// judged at review, and a gate here would breed Goodhart claims.
+pub fn files_cited(all: &[Node], globs: &[String]) -> bool {
+    all.iter().any(|n| {
+        (matches!(n.front.ty.as_str(), "claim" | "doc")
+            && n.front.edges.iter().any(|e| {
+                e.to.strip_prefix("file:").map_or(false, |f| {
+                    let path = crate::store::strip_line(f);
+                    globs.iter().any(|g| crate::coord::globs_overlap(g, &path))
+                })
+            }))
+            || (n.front.ty == "doc"
+                && n.front
+                    .path
+                    .as_ref()
+                    .map_or(false, |p| globs.iter().any(|g| crate::coord::globs_overlap(g, p))))
+    })
+}
+
 /// Nodes this session created or adjusted since its last wrap, with each
 /// node's most recent op — the boundary-time final-review list (the wrap
 /// event itself plants the cursor). `sess = None` means an unbound chat:

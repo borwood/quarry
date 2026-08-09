@@ -580,6 +580,30 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn spine_presence_check() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::write(s.root.join("resolve.rs"), "fn spine() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "materials")).unwrap();
+    let all = s.load_all().unwrap();
+    assert!(!queries::files_cited(&all, &["resolve.rs".to_string()]), "nothing cites yet");
+    ops::claim(
+        &s,
+        "materials resolve per-voxel through layered override stacks",
+        vec![area.front.id.clone()],
+        Some("file:resolve.rs".into()),
+        None,
+        Some("assistant".into()),
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    assert!(queries::files_cited(&all, &["resolve.rs".to_string()]), "the spine claim cites it");
+    assert!(queries::files_cited(&all, &["resolve.rs:12".to_string().replace(":12", "")]),);
+    assert!(!queries::files_cited(&all, &["src/**".to_string()]), "unrelated globs stay uncited");
+}
+
+#[test]
 fn topic_queue_roundtrip_and_prune() {
     let s = temp_store();
     let mut a = NewArgs::bare("thread", "naming register");
