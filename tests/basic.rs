@@ -576,6 +576,38 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn area_watermark_lifecycle() {
+    use quarry::coord::{record_area_read, touch_area, AreaTouch};
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let aid = area.front.id.clone();
+    let all = s.load_all().unwrap();
+    // first touch: no cursor recorded for this session
+    assert!(matches!(touch_area(&s, &all, "geo", &aid), AreaTouch::FirstTouch));
+    record_area_read(&s, "geo", &aid);
+    assert!(matches!(touch_area(&s, &all, "geo", &aid), AreaTouch::Current));
+    // a foreign (unbound) write lands in the area after the cursor
+    std::thread::sleep(std::time::Duration::from_millis(1100)); // second-resolution timestamps
+    let mut it = NewArgs::bare("item", "erosion pass");
+    it.about = vec![aid.clone()];
+    ops::new_node(&s, it).unwrap();
+    let all = s.load_all().unwrap();
+    match touch_area(&s, &all, "geo", &aid) {
+        AreaTouch::Drift(lines) => {
+            assert!(
+                lines.iter().any(|l| l.contains("erosion pass") && l.contains("unbound")),
+                "got {:?}",
+                lines
+            );
+        }
+        AreaTouch::FirstTouch => panic!("cursor was recorded"),
+        AreaTouch::Current => panic!("foreign drift must surface"),
+    }
+    // delivery advanced the cursor: quiet again, said once
+    assert!(matches!(touch_area(&s, &all, "geo", &aid), AreaTouch::Current));
+}
+
+#[test]
 fn wrap_session_touched_review() {
     use quarry::queries::session_touched;
     use serde_json::json;

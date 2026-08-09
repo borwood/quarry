@@ -357,7 +357,81 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
     }
 }
 
+/// The per-area watermark surface, run after a mutating verb touched a node.
+/// First touch of an unread area nudges once; foreign drift since the
+/// recorded read prints inline (the delta IS the delivery); own writes and
+/// quiet checks advance the cursor silently.
+fn area_watermarks(store: &Store, node_id: &str) {
+    let sess = coord::session_key();
+    let Ok(all) = store.load_all() else { return };
+    let Ok(node) = store.find(&all, node_id) else { return };
+    let areas: Vec<(String, String)> = node
+        .front
+        .edges
+        .iter()
+        .filter(|e| e.rel == "about")
+        .filter_map(|e| {
+            all.iter()
+                .find(|n| n.front.id == e.to && n.front.ty == "area")
+                .map(|n| (n.front.id.clone(), n.front.title.clone()))
+        })
+        .collect();
+    for (aid, title) in areas {
+        match coord::touch_area(store, &all, &sess, &aid) {
+            coord::AreaTouch::FirstTouch => {
+                println!(
+                    "  note: first touch of area \"{}\" this session without a read — the read-first: q open {}",
+                    title, aid
+                );
+                coord::record_area_read(store, &sess, &aid);
+            }
+            coord::AreaTouch::Drift(lines) => {
+                println!("  since your last read of \"{}\" (other sessions):", title);
+                for l in lines {
+                    println!("    · {}", l);
+                }
+            }
+            coord::AreaTouch::Current => {}
+        }
+    }
+}
+
+/// The area-first-touch gate (user-agreed 2026-08-09): minting into an area
+/// this session has never read intercepts once, delivers the area's derived
+/// read-first, and saves the intent for q resume. A prior same-session
+/// `q open <area>` passes silently — the gate is the backstop, not the path.
+fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
+    let sess = coord::session_key();
+    let all = store.load_all()?;
+    let mut unread: Vec<(String, String)> = Vec::new();
+    for key in &a.about {
+        if key.starts_with("file:") {
+            continue;
+        }
+        let Ok(n) = store.find(&all, key) else { continue };
+        if n.front.ty == "area" && coord::area_cursor(store, &sess, &n.front.id).is_none() {
+            unread.push((n.front.id.clone(), n.front.title.clone()));
+        }
+    }
+    if unread.is_empty() {
+        return Ok(false);
+    }
+    let token = quarry::protocol::save_intent(store, "new", serde_json::to_value(a)?)?;
+    println!("⏸ gated: first write into unread area(s) this session — the read-first arrives now.");
+    for (aid, title) in &unread {
+        println!("\n── area \"{}\" ──", title);
+        print!("{}", render::open(store, aid, false)?);
+        coord::record_area_read(store, &coord::session_key(), aid);
+    }
+    println!("\nYour intent is saved. Read the above, then run: q resume {}", token);
+    println!("(args are remembered; delivery is recorded — this session will not be gated on these areas again)");
+    Ok(true)
+}
+
 fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
+    if area_gate_if_needed(store, &a)? {
+        std::process::exit(2);
+    }
     let body = read_body(a.body, a.body_file)?;
     let node = ops::new_node(
         store,
@@ -387,6 +461,7 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
         );
     }
     print_mint_surfaces(store, &node);
+    area_watermarks(store, &node.front.id);
     if let Ok(all) = store.load_all() {
         for (title, text) in quarry::protocol::inline_texts(
             &all,
@@ -1288,6 +1363,7 @@ fn main() -> Result<()> {
             }
             drop(all);
             print_homework(&store, &[src_id.as_str(), edge.to.as_str()]);
+            area_watermarks(&store, &src_id);
         }
         Cmd::Set { node, fields, note } => {
             let store = Store::discover()?;
@@ -1295,6 +1371,7 @@ fn main() -> Result<()> {
             println!("✔ {}", line(&n));
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
+            area_watermarks(&store, &n.front.id);
         }
         Cmd::Edit {
             node,
@@ -1311,6 +1388,7 @@ fn main() -> Result<()> {
             println!("✔ {}", line(&n));
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
+            area_watermarks(&store, &n.front.id);
         }
         Cmd::Rule {
             thread,
@@ -1327,6 +1405,7 @@ fn main() -> Result<()> {
             let th_id = store.find(&all, &thread)?.front.id.clone();
             drop(all);
             print_homework(&store, &[th_id.as_str(), d.front.id.as_str()]);
+            area_watermarks(&store, &d.front.id);
         }
         Cmd::Claim {
             text,
@@ -1340,6 +1419,7 @@ fn main() -> Result<()> {
             let n = ops::claim(&store, &text, about, source, method, provenance, status)?;
             println!("✔ {}", line(&n));
             print_mint_surfaces(&store, &n);
+            area_watermarks(&store, &n.front.id);
         }
         Cmd::Refute { claim, by, note } => {
             let store = Store::discover()?;
@@ -1377,6 +1457,15 @@ fn main() -> Result<()> {
         Cmd::Open { node, all } => {
             let store = Store::discover()?;
             print!("{}", render::open(&store, &node, all)?);
+            // An area open is the canonical read-first act: record it so the
+            // first-touch gate passes silently on the diligent path.
+            if let Ok(loaded) = store.load_all() {
+                if let Ok(n) = store.find(&loaded, &node) {
+                    if n.front.ty == "area" {
+                        coord::record_area_read(&store, &coord::session_key(), &n.front.id);
+                    }
+                }
+            }
         }
         Cmd::Brief { item } => {
             let store = Store::discover()?;

@@ -165,6 +165,23 @@ pub fn gate_if_needed(
     }))
 }
 
+/// Save an intent outside the protocol-rule flow (engine-native gates, e.g.
+/// the area-first-touch gate) and return its one-time token.
+pub fn save_intent(store: &Store, verb: &str, args: serde_json::Value) -> Result<String> {
+    let sess = crate::coord::current_session().unwrap_or_else(|| "default".into());
+    let mut f = load(store);
+    let token = mint_token();
+    f.intents.push(StoredIntent {
+        token: token.clone(),
+        verb: verb.to_string(),
+        args,
+        session: sess,
+        created: Store::now(),
+    });
+    save(store, &f)?;
+    Ok(token)
+}
+
 /// Consume a token: single-use, ~1h TTL. Expired or unknown tokens re-gate
 /// gracefully (the memo already stands, so the plain retry executes).
 pub fn take_intent(store: &Store, token: &str) -> Result<StoredIntent> {

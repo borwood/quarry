@@ -2,8 +2,8 @@
 id: it-x8ms
 type: item
 title: 'area-first-touch gate: read-first delivered at the first write into an area'
-v: 5
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-09T08:02:50Z
 actor: claude

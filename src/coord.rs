@@ -269,6 +269,119 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
+fn area_reads_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".area-reads.json")
+}
+
+/// The session key for machine-local attention state: the bound session, or
+/// "unbound" for a chat with no identity (imprecise across parallel unbound
+/// chats — an accepted, machine-local blur).
+pub fn session_key() -> String {
+    current_session().unwrap_or_else(|| "unbound".into())
+}
+
+type AreaReads = BTreeMap<String, BTreeMap<String, String>>;
+
+fn load_area_reads(store: &Store) -> AreaReads {
+    fs::read_to_string(area_reads_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+pub fn area_cursor(store: &Store, sess: &str, area_id: &str) -> Option<String> {
+    load_area_reads(store).get(sess)?.get(area_id).cloned()
+}
+
+/// Record that this session has read (or been delivered) this area's
+/// neighborhood — machine-local; the committed log stays mutations-only.
+pub fn record_area_read(store: &Store, sess: &str, area_id: &str) {
+    let mut m = load_area_reads(store);
+    m.entry(sess.to_string())
+        .or_default()
+        .insert(area_id.to_string(), Store::now());
+    if let Ok(s) = serde_json::to_string_pretty(&m) {
+        let _ = fs::write(area_reads_path(store), s + "\n");
+    }
+}
+
+/// The per-(session, area) watermark surface (user-ruled 2026-08-09).
+pub enum AreaTouch {
+    /// No recorded read this session — the caller gates (q new) or nudges
+    /// (other verbs), then records the delivery.
+    FirstTouch,
+    /// Foreign content events landed in this area since the recorded read —
+    /// delivered once; the cursor has advanced.
+    Drift(Vec<String>),
+    /// Nothing foreign since the cursor; cursor advanced silently.
+    Current,
+}
+
+/// Check (and advance) a session's watermark over one area. Own-session
+/// events advance silently; foreign create/set/link/body events on nodes in
+/// the area come back as delta lines, capped, each said once. Known blind
+/// spot: second-granularity timestamps can hide a foreign write landing the
+/// same second as the cursor — accepted, watch-listed.
+pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> AreaTouch {
+    let Some(cursor) = area_cursor(store, sess, area_id) else {
+        return AreaTouch::FirstTouch;
+    };
+    let Ok(log) = store.read_log() else {
+        record_area_read(store, sess, area_id);
+        return AreaTouch::Current;
+    };
+    let mut lines: Vec<(String, String)> = Vec::new(); // node id → line
+    for ev in &log {
+        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
+        if ts <= cursor.as_str() {
+            continue;
+        }
+        let ev_key = ev
+            .get("session")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unbound");
+        if ev_key == sess {
+            continue;
+        }
+        let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("");
+        if !matches!(op, "create" | "set" | "link" | "body") {
+            continue;
+        }
+        let Some(id) = ev.get("node").and_then(|v| v.as_str()) else { continue };
+        let in_area = id == area_id
+            || all
+                .iter()
+                .find(|n| n.front.id == id)
+                .map_or(false, |n| in_purview(n, &[area_id]));
+        if !in_area {
+            continue;
+        }
+        let title = all
+            .iter()
+            .find(|n| n.front.id == id)
+            .map(|n| n.front.title.clone())
+            .unwrap_or_else(|| id.to_string());
+        let line = format!("[{}] \"{}\" ({}) by session {}", op, title, id, ev_key);
+        if let Some(pos) = lines.iter().position(|(i, _)| i == id) {
+            lines[pos].1 = line;
+        } else {
+            lines.push((id.to_string(), line));
+        }
+    }
+    record_area_read(store, sess, area_id);
+    if lines.is_empty() {
+        AreaTouch::Current
+    } else {
+        let mut out: Vec<String> = lines.into_iter().map(|(_, l)| l).collect();
+        if out.len() > 6 {
+            let extra = out.len() - 6;
+            out.truncate(6);
+            out.push(format!("…and {} more — q open {}", extra, area_id));
+        }
+        AreaTouch::Drift(out)
+    }
+}
+
 /// C8 support: has this session rendered a brief for this item? A lease
 /// follows a brief — reserve refuses without one on the session's log.
 pub fn briefed_this_session(store: &Store, item_id: &str, session: &str) -> bool {
