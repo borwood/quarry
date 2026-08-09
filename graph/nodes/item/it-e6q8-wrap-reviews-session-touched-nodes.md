@@ -2,8 +2,8 @@
 id: it-e6q8
 type: item
 title: wrap reviews session-touched nodes
-v: 3
-status: ready
+v: 4
+status: done
 provenance: user
 created: 2026-08-09T07:14:53Z
 actor: claude

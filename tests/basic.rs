@@ -576,6 +576,30 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn wrap_session_touched_review() {
+    use quarry::queries::session_touched;
+    use serde_json::json;
+    let log = vec![
+        json!({"ts":"t1","op":"create","node":"it-a","session":"geo"}),
+        json!({"ts":"t2","op":"wrap","node":"session:geo","session":"geo"}),
+        json!({"ts":"t3","op":"set","node":"it-b","session":"geo"}),
+        json!({"ts":"t4","op":"link","node":"it-b","session":"geo"}),
+        json!({"ts":"t5","op":"create","node":"it-c","session":"bodies"}),
+        json!({"ts":"t6","op":"create","node":"it-d"}),
+    ];
+    let geo = session_touched(&log, Some("geo"));
+    assert_eq!(
+        geo,
+        vec![("it-b".to_string(), "link".to_string())],
+        "own events since the last own wrap, latest op wins"
+    );
+    let unbound = session_touched(&log, None);
+    assert_eq!(unbound, vec![("it-d".to_string(), "create".to_string())]);
+    let bodies = session_touched(&log, Some("bodies"));
+    assert_eq!(bodies.len(), 1, "no wrap cursor yet: everything shows");
+}
+
+#[test]
 fn brief_renders_neighborhood_and_return_spec() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();

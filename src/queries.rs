@@ -403,6 +403,48 @@ pub fn unblocked_by<'a>(all: &'a [Node], id: &str) -> Vec<&'a Node> {
         .collect()
 }
 
+/// Nodes this session created or adjusted since its last wrap, with each
+/// node's most recent op — the boundary-time final-review list (the wrap
+/// event itself plants the cursor). `sess = None` means an unbound chat:
+/// events carrying no session stamp.
+pub fn session_touched(
+    log: &[serde_json::Value],
+    sess: Option<&str>,
+) -> Vec<(String, String)> {
+    let matches_key = |ev: &serde_json::Value| -> bool {
+        match (sess, ev.get("session").and_then(|v| v.as_str())) {
+            (Some(s), Some(es)) => s == es,
+            (None, None) => true,
+            _ => false,
+        }
+    };
+    let cursor = log
+        .iter()
+        .rev()
+        .find(|ev| ev.get("op").and_then(|v| v.as_str()) == Some("wrap") && matches_key(ev))
+        .and_then(|ev| ev.get("ts").and_then(|v| v.as_str()))
+        .unwrap_or("");
+    let mut touched: Vec<(String, String)> = Vec::new();
+    for ev in log {
+        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
+        if ts <= cursor || !matches_key(ev) {
+            continue;
+        }
+        let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
+        if op == "wrap" {
+            continue;
+        }
+        if let Some(id) = ev.get("node").and_then(|v| v.as_str()) {
+            if let Some(pos) = touched.iter().position(|(i, _)| i == id) {
+                touched[pos].1 = op.to_string();
+            } else {
+                touched.push((id.to_string(), op.to_string()));
+            }
+        }
+    }
+    touched
+}
+
 /// Events for one node, oldest first.
 pub fn node_log(store: &Store, id: &str) -> Result<Vec<serde_json::Value>> {
     Ok(store

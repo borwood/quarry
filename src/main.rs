@@ -1017,6 +1017,34 @@ fn main() -> Result<()> {
             for n in &answerable {
                 println!("    {}", line(n));
             }
+            {
+                // Session-touched review (user-ruled 2026-08-09): every node
+                // this session created or adjusted since its last wrap, for a
+                // final look while the context that wrote them is still warm.
+                let sess_key = coord::current_session();
+                let log = store.read_log()?;
+                let touched = queries::session_touched(&log, sess_key.as_deref());
+                if !touched.is_empty() {
+                    println!(
+                        "  session-touched since last wrap ({}) — final review: does each still say what you now know?",
+                        touched.len()
+                    );
+                    for (id, op) in touched.iter().take(15) {
+                        match all.iter().find(|n| &n.front.id == id) {
+                            Some(n) => println!("    [{}] {}", op, line(n)),
+                            None => println!("    [{}] {}", op, id),
+                        }
+                    }
+                    if touched.len() > 15 {
+                        println!("    …and {} more", touched.len() - 15);
+                    }
+                }
+                store.log_event(serde_json::json!({
+                    "ts": Store::now(),
+                    "node": format!("session:{}", sess_key.as_deref().unwrap_or("unbound")),
+                    "v": 0, "op": "wrap", "actor": Store::actor()
+                }))?;
+            }
             let behind = queries::behind(&store, &all);
             if behind.is_empty() {
                 println!("  behind: none — every ref current");
