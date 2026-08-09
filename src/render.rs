@@ -218,7 +218,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         if n.front.ty == "area" && has_claim_backlink {
             writeln!(
                 s,
-                "  (claim backlinks are this area's load-bearing bones — build from spine before handrolling anew)"
+                "  (claim backlinks are this area's `load-bearing bones` — build from spine before handrolling anew)"
             )?;
         }
     }
@@ -356,7 +356,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     }
 
     writeln!(s, "\nACTOR RULES:")?;
-    writeln!(s, "  · Build from spine: the claims above are load-bearing capabilities — design from these bones before proposing new structure.")?;
+    writeln!(s, "  · Build from spine: the claims above are `load-bearing capabilities` — design from these bones before proposing new structure.")?;
     writeln!(s, "  · All graph writes go through q verbs; your work logs under QUARRY_ACTOR (auto-injected).")?;
     writeln!(s, "  · C3: you may not settle or supersede user-provenance nodes; if a call belongs to the user, queue a thread.")?;
     writeln!(s, "  · Cite what you build on (q link ... / q claim --source ...); harvest is judged from the diff, not the report.")?;

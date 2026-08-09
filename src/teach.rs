@@ -90,7 +90,10 @@ foreign drift in an area prints inline when your own verb touches it.
 DISPATCH IS A CHAIN: q brief renders the derived brief (if it reads
 wrong, fix the graph and re-render — never hand-compose dispatch
 context), C8 makes reserve follow a same-session brief, and the write
-hook holds code writes to the leased set. The user's single-thread
+hook holds code writes to the leased set. A landed capability registers
+its spine: a claim titled name-first (`name`: what it provides), source
+the code it was read off — the area's claims are its `load-bearing
+bones`, and building starts from them. The user's single-thread
 conversation order lives in q queue (push/pop/front/drop) — it is
 working state; what the user owes stays the graph's queued threads.
 

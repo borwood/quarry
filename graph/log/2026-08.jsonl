@@ -210,3 +210,6 @@
 {"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:58Z","node":"cl-qm6t","v":3,"actor":"claude"}
 {"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:59Z","node":"cl-c34g","v":3,"actor":"claude"}
 {"op":"set","fields":["status=measured"],"from_status":"asserted","ts":"2026-08-09T16:57:59Z","node":"cl-en99","v":3,"actor":"claude"}
+{"ts":"2026-08-09T17:22:58Z","node":"dc-e6pp","v":1,"op":"create","type":"decision","title":"capability names over descriptions; the backtick meme spreads by use","actor":"claude","note":null}
+{"op":"body","ts":"2026-08-09T17:22:58Z","node":"th-ejn6","v":3,"actor":"claude","note":"user lean recorded"}
+{"ts":"2026-08-09T17:22:58Z","node":"th-dbn4","v":1,"op":"create","type":"thread","title":"the dispatched agent as quarry citizen: what it uses, how quarry leverages it","actor":"claude","note":null}

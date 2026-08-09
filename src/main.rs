@@ -129,12 +129,13 @@ user-provenance thread without --by user.")]
     /// Extract a claim (extraction-on-citation)
     #[command(after_help = "EXAMPLES:
   q claim \"halo is 4-11 cells\" --about hydrology --source s11-results --method \"ring differencing\"
+  q claim \"`body-graph`: water bodies keep identity across chunk regen\" --about hydrology --source file:src/water/body.rs
 Extract a claim only when something depends on the statement or kills it —
 never while writing prose. C1: at least one --about. C2: non-user claims
 name their --source doc. A landing counts as dependence: register a landed
-capability as a SPINE claim (--source file:<the code>), titled in the
-project's naming register — titles feed the relatedness lexicon, so a
-well-named spine surfaces itself to future work. Backtick concept names.")]
+capability as a SPINE claim (--source file:<the code>), titled name-first
+in the project's register (`name`: what it provides) — titles feed the
+relatedness lexicon, so a well-named spine surfaces itself to future work.")]
     Claim {
         text: String,
         #[arg(long = "about", required = true)]
@@ -441,7 +442,8 @@ fn spine_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
         "  landed uncited: no claim or doc cites {:?}. If this work left a durable capability, register its spine while the diff is warm:",
         globs
     );
-    println!("    q claim \"<the capability, named in the project's register>\" --about <area> --source file:<path>");
+    println!("    q claim \"`capability-name`: what it now provides\" --about <area> --source file:<path>");
+    println!("  Name it — a `named` capability reasons better than a description, and every build that cites it surfaces by blast.");
     println!("  Skip freely if nothing durable landed — a claim minted to silence this line is Goodhart, worse than silence. Presence is checked; quality is judged at review.");
 }
 
