@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: part-of
   to: it-wkcq
-  at: 1
+  at: 2
 ---
 
 Single-thread topic queue: push/order/pop thread nodes (DESIGN.md section 9, need-order list). NOT q query queue (the answerable-thread listing) — this verb mechanizes conversation pacing: the user works one thread at a time; the queue holds what is next and in what order. Directly serves the single-thread reply convention (CLAUDE.md, user ruling 2026-08-09). Dropped in error 2026-08-09 from its bodyless title; restored the same day on reading the design doc.

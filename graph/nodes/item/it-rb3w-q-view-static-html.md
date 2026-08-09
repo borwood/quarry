@@ -15,7 +15,7 @@ edges:
   at: 1
 - rel: part-of
   to: it-wkcq
-  at: 1
+  at: 2
 - rel: depends-on
   to: th-ngby
   at: 4
