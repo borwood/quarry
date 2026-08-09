@@ -191,6 +191,13 @@ fix the graph and re-render — never hand-compose dispatch context.")]
         #[command(subcommand)]
         which: Query,
     },
+    /// The single-thread topic queue: threads the user works one at a time
+    /// (push / pop / front / drop; no subcommand lists it). Working state,
+    /// machine-local — ownership itself stays in the graph's queued threads.
+    Queue {
+        #[command(subcommand)]
+        which: Option<QueueCmd>,
+    },
     /// Boundary-time lint: what is owed, dangling, in flight, or unrecorded
     Wrap,
     /// Search nodes by id, title, or body text
@@ -237,6 +244,19 @@ A lease follows a brief: reserve refuses unless this session rendered
         #[command(subcommand)]
         which: HookCmd,
     },
+}
+
+#[derive(Subcommand)]
+enum QueueCmd {
+    /// Append a thread to the topic queue
+    Push { thread: String },
+    /// Take the front topic off the queue (does not resolve the thread —
+    /// rulings still go through q rule)
+    Pop,
+    /// Move a queued thread to the front
+    Front { thread: String },
+    /// Remove a thread from the queue without taking it up
+    Drop { thread: String },
 }
 
 #[derive(Subcommand)]
@@ -1071,6 +1091,90 @@ fn main() -> Result<()> {
             let node = store.find(&all, &item)?.clone();
             coord::release(&store, &node, &sess, &Store::actor())?;
             println!("✔ released: \"{}\"", node.front.title);
+        }
+        Cmd::Queue { which } => {
+            let store = Store::discover()?;
+            let all = store.load_all()?;
+            let (mut q, pruned) = coord::topic_queue_pruned(&store, &all);
+            for id in &pruned {
+                println!("  (pruned: {} — resolved or gone)", id);
+            }
+            match which {
+                None => {
+                    if q.is_empty() {
+                        println!("topic queue is empty — q queue push <thread>");
+                    }
+                    for (i, id) in q.iter().enumerate() {
+                        if let Some(n) = all.iter().find(|n| &n.front.id == id) {
+                            let blockers = queries::live_blockers(&all, n);
+                            let state = if blockers.is_empty() {
+                                String::new()
+                            } else {
+                                format!("  (blocked on \"{}\")", blockers[0].front.title)
+                            };
+                            let mark = if i == 0 { " ← next up" } else { "" };
+                            println!("{}. {}{}{}", i + 1, line(n), state, mark);
+                        }
+                    }
+                }
+                Some(QueueCmd::Push { thread }) => {
+                    let n = store.find(&all, &thread)?;
+                    if n.front.ty != "thread" {
+                        anyhow::bail!("{} is a {}, not a thread", n.front.id, n.front.ty);
+                    }
+                    if n.front.status == "resolved" {
+                        anyhow::bail!("\"{}\" is already resolved", n.front.title);
+                    }
+                    if q.contains(&n.front.id) {
+                        anyhow::bail!("\"{}\" is already in the topic queue", n.front.title);
+                    }
+                    q.push(n.front.id.clone());
+                    coord::save_topic_queue(&store, &q)?;
+                    println!("✔ queued at {}: {}", q.len(), line(n));
+                }
+                Some(QueueCmd::Pop) => {
+                    if q.is_empty() {
+                        println!("topic queue is empty.");
+                    } else {
+                        let id = q.remove(0);
+                        coord::save_topic_queue(&store, &q)?;
+                        match store.find(&all, &id) {
+                            Ok(n) => {
+                                println!("now: {}", line(n));
+                                if !n.body.trim().is_empty() {
+                                    for l in n.body.lines() {
+                                        println!("  {}", l);
+                                    }
+                                }
+                                println!("  (ruling still goes through: q rule {} \"...\" --by user)", n.front.id);
+                            }
+                            Err(_) => println!("now: {}", id),
+                        }
+                        if let Some(next) = q.first().and_then(|id| all.iter().find(|n| &n.front.id == id)) {
+                            println!("  next after this: \"{}\"", next.front.title);
+                        }
+                    }
+                }
+                Some(QueueCmd::Front { thread }) => {
+                    let n = store.find(&all, &thread)?;
+                    let Some(pos) = q.iter().position(|id| id == &n.front.id) else {
+                        anyhow::bail!("\"{}\" is not in the topic queue — q queue push first", n.front.title);
+                    };
+                    let id = q.remove(pos);
+                    q.insert(0, id);
+                    coord::save_topic_queue(&store, &q)?;
+                    println!("✔ front: {}", line(n));
+                }
+                Some(QueueCmd::Drop { thread }) => {
+                    let n = store.find(&all, &thread)?;
+                    let Some(pos) = q.iter().position(|id| id == &n.front.id) else {
+                        anyhow::bail!("\"{}\" is not in the topic queue", n.front.title);
+                    };
+                    q.remove(pos);
+                    coord::save_topic_queue(&store, &q)?;
+                    println!("✔ dropped from the topic queue: {} (the thread itself is untouched)", line(n));
+                }
+            }
         }
         Cmd::Wrap => {
             let store = Store::discover()?;

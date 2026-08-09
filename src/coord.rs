@@ -382,6 +382,39 @@ pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> Are
     }
 }
 
+fn topic_queue_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".topic-queue.json")
+}
+
+/// The single-thread topic queue (DESIGN.md § 9): an ordered list of thread
+/// ids the user works one at a time. Machine-local working state — the
+/// threads themselves, and what the user owes, live in the graph.
+pub fn load_topic_queue(store: &Store) -> Vec<String> {
+    fs::read_to_string(topic_queue_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+pub fn save_topic_queue(store: &Store, q: &[String]) -> Result<()> {
+    fs::write(topic_queue_path(store), serde_json::to_string_pretty(q)? + "\n")?;
+    Ok(())
+}
+
+/// Load the topic queue with resolved/vanished threads pruned out.
+/// Returns (live queue, pruned ids); saves only if something was pruned.
+pub fn topic_queue_pruned(store: &Store, all: &[Node]) -> (Vec<String>, Vec<String>) {
+    let q = load_topic_queue(store);
+    let (live, pruned): (Vec<String>, Vec<String>) = q.into_iter().partition(|id| {
+        all.iter()
+            .any(|n| &n.front.id == id && n.front.ty == "thread" && n.front.status != "resolved")
+    });
+    if !pruned.is_empty() {
+        let _ = save_topic_queue(store, &live);
+    }
+    (live, pruned)
+}
+
 /// C8 support: has this session rendered a brief for this item? A lease
 /// follows a brief — reserve refuses without one on the session's log.
 pub fn briefed_this_session(store: &Store, item_id: &str, session: &str) -> bool {

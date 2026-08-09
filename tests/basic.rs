@@ -576,6 +576,32 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn topic_queue_roundtrip_and_prune() {
+    let s = temp_store();
+    let mut a = NewArgs::bare("thread", "naming register");
+    a.provenance = Some("user".into());
+    a.status = Some("queued".into());
+    let a = ops::new_node(&s, a).unwrap();
+    let mut b = NewArgs::bare("thread", "journal ambition");
+    b.provenance = Some("user".into());
+    b.status = Some("queued".into());
+    let b = ops::new_node(&s, b).unwrap();
+    quarry::coord::save_topic_queue(&s, &[a.front.id.clone(), b.front.id.clone()]).unwrap();
+    let all = s.load_all().unwrap();
+    let (q, pruned) = quarry::coord::topic_queue_pruned(&s, &all);
+    assert_eq!(q.len(), 2);
+    assert!(pruned.is_empty());
+    // resolving a thread prunes it from the topic queue
+    ops::rule(&s, &a.front.id, "settled", Some("user".into()), None).unwrap();
+    let all = s.load_all().unwrap();
+    let (q, pruned) = quarry::coord::topic_queue_pruned(&s, &all);
+    assert_eq!(q, vec![b.front.id.clone()]);
+    assert_eq!(pruned, vec![a.front.id.clone()]);
+    // and the prune persisted
+    assert_eq!(quarry::coord::load_topic_queue(&s), vec![b.front.id.clone()]);
+}
+
+#[test]
 fn area_watermark_lifecycle() {
     use quarry::coord::{record_area_read, touch_area, AreaTouch};
     let s = temp_store();
