@@ -7,3 +7,4 @@ graph/.sessions-live.json
 graph/.chat-sessions.json
 graph/.adopt-request.json
 graph/.alert-cursors.json
+graph/.chat-actors.json

@@ -317,6 +317,41 @@ pub fn chat_binding(store: &Store, chat_id: &str) -> Option<String> {
     map.get(chat_id).cloned()
 }
 
+fn actors_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".chat-actors.json")
+}
+
+/// SessionStart records which model a chat runs (when the harness provides
+/// it); the PreToolUse hook injects it as QUARRY_ACTOR so agents never set
+/// attribution by hand — same class, same cure as session identity.
+pub fn record_chat_actor(store: &Store, chat_id: &str, model: &str) {
+    let mut map: BTreeMap<String, String> = fs::read_to_string(actors_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    map.insert(chat_id.to_string(), model.to_string());
+    if let Ok(s) = serde_json::to_string_pretty(&map) {
+        let _ = fs::write(actors_path(store), s + "\n");
+    }
+}
+
+pub fn chat_actor(store: &Store, chat_id: &str) -> Option<String> {
+    let map: BTreeMap<String, String> =
+        serde_json::from_str(&fs::read_to_string(actors_path(store)).ok()?).ok()?;
+    map.get(chat_id).cloned()
+}
+
+/// Provenance derivation keys on "claude" in the actor string; a display
+/// name like "Fable 5" would silently derive USER provenance. Any actor the
+/// hook injects passes through this guard.
+pub fn safe_actor(model: &str) -> String {
+    if model.to_lowercase().contains("claude") {
+        model.to_string()
+    } else {
+        format!("claude:{}", model)
+    }
+}
+
 /// `q session adopt` writes this; the NEXT PreToolUse hook (which knows the
 /// chat's session_id) consumes it and binds. TTL 120s; single pending slot.
 pub fn write_adopt_request(store: &Store, q_session: &str) -> Result<()> {

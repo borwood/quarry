@@ -21,9 +21,11 @@ machine.
 
 ## Conventions
 
-- **Export `QUARRY_ACTOR=<model-name>` before running q verbs** so the event
-  log attributes honestly. If unset, derived provenance safely defaults to
-  `assistant` — user provenance is only ever explicit.
+- **`QUARRY_ACTOR` is auto-injected by the session hook** (from the model
+  recorded at SessionStart) for chats running in this repo — don't set it by
+  hand. Export it manually only when working from outside hook coverage
+  (e.g. a parent-directory session). If unset entirely, derived provenance
+  safely defaults to `assistant` — user provenance is only ever explicit.
 - After editing `src/teach.rs` (guide/skill/hooks): rebuild, then re-run
   `q init --claude` to regenerate `.claude/skills/quarry/SKILL.md` and hook
   wiring. After graph or docs changes: `q view` to regenerate the page.

@@ -446,7 +446,7 @@ fn session_injection_binds_and_rewrites() {
     let input = r#"{"session_id":"chat-abc","tool_name":"Bash","tool_input":{"command":"q wrap","description":"lint"}}"#;
     let out = quarry::teach::session_hook_output(&s, input).expect("injects after adopt");
     let cmd = out["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap();
-    assert_eq!(cmd, "export QUARRY_SESSION=geo; q wrap");
+    assert_eq!(cmd, "export QUARRY_SESSION='geo'; q wrap");
     assert_eq!(out["hookSpecificOutput"]["updatedInput"]["description"].as_str().unwrap(), "lint");
     // binding persisted: no pending request, still injects; PowerShell prefix
     let input2 = r#"{"session_id":"chat-abc","tool_name":"PowerShell","tool_input":{"command":"q view"}}"#;
@@ -573,4 +573,14 @@ fn session_retire_removes_registry_and_leases() {
     assert!(!quarry::coord::load_sessions(&s).contains_key("audit"));
     assert!(quarry::coord::load_leases(&s).is_empty());
     assert!(quarry::coord::retire_session(&s, "audit", "t").is_err(), "double retire errors");
+}
+
+#[test]
+fn actor_recording_and_safety_prefix() {
+    let s = temp_store();
+    assert!(quarry::coord::chat_actor(&s, "chat-1").is_none());
+    quarry::coord::record_chat_actor(&s, "chat-1", "Fable 5");
+    assert_eq!(quarry::coord::chat_actor(&s, "chat-1").as_deref(), Some("Fable 5"));
+    assert_eq!(quarry::coord::safe_actor("claude-fable-5"), "claude-fable-5");
+    assert_eq!(quarry::coord::safe_actor("Fable 5"), "claude:Fable 5");
 }

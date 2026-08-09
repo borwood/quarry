@@ -534,17 +534,24 @@ fn main() -> Result<()> {
             }
             HookCmd::Orient => {
                 // Best-effort: a hook must never fail a session over a missing graph.
-                let chat_id = {
+                let (chat_id, model) = {
                     use std::io::{IsTerminal, Read as _};
                     let mut s = String::new();
                     if !std::io::stdin().is_terminal() {
                         let _ = std::io::stdin().read_to_string(&mut s);
                     }
-                    serde_json::from_str::<serde_json::Value>(&s)
-                        .ok()
-                        .and_then(|v| v.get("session_id").and_then(|x| x.as_str()).map(String::from))
+                    let v = serde_json::from_str::<serde_json::Value>(&s).ok();
+                    (
+                        v.as_ref()
+                            .and_then(|v| v.get("session_id").and_then(|x| x.as_str()).map(String::from)),
+                        v.as_ref()
+                            .and_then(|v| v.get("model").and_then(|x| x.as_str()).map(String::from)),
+                    )
                 };
                 if let Ok(store) = Store::discover() {
+                    if let (Some(cid), Some(m)) = (&chat_id, &model) {
+                        coord::record_chat_actor(&store, cid, m);
+                    }
                     if let Ok(all) = store.load_all() {
                         let queue = queries::queue(&all);
                         let ready = queries::ready(&all);

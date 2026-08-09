@@ -141,8 +141,11 @@ supports (claim/doc → decision/item/claim) · refutes (claim/doc →
 claim/decision) · supersedes (same type) · source (claim → doc)
 
 ENVIRONMENT
-Set QUARRY_ACTOR to your model/agent name so provenance derivation and the
-event log stay honest.
+QUARRY_ACTOR (your model identity) and QUARRY_SESSION are auto-injected by
+the session hook for chats running in this repo — you should never set
+them by hand. Set QUARRY_ACTOR manually only when operating outside hook
+coverage (e.g. from a parent directory). If unset entirely, provenance
+safely derives as assistant; user provenance is always explicit.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -166,21 +169,44 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
         }
     }
     let env_sess = std::env::var("QUARRY_SESSION").ok().filter(|s| !s.trim().is_empty());
+    let env_actor = std::env::var("QUARRY_ACTOR").ok().filter(|s| !s.trim().is_empty());
     let bound = chat_id.and_then(|cid| crate::coord::chat_binding(store, cid));
     let session = env_sess.clone().or_else(|| bound.clone());
+    // Actor injection applies to ANY chat (bound or not): the model recorded
+    // at SessionStart, safety-prefixed so provenance derivation stays honest;
+    // "claude" as the fallback when the harness gave no model. Env wins.
+    let inject_actor = if env_actor.is_none() {
+        Some(crate::coord::safe_actor(
+            &chat_id
+                .and_then(|cid| crate::coord::chat_actor(store, cid))
+                .unwrap_or_else(|| "claude".into()),
+        ))
+    } else {
+        None
+    };
+    let inject_sess = if env_sess.is_none() { bound.clone() } else { None };
     let mut updated_input: Option<serde_json::Map<String, serde_json::Value>> = None;
-    if env_sess.is_none() && matches!(tool, "Bash" | "PowerShell") {
-        if let Some(qs) = &bound {
-            if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
-                if let Some(cmd) = ti.get("command").and_then(|c| c.as_str()) {
-                    let prefix = match tool {
-                        "Bash" => format!("export QUARRY_SESSION={}; ", qs),
+    if matches!(tool, "Bash" | "PowerShell")
+        && (inject_sess.is_some() || (inject_actor.is_some() && chat_id.is_some()))
+    {
+        if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
+            if let Some(cmd) = ti.get("command").and_then(|c| c.as_str()) {
+                let mut prefix = String::new();
+                if let Some(qs) = &inject_sess {
+                    prefix += &match tool {
+                        "Bash" => format!("export QUARRY_SESSION='{}'; ", qs),
                         _ => format!("$env:QUARRY_SESSION='{}'; ", qs),
                     };
-                    let mut u = ti.clone();
-                    u.insert("command".into(), serde_json::json!(format!("{}{}", prefix, cmd)));
-                    updated_input = Some(u);
                 }
+                if let Some(qa) = &inject_actor {
+                    prefix += &match tool {
+                        "Bash" => format!("export QUARRY_ACTOR='{}'; ", qa),
+                        _ => format!("$env:QUARRY_ACTOR='{}'; ", qa),
+                    };
+                }
+                let mut u = ti.clone();
+                u.insert("command".into(), serde_json::json!(format!("{}{}", prefix, cmd)));
+                updated_input = Some(u);
             }
         }
     }
