@@ -2,8 +2,8 @@
 id: it-nnyv
 type: item
 title: q queue verb
-v: 5
-status: sketch
+v: 6
+status: ready
 provenance: assistant
 created: 2026-08-07T11:05:00Z
 actor: claude-fable-5

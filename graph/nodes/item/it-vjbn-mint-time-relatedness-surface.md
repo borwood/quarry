@@ -2,8 +2,8 @@
 id: it-vjbn
 type: item
 title: mint-time relatedness surface
-v: 2
-status: sketch
+v: 4
+status: ready
 provenance: user
 created: 2026-08-09T07:36:42Z
 actor: claude
@@ -11,6 +11,9 @@ kind: feature
 edges:
 - rel: about
   to: ar-c7f5
+  at: 1
+- rel: part-of
+  to: it-wkcq
   at: 1
 ---
 

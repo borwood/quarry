@@ -2,8 +2,8 @@
 id: it-x8ms
 type: item
 title: 'area-first-touch gate: read-first delivered at the first write into an area'
-v: 3
-status: sketch
+v: 5
+status: ready
 provenance: assistant
 created: 2026-08-09T08:02:50Z
 actor: claude
@@ -17,6 +17,9 @@ acceptance:
 edges:
 - rel: about
   to: ar-c7f5
+  at: 1
+- rel: part-of
+  to: it-wkcq
   at: 1
 ---
 

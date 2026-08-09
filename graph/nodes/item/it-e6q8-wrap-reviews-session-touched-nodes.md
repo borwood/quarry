@@ -2,8 +2,8 @@
 id: it-e6q8
 type: item
 title: wrap reviews session-touched nodes
-v: 1
-status: sketch
+v: 3
+status: ready
 provenance: user
 created: 2026-08-09T07:14:53Z
 actor: claude
@@ -11,6 +11,9 @@ kind: feature
 edges:
 - rel: about
   to: ar-c7f5
+  at: 1
+- rel: part-of
+  to: it-wkcq
   at: 1
 ---
 

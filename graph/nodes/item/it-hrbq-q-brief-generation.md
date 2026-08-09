@@ -2,8 +2,8 @@
 id: it-hrbq
 type: item
 title: q brief generation
-v: 3
-status: sketch
+v: 4
+status: ready
 provenance: assistant
 created: 2026-08-07T11:05:00Z
 actor: claude-fable-5
