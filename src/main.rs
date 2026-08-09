@@ -1196,6 +1196,7 @@ fn main() -> Result<()> {
             for n in &answerable {
                 println!("    {}", line(n));
             }
+            let touched_ids: std::collections::HashSet<String>;
             {
                 // Session-touched review (user-ruled 2026-08-09): every node
                 // this session created or adjusted since its last wrap, for a
@@ -1203,6 +1204,7 @@ fn main() -> Result<()> {
                 let sess_key = coord::current_session();
                 let log = store.read_log()?;
                 let touched = queries::session_touched(&log, sess_key.as_deref());
+                touched_ids = touched.iter().map(|(id, _)| id.clone()).collect();
                 if !touched.is_empty() {
                     println!(
                         "  session-touched since last wrap ({}) — final review: does each still say what you now know?",
@@ -1320,16 +1322,31 @@ fn main() -> Result<()> {
                             })
                     })
                     .collect();
-                if !archivable.is_empty() {
+                // Cooling rule (user-ruled 2026-08-09): work settled THIS
+                // session archives at a later wrap, not its landing wrap —
+                // a just-landed node is still a landmark for follow-up work.
+                let (cooling, cold): (Vec<&&Node>, Vec<&&Node>) = archivable
+                    .iter()
+                    .partition(|n| touched_ids.contains(&n.front.id));
+                if !cold.is_empty() {
                     println!(
                         "  archivable ({} settled leaf/childless node(s)) — q archive <node>; parents index their archived offspring:",
-                        archivable.len()
+                        cold.len()
                     );
-                    for n in archivable.iter().take(6) {
+                    for n in cold.iter().take(6) {
                         println!("    {}", line(n));
                     }
-                    if archivable.len() > 6 {
-                        println!("    …and {} more", archivable.len() - 6);
+                    if cold.len() > 6 {
+                        println!("    …and {} more", cold.len() - 6);
+                    }
+                }
+                if !cooling.is_empty() {
+                    println!(
+                        "  cooling ({} settled this session) — leave live for follow-up work; archive at a later wrap:",
+                        cooling.len()
+                    );
+                    for n in cooling.iter().take(6) {
+                        println!("    {}", line(n));
                     }
                 }
             }

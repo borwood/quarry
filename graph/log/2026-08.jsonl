@@ -191,3 +191,8 @@
 {"ts":"2026-08-09T08:54:11Z","node":"it-x8ms","v":6,"op":"archive","actor":"claude"}
 {"ts":"2026-08-09T14:56:06Z","node":"it-nmhu","v":1,"op":"create","type":"item","title":"log-index cursors: retire the timestamp blind spot","actor":"claude","note":null}
 {"op":"set","fields":["status=done"],"from_status":"ready","ts":"2026-08-09T14:58:26Z","node":"it-nmhu","v":2,"actor":"claude","note":"Shipped: Cursor enum (Index | legacy Ts, untagged), cursor_index converts legacy stamps by counting events at-or-before (old semantics, no re-delivery), touch_area and the alert bus both scan by log position, cursors store positions. The watermark test now asserts the same-second catch with the sleep removed. Clears the watch-list entry recorded on the area-gate item."}
+{"ts":"2026-08-09T15:38:19Z","node":"dc-8z38","v":1,"op":"create","type":"decision","title":"archive cooling: settled work archives at a later wrap, not its landing wrap","actor":"claude","note":null}
+{"ts":"2026-08-09T15:38:19Z","node":"th-qv27","v":1,"op":"create","type":"thread","title":"setup runbook: what quarry asks and offers at init time","actor":"claude","note":null}
+{"ts":"2026-08-09T15:38:19Z","node":"th-gdtn","v":1,"op":"create","type":"thread","title":"how PRDs, tech specs, and spine landmarks live in the graph","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"dc-9hgd","at":1,"ts":"2026-08-09T15:38:42Z","node":"th-qv27","v":2,"actor":"claude","note":"setup seeds ARE protocol content — the runbook designs against this ruling"}
+{"op":"link","rel":"depends-on","to":"dc-w9vx","at":1,"ts":"2026-08-09T15:38:42Z","node":"th-gdtn","v":2,"actor":"claude","note":"the landmark-minting question must reconcile with extract-on-citation"}
