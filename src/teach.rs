@@ -383,19 +383,80 @@ pub fn alerts_between(
     out
 }
 
-/// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be
-/// blocked, None to allow. Input is the hook's stdin JSON.
-pub fn guard(input: &str) -> Option<String> {
+/// The file path a Write/Edit/NotebookEdit hook input targets, if any.
+pub fn write_target(input: &str) -> Option<String> {
     let v: serde_json::Value = serde_json::from_str(input).ok()?;
     let tool = v.get("tool_name")?.as_str()?;
     if !matches!(tool, "Write" | "Edit" | "NotebookEdit") {
         return None;
     }
     let ti = v.get("tool_input")?;
-    let path = ti
-        .get("file_path")
+    ti.get("file_path")
         .or_else(|| ti.get("notebook_path"))?
-        .as_str()?;
+        .as_str()
+        .map(String::from)
+}
+
+/// The lease layer of the write guard (the dispatch chain's last link).
+pub enum LeaseCheck {
+    Deny(String),
+    Warn(String),
+    Allow,
+}
+
+/// Check a repo-relative write path against the live leases. A foreign
+/// EXCLUSIVE lease covering the path denies for everyone (that is what the
+/// lease means). Under QUARRY_DISPATCH, a write outside the own session's
+/// lease denies — the brief's write-set is the contract. A main session
+/// holding leases but writing outside all of them gets a warning: scope
+/// creep made visible, not forbidden.
+pub fn lease_check(
+    leases: &[crate::coord::Lease],
+    session: Option<&str>,
+    dispatch_item: Option<&str>,
+    rel_path: &str,
+) -> LeaseCheck {
+    if leases.is_empty() || rel_path.starts_with("graph/") {
+        return LeaseCheck::Allow;
+    }
+    let foreign_exclusive = leases.iter().find(|l| {
+        session.map_or(true, |s| l.session != s)
+            && !l.shared
+            && l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
+    });
+    if let Some(f) = foreign_exclusive {
+        return LeaseCheck::Deny(format!(
+            "C7: {} is inside session {}'s exclusive lease ({:?} for \"{}\") — coordinate with the holder, mark a co-write zone with --shared leases, or steal loudly (q reserve --steal).",
+            rel_path, f.session, f.globs, f.item_title
+        ));
+    }
+    let covered_own = leases.iter().any(|l| {
+        session.map_or(false, |s| l.session == s)
+            && l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
+    });
+    if let Some(item) = dispatch_item {
+        if !covered_own {
+            return LeaseCheck::Deny(format!(
+                "dispatch write outside the leased write-set: {} is not covered by the lease for {} — the brief's write-set is the contract; ask the dispatcher to extend the lease.",
+                rel_path, item
+            ));
+        }
+        return LeaseCheck::Allow;
+    }
+    let holds_any = session.map_or(false, |s| leases.iter().any(|l| l.session == s));
+    if holds_any && !covered_own {
+        return LeaseCheck::Warn(format!(
+            "quarry: this write ({}) lands outside every lease your session holds — scope creep, or a lease wanting extension?",
+            rel_path
+        ));
+    }
+    LeaseCheck::Allow
+}
+
+/// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be
+/// blocked, None to allow. Input is the hook's stdin JSON.
+pub fn guard(input: &str) -> Option<String> {
+    let path = write_target(input)?;
     let p = path.replace('\\', "/").to_lowercase();
     if p.contains("graph/nodes/") || p.contains("graph/log/") {
         Some(

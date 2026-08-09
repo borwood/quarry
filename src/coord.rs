@@ -269,6 +269,18 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
+/// C8 support: has this session rendered a brief for this item? A lease
+/// follows a brief — reserve refuses without one on the session's log.
+pub fn briefed_this_session(store: &Store, item_id: &str, session: &str) -> bool {
+    store.read_log().map_or(false, |log| {
+        log.iter().rev().any(|ev| {
+            ev.get("op").and_then(|v| v.as_str()) == Some("brief")
+                && ev.get("node").and_then(|v| v.as_str()) == Some(item_id)
+                && ev.get("session").and_then(|v| v.as_str()) == Some(session)
+        })
+    })
+}
+
 fn live_path(store: &Store) -> std::path::PathBuf {
     store.root.join("graph").join(".sessions-live.json")
 }

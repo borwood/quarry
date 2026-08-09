@@ -576,6 +576,60 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
+fn brief_renders_neighborhood_and_return_spec() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["bodies persist across reload".into()];
+    it.body = "build the graph".into();
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &d.front.id, false, None).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(text.contains("DISPATCH BRIEF"));
+    assert!(text.contains("bodies persist across reload"));
+    assert!(text.contains("depends on decision"));
+    assert!(text.contains("leaseless"), "no lease yet: research dispatch");
+    assert!(text.contains("hydrology"));
+    assert!(quarry::render::brief(&s, &area.front.id).is_err(), "briefs dispatch items only");
+}
+
+#[test]
+fn c8_briefed_gate_and_lease_check() {
+    let s = temp_store();
+    let it = ops::new_node(&s, NewArgs::bare("item", "geo pass")).unwrap();
+    assert!(!quarry::coord::briefed_this_session(&s, &it.front.id, "geo"));
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": it.front.id, "v": 1, "op": "brief", "session": "geo"
+    }))
+    .unwrap();
+    assert!(quarry::coord::briefed_this_session(&s, &it.front.id, "geo"));
+    assert!(!quarry::coord::briefed_this_session(&s, &it.front.id, "bodies"));
+
+    use quarry::teach::{lease_check, LeaseCheck};
+    let leases = vec![quarry::coord::Lease {
+        item: it.front.id.clone(),
+        item_title: "geo pass".into(),
+        session: "geo".into(),
+        actor: "t".into(),
+        globs: vec!["src/geo/**".into()],
+        shared: false,
+        since: "now".into(),
+    }];
+    assert!(matches!(lease_check(&leases, Some("bodies"), None, "src/geo/pass.rs"), LeaseCheck::Deny(_)), "foreign exclusive zone denies");
+    assert!(matches!(lease_check(&leases, None, None, "src/geo/pass.rs"), LeaseCheck::Deny(_)), "unbound writes into leased zones deny");
+    assert!(matches!(lease_check(&leases, Some("geo"), None, "src/geo/pass.rs"), LeaseCheck::Allow));
+    assert!(matches!(lease_check(&leases, Some("geo"), None, "src/other.rs"), LeaseCheck::Warn(_)), "scope creep warns the holder");
+    assert!(matches!(lease_check(&leases, Some("geo"), Some(it.front.id.as_str()), "src/other.rs"), LeaseCheck::Deny(_)), "dispatch outside write-set denies");
+    assert!(matches!(lease_check(&leases, Some("bodies"), None, "graph/sessions.json"), LeaseCheck::Allow));
+    assert!(matches!(lease_check(&[], None, None, "src/x.rs"), LeaseCheck::Allow));
+}
+
+#[test]
 fn relatedness_forward_and_reverse() {
     let s = temp_store();
     // forward: a sketch item exists; a new decision's body names its concept —

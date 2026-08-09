@@ -229,6 +229,129 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     Ok(s)
 }
 
+/// The dispatch brief: DERIVED, NEVER HAND-WRITTEN. If it reads wrong, fix
+/// the graph and re-render. Sections: read-first (the item's neighborhood at
+/// pinned versions), write-set from the live lease (complement = do-not-
+/// touch), acceptance as the RETURN spec, protocol rider (on=brief entries),
+/// and the actor rules a dispatched agent works under.
+pub fn brief(store: &Store, key: &str) -> Result<String> {
+    let all = store.load_all()?;
+    let item = store.find(&all, key)?;
+    if item.front.ty != "item" {
+        anyhow::bail!("{} is a {}, not an item — briefs dispatch items", item.front.id, item.front.ty);
+    }
+    let first_line = |body: &str| body.lines().next().unwrap_or("").trim().to_string();
+    let mut s = String::new();
+    writeln!(s, "══ DISPATCH BRIEF — \"{}\" ({} v{}) ══", item.front.title, item.front.id, item.front.v)?;
+    writeln!(s, "derived from the graph at render time; if this brief reads wrong, the graph is wrong — fix the graph, re-render.")?;
+    if let Some(k) = &item.front.kind {
+        writeln!(s, "kind: {}", k)?;
+    }
+    if !item.body.trim().is_empty() {
+        writeln!(s, "\nTHE WORK:")?;
+        for l in item.body.lines() {
+            writeln!(s, "  {}", l)?;
+        }
+    }
+
+    writeln!(s, "\nREAD-FIRST (cited at pinned versions — q open <id> for any neighborhood):")?;
+    let mut cited = 0usize;
+    for e in &item.front.edges {
+        if e.rel != "depends-on" {
+            continue;
+        }
+        if let Some(t) = all.iter().find(|n| n.front.id == e.to) {
+            writeln!(s, "  · depends on {} \"{}\" [{}] ({} v{})", t.front.ty, t.front.title, t.front.status, t.front.id, t.front.v)?;
+            for l in t.body.lines() {
+                writeln!(s, "      {}", l)?;
+            }
+            cited += 1;
+        }
+    }
+    let area_ids: Vec<&str> = item
+        .front
+        .edges
+        .iter()
+        .filter(|e| e.rel == "about")
+        .map(|e| e.to.as_str())
+        .filter(|id| all.iter().any(|n| n.front.id == *id && n.front.ty == "area"))
+        .collect();
+    for aid in &area_ids {
+        let Some(area) = all.iter().find(|n| n.front.id == *aid) else { continue };
+        writeln!(s, "  · area \"{}\" ({} v{})", area.front.title, area.front.id, area.front.v)?;
+        if !area.body.trim().is_empty() {
+            writeln!(s, "      {}", first_line(&area.body))?;
+        }
+        for n in all.iter().filter(|n| !n.front.archived && crate::coord::in_purview(n, &[aid])) {
+            match (n.front.ty.as_str(), n.front.status.as_str()) {
+                ("decision", "in-force") => {
+                    writeln!(s, "      decision in force: \"{}\" ({} v{}) — {}", n.front.title, n.front.id, n.front.v, first_line(&n.body))?;
+                    cited += 1;
+                }
+                ("doc", "registered") => {
+                    let p = n.front.path.as_deref().map(|p| format!(" · {}", p)).unwrap_or_default();
+                    writeln!(s, "      doc: \"{}\" ({} v{}){}", n.front.title, n.front.id, n.front.v, p)?;
+                    cited += 1;
+                }
+                ("thread", "open") | ("thread", "queued") => {
+                    writeln!(s, "      open thread: \"{}\" ({}) — NOT yours to settle", n.front.title, n.front.id)?;
+                }
+                _ => {}
+            }
+        }
+    }
+    let evidence: Vec<&crate::model::Node> = all
+        .iter()
+        .filter(|n| {
+            n.front.edges.iter().any(|e| matches!(e.rel.as_str(), "supports") && e.to == item.front.id)
+        })
+        .collect();
+    for ev in evidence {
+        writeln!(s, "  · evidence: {} \"{}\" [{}] ({} v{})", ev.front.ty, ev.front.title, ev.front.status, ev.front.id, ev.front.v)?;
+        cited += 1;
+    }
+    if cited == 0 {
+        writeln!(s, "  (nothing cited — an item with no neighborhood usually means the graph is missing edges, not that there is nothing to read)")?;
+    }
+
+    writeln!(s, "\nWRITE-SET:")?;
+    let leases = crate::coord::load_leases(store);
+    match leases.iter().find(|l| l.item == item.front.id) {
+        Some(l) => {
+            writeln!(s, "  leased{}: {:?}", if l.shared { " [shared — co-writers may be present]" } else { "" }, l.globs)?;
+            writeln!(s, "  everything outside those globs is DO-NOT-TOUCH.")?;
+        }
+        None => {
+            writeln!(s, "  leaseless — research dispatch; DO-NOT-TOUCH: every file. To write code, the dispatcher reserves first: q reserve {} --files <globs>", item.front.id)?;
+        }
+    }
+
+    writeln!(s, "\nRETURN SPEC (accept by outcome):")?;
+    if item.front.acceptance.is_empty() {
+        writeln!(s, "  ⚠ no acceptance recorded — outcomes cannot be judged. Fix the graph first: q set {} acceptance+=\"...\"", item.front.id)?;
+    } else {
+        for a in &item.front.acceptance {
+            writeln!(s, "  · {}", a)?;
+        }
+        writeln!(s, "  Report against these outcomes — not effort, not process. A number needs its method; a mechanism is a hypothesis until measured.")?;
+    }
+
+    let riders = crate::protocol::matching(&all, "brief", None, item.front.kind.as_deref());
+    for r in &riders {
+        writeln!(s, "\nPROTOCOL — {}:", r.front.title)?;
+        for l in r.body.lines() {
+            writeln!(s, "  {}", l)?;
+        }
+    }
+
+    writeln!(s, "\nACTOR RULES:")?;
+    writeln!(s, "  · All graph writes go through q verbs; your work logs under QUARRY_ACTOR (auto-injected).")?;
+    writeln!(s, "  · C3: you may not settle or supersede user-provenance nodes; if a call belongs to the user, queue a thread.")?;
+    writeln!(s, "  · Cite what you build on (q link ... / q claim --source ...); harvest is judged from the diff, not the report.")?;
+    writeln!(s, "  · When the work lands: q set {} status=done, release any lease, and do the homework the verbs print.", item.front.id)?;
+    Ok(s)
+}
+
 pub fn log(store: &Store, key: &str) -> Result<String> {
     let all = store.load_all()?;
     let n = store.find(&all, key)?;

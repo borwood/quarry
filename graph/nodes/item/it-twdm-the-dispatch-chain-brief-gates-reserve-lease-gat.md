@@ -2,8 +2,8 @@
 id: it-twdm
 type: item
 title: 'the dispatch chain: brief gates reserve, lease gates write'
-v: 4
-status: ready
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-09T07:54:21Z
 actor: claude

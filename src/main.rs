@@ -174,6 +174,15 @@ name their --source doc.")]
         #[arg(long)]
         all: bool,
     },
+    /// Render an item's dispatch brief (derived, never hand-written) and log
+    /// the render — reserving that item requires a same-session brief (C8)
+    #[command(after_help = "EXAMPLES:
+  q brief \"water body graph\"
+The brief is DERIVED: read-first neighborhood at pinned versions, write-set
+from the live lease (complement is do-not-touch), acceptance as the RETURN
+spec, protocol riders (on=brief), and the actor rules. If it reads wrong,
+fix the graph and re-render — never hand-compose dispatch context.")]
+    Brief { item: String },
     /// Per-node history from the event log
     Log { node: String },
     /// Canned queries
@@ -198,7 +207,9 @@ name their --source doc.")]
 Exclusive by default: an overlapping foreign lease denies, naming the
 holder. --shared marks a co-write zone (shared leases coexist, with mutual
 visibility). --steal overrides loudly and is logged. Release explicitly
-when the arc lands; sessions start leaseless and reserve at dispatch.")]
+when the arc lands; sessions start leaseless and reserve at dispatch.
+A lease follows a brief: reserve refuses unless this session rendered
+`q brief <item>` first (C8) — no lease on unbriefed work.")]
     Reserve {
         item: String,
         #[arg(long = "files", required = true)]
@@ -541,6 +552,50 @@ fn main() -> Result<()> {
                     eprintln!("{}", msg);
                     std::process::exit(2);
                 }
+                // The lease layer (dispatch chain): best-effort, never fails
+                // a session over a missing graph.
+                if let (Some(path), Ok(store)) =
+                    (quarry::teach::write_target(&input), Store::discover())
+                {
+                    let root = store.root.to_string_lossy().replace('\\', "/").to_lowercase();
+                    let p = path.replace('\\', "/").to_lowercase();
+                    let rel = p
+                        .strip_prefix(&root)
+                        .map(|r| r.trim_start_matches('/').to_string())
+                        .unwrap_or(p.clone());
+                    let session = coord::current_session().or_else(|| {
+                        serde_json::from_str::<serde_json::Value>(&input)
+                            .ok()
+                            .and_then(|v| {
+                                v.get("session_id")
+                                    .and_then(|x| x.as_str())
+                                    .and_then(|cid| coord::chat_binding(&store, cid))
+                            })
+                    });
+                    let dispatch = std::env::var("QUARRY_DISPATCH").ok().filter(|s| !s.trim().is_empty());
+                    let leases = coord::load_leases(&store);
+                    match quarry::teach::lease_check(
+                        &leases,
+                        session.as_deref(),
+                        dispatch.as_deref(),
+                        &rel,
+                    ) {
+                        quarry::teach::LeaseCheck::Deny(msg) => {
+                            eprintln!("{}", msg);
+                            std::process::exit(2);
+                        }
+                        quarry::teach::LeaseCheck::Warn(msg) => {
+                            println!(
+                                "{}",
+                                serde_json::json!({"hookSpecificOutput": {
+                                    "hookEventName": "PreToolUse",
+                                    "additionalContext": msg
+                                }})
+                            );
+                        }
+                        quarry::teach::LeaseCheck::Allow => {}
+                    }
+                }
             }
             HookCmd::Session => {
                 use std::io::Read as _;
@@ -880,6 +935,13 @@ fn main() -> Result<()> {
             })?;
             let all = store.load_all()?;
             let node = store.find(&all, &item)?.clone();
+            // C8: a lease follows a brief — no lease on unbriefed work.
+            if !coord::briefed_this_session(&store, &node.front.id, &sess) {
+                anyhow::bail!(
+                    "C8: no brief on record for \"{}\" from session {} — a lease follows a brief. Render it (q brief {}), read it, then reserve.",
+                    node.front.title, sess, node.front.id
+                );
+            }
             // Engine-native consequence gate: a steal demands its reason —
             // the required response IS the proof of engagement, and it lands
             // in the logged event.
@@ -1287,6 +1349,17 @@ fn main() -> Result<()> {
         Cmd::Open { node, all } => {
             let store = Store::discover()?;
             print!("{}", render::open(&store, &node, all)?);
+        }
+        Cmd::Brief { item } => {
+            let store = Store::discover()?;
+            let text = render::brief(&store, &item)?;
+            print!("{}", text);
+            let all = store.load_all()?;
+            let n = store.find(&all, &item)?;
+            store.log_event(serde_json::json!({
+                "ts": Store::now(), "node": n.front.id, "v": n.front.v,
+                "op": "brief", "actor": Store::actor()
+            }))?;
         }
         Cmd::Log { node } => {
             let store = Store::discover()?;
