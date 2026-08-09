@@ -8,6 +8,7 @@ provenance: user
 created: 2026-08-09T14:56:06Z
 actor: claude
 kind: feature
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
