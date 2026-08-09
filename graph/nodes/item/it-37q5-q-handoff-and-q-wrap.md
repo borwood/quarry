@@ -2,12 +2,13 @@
 id: it-37q5
 type: item
 title: q handoff and q wrap
-v: 2
-status: sketch
+v: 3
+status: dropped
 provenance: assistant
 created: 2026-08-07T11:05:00Z
 actor: claude-fable-5
 kind: feature
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

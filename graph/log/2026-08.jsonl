@@ -126,3 +126,10 @@
 {"ts":"2026-08-09T06:19:48Z","node":"dc-qhru","v":1,"op":"create","type":"decision","title":"a game is a plugin pack; the engine ships opinionated plugins; marketplace is opt-in","actor":"claude","note":null}
 {"ts":"2026-08-09T06:19:48Z","node":"th-n8h6","v":1,"op":"create","type":"thread","title":"settle the working names: deep-time, pure-lands, brickolage, augury","actor":"claude","note":null}
 {"ts":"2026-08-09T06:20:15Z","node":"do-89t9","v":1,"op":"affirm","restamped":1,"actor":"claude"}
+{"op":"set","fields":["status=dropped"],"from_status":"sketch","ts":"2026-08-09T06:29:49Z","node":"it-37q5","v":3,"actor":"claude","note":"wrap shipped as a built verb; the planned q handoff verb was retired by dc-8mf2 (handoff is derived at wake via q session resume). Nothing remains."}
+{"ts":"2026-08-09T06:29:49Z","node":"it-37q5","v":3,"op":"archive","actor":"claude"}
+{"op":"set","fields":["status=dropped"],"from_status":"sketch","ts":"2026-08-09T06:29:49Z","node":"it-nnyv","v":3,"actor":"claude","note":"bodyless sketch; the need is met by q query queue. Re-mint with a body if a distinct top-level verb need re-emerges."}
+{"ts":"2026-08-09T06:29:49Z","node":"it-nnyv","v":3,"op":"archive","actor":"claude"}
+{"ts":"2026-08-09T06:30:01Z","node":"it-ttv5","v":1,"op":"create","type":"item","title":"rule-time tripwire: rulings that obsolete sketch work","actor":"claude","note":null}
+{"ts":"2026-08-09T06:30:01Z","node":"it-pzp7","v":1,"op":"create","type":"item","title":"mint-time nudge: bodyless sketches","actor":"claude","note":null}
+{"op":"body","ts":"2026-08-09T06:30:19Z","node":"it-hrbq","v":3,"actor":"claude"}

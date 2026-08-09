@@ -2,12 +2,13 @@
 id: it-nnyv
 type: item
 title: q queue verb
-v: 2
-status: sketch
+v: 3
+status: dropped
 provenance: assistant
 created: 2026-08-07T11:05:00Z
 actor: claude-fable-5
 kind: feature
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
