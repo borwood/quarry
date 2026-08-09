@@ -133,3 +133,6 @@
 {"ts":"2026-08-09T06:30:01Z","node":"it-ttv5","v":1,"op":"create","type":"item","title":"rule-time tripwire: rulings that obsolete sketch work","actor":"claude","note":null}
 {"ts":"2026-08-09T06:30:01Z","node":"it-pzp7","v":1,"op":"create","type":"item","title":"mint-time nudge: bodyless sketches","actor":"claude","note":null}
 {"op":"body","ts":"2026-08-09T06:30:19Z","node":"it-hrbq","v":3,"actor":"claude"}
+{"ts":"2026-08-09T07:14:53Z","node":"it-e6q8","v":1,"op":"create","type":"item","title":"wrap reviews session-touched nodes","actor":"claude","note":null}
+{"op":"set","fields":["status=dropped"],"from_status":"sketch","ts":"2026-08-09T07:14:53Z","node":"it-ttv5","v":2,"actor":"claude","note":"Superseded by the wrap-review design after user critique: text matching mislinks, corpus sweeps do not scale under parallel work. The concern (rulings obsoleting sketch work) lives on in the wrap surface + rule-time judgment."}
+{"ts":"2026-08-09T07:14:53Z","node":"it-ttv5","v":2,"op":"archive","actor":"claude"}

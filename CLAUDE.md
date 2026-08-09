@@ -21,6 +21,10 @@ machine.
 
 ## Conventions
 
+- **Single-thread replies.** One topic per message, kept short — the user
+  pulls the next thread. Multi-topic work still happens; reporting it does
+  not all arrive at once. (User ruling, 2026-08-09, asked for repeatedly
+  across sessions.)
 - **`QUARRY_ACTOR` is auto-injected by the session hook** (from the model
   recorded at SessionStart) for chats running in this repo — don't set it by
   hand. Export it manually only when working from outside hook coverage

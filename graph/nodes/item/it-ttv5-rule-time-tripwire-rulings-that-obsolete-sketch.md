@@ -2,12 +2,13 @@
 id: it-ttv5
 type: item
 title: 'rule-time tripwire: rulings that obsolete sketch work'
-v: 1
-status: sketch
+v: 2
+status: dropped
 provenance: assistant
 created: 2026-08-09T06:30:01Z
 actor: claude
 kind: feature
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
