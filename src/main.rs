@@ -72,6 +72,10 @@ enum Cmd {
         /// Project-declared field, k=v (protocol layer) — repeatable
         #[arg(long = "field")]
         fields: Vec<String>,
+        /// Mint-time supports edge (claim/doc → decision/item/claim) — one
+        /// command registers a dispatch report against its item
+        #[arg(long)]
+        supports: Option<String>,
         #[arg(long)]
         note: Option<String>,
     },
@@ -94,7 +98,8 @@ enum Cmd {
         #[arg(long)]
         note: Option<String>,
     },
-    /// Mutate fields: status=… title=… kind=… method=… path=… acceptance+=… ratified=…
+    /// Mutate fields: status=… title=… kind=… method=… path=… acceptance+=…
+    /// write-set+=… ratified=…
     Set {
         node: String,
         #[arg(required = true)]
@@ -236,6 +241,30 @@ A lease follows a brief: reserve refuses unless this session rendered
     },
     /// Release an item's lease
     Release { item: String },
+    /// Dispatch an item: derived brief + lease + in-flight + hand-off
+    /// payload carrying the QUARRY_DISPATCH badge, as one act
+    #[command(after_help = "EXAMPLES:
+  q dispatch \"water body graph\" --files \"crates/dc-worldgen/**\"
+One act: renders the derived brief (logged — C8), reserves the write-set
+(--files, falling back to the item's recorded write-set), sets in-flight,
+records the badge machine-locally, and prints the paste-whole payload.
+The agent reports and stops; YOU judge and land: q harvest <item>.")]
+    Dispatch {
+        item: String,
+        /// Write-set globs for the lease (falls back to the item's write-set)
+        #[arg(long = "files")]
+        files: Vec<String>,
+        /// Mark the lease as a co-write zone
+        #[arg(long)]
+        shared: bool,
+    },
+    /// Harvest a dispatch: observed-vs-leased, badge-stamped acts, report
+    /// homework — the dispatcher judges acceptance and lands by hand
+    #[command(after_help = "An agent's \"done\" is a stop signal, never a transition: the item stays
+in-flight and the lease held until YOU land it (q set <item> status=done ·
+q release <item>). Harvest prints the judgment surface and clears the
+machine-local badge; a partial or stop report harvests the same way.")]
+    Harvest { item: String },
     /// Render the whole graph as one self-contained HTML page (graph/view/index.html)
     View {
         /// Open the rendered page in the default browser
@@ -334,6 +363,8 @@ enum Query {
     },
     /// Assistant claims never verified
     Unverified,
+    /// What a dispatch wrote: badge-stamped events and guard-observed files
+    Dispatch { item: String },
 }
 
 fn read_body(body: Option<String>, body_file: Option<String>) -> Result<String> {
@@ -360,6 +391,8 @@ struct NewCliArgs {
     body_file: Option<String>,
     acceptance: Vec<String>,
     fields: Vec<String>,
+    #[serde(default)]
+    supports: Option<String>,
     note: Option<String>,
 }
 
@@ -429,13 +462,20 @@ fn spine_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
         return;
     }
     let Ok(all) = store.load_all() else { return };
-    let globs = globs.unwrap_or_else(|| {
-        coord::load_leases(store)
-            .iter()
-            .find(|l| l.item == item.front.id)
-            .map(|l| l.globs.clone())
-            .unwrap_or_else(|| item.front.write_set.clone())
-    });
+    // Observed files win when present: what the guard actually saw touched
+    // is truer than what the lease predicted.
+    let observed = coord::touched_for(store, &format!("item:{}", item.front.id));
+    let globs = if !observed.is_empty() {
+        observed
+    } else {
+        globs.unwrap_or_else(|| {
+            coord::load_leases(store)
+                .iter()
+                .find(|l| l.item == item.front.id)
+                .map(|l| l.globs.clone())
+                .unwrap_or_else(|| item.front.write_set.clone())
+        })
+    };
     if globs.is_empty() || quarry::queries::files_cited(&all, &globs) {
         return;
     }
@@ -484,6 +524,7 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
     if area_gate_if_needed(store, &a)? {
         std::process::exit(2);
     }
+    let supports = a.supports.clone();
     let body = read_body(a.body, a.body_file)?;
     let node = ops::new_node(
         store,
@@ -504,6 +545,10 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
         },
     )?;
     println!("✔ {}", line(&node));
+    if let Some(target) = supports {
+        let edge = ops::link(store, &node.front.id, "supports", &target, false, None)?;
+        println!("  ✔ {} -[supports]-> {} (at {})", node.front.id, edge.to, edge.at);
+    }
     let filed = node.front.ty == "area"
         || node.front.edges.iter().any(|e| e.rel == "about" && e.to.starts_with("ar-"));
     if !filed {
@@ -647,7 +692,7 @@ fn main() -> Result<()> {
             let cwd = std::env::current_dir()?;
             Store::init(&cwd)?;
             println!("✔ graph/ initialized at {}", cwd.display());
-            println!("  suggested .gitignore lines: graph/.index/  graph/view/");
+            println!("  suggested .gitignore lines: graph/.index/  graph/view/  graph/.*  (machine-local state — leases, cursors, the touched-set, the dispatch badge)");
             if claude {
                 for a in quarry::teach::install_claude(&cwd)? {
                     println!("  ✔ {}", a);
@@ -686,41 +731,62 @@ fn main() -> Result<()> {
                 {
                     let root = store.root.to_string_lossy().replace('\\', "/").to_lowercase();
                     let p = path.replace('\\', "/").to_lowercase();
+                    // The lease layer judges REPO-RELATIVE paths only: a
+                    // write outside the host repo (scratchpads, temp files)
+                    // is never scope creep, never accrual, never contract
+                    // material. Component-boundary strip: root + '/' + rel.
                     let rel = p
                         .strip_prefix(&root)
-                        .map(|r| r.trim_start_matches('/').to_string())
-                        .unwrap_or(p.clone());
-                    let session = coord::current_session().or_else(|| {
-                        serde_json::from_str::<serde_json::Value>(&input)
-                            .ok()
-                            .and_then(|v| {
-                                v.get("session_id")
-                                    .and_then(|x| x.as_str())
-                                    .and_then(|cid| coord::chat_binding(&store, cid))
-                            })
-                    });
-                    let dispatch = std::env::var("QUARRY_DISPATCH").ok().filter(|s| !s.trim().is_empty());
-                    let leases = coord::load_leases(&store);
-                    match quarry::teach::lease_check(
-                        &leases,
-                        session.as_deref(),
-                        dispatch.as_deref(),
-                        &rel,
-                    ) {
-                        quarry::teach::LeaseCheck::Deny(msg) => {
-                            eprintln!("{}", msg);
-                            std::process::exit(2);
+                        .and_then(|r| r.strip_prefix('/'))
+                        .map(String::from);
+                    if let Some(rel) = rel {
+                        let session = coord::current_session().or_else(|| {
+                            serde_json::from_str::<serde_json::Value>(&input)
+                                .ok()
+                                .and_then(|v| {
+                                    v.get("session_id")
+                                        .and_then(|x| x.as_str())
+                                        .and_then(|cid| coord::chat_binding(&store, cid))
+                                })
+                        });
+                        // The badge: shell env when it reaches this process,
+                        // the machine-local dispatch state when it cannot (a
+                        // hook runs in the harness env, not the agent's shell).
+                        let dispatch = coord::current_dispatch_badge(&store);
+                        let leases = coord::load_leases(&store);
+                        let mut context: Vec<String> = Vec::new();
+                        match quarry::teach::lease_check(
+                            &leases,
+                            session.as_deref(),
+                            dispatch.as_deref(),
+                            &rel,
+                        ) {
+                            quarry::teach::LeaseCheck::Deny(msg) => {
+                                eprintln!("{}", msg);
+                                std::process::exit(2);
+                            }
+                            quarry::teach::LeaseCheck::Warn(msg) => context.push(msg),
+                            quarry::teach::LeaseCheck::Allow => {}
                         }
-                        quarry::teach::LeaseCheck::Warn(msg) => {
+                        // Observation, never denial: accrue the touch, echo
+                        // the contract on the first badged write, notice
+                        // drift, nudge the leaseless arc at threshold.
+                        context.extend(quarry::teach::observe_write(
+                            &store,
+                            &leases,
+                            session.as_deref(),
+                            dispatch.as_deref(),
+                            &rel,
+                        ));
+                        if !context.is_empty() {
                             println!(
                                 "{}",
                                 serde_json::json!({"hookSpecificOutput": {
                                     "hookEventName": "PreToolUse",
-                                    "additionalContext": msg
+                                    "additionalContext": context.join("\n")
                                 }})
                             );
                         }
-                        quarry::teach::LeaseCheck::Allow => {}
                     }
                 }
             }
@@ -1128,6 +1194,46 @@ fn main() -> Result<()> {
             coord::release(&store, &node, &sess, &Store::actor())?;
             println!("✔ released: \"{}\"", node.front.title);
             spine_check(&store, &node, held);
+            // The arc is over: land clears the badge and the observed set.
+            coord::clear_dispatch(&store, &node.front.id);
+            coord::clear_touched(&store, &format!("item:{}", node.front.id));
+        }
+        Cmd::Dispatch { item, files, shared } => {
+            let store = Store::discover()?;
+            let sess = coord::current_session().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "q dispatch is a session act — the lease it takes needs a holder, and an unbound chat has none. Bind this chat first: q session adopt <name> (or register one: q session set <name> --areas <area>...), then re-run."
+                )
+            })?;
+            let out = ops::dispatch(&store, &item, files, shared, &sess, &Store::actor())?;
+            println!(
+                "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, badge recorded machine-locally",
+                out.item_title,
+                out.item_id,
+                out.globs,
+                if out.reused_lease { " [re-dispatch: lease kept]" } else { "" }
+            );
+            println!(
+                "  when the report arrives, YOU judge and land: q harvest {}  (the agent's done is a stop signal)",
+                out.item_id
+            );
+            println!("\n──── HAND-OFF PAYLOAD — paste everything below to the agent ────");
+            print!("{}", out.payload);
+            println!("──── payload ends ────");
+        }
+        Cmd::Harvest { item } => {
+            let store = Store::discover()?;
+            print!("{}", render::harvest(&store, &item)?);
+            let all = store.load_all()?;
+            let n = store.find(&all, &item)?;
+            store.log_event(serde_json::json!({
+                "ts": Store::now(), "node": n.front.id, "v": n.front.v,
+                "op": "harvest", "actor": Store::actor()
+            }))?;
+            // Harvest clears the badge: further writes on this machine are
+            // the dispatcher's own. The observed set stays until release —
+            // spine_check consumes it at landing.
+            coord::clear_dispatch(&store, &n.front.id);
         }
         Cmd::Queue { which } => {
             let store = Store::discover()?;
@@ -1325,6 +1431,40 @@ fn main() -> Result<()> {
                 ),
             }
             {
+                // Leaseless observation pickup: the observed set stands in
+                // for lease globs — delivered once, then cleared.
+                let key = format!("session:{}", coord::session_key());
+                let touched = coord::touched_for(&store, &key);
+                if !touched.is_empty() {
+                    println!(
+                        "  leaseless code writes this session ({} file(s)) — observed, never denied; was this an item's arc?",
+                        touched.len()
+                    );
+                    for f in touched.iter().take(10) {
+                        println!("    {}", f);
+                    }
+                    if touched.len() > 10 {
+                        println!("    …and {} more", touched.len() - 10);
+                    }
+                    let matched = queries::items_matching_files(&all, &touched);
+                    if !matched.is_empty() {
+                        for m in matched.iter().take(3) {
+                            println!("    resembles: {}", line(m));
+                        }
+                    }
+                    println!("    a recurring arc wants declaring next time: q brief <item>, then q reserve <item> --files <globs>");
+                    coord::clear_touched(&store, &key);
+                }
+                // Dispatches whose report was never harvested: the judgment
+                // seat is empty and the lease still held.
+                for n in queries::unharvested_dispatches(&all, &log) {
+                    println!(
+                        "  unharvested dispatch: \"{}\" ({}) — the report is owed; judge and land: q harvest {}",
+                        n.front.title, n.front.id, n.front.id
+                    );
+                }
+            }
+            {
                 use time::format_description::well_known::Rfc3339;
                 for (name, p) in coord::load_sessions(&store) {
                     if !p.ephemeral {
@@ -1472,6 +1612,7 @@ fn main() -> Result<()> {
             body_file,
             acceptance,
             fields,
+            supports,
             note,
         } => {
             let store = Store::discover()?;
@@ -1489,6 +1630,7 @@ fn main() -> Result<()> {
                 body_file,
                 acceptance,
                 fields,
+                supports,
                 note,
             };
             let all = store.load_all()?;
@@ -1552,6 +1694,18 @@ fn main() -> Result<()> {
             area_watermarks(&store, &n.front.id);
             if fields.iter().any(|f| f == "status=done") {
                 spine_check(&store, &n, None);
+            }
+            // Solo-path advert: taking up an item without a lease is legal —
+            // leaseless writes accrue and nudge, never deny — but a declared
+            // arc gets the full surfaces. Said at the moment it fires.
+            if fields.iter().any(|f| f == "status=in-flight")
+                && n.front.ty == "item"
+                && !coord::load_leases(&store).iter().any(|l| l.item == n.front.id)
+            {
+                println!(
+                    "  note: in flight with no lease — about to write code solo? Declare the arc: q brief {} then q reserve {} --files <globs> (or hand it off whole: q dispatch {}).",
+                    n.front.id, n.front.id, n.front.id
+                );
             }
         }
         Cmd::Edit {
@@ -1696,6 +1850,8 @@ fn main() -> Result<()> {
                     }
                     if shown == 0 {
                         println!("nothing dispatchable.");
+                    } else {
+                        println!("dispatch the chain in one act: q dispatch <item> --files <globs>  ·  solo: q brief <item>, then q reserve");
                     }
                 }
                 Query::Shaping { mine } => {
@@ -1774,6 +1930,9 @@ fn main() -> Result<()> {
                     for n in u {
                         println!("{}", line(n));
                     }
+                }
+                Query::Dispatch { item } => {
+                    print!("{}", render::dispatch_trace(&store, &item)?);
                 }
             }
         }

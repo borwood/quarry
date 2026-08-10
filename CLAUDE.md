@@ -8,13 +8,12 @@ machine.
 
 ## Build & test (this machine)
 
-- cargo is not on PATH: `"$HOME/.cargo/bin/cargo"` (bash) or
-  `& "$env:USERPROFILE\.cargo\bin\cargo.exe"` (pwsh).
-- **Use `TMP=B:\tmp TEMP=B:\tmp`** on cargo invocations while C: is
-  space-constrained — the linker's temp files live on C: and a full drive
-  fails with LNK1108 / "database or disk is full".
-- `CARGO_BUILD_JOBS=4`, one build at a time — this machine has hung under
-  parallel heavy builds.
+- TMP/TEMP redirection (C: is space-constrained) and `jobs = 4` are set
+  durably in `~/.cargo/config.toml` (2026-08-10) — no per-invocation env
+  needed. cargo is on the user PATH from the same date; sessions started
+  before then still need `& "$env:USERPROFILE\.cargo\bin\cargo.exe"`.
+- **One build at a time** — this machine has hung under parallel heavy
+  builds.
 - **Verify test results by reading the `test result:` line and its count** —
   never through a filter. A `grep -v "0 passed"` pipeline silently swallowed
   a `20 passed` line here once ("0 passed" is a substring).

@@ -269,6 +269,137 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
+// ── the dispatch badge (machine-local) ─────────────────────────────────────
+//
+// QUARRY_DISPATCH in a shell's env stamps that shell's q acts, but a hook
+// process spawned by the harness never sees the agent's shell env — so the
+// badge also lives machine-locally, written at `q dispatch` and cleared at
+// harvest/release. Known blur (accepted, single-orchestrator): while a
+// dispatch is active, the orchestrator's own code writes on this machine are
+// indistinguishable from the dispatched agent's.
+
+/// The active dispatch, with the contract captured at dispatch time so the
+/// write guard can echo it without loading the graph.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct DispatchState {
+    pub item: String,
+    pub item_title: String,
+    pub session: String,
+    pub globs: Vec<String>,
+    #[serde(default)]
+    pub acceptance: Vec<String>,
+    pub since: String,
+    /// Log position at dispatch — the mid-flight drift check reads forward
+    /// from here, never the whole log.
+    #[serde(default)]
+    pub cursor: u64,
+    /// Wall-clock throttle stamp for the drift check.
+    #[serde(default)]
+    pub checked: String,
+}
+
+fn dispatch_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".dispatch.json")
+}
+
+pub fn save_dispatch(store: &Store, d: &DispatchState) -> Result<()> {
+    fs::write(dispatch_path(store), serde_json::to_string_pretty(d)? + "\n")?;
+    Ok(())
+}
+
+pub fn load_dispatch(store: &Store) -> Option<DispatchState> {
+    serde_json::from_str(&fs::read_to_string(dispatch_path(store)).ok()?).ok()
+}
+
+/// Clear the badge if it names this item (harvest and land both clear).
+pub fn clear_dispatch(store: &Store, item_id: &str) {
+    if load_dispatch(store).map_or(false, |d| d.item == item_id) {
+        let _ = fs::remove_file(dispatch_path(store));
+    }
+}
+
+/// The active badge: QUARRY_DISPATCH env wins (explicit, per-shell); the
+/// machine-local state is the fallback for processes the env cannot reach.
+pub fn current_dispatch_badge(store: &Store) -> Option<String> {
+    std::env::var("QUARRY_DISPATCH")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .or_else(|| load_dispatch(store).map(|d| d.item))
+}
+
+// ── the touched-set accrual (machine-local) ────────────────────────────────
+//
+// Leaseless code writes are observed, never denied (the lease is an arc
+// declaration; a blocked write breeds junk leases). The write guard accrues
+// every allowed code write here: per-item under a badge, per-session
+// leaseless. Append-only JSONL — O(1) on the write path, no graph load.
+
+/// Distinct source files a leaseless session touches before the once-per-
+/// session nudge fires. One or two is a casual edit; three is an arc forming.
+pub const LEASELESS_NUDGE_THRESHOLD: usize = 3;
+
+fn touched_path(store: &Store) -> std::path::PathBuf {
+    store.root.join("graph").join(".touched.jsonl")
+}
+
+/// The accrual key: `item:<id>` under a badge, `session:<name>` leaseless.
+pub fn touch_key(badge: Option<&str>, session: Option<&str>) -> String {
+    match badge {
+        Some(b) => format!("item:{}", b),
+        None => format!("session:{}", session.unwrap_or("unbound")),
+    }
+}
+
+/// Append one touched path (call only for paths not already accrued —
+/// `touched_for` gives the prior set). Best-effort: observation never fails
+/// a write.
+pub fn accrue_touch(store: &Store, key: &str, rel_path: &str) {
+    use std::io::Write as _;
+    let line = serde_json::json!({"ts": Store::now(), "key": key, "path": rel_path});
+    if let Ok(mut f) = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(touched_path(store))
+    {
+        let _ = writeln!(f, "{}", line);
+    }
+}
+
+/// Distinct touched paths for one key, in first-touch order.
+pub fn touched_for(store: &Store, key: &str) -> Vec<String> {
+    let Ok(s) = fs::read_to_string(touched_path(store)) else {
+        return vec![];
+    };
+    let mut out: Vec<String> = Vec::new();
+    for line in s.lines() {
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else { continue };
+        if v.get("key").and_then(|x| x.as_str()) == Some(key) {
+            if let Some(p) = v.get("path").and_then(|x| x.as_str()) {
+                if !out.iter().any(|x| x == p) {
+                    out.push(p.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Drop a key's entries once delivered (wrap pickup) or landed (release).
+pub fn clear_touched(store: &Store, key: &str) {
+    let Ok(s) = fs::read_to_string(touched_path(store)) else { return };
+    let kept: Vec<&str> = s
+        .lines()
+        .filter(|line| {
+            serde_json::from_str::<serde_json::Value>(line)
+                .ok()
+                .and_then(|v| v.get("key").and_then(|x| x.as_str()).map(String::from))
+                .map_or(false, |k| k != key)
+        })
+        .collect();
+    let body = if kept.is_empty() { String::new() } else { kept.join("\n") + "\n" };
+    let _ = fs::write(touched_path(store), body);
+}
+
 fn area_reads_path(store: &Store) -> std::path::PathBuf {
     store.root.join("graph").join(".area-reads.json")
 }

@@ -2,7 +2,7 @@
 id: cl-qm6t
 type: claim
 title: the dispatch chain gates reserve on briefs and holds code writes to lea…
-v: 3
+v: 4
 status: measured
 provenance: measured
 created: 2026-08-09T16:57:36Z
@@ -15,6 +15,9 @@ edges:
 - rel: source
   to: file:src/teach.rs
   at: 36b489f7fc9c
+- rel: supports
+  to: dc-cc76
+  at: 2
 ---
 
 the dispatch chain gates reserve on briefs and holds code writes to leases

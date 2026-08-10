@@ -164,6 +164,13 @@ impl Store {
                     }
                 }
             }
+            // The dispatch badge: every verb stamps it, so "what did this
+            // dispatch write" is a query, not a reconstruction.
+            if !obj.contains_key("dispatch") {
+                if let Some(b) = crate::coord::current_dispatch_badge(self) {
+                    obj.insert("dispatch".into(), serde_json::json!(b));
+                }
+            }
         }
         if let Some(sess) = ev.get("session").and_then(|v| v.as_str()) {
             crate::coord::touch_session(self, sess);

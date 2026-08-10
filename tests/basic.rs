@@ -8,6 +8,10 @@ static COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn temp_store() -> Store {
     std::env::set_var("QUARRY_ACTOR", "test-user");
+    // The session hook injects these into bound chats; inherited values flip
+    // session-keyed behavior (injection no-ops, watermark keys shift).
+    std::env::remove_var("QUARRY_SESSION");
+    std::env::remove_var("QUARRY_DISPATCH");
     let n = COUNTER.fetch_add(1, Ordering::SeqCst);
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -737,6 +741,18 @@ fn c8_briefed_gate_and_lease_check() {
     assert!(matches!(lease_check(&leases, Some("geo"), Some(it.front.id.as_str()), "src/other.rs"), LeaseCheck::Deny(_)), "dispatch outside write-set denies");
     assert!(matches!(lease_check(&leases, Some("bodies"), None, "graph/sessions.json"), LeaseCheck::Allow));
     assert!(matches!(lease_check(&[], None, None, "src/x.rs"), LeaseCheck::Allow));
+    // Out-of-repo paths are never judged: no scope creep, no deny — for
+    // holders, foreigners, the unbound, and even a badge.
+    assert!(matches!(
+        lease_check(&leases, Some("geo"), None, "c:/users/x/appdata/local/temp/scratchpad/notes.md"),
+        LeaseCheck::Allow
+    ));
+    assert!(matches!(lease_check(&leases, Some("bodies"), None, "c:/tmp/elsewhere/src/geo/pass.rs"), LeaseCheck::Allow));
+    assert!(matches!(lease_check(&leases, None, None, "/tmp/notes.md"), LeaseCheck::Allow));
+    assert!(matches!(
+        lease_check(&leases, Some("geo"), Some(it.front.id.as_str()), "/tmp/outside.rs"),
+        LeaseCheck::Allow
+    ));
 }
 
 #[test]
@@ -779,6 +795,289 @@ fn relatedness_forward_and_reverse() {
     let all = s.load_all().unwrap();
     let qn = s.find(&all, &quiet.front.id).unwrap();
     assert!(queries::relatedness(&all, qn).is_empty(), "silence is the default");
+}
+
+#[test]
+fn dispatch_state_and_touched_accrual() {
+    let s = temp_store();
+    let d = quarry::coord::DispatchState {
+        item: "it-test".into(),
+        item_title: "the work".into(),
+        session: "geo".into(),
+        globs: vec!["src/**".into()],
+        acceptance: vec!["it lands".into()],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    assert_eq!(quarry::coord::load_dispatch(&s).unwrap().item, "it-test");
+    // badge resolution falls back to the state file (env unset in tests)
+    assert_eq!(quarry::coord::current_dispatch_badge(&s).as_deref(), Some("it-test"));
+    // clearing a different item leaves the badge; the matching item clears it
+    quarry::coord::clear_dispatch(&s, "it-other");
+    assert!(quarry::coord::load_dispatch(&s).is_some());
+    quarry::coord::clear_dispatch(&s, "it-test");
+    assert!(quarry::coord::load_dispatch(&s).is_none());
+    // accrual: distinct per key, ordered, isolated, clearable
+    assert_eq!(quarry::coord::touch_key(Some("it-x"), Some("geo")), "item:it-x");
+    assert_eq!(quarry::coord::touch_key(None, Some("geo")), "session:geo");
+    assert_eq!(quarry::coord::touch_key(None, None), "session:unbound");
+    quarry::coord::accrue_touch(&s, "session:geo", "src/a.rs");
+    quarry::coord::accrue_touch(&s, "session:geo", "src/b.rs");
+    quarry::coord::accrue_touch(&s, "item:it-x", "src/c.rs");
+    assert_eq!(quarry::coord::touched_for(&s, "session:geo"), vec!["src/a.rs", "src/b.rs"]);
+    assert_eq!(quarry::coord::touched_for(&s, "item:it-x"), vec!["src/c.rs"]);
+    quarry::coord::clear_touched(&s, "session:geo");
+    assert!(quarry::coord::touched_for(&s, "session:geo").is_empty());
+    assert_eq!(quarry::coord::touched_for(&s, "item:it-x"), vec!["src/c.rs"], "clear is key-scoped");
+}
+
+#[test]
+fn log_events_stamp_the_badge_from_state() {
+    let s = temp_store();
+    let d = quarry::coord::DispatchState {
+        item: "it-bdg".into(),
+        item_title: "badged".into(),
+        session: "geo".into(),
+        globs: vec![],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": "cl-zzzz", "v": 1, "op": "create", "type": "claim", "actor": "t"
+    }))
+    .unwrap();
+    let log = s.read_log().unwrap();
+    let ev = log.last().unwrap();
+    assert_eq!(ev.get("dispatch").and_then(|v| v.as_str()), Some("it-bdg"));
+    // badge cleared: later events are unstamped
+    quarry::coord::clear_dispatch(&s, "it-bdg");
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": "cl-yyyy", "v": 1, "op": "create", "actor": "t"
+    }))
+    .unwrap();
+    let log = s.read_log().unwrap();
+    assert!(log.last().unwrap().get("dispatch").is_none());
+}
+
+#[test]
+fn observe_write_contract_echo_and_drift() {
+    use quarry::teach::observe_write;
+    let s = temp_store();
+    let d = quarry::coord::DispatchState {
+        item: "it-bdg".into(),
+        item_title: "guard growth".into(),
+        session: "geo".into(),
+        globs: vec!["src/**".into()],
+        acceptance: vec!["a".into(), "b".into()],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: Store::now(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    // first badged write echoes the contract once
+    let out = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/main.rs");
+    assert!(
+        out.iter().any(|l| l.contains("first write under dispatch") && l.contains("guard growth")),
+        "got {:?}",
+        out
+    );
+    let out2 = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/main.rs");
+    assert!(out2.is_empty(), "echo is first-touch only, got {:?}", out2);
+    assert_eq!(quarry::coord::touched_for(&s, "item:it-bdg"), vec!["src/main.rs"]);
+    // drift: an event lands on the item, the throttle expires — noticed once
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": "it-bdg", "v": 2, "op": "set", "actor": "someone-else"
+    }))
+    .unwrap();
+    let mut d2 = quarry::coord::load_dispatch(&s).unwrap();
+    d2.checked = "2000-01-01T00:00:00Z".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
+    let out3 = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/other.rs");
+    assert!(out3.iter().any(|l| l.contains("dispatch drift")), "got {:?}", out3);
+    // cursor advanced by the delivery: stale throttle again, no re-delivery
+    let mut d3 = quarry::coord::load_dispatch(&s).unwrap();
+    d3.checked = "2000-01-01T00:00:00Z".into();
+    quarry::coord::save_dispatch(&s, &d3).unwrap();
+    let out4 = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/third.rs");
+    assert!(!out4.iter().any(|l| l.contains("dispatch drift")), "said once, got {:?}", out4);
+}
+
+#[test]
+fn observe_write_leaseless_threshold_nudge() {
+    use quarry::teach::observe_write;
+    let s = temp_store();
+    let it = ops::new_node(&s, NewArgs::bare("item", "guard growth arc")).unwrap();
+    ops::set(&s, &it.front.id, &["write-set+=src/**".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let m = queries::items_matching_files(&all, &["src/lease.rs".to_string()]);
+    assert_eq!(m.len(), 1, "write-set glob matches the touched file");
+    // graph paths and paths outside the repo root never accrue
+    assert!(observe_write(&s, &[], Some("solo"), None, "graph/sessions.json").is_empty());
+    assert!(observe_write(&s, &[], Some("solo"), None, "c:/users/x/scratch/notes.md").is_empty());
+    assert!(observe_write(&s, &[], Some("solo"), None, "/tmp/notes.md").is_empty());
+    assert!(quarry::coord::touched_for(&s, "session:solo").is_empty());
+    // two distinct files: quiet; a duplicate does not advance the count
+    assert!(observe_write(&s, &[], Some("solo"), None, "src/a.rs").is_empty());
+    assert!(observe_write(&s, &[], Some("solo"), None, "src/b.rs").is_empty());
+    assert!(observe_write(&s, &[], Some("solo"), None, "src/b.rs").is_empty());
+    // the third distinct file crosses the threshold: nudge, with the match
+    let out = observe_write(&s, &[], Some("solo"), None, "src/c.rs");
+    assert!(
+        out.iter().any(|l| l.contains("arc is forming") && l.contains("guard growth arc")),
+        "got {:?}",
+        out
+    );
+    // once per session: the fourth is silent
+    assert!(observe_write(&s, &[], Some("solo"), None, "src/d.rs").is_empty());
+    // a session holding a lease is not leaseless — no nudge from this layer
+    let holder = ops::new_node(&s, NewArgs::bare("item", "held work")).unwrap();
+    quarry::coord::reserve(&s, &holder, "lessee", "t", vec!["docs/**".into()], false, false, None).unwrap();
+    let leases = quarry::coord::load_leases(&s);
+    assert!(observe_write(&s, &leases, Some("lessee"), None, "src/e.rs").is_empty());
+    assert!(observe_write(&s, &leases, Some("lessee"), None, "src/f.rs").is_empty());
+    let third = observe_write(&s, &leases, Some("lessee"), None, "src/g.rs");
+    assert!(third.is_empty(), "lease holders get the scope-creep warn, not the nudge: {:?}", third);
+}
+
+#[test]
+fn dispatch_one_act_then_harvest() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, "geo", "t").unwrap();
+    assert!(out.payload.contains(&format!("QUARRY_DISPATCH={}", it.front.id)), "payload carries the badge");
+    assert!(out.payload.contains("DISPATCH BRIEF"), "payload carries the brief whole");
+    assert!(!out.reused_lease);
+    let leases = quarry::coord::load_leases(&s);
+    assert_eq!(leases.len(), 1);
+    assert_eq!(leases[0].item, it.front.id);
+    assert_eq!(leases[0].session, "geo");
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &it.front.id).unwrap().front.status, "in-flight");
+    let d = quarry::coord::load_dispatch(&s).unwrap();
+    assert_eq!(d.item, it.front.id);
+    assert_eq!(d.globs, vec!["src/geo/**".to_string()]);
+    assert_eq!(d.acceptance.len(), 1, "the contract rides the state file");
+    assert!(quarry::coord::briefed_this_session(&s, &it.front.id, "geo"), "dispatch briefs (C8)");
+    // re-dispatch keeps the lease
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, "geo", "t").unwrap();
+    assert!(again.reused_lease);
+    // a second concurrent dispatch refuses — one badge at a time
+    let other = ops::new_node(&s, NewArgs::bare("item", "other work")).unwrap();
+    let err = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, "geo", "t").unwrap_err();
+    assert!(err.to_string().contains("already active"), "got: {}", err);
+    // acts under the badge are stamped (state-file transport)
+    let c = ops::claim(
+        &s,
+        "`geo-pass`: emits layered strata",
+        vec![area.front.id.clone()],
+        None,
+        Some("read off the pass".into()),
+        None,
+        None,
+    )
+    .unwrap();
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| e.get("node").and_then(|v| v.as_str()) == Some(c.front.id.as_str()))
+        .unwrap();
+    assert_eq!(ev.get("dispatch").and_then(|v| v.as_str()), Some(it.front.id.as_str()));
+    // observed writes accrue under the item key; harvest renders the seat
+    quarry::coord::accrue_touch(&s, &format!("item:{}", it.front.id), "src/geo/pass.rs");
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(h.contains("src/geo/pass.rs"), "observed file listed");
+    assert!(h.contains("stop signal"), "harness done never transitions");
+    assert!(h.contains(&format!("q query dispatch {}", it.front.id)), "trace advertised");
+    assert!(h.contains("--supports"), "one-command report registration");
+    assert!(h.contains("1 claim(s) minted"), "badge-stamped acts counted: {}", h);
+    assert!(h.contains("the pass lands"), "RETURN spec re-listed for judging");
+    let t = quarry::render::dispatch_trace(&s, &it.front.id).unwrap();
+    assert!(t.contains("src/geo/pass.rs"));
+    assert!(t.contains(&c.front.id), "stamped claim in the trace");
+    // wrap sees the unharvested dispatch; a harvest event clears it
+    let all = s.load_all().unwrap();
+    let un = queries::unharvested_dispatches(&all, &log);
+    assert!(un.iter().any(|n| n.front.id == it.front.id));
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": it.front.id, "v": 1, "op": "harvest", "actor": "t"
+    }))
+    .unwrap();
+    let log2 = s.read_log().unwrap();
+    assert!(queries::unharvested_dispatches(&all, &log2).is_empty());
+}
+
+#[test]
+fn dispatch_refuses_settled_and_foreign_lease() {
+    let s = temp_store();
+    let mut done = NewArgs::bare("item", "landed work");
+    done.status = Some("done".into());
+    let done = ops::new_node(&s, done).unwrap();
+    let err = ops::dispatch(&s, &done.front.id, vec!["src/**".into()], false, "geo", "t").unwrap_err();
+    assert!(err.to_string().contains("[done]"), "got: {}", err);
+    // a foreign holder blocks dispatch with the holder named
+    let it = ops::new_node(&s, NewArgs::bare("item", "contested work")).unwrap();
+    quarry::coord::reserve(&s, &it, "bodies", "t", vec!["src/x/**".into()], false, false, None).unwrap();
+    let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, "geo", "t").unwrap_err();
+    assert!(err.to_string().contains("bodies"), "got: {}", err);
+    // no globs anywhere refuses with the teaching line
+    let bare = ops::new_node(&s, NewArgs::bare("item", "bare work")).unwrap();
+    let err = ops::dispatch(&s, &bare.front.id, vec![], false, "geo", "t").unwrap_err();
+    assert!(err.to_string().contains("--files"), "got: {}", err);
+}
+
+#[test]
+fn brief_carries_dispatch_citizenship_sections() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut spine = NewArgs::bare("claim", "`body-graph`: bodies keep identity");
+    spine.about = vec![area.front.id.clone()];
+    spine.body = "water bodies keep identity across chunk regeneration by graph persistence".into();
+    spine.provenance = Some("user".into());
+    ops::new_node(&s, spine).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["bodies persist across reload".into()];
+    it.body = "build the graph".into();
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &d.front.id, false, None).unwrap();
+    let mut leaner = NewArgs::bare("item", "river deltas");
+    leaner.about = vec![area.front.id.clone()];
+    let leaner = ops::new_node(&s, leaner).unwrap();
+    ops::link(&s, &leaner.front.id, "depends-on", &it.front.id, false, None).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(text.contains("REFLECTIONS"), "reflections instruction present");
+    assert!(text.contains("STOP-REPORTS"), "stop-report instruction present");
+    assert!(text.contains(&format!("q harvest {}", it.front.id)), "landing points at harvest");
+    assert!(text.contains(&format!("q dispatch {}", it.front.id)), "leaseless brief advertises dispatch");
+    assert!(!text.contains("status=done, release any lease"), "the stale landing rule is gone");
+    assert!(
+        text.contains("graph persistence"),
+        "spine shelf renders bodies, not titles: {}",
+        text
+    );
+    assert!(text.contains("who leans on this landing"), "backlinks considered");
+    assert!(text.contains("river deltas"));
+    assert!(!text.contains("BEHIND CHECK"), "nothing behind yet");
+    // bump the cited decision: the render-time behind check confronts the dispatcher
+    ops::set(&s, &d.front.id, &["title=bodies persist, voxels derive".to_string()], None).unwrap();
+    let text2 = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(text2.contains("DISPATCHER — BEHIND CHECK"), "got: {}", text2);
+    assert!(text2.contains(&format!("q affirm {} --to {}", it.front.id, d.front.id)));
 }
 
 #[test]

@@ -10,3 +10,5 @@ graph/.alert-cursors.json
 graph/.chat-actors.json
 graph/.area-reads.json
 graph/.topic-queue.json
+graph/.touched.jsonl
+graph/.dispatch.json

@@ -219,3 +219,70 @@
 {"ts":"2026-08-09T17:31:46Z","node":"th-x9b2","v":2,"op":"archive","actor":"claude"}
 {"ts":"2026-08-09T17:34:22Z","node":"session:unbound","v":0,"op":"wrap","actor":"claude"}
 {"ts":"2026-08-09T17:34:36Z","node":"it-nmhu","v":2,"op":"archive","actor":"claude"}
+{"ts":"2026-08-09T19:18:04Z","node":"dc-cc76","v":1,"op":"create","type":"decision","title":"the lease is an arc declaration: boundary at first file touch; leaseless writes observed, never denied","actor":"claude","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-cc76","ts":"2026-08-09T19:18:04Z","node":"th-ejn6","v":4,"actor":"claude"}
+{"op":"link","rel":"settles","to":"th-ejn6","at":4,"ts":"2026-08-09T19:18:04Z","node":"dc-cc76","v":2,"actor":"claude"}
+{"op":"link","rel":"supports","to":"dc-cc76","at":2,"ts":"2026-08-09T19:18:21Z","node":"cl-qm6t","v":4,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"dc-cc76","at":2,"ts":"2026-08-09T19:18:21Z","node":"th-dbn4","v":2,"actor":"claude"}
+{"ts":"2026-08-09T19:19:00Z","node":"it-7ss9","v":1,"op":"create","type":"item","title":"q dispatch and the leaseless observation surfaces","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"dc-cc76","at":2,"ts":"2026-08-09T19:19:05Z","node":"it-7ss9","v":2,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"th-dbn4","at":2,"ts":"2026-08-09T19:19:05Z","node":"it-7ss9","v":3,"actor":"claude"}
+{"ts":"2026-08-09T19:19:05Z","node":"it-vztp","v":1,"op":"create","type":"item","title":"post-mortem: prose mentions that never became edges","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"dc-grrb","at":1,"ts":"2026-08-09T19:19:17Z","node":"it-vztp","v":2,"actor":"claude"}
+{"ts":"2026-08-10T06:16:39Z","node":"cl-eb8j","v":1,"op":"create","type":"claim","title":"`enforcement-beats-doctrine`: the one invariant that stopped failing be…","actor":"claude","note":null}
+{"op":"link","rel":"source","to":"do-aurk","at":2,"ts":"2026-08-10T06:16:40Z","node":"cl-eb8j","v":2,"actor":"claude"}
+{"ts":"2026-08-10T06:16:57Z","node":"dc-kpqg","v":1,"op":"create","type":"decision","title":"dispatch citizenship: the brief primes quality, choke points construct accounting, the report registers","actor":"claude","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-kpqg","ts":"2026-08-10T06:16:57Z","node":"th-dbn4","v":3,"actor":"claude"}
+{"op":"link","rel":"settles","to":"th-dbn4","at":3,"ts":"2026-08-10T06:16:57Z","node":"dc-kpqg","v":2,"actor":"claude"}
+{"op":"link","rel":"supports","to":"dc-kpqg","at":2,"ts":"2026-08-10T06:17:07Z","node":"cl-eb8j","v":3,"actor":"claude"}
+{"ts":"2026-08-10T06:17:07Z","node":"it-7ss9","v":3,"op":"affirm","restamped":1,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"dc-kpqg","at":2,"ts":"2026-08-10T06:17:07Z","node":"it-7ss9","v":4,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"it-ubqe","at":2,"ts":"2026-08-10T06:17:08Z","node":"it-7ss9","v":5,"actor":"claude"}
+{"op":"body","ts":"2026-08-10T06:17:23Z","node":"it-7ss9","v":6,"actor":"claude","note":"fold dispatch-citizenship ruling into build shape"}
+{"op":"body","ts":"2026-08-10T06:25:02Z","node":"it-vztp","v":3,"actor":"claude","note":"record instance 2: dc-kpqg to dc-cc76, same seam"}
+{"ts":"2026-08-10T06:25:02Z","node":"th-4fz6","v":1,"op":"create","type":"thread","title":"decision-to-decision citation: the edge matrix seam","actor":"claude","note":null}
+{"op":"link","rel":"depends-on","to":"dc-cc76","at":2,"ts":"2026-08-10T06:25:51Z","node":"th-4fz6","v":2,"actor":"claude"}
+{"op":"link","rel":"depends-on","to":"dc-grrb","at":1,"ts":"2026-08-10T06:25:51Z","node":"th-4fz6","v":3,"actor":"claude"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-10T06:25:51Z","node":"th-4fz6","v":4,"actor":"claude"}
+{"op":"set","fields":["acceptance+=q dispatch performs brief+reserve+in-flight+payload as one act, refuses unbound with a session-adopt pointer, and carries QUARRY_DISPATCH=<item-id> in the payload"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":7,"actor":"claude"}
+{"op":"set","fields":["acceptance+=the guard accrues touched paths machine-locally (per-session leaseless, per-item under badge) with no graph load added to the write path; the first badged write echoes the contract; the leaseless threshold nudge fires once per session with a derived item match"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":8,"actor":"claude"}
+{"op":"set","fields":["acceptance+=q verbs stamp the badge on logged events and a dispatch-writes query exists, advertised in harvest output"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":9,"actor":"claude"}
+{"op":"set","fields":["acceptance+=landing prints observed-vs-leased and report-registration homework; spine_check consumes observed files when present; wrap lists leaseless touched files and unharvested dispatches"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":10,"actor":"claude"}
+{"op":"set","fields":["acceptance+=the brief renders spine bodies, a render-time behind check addressed to the dispatcher, and a reflections/stop-report RETURN section; a resource-rules protocol rider exists on=brief"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":11,"actor":"claude"}
+{"op":"set","fields":["acceptance+=cargo test passes with the raw test result line read unfiltered, and the dispatch chain is exercised end-to-end once in a scratch host repo"],"ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":12,"actor":"claude"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-10T06:26:02Z","node":"it-7ss9","v":13,"actor":"claude"}
+{"ts":"2026-08-10T06:26:08Z","node":"it-7ss9","v":13,"op":"brief","actor":"claude"}
+{"ts":"2026-08-10T06:27:20Z","node":"it-7ss9","v":13,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:27:20Z","node":"it-7ss9","v":13,"op":"reserve","globs":["src/**,tests/**,Cargo.toml,Cargo.lock,.claude/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-10T06:27:20Z","node":"it-7ss9","v":14,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:27:32Z","node":"it-7ss9","v":14,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:27:32Z","node":"it-7ss9","v":14,"op":"reserve","globs":["src/**","tests/**","Cargo.toml","Cargo.lock",".claude/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:49:35Z","node":"do-799m","v":1,"op":"create","type":"doc","title":"resource rules: this machine's build serialization","actor":"claude","note":null,"session":"quarry","dispatch":"it-7ss9"}
+{"ts":"2026-08-10T06:49:53Z","node":"it-7ss9","v":14,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-7ss9"}
+{"ts":"2026-08-10T06:49:53Z","node":"it-7ss9","v":14,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-7ss9"}
+{"ts":"2026-08-10T06:50:06Z","node":"it-7ss9","v":14,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-7ss9"}
+{"ts":"2026-08-10T06:53:10Z","node":"th-fu73","v":1,"op":"create","type":"thread","title":"user presence: when should a fork block?","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["status=queued"],"from_status":"queued","ts":"2026-08-10T06:53:10Z","node":"th-4fz6","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=parked"],"from_status":"open","ts":"2026-08-10T06:53:19Z","node":"th-fu73","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-kpqg","at":2,"ts":"2026-08-10T06:53:19Z","node":"th-fu73","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:58:01Z","node":"it-7ss9","v":14,"op":"harvest","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:58:25Z","node":"it-7ss9","v":14,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:22Z","node":"do-xt6f","v":1,"op":"create","type":"doc","title":"dispatch report: the dispatch chain lands","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-7ss9","at":14,"ts":"2026-08-10T06:59:22Z","node":"do-xt6f","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:29Z","node":"cl-p6aj","v":1,"op":"create","type":"claim","title":"`q-dispatch`: one act renders the brief, reserves, sets in-flight, and…","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"b7f4525ed5cd","ts":"2026-08-10T06:59:29Z","node":"cl-p6aj","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:29Z","node":"cl-h2gx","v":1,"op":"create","type":"claim","title":"`touched-set-accrual`: the guard observes every in-repo write into mach…","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"9638cc9c48ca","ts":"2026-08-10T06:59:29Z","node":"cl-h2gx","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:29Z","node":"cl-enu7","v":1,"op":"create","type":"claim","title":"`q-harvest`: landing renders observed-vs-leased, advertises the dispatc…","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"a342c520e9be","ts":"2026-08-10T06:59:29Z","node":"cl-enu7","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-7ss9","at":14,"ts":"2026-08-10T06:59:40Z","node":"cl-p6aj","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-7ss9","at":14,"ts":"2026-08-10T06:59:40Z","node":"cl-h2gx","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-7ss9","at":14,"ts":"2026-08-10T06:59:40Z","node":"cl-enu7","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-10T06:59:40Z","node":"it-7ss9","v":15,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:40Z","node":"it-7ss9","v":15,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:49Z","node":"cl-enu7","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:49Z","node":"cl-h2gx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:49Z","node":"cl-p6aj","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T06:59:49Z","node":"do-xt6f","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:00:01Z","node":"it-h9aw","v":1,"op":"create","type":"item","title":"DESIGN.md: dispatch-chain section","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-h9aw","at":1,"ts":"2026-08-10T07:00:21Z","node":"do-xt6f","v":3,"actor":"claude","session":"quarry"}

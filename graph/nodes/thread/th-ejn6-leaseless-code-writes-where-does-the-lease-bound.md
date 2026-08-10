@@ -2,8 +2,8 @@
 id: th-ejn6
 type: thread
 title: 'leaseless code writes: where does the lease boundary actually sit?'
-v: 3
-status: queued
+v: 4
+status: resolved
 provenance: user
 created: 2026-08-09T16:57:21Z
 actor: claude

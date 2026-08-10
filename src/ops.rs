@@ -308,6 +308,7 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
             "method" => node.front.method = Some(v.into()),
             "path" => node.front.path = Some(v.into()),
             "acceptance+" => node.front.acceptance.push(v.into()),
+            "write-set+" | "write_set+" => node.front.write_set.push(v.into()),
             "ratified" => {
                 node.front.ratified = Some(Ratified {
                     by: v.into(),
@@ -538,6 +539,118 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         "op": "archive", "actor": Store::actor()
     }))?;
     Ok(node)
+}
+
+#[derive(Debug)]
+pub struct DispatchOutcome {
+    pub item_id: String,
+    pub item_title: String,
+    pub globs: Vec<String>,
+    /// Re-dispatch: this session already held the lease and kept it.
+    pub reused_lease: bool,
+    /// The hand-off block: badge instruction + derived brief, paste-whole.
+    pub payload: String,
+}
+
+/// `q dispatch <item>`: one act — derived brief (rendered and logged, C8's
+/// substance), lease, in-flight, machine-local badge, hand-off payload.
+/// Never a landing: the item comes back through `q harvest` by the
+/// dispatcher's own hand.
+pub fn dispatch(
+    store: &Store,
+    key: &str,
+    files: Vec<String>,
+    shared: bool,
+    session: &str,
+    actor: &str,
+) -> Result<DispatchOutcome> {
+    let all = store.load_all()?;
+    let item = store.find(&all, key)?.clone();
+    if item.front.ty != "item" {
+        bail!("{} is a {}, not an item — dispatch hands off items", item.front.id, item.front.ty);
+    }
+    if matches!(item.front.status.as_str(), "done" | "dropped") {
+        bail!(
+            "\"{}\" is already [{}] — dispatch moves live work. If the arc truly resumes, reopen it deliberately first: q set {} status=ready",
+            item.front.title, item.front.status, item.front.id
+        );
+    }
+    if let Some(d) = crate::coord::load_dispatch(store) {
+        if d.item != item.front.id {
+            bail!(
+                "a dispatch is already active on this machine: \"{}\" ({}) — one badge at a time keeps observation honest. Harvest it first: q harvest {}",
+                d.item_title, d.item, d.item
+            );
+        }
+    }
+    // The brief act is logged up front (C8: the lease follows a brief); the
+    // TEXT renders after the lease is taken, so the payload's write-set
+    // section shows the contract the agent actually works under.
+    store.log_event(json!({
+        "ts": Store::now(), "node": item.front.id, "v": item.front.v,
+        "op": "brief", "actor": actor, "session": session
+    }))?;
+    let existing = crate::coord::load_leases(store)
+        .into_iter()
+        .find(|l| l.item == item.front.id);
+    let (globs, reused_lease) = match existing {
+        Some(l) if l.session == session => (l.globs, true),
+        Some(l) => bail!(
+            "\"{}\" is leased by session {} ({:?}) — a dispatch would double-hold. Coordinate with the holder, or they harvest/release first.",
+            item.front.title, l.session, l.globs
+        ),
+        None => {
+            let globs = if !files.is_empty() { files } else { item.front.write_set.clone() };
+            if globs.is_empty() {
+                bail!(
+                    "a dispatch leases a write-set — pass --files <globs> (use ** to cover files the work will create): q dispatch {} --files \"src/**\"",
+                    item.front.id
+                );
+            }
+            crate::coord::reserve(store, &item, session, actor, globs.clone(), shared, false, None)?;
+            (globs, false)
+        }
+    };
+    if item.front.status != "in-flight" {
+        set(store, &item.front.id, &["status=in-flight".to_string()], None)?;
+    }
+    let cursor = store.read_log().map(|l| l.len()).unwrap_or(0) as u64;
+    let now = Store::now();
+    crate::coord::save_dispatch(
+        store,
+        &crate::coord::DispatchState {
+            item: item.front.id.clone(),
+            item_title: item.front.title.clone(),
+            session: session.to_string(),
+            globs: globs.clone(),
+            acceptance: item.front.acceptance.clone(),
+            since: now.clone(),
+            cursor,
+            checked: now,
+        },
+    )?;
+    store.log_event(json!({
+        "ts": Store::now(), "node": item.front.id, "v": item.front.v,
+        "op": "dispatch", "actor": actor, "session": session, "globs": globs
+    }))?;
+    // Rendered after the lease and the state save: the payload's write-set
+    // section shows the live contract, not the pre-dispatch void.
+    let brief_text = crate::render::brief(store, &item.front.id)?;
+    let payload = format!(
+        "You are dispatched under badge QUARRY_DISPATCH={id}. Export it in every shell that runs q:\n  \
+         pwsh: $env:QUARRY_DISPATCH='{id}'   ·   bash: export QUARRY_DISPATCH={id}\n\
+         (the write guard also reads the badge recorded machine-locally at dispatch, so your file\n\
+         writes are observed even where your shell env cannot reach; the export stamps your q acts.)\n\n{brief}",
+        id = item.front.id,
+        brief = brief_text
+    );
+    Ok(DispatchOutcome {
+        item_id: item.front.id.clone(),
+        item_title: item.front.title.clone(),
+        globs,
+        reused_lease,
+        payload,
+    })
 }
 
 /// Re-stamp behind edges (and a path-backed doc's blob) after actual review.

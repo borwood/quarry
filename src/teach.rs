@@ -87,10 +87,20 @@ as complete. The first write into an area you have not read this session
 GATES with the area's derived read-first (a prior q open of the area
 passes silently — open first and you never see the gate); after that,
 foreign drift in an area prints inline when your own verb touches it.
-DISPATCH IS A CHAIN: q brief renders the derived brief (if it reads
+DISPATCH IS A CHAIN: q dispatch <item> runs it as one act — derived
+brief, lease, in-flight, and a hand-off payload carrying the
+QUARRY_DISPATCH badge (q brief then q reserve remains the solo path;
+C8 makes any lease follow a same-session brief; if the brief reads
 wrong, fix the graph and re-render — never hand-compose dispatch
-context), C8 makes reserve follow a same-session brief, and the write
-hook holds code writes to the leased set. A landed capability registers
+context). The write hook holds a badged agent to the leased set and
+OBSERVES everyone else: leaseless code writes are never denied — they
+accrue to a machine-local touched-set, nudge once at threshold with
+the items they resemble, and surface at wrap. Verbs stamp the badge on
+events (q query dispatch <item> replays what a dispatch wrote). THE
+RETURN IS A REPORT, NOT A LANDING: an agent's "done" is a stop signal
+— the dispatcher judges at q harvest <item> (observed-vs-leased,
+report registration as a doc, then status=done and release by the
+dispatcher's own hand). A landed capability registers
 its spine: a claim titled name-first (`name`: what it provides), source
 the code it was read off — the area's claims are its `load-bearing
 bones`, and building starts from them. The user's single-thread
@@ -166,6 +176,10 @@ the session hook for chats running in this repo — you should never set
 them by hand. Set QUARRY_ACTOR manually only when operating outside hook
 coverage (e.g. from a parent directory). If unset entirely, provenance
 safely derives as assistant; user provenance is always explicit.
+QUARRY_DISPATCH is the dispatch badge: a dispatched agent exports it in
+every shell that runs q (the hand-off payload says how); q dispatch also
+records it machine-locally so the write guard observes even shells whose
+env cannot reach it. Harvest and release clear it.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -437,7 +451,9 @@ pub enum LeaseCheck {
 /// lease means). Under QUARRY_DISPATCH, a write outside the own session's
 /// lease denies — the brief's write-set is the contract. A main session
 /// holding leases but writing outside all of them gets a warning: scope
-/// creep made visible, not forbidden.
+/// creep made visible, not forbidden. The contract is REPO-RELATIVE: a path
+/// outside the host repo (absolute — scratchpads, temp files) is never
+/// scope creep, never contract material, and always allowed here.
 pub fn lease_check(
     leases: &[crate::coord::Lease],
     session: Option<&str>,
@@ -446,6 +462,9 @@ pub fn lease_check(
 ) -> LeaseCheck {
     if leases.is_empty() || rel_path.starts_with("graph/") {
         return LeaseCheck::Allow;
+    }
+    if rel_path.starts_with('/') || rel_path.contains(':') {
+        return LeaseCheck::Allow; // outside the host repo — not this graph's concern
     }
     let foreign_exclusive = leases.iter().find(|l| {
         session.map_or(true, |s| l.session != s)
@@ -479,6 +498,123 @@ pub fn lease_check(
         ));
     }
     LeaseCheck::Allow
+}
+
+/// The observation layer riding the write guard, AFTER allow/warn — it never
+/// denies (a blocked write breeds junk leases; prompts, not gates). Accrues
+/// the touched path (O(1) append, no graph load), echoes the dispatch
+/// contract on the first badged write, raises a badge-keyed drift notice off
+/// the dispatch cursor (throttled — never a per-write log scan), and fires
+/// the leaseless threshold nudge once per session with a derived item match.
+/// Returns additionalContext lines for the hook envelope.
+pub fn observe_write(
+    store: &crate::store::Store,
+    leases: &[crate::coord::Lease],
+    session: Option<&str>,
+    badge: Option<&str>,
+    rel_path: &str,
+) -> Vec<String> {
+    use crate::coord;
+    if rel_path.starts_with("graph/") {
+        return vec![]; // graph state is not code; verbs carry their own record
+    }
+    if rel_path.starts_with('/') || rel_path.contains(':') {
+        return vec![]; // an absolute path escaped the repo root — not this graph's arc
+    }
+    let mut out: Vec<String> = Vec::new();
+    let key = coord::touch_key(badge, session);
+    let prior = coord::touched_for(store, &key);
+    let is_new = !prior.iter().any(|p| p == rel_path);
+    if is_new {
+        coord::accrue_touch(store, &key, rel_path);
+    }
+    if let Some(b) = badge {
+        // First badged write: echo the contract captured at dispatch time —
+        // the write path reads one small state file, never the graph.
+        if prior.is_empty() {
+            if let Some(d) = coord::load_dispatch(store).filter(|d| d.item == b) {
+                out.push(format!(
+                    "first write under dispatch {} — the contract: item \"{}\"; write-set {:?} (outside writes deny); RETURN: {} acceptance line(s), accepted by outcome. Report and stop — landing belongs to the dispatcher. (q brief {} re-renders the full brief.)",
+                    b, d.item_title, d.globs, d.acceptance.len(), b
+                ));
+            }
+        }
+        // Badge-keyed drift notice: has the dispatched item moved since the
+        // brief? Cursor-incremental from the dispatch state, throttled.
+        if let Some(mut d) = coord::load_dispatch(store).filter(|d| d.item == b) {
+            let stale = {
+                use time::format_description::well_known::Rfc3339;
+                time::OffsetDateTime::parse(&d.checked, &Rfc3339)
+                    .map(|t| (time::OffsetDateTime::now_utc() - t).whole_seconds() >= 120)
+                    .unwrap_or(true)
+            };
+            if stale {
+                if let Ok(log) = store.read_log() {
+                    let drifted: Vec<String> = log
+                        .iter()
+                        .skip(d.cursor as usize)
+                        .filter(|ev| {
+                            ev.get("node").and_then(|v| v.as_str()) == Some(b)
+                                && matches!(
+                                    ev.get("op").and_then(|v| v.as_str()),
+                                    Some("set") | Some("body") | Some("link")
+                                )
+                        })
+                        .map(|ev| {
+                            format!(
+                                "[{}] by {}",
+                                ev.get("op").and_then(|v| v.as_str()).unwrap_or("?"),
+                                ev.get("actor").and_then(|v| v.as_str()).unwrap_or("?")
+                            )
+                        })
+                        .collect();
+                    if !drifted.is_empty() {
+                        out.push(format!(
+                            "dispatch drift: \"{}\" ({}) changed since your brief ({}) — the contract may have moved; re-read: q open {}",
+                            d.item_title, b, drifted.join(", "), b
+                        ));
+                    }
+                    d.cursor = log.len() as u64;
+                    d.checked = crate::store::Store::now();
+                    let _ = coord::save_dispatch(store, &d);
+                }
+            }
+        }
+        return out;
+    }
+    // Leaseless: sessions holding leases already get the scope-creep warn;
+    // the threshold nudge is for the genuinely leaseless arc taking shape.
+    let holds_any = session.map_or(false, |s| leases.iter().any(|l| l.session == s));
+    if !holds_any && is_new && prior.len() + 1 == coord::LEASELESS_NUDGE_THRESHOLD {
+        let mut touched = prior.clone();
+        touched.push(rel_path.to_string());
+        // The match loads the graph — once, at the threshold crossing, never
+        // on the steady write path.
+        let matched = store
+            .load_all()
+            .map(|all| {
+                crate::queries::items_matching_files(&all, &touched)
+                    .into_iter()
+                    .map(|n| format!("\"{}\" ({})", n.front.title, n.front.id))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let hint = if matched.is_empty() {
+            "no item's write-set or file refs cover these — if the arc is real, sketch it: q new item \"...\" --about <area>".to_string()
+        } else {
+            format!(
+                "this resembles {} — take it up: q brief <item>, then q reserve <item> --files <globs> (or q dispatch <item>)",
+                matched.join(", ")
+            )
+        };
+        out.push(format!(
+            "quarry: {} source files touched this session with no lease ({}) — an arc is forming. A lease is an arc declaration, not permission (leaseless writes never deny), but a declared arc gets spine extraction and presence. {}",
+            coord::LEASELESS_NUDGE_THRESHOLD,
+            touched.join(", "),
+            hint
+        ));
+    }
+    out
 }
 
 /// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be

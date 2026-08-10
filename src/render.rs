@@ -261,6 +261,25 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         }
     }
 
+    // Render-time behind check, addressed to the DISPATCHER: a brief built
+    // on stale stamps dispatches stale context — confront it before the
+    // agent has to.
+    let behinds: Vec<crate::queries::Behind> = crate::queries::behind(store, &all)
+        .into_iter()
+        .filter(|b| b.src_id == item.front.id)
+        .collect();
+    if !behinds.is_empty() {
+        writeln!(s, "\nDISPATCHER — BEHIND CHECK ({} stale ref(s) at render time):", behinds.len())?;
+        for b in &behinds {
+            writeln!(
+                s,
+                "  ⚠ [sev {}] this item cites \"{}\" at {}, now {} ({}) — review the change, then: q affirm {} --to {}",
+                b.severity, b.to_title, b.at, b.current, b.reason, item.front.id, b.to
+            )?;
+        }
+        writeln!(s, "  Do not hand this off until each is reviewed — the agent inherits what you did not confront.")?;
+    }
+
     writeln!(s, "\nREAD-FIRST (cited at pinned versions — q open <id> for any neighborhood):")?;
     let mut cited = 0usize;
     for e in &item.front.edges {
@@ -304,7 +323,14 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
                     writeln!(s, "      open thread: \"{}\" ({}) — NOT yours to settle", n.front.title, n.front.id)?;
                 }
                 ("claim", "asserted") | ("claim", "measured") | ("claim", "ratified") => {
+                    // The spine shelf carries BODIES, not name-tags: the
+                    // agent builds from these bones without a round-trip.
                     writeln!(s, "      spine: \"{}\" [{}] ({} v{})", n.front.title, n.front.status, n.front.id, n.front.v)?;
+                    if !n.body.trim().is_empty() && n.body.trim() != n.front.title.trim() {
+                        for l in n.body.lines() {
+                            writeln!(s, "        {}", l)?;
+                        }
+                    }
                     cited += 1;
                 }
                 _ => {}
@@ -318,11 +344,34 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         })
         .collect();
     for ev in evidence {
-        writeln!(s, "  · evidence: {} \"{}\" [{}] ({} v{})", ev.front.ty, ev.front.title, ev.front.status, ev.front.id, ev.front.v)?;
+        let p = ev.front.path.as_deref().map(|p| format!(" · {}", p)).unwrap_or_default();
+        writeln!(s, "  · evidence: {} \"{}\" [{}] ({} v{}){}", ev.front.ty, ev.front.title, ev.front.status, ev.front.id, ev.front.v, p)?;
+        if ev.front.kind.as_deref() == Some("report") {
+            writeln!(s, "      a prior dispatch's report — read it before repeating its ground.")?;
+        }
         cited += 1;
     }
     if cited == 0 {
         writeln!(s, "  (nothing cited — an item with no neighborhood usually means the graph is missing edges, not that there is nothing to read)")?;
+    }
+    // Backlinks: who leans on this item — landing context the forward edges
+    // cannot show.
+    let leaners: Vec<(&Node, &str)> = all
+        .iter()
+        .flat_map(|m| {
+            m.front
+                .edges
+                .iter()
+                .filter(|e| e.to == item.front.id && matches!(e.rel.as_str(), "depends-on" | "part-of"))
+                .map(move |e| (m, e.rel.as_str()))
+        })
+        .filter(|(m, _)| !m.front.archived)
+        .collect();
+    if !leaners.is_empty() {
+        writeln!(s, "  who leans on this landing:")?;
+        for (m, rel) in leaners {
+            writeln!(s, "    · \"{}\" [{}] ({}) -[{}]→ this item", m.front.title, m.front.status, m.front.id, rel)?;
+        }
     }
 
     writeln!(s, "\nWRITE-SET:")?;
@@ -334,6 +383,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         }
         None => {
             writeln!(s, "  leaseless — research dispatch; DO-NOT-TOUCH: every file. To write code, the dispatcher reserves first: q reserve {} --files <globs>", item.front.id)?;
+            writeln!(s, "  (the whole chain in one act — brief, lease, in-flight, hand-off payload: q dispatch {} --files <globs>)", item.front.id)?;
         }
     }
 
@@ -346,6 +396,8 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         }
         writeln!(s, "  Report against these outcomes — not effort, not process. A number needs its method; a mechanism is a hypothesis until measured.")?;
     }
+    writeln!(s, "  REFLECTIONS (always): close the report with doubts, surprises, and design friction in your own words — candor beats polish; reflections are mined afterward.")?;
+    writeln!(s, "  STOP-REPORTS: stopping before acceptance is met is a valid outcome — say so explicitly (why, where you stopped, what remains) and the dispatcher re-dispatches from your report. A partial report registers like any other.")?;
 
     let riders = crate::protocol::matching(&all, "brief", None, item.front.kind.as_deref());
     for r in &riders {
@@ -358,9 +410,133 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     writeln!(s, "\nACTOR RULES:")?;
     writeln!(s, "  · Build from spine: the claims above are `load-bearing capabilities` — design from these bones before proposing new structure.")?;
     writeln!(s, "  · All graph writes go through q verbs; your work logs under QUARRY_ACTOR (auto-injected).")?;
-    writeln!(s, "  · C3: you may not settle or supersede user-provenance nodes; if a call belongs to the user, queue a thread.")?;
+    writeln!(s, "  · C3: never settle or supersede user-provenance nodes. When the work hits a call that is the user's — a fork that would contradict or overturn a user ruling — queue a thread, take the least-committal provisional path consistent with standing rulings, and keep building; flag the provisional call in your report. The thread surfaces the call; it never blocks your arc.")?;
     writeln!(s, "  · Cite what you build on (q link ... / q claim --source ...); harvest is judged from the diff, not the report.")?;
-    writeln!(s, "  · When the work lands: q set {} status=done, release any lease, and do the homework the verbs print.", item.front.id)?;
+    writeln!(s, "  · Landing belongs to the dispatcher: report against the RETURN spec and stop — never flip status=done, never release the lease. \"Done\" from an agent is a stop signal, not a transition; the dispatcher judges at: q harvest {}", item.front.id)?;
+    Ok(s)
+}
+
+/// The harvest surface: the dispatcher's judgment seat at a dispatch's exit.
+/// Observed-vs-leased, the acts stamped under the badge, the RETURN spec to
+/// judge against, and the report-registration homework. Prints; never
+/// transitions — landing stays the dispatcher's own act.
+pub fn harvest(store: &Store, key: &str) -> Result<String> {
+    let all = store.load_all()?;
+    let item = store.find(&all, key)?;
+    if item.front.ty != "item" {
+        anyhow::bail!("{} is a {}, not an item — harvest judges dispatched items", item.front.id, item.front.ty);
+    }
+    let id = &item.front.id;
+    let log = store.read_log()?;
+    let mut s = String::new();
+    writeln!(s, "══ HARVEST — \"{}\" ({}) [{}] ══", item.front.title, id, item.front.status)?;
+    writeln!(s, "the agent's \"done\" was a stop signal, never a transition — judge by outcome, land by your own hand.")?;
+
+    let observed = crate::coord::touched_for(store, &format!("item:{}", id));
+    let globs = crate::coord::load_leases(store)
+        .iter()
+        .find(|l| &l.item == id)
+        .map(|l| l.globs.clone())
+        .or_else(|| crate::coord::load_dispatch(store).filter(|d| &d.item == id).map(|d| d.globs))
+        .unwrap_or_else(|| item.front.write_set.clone());
+    writeln!(s, "\nOBSERVED vs LEASED:")?;
+    if observed.is_empty() {
+        writeln!(s, "  no code writes observed under this badge — a research dispatch, or the agent's shells ran outside the guard's sight.")?;
+    } else {
+        writeln!(s, "  files touched under the badge ({}):", observed.len())?;
+        for f in &observed {
+            let inside = globs.iter().any(|g| crate::coord::globs_overlap(g, f));
+            writeln!(s, "    {}{}", f, if inside { "" } else { "  ⚠ outside the lease" })?;
+        }
+    }
+    let untouched: Vec<&String> = globs
+        .iter()
+        .filter(|g| !observed.iter().any(|f| crate::coord::globs_overlap(g, f)))
+        .collect();
+    for g in untouched {
+        writeln!(s, "  leased but untouched: {} — dead weight in the lease, or unfinished work?", g)?;
+    }
+
+    let acts: Vec<&serde_json::Value> = log
+        .iter()
+        .filter(|ev| ev.get("dispatch").and_then(|v| v.as_str()) == Some(id.as_str()))
+        .filter(|ev| !matches!(ev.get("op").and_then(|v| v.as_str()), Some("dispatch") | Some("harvest")))
+        .collect();
+    let count_of = |ty: &str| {
+        acts.iter()
+            .filter(|ev| {
+                ev.get("op").and_then(|v| v.as_str()) == Some("create")
+                    && ev.get("type").and_then(|v| v.as_str()) == Some(ty)
+            })
+            .count()
+    };
+    writeln!(
+        s,
+        "\nGRAPH ACTS UNDER THE BADGE: {} event(s) — {} claim(s) minted, {} thread(s) filed, {} doc(s) registered. Full trace: q query dispatch {}",
+        acts.len(), count_of("claim"), count_of("thread"), count_of("doc"), id
+    )?;
+
+    if !item.front.acceptance.is_empty() {
+        writeln!(s, "\nJUDGE EACH BY OUTCOME (the RETURN spec):")?;
+        for a in &item.front.acceptance {
+            writeln!(s, "  · {}", a)?;
+        }
+    }
+
+    let area = item
+        .front
+        .edges
+        .iter()
+        .find(|e| e.rel == "about" && all.iter().any(|n| n.front.id == e.to && n.front.ty == "area"))
+        .map(|e| e.to.clone())
+        .unwrap_or_else(|| "<area>".into());
+    writeln!(s, "\nHOMEWORK — register the report (a stop/partial report registers the same way):")?;
+    writeln!(
+        s,
+        "  q new doc \"dispatch report: {}\" --kind report --path <report.md> --about {} --supports {}",
+        item.front.title, area, id
+    )?;
+    writeln!(s, "  (the supports edge carries it into any re-dispatch brief — prior reports ride along.)")?;
+    writeln!(s, "\nLANDING (yours, if the outcomes hold): q set {} status=done · q release {}", id, id)?;
+    writeln!(s, "  not yet earned → re-dispatch from the report: q dispatch {}", id)?;
+    Ok(s)
+}
+
+/// What a dispatch wrote: the badge-stamped events and the accrued touches.
+pub fn dispatch_trace(store: &Store, key: &str) -> Result<String> {
+    let all = store.load_all()?;
+    let item = store.find(&all, key)?;
+    let id = &item.front.id;
+    let log = store.read_log()?;
+    let mut s = String::new();
+    writeln!(s, "dispatch trace for \"{}\" ({}):", item.front.title, id)?;
+    let mut any = false;
+    for ev in log
+        .iter()
+        .filter(|ev| ev.get("dispatch").and_then(|v| v.as_str()) == Some(id.as_str()))
+    {
+        let node = ev.get("node").and_then(|v| v.as_str()).unwrap_or("?");
+        let title = all
+            .iter()
+            .find(|n| n.front.id == node)
+            .map(|n| n.front.title.as_str())
+            .unwrap_or(node);
+        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
+        let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
+        writeln!(s, "  {} {} \"{}\" ({})", ts, op, title, node)?;
+        any = true;
+    }
+    let touched = crate::coord::touched_for(store, &format!("item:{}", id));
+    if !touched.is_empty() {
+        writeln!(s, "  files touched (accrued by the write guard):")?;
+        for f in &touched {
+            writeln!(s, "    {}", f)?;
+        }
+        any = true;
+    }
+    if !any {
+        writeln!(s, "  nothing under this badge yet — badge-stamped acts and guard-observed writes will appear here.")?;
+    }
     Ok(s)
 }
 

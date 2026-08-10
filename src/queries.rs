@@ -423,6 +423,61 @@ pub fn files_cited(all: &[Node], globs: &[String]) -> bool {
     })
 }
 
+/// Live items whose declared write-sets or file edges cover any of these
+/// paths — the derived "which item is this arc?" match behind the leaseless
+/// threshold nudge. A match is a resemblance to review, never an auto-claim.
+pub fn items_matching_files<'a>(all: &'a [Node], files: &[String]) -> Vec<&'a Node> {
+    all.iter()
+        .filter(|n| {
+            n.front.ty == "item"
+                && !n.front.archived
+                && !matches!(n.front.status.as_str(), "done" | "dropped")
+        })
+        .filter(|n| {
+            n.front
+                .write_set
+                .iter()
+                .any(|g| files.iter().any(|f| crate::coord::globs_overlap(g, f)))
+                || n.front.edges.iter().any(|e| {
+                    e.to.strip_prefix("file:").map_or(false, |fr| {
+                        let p = crate::store::strip_line(fr);
+                        files.iter().any(|f| crate::coord::globs_overlap(&p, f))
+                    })
+                })
+        })
+        .collect()
+}
+
+/// Dispatched items whose report was never harvested: a dispatch event with
+/// no later harvest for the same item, the item still live. The report is
+/// owed — wrap confronts the dispatcher.
+pub fn unharvested_dispatches<'a>(
+    all: &'a [Node],
+    log: &[serde_json::Value],
+) -> Vec<&'a Node> {
+    let mut last_dispatch: Vec<(String, usize)> = Vec::new();
+    let mut last_harvest: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for (i, ev) in log.iter().enumerate() {
+        let Some(id) = ev.get("node").and_then(|v| v.as_str()) else { continue };
+        match ev.get("op").and_then(|v| v.as_str()) {
+            Some("dispatch") => match last_dispatch.iter_mut().find(|(d, _)| d == id) {
+                Some(e) => e.1 = i,
+                None => last_dispatch.push((id.to_string(), i)),
+            },
+            Some("harvest") => {
+                last_harvest.insert(id.to_string(), i);
+            }
+            _ => {}
+        }
+    }
+    last_dispatch
+        .into_iter()
+        .filter(|(id, di)| last_harvest.get(id).map_or(true, |hi| hi < di))
+        .filter_map(|(id, _)| all.iter().find(|n| n.front.id == id))
+        .filter(|n| !matches!(n.front.status.as_str(), "done" | "dropped"))
+        .collect()
+}
+
 /// Nodes this session created or adjusted since its last wrap, with each
 /// node's most recent op — the boundary-time final-review list (the wrap
 /// event itself plants the cursor). `sess = None` means an unbound chat:
