@@ -233,6 +233,21 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         }
     }
 
+    // The area read-first is where intent meets its reality — the delta
+    // advertises itself here, scoped, only when non-empty.
+    if n.front.ty == "area" {
+        let d = queries::intent_delta(&all, Some(n.front.id.as_str()));
+        if !d.unlanded.is_empty() || !d.unintended.is_empty() {
+            writeln!(
+                s,
+                "\n  intent delta — plan and reality join by name: {} intended-but-unlanded, {} landed-but-unintended (q query intent-delta {})",
+                d.unlanded.len(),
+                d.unintended.len(),
+                n.front.id
+            )?;
+        }
+    }
+
     Ok(s)
 }
 

@@ -286,3 +286,57 @@
 {"ts":"2026-08-10T06:59:49Z","node":"do-xt6f","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-10T07:00:01Z","node":"it-h9aw","v":1,"op":"create","type":"item","title":"DESIGN.md: dispatch-chain section","actor":"claude","note":null,"session":"quarry"}
 {"op":"link","rel":"supports","to":"it-h9aw","at":1,"ts":"2026-08-10T07:00:21Z","node":"do-xt6f","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:38:28Z","node":"dc-je5b","v":1,"op":"create","type":"decision","title":"intent rides items and docs; capability names are the join between plan and reality","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-je5b","ts":"2026-08-10T07:38:28Z","node":"th-gdtn","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-gdtn","at":4,"ts":"2026-08-10T07:38:28Z","node":"dc-je5b","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:38:36Z","node":"dc-jsvp","v":1,"op":"create","type":"decision","title":"the matrix grows builds-on: lineage without status coupling, staleness in full","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-jsvp","ts":"2026-08-10T07:38:36Z","node":"th-4fz6","v":6,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-4fz6","at":6,"ts":"2026-08-10T07:38:37Z","node":"dc-jsvp","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:38:53Z","node":"it-tz94","v":1,"op":"create","type":"item","title":"the builds-on edge and the intent delta query","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-jsvp","at":2,"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-je5b","at":2,"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `builds-on-edge`: q link accepts builds-on for decision->decision, doc->claim, doc->decision, refuses other shapes teaching the matrix, stamps like any edge, and couples no status anywhere"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=`builds-on-edge` staleness: behind reports builds-on refs at ordinary severity and blast traverses reverse builds-on (a refuted spine enumerates specs and decisions standing on it), test-covered"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `intent-delta`: a query joining backtick-named acceptance lines of live items to spine claim titles in shared areas, reporting intended-but-unlanded and landed-but-unintended; advertised at the surface where it fires"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":6,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=teach surfaces carry the rel and the query (skill matrix line, guide); q init --claude regenerated"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":7,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=retroactive lineage recorded: dc-cc76 builds-on dc-grrb and dc-kpqg builds-on dc-cc76"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":8,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=cargo test passes with the raw test result line read unfiltered"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":9,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=src/**"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":10,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=tests/**"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":11,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=Cargo.toml"],"ts":"2026-08-10T07:39:03Z","node":"it-tz94","v":12,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=Cargo.lock"],"ts":"2026-08-10T07:39:04Z","node":"it-tz94","v":13,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=.claude/**"],"ts":"2026-08-10T07:39:04Z","node":"it-tz94","v":14,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-10T07:39:04Z","node":"it-tz94","v":15,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:39:10Z","node":"it-tz94","v":15,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:39:10Z","node":"it-tz94","v":15,"op":"reserve","globs":["src/**","tests/**","Cargo.toml","Cargo.lock",".claude/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-10T07:39:10Z","node":"it-tz94","v":16,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:39:11Z","node":"it-tz94","v":15,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**","Cargo.toml","Cargo.lock",".claude/**"],"dispatch":"it-tz94"}
+{"op":"link","rel":"builds-on","to":"dc-grrb","at":1,"ts":"2026-08-10T07:49:17Z","node":"dc-cc76","v":3,"actor":"claude","note":"retroactive lineage (dc-jsvp homework): the arc-declaration ruling was carried by user memory from spine landmarks","session":"quarry","dispatch":"it-tz94"}
+{"op":"link","rel":"builds-on","to":"dc-cc76","at":3,"ts":"2026-08-10T07:49:21Z","node":"dc-kpqg","v":3,"actor":"claude","note":"retroactive lineage (dc-jsvp homework): dispatch citizenship was carried by prose from the arc-declaration ruling","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"it-7ss9","v":15,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"th-4fz6","v":6,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"th-dbn4","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"cl-qm6t","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"it-7ss9","v":15,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"th-fu73","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:49:57Z","node":"cl-eb8j","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:50:03Z","node":"cl-vqdb","v":1,"op":"create","type":"claim","title":"`builds-on-edge`: q link records builder-to-built-upon lineage (decisio…","actor":"claude","note":null,"session":"quarry","dispatch":"it-tz94"}
+{"op":"link","rel":"source","to":"file:src/model.rs","at":"9579271ffbe6","ts":"2026-08-10T07:50:03Z","node":"cl-vqdb","v":2,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"op":"set","fields":["title=`builds-on-edge`: q link records builder-to-built-upon lineage, stamped and status-free; behind reports it, blast walks it in reverse"],"ts":"2026-08-10T07:50:12Z","node":"cl-vqdb","v":3,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"op":"link","rel":"supports","to":"dc-jsvp","at":2,"ts":"2026-08-10T07:50:12Z","node":"cl-vqdb","v":4,"actor":"claude","note":"the ratified mechanism now exists in the matrix","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:50:16Z","node":"cl-gu5f","v":1,"op":"create","type":"claim","title":"`intent-delta`: backtick-named acceptance lines of live items join spin…","actor":"claude","note":null,"session":"quarry","dispatch":"it-tz94"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"c85b3612113b","ts":"2026-08-10T07:50:16Z","node":"cl-gu5f","v":2,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"op":"set","fields":["title=`intent-delta`: acceptance names join spine titles per shared area — unlanded intent and emergent scope, both directions"],"ts":"2026-08-10T07:50:21Z","node":"cl-gu5f","v":3,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"op":"link","rel":"supports","to":"dc-je5b","at":2,"ts":"2026-08-10T07:50:21Z","node":"cl-gu5f","v":4,"actor":"claude","note":"the derivable comparison the intent ruling promised now derives","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:51:42Z","node":"cl-en99","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:51:42Z","node":"cl-enu7","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:51:42Z","node":"cl-qm6t","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:53:27Z","node":"it-tz94","v":16,"op":"harvest","actor":"claude","session":"quarry","dispatch":"it-tz94"}
+{"ts":"2026-08-10T07:54:28Z","node":"do-hvmd","v":1,"op":"create","type":"doc","title":"dispatch report: the builds-on edge and the intent delta query","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-tz94","at":16,"ts":"2026-08-10T07:54:28Z","node":"do-hvmd","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:54:28Z","node":"cl-c34g","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-10T07:54:28Z","node":"it-tz94","v":17,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:54:28Z","node":"it-tz94","v":17,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:54:36Z","node":"do-hvmd","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-10T07:54:36Z","node":"it-rzk8","v":1,"op":"create","type":"item","title":"q claim --title override: register-length spine titles without the retitle two-step","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"cl-vqdb","at":4,"ts":"2026-08-10T07:54:36Z","node":"do-hvmd","v":3,"actor":"claude","session":"quarry"}

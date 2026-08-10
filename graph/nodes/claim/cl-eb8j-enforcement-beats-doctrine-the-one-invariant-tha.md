@@ -16,7 +16,7 @@ edges:
   at: 2
 - rel: supports
   to: dc-kpqg
-  at: 2
+  at: 3
 ---
 
 `enforcement-beats-doctrine`: the one invariant that stopped failing became a hook; priming is never load-bearing for accounting

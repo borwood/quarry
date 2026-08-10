@@ -161,7 +161,9 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
 }
 
 /// Who leans on this node: forward closure of its `supports`, plus inbound
-/// `depends-on` and `source` edges, transitively.
+/// `depends-on`, `source`, and `builds-on` edges, transitively. Reverse
+/// builds-on is the lineage walk: a killed capability enumerates the specs
+/// and decisions standing on it — the list IS the correction, never a sweep.
 pub fn blast(all: &[Node], start: &str) -> Vec<String> {
     let mut seen: HashSet<String> = HashSet::new();
     seen.insert(start.to_string());
@@ -180,7 +182,7 @@ pub fn blast(all: &[Node], start: &str) -> Vec<String> {
         for n in all {
             for e in &n.front.edges {
                 if e.to == cur
-                    && matches!(e.rel.as_str(), "depends-on" | "source")
+                    && matches!(e.rel.as_str(), "depends-on" | "source" | "builds-on")
                     && seen.insert(n.front.id.clone())
                 {
                     out.push(n.front.id.clone());
@@ -265,6 +267,18 @@ fn sig_tokens(title: &str) -> Vec<String> {
     out
 }
 
+/// Backticked spans of a text, trimmed and lowercased — the naming
+/// register's marks (`name`). One extraction shared by the relatedness
+/// matcher and the intent delta: plan and reality join on one vocabulary.
+pub fn backticked_spans(text: &str) -> Vec<String> {
+    text.split('`')
+        .skip(1)
+        .step_by(2)
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| s.len() >= 4 && s.len() <= 60)
+        .collect()
+}
+
 /// Word-boundary containment: `word` occurs in `text` not embedded in a
 /// longer token ("wrap" must not hit "wrapper").
 fn contains_word(text: &str, word: &str) -> bool {
@@ -304,14 +318,7 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
         .into_iter()
         .filter(|t| t.len() >= 6)
         .collect();
-    let backticked: Vec<String> = node
-        .body
-        .split('`')
-        .skip(1)
-        .step_by(2)
-        .map(|s| s.trim().to_lowercase())
-        .filter(|s| s.len() >= 4 && s.len() <= 60)
-        .collect();
+    let backticked: Vec<String> = backticked_spans(&node.body);
     let mut scored: Vec<(i32, &Node, String)> = Vec::new();
     for cand in all {
         if cand.front.id == node.front.id || cand.front.archived || cand.front.ty == "area" {
@@ -359,6 +366,94 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
     scored.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.front.id.cmp(&b.1.front.id)));
     scored.truncate(4);
     scored.into_iter().map(|(_, n, w)| (n, w)).collect()
+}
+
+/// The intent delta, both directions. Never a sweep — an index for judgment.
+pub struct IntentDelta<'a> {
+    /// Named in a live item's acceptance, no live spine claim in a shared
+    /// area carries it — intended but unlanded.
+    pub unlanded: Vec<(String, &'a Node)>,
+    /// A live spine claim's registered name that no item's acceptance ever
+    /// named — landed but unintended: emergent scope, visible not silent.
+    pub unintended: Vec<(String, &'a Node)>,
+}
+
+/// Derive the intent delta (the intent ruling, 2026-08-10): acceptance
+/// lines name their intended capabilities in the spine register (lands
+/// `name`: what it provides); spine claim titles carry the names that
+/// exist. Same vocabulary, so the comparison derives — joined per shared
+/// area, scoped by `area` when given. Unlanded intent is read off LIVE
+/// items only (settled intent is no longer owed); the unintended check
+/// consults items of ANY status — landing an item does not un-intend what
+/// its acceptance named.
+pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> {
+    let areas_of = |n: &Node| -> Vec<String> {
+        n.front
+            .edges
+            .iter()
+            .filter(|e| e.rel == "about")
+            .filter(|e| all.iter().any(|a| a.front.id == e.to && a.front.ty == "area"))
+            .map(|e| e.to.clone())
+            .collect()
+    };
+    let in_scope = |areas: &[String]| area.map_or(true, |a| areas.iter().any(|x| x == a));
+    let shares = |a: &[String], b: &[String]| a.iter().any(|x| b.contains(x));
+    // Live spine claims carrying registered names in their titles.
+    let spines: Vec<(&Node, Vec<String>, Vec<String>)> = all
+        .iter()
+        .filter(|n| {
+            n.front.ty == "claim" && !matches!(n.front.status.as_str(), "refuted" | "superseded")
+        })
+        .map(|n| (n, backticked_spans(&n.front.title), areas_of(n)))
+        .filter(|(_, names, areas)| !names.is_empty() && !areas.is_empty())
+        .collect();
+    // Intent: backtick-named acceptance lines, per item (any status), with areas.
+    let intents: Vec<(&Node, Vec<String>, Vec<String>)> = all
+        .iter()
+        .filter(|n| n.front.ty == "item")
+        .map(|n| {
+            let names: Vec<String> = n
+                .front
+                .acceptance
+                .iter()
+                .flat_map(|a| backticked_spans(a))
+                .collect();
+            (n, names, areas_of(n))
+        })
+        .filter(|(_, names, areas)| !names.is_empty() && !areas.is_empty())
+        .collect();
+    let mut unlanded: Vec<(String, &Node)> = Vec::new();
+    for (item, names, iareas) in intents
+        .iter()
+        .filter(|(n, _, _)| !matches!(n.front.status.as_str(), "done" | "dropped") && !n.front.archived)
+    {
+        if !in_scope(iareas) {
+            continue;
+        }
+        for name in names {
+            let landed = spines
+                .iter()
+                .any(|(_, snames, sareas)| snames.contains(name) && shares(iareas, sareas));
+            if !landed && !unlanded.iter().any(|(x, i)| x == name && i.front.id == item.front.id) {
+                unlanded.push((name.clone(), item));
+            }
+        }
+    }
+    let mut unintended: Vec<(String, &Node)> = Vec::new();
+    for (claim, names, careas) in &spines {
+        if !in_scope(careas) {
+            continue;
+        }
+        for name in names {
+            let intended = intents
+                .iter()
+                .any(|(_, inames, iareas)| inames.contains(name) && shares(careas, iareas));
+            if !intended && !unintended.iter().any(|(x, c)| x == name && c.front.id == claim.front.id) {
+                unintended.push((name.clone(), claim));
+            }
+        }
+    }
+    IntentDelta { unlanded, unintended }
 }
 
 /// Citers of `id` whose stamp is now behind the target's version — the

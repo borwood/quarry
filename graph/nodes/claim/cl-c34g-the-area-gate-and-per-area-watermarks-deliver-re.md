@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 485806b91937
+  at: 9638cc9c48ca
 ---
 
 the area gate and per-area watermarks deliver read-firsts and foreign drift at write time

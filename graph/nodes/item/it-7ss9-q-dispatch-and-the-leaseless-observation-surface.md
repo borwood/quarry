@@ -24,13 +24,13 @@ edges:
   at: 1
 - rel: depends-on
   to: dc-cc76
-  at: 2
+  at: 3
 - rel: depends-on
   to: th-dbn4
   at: 3
 - rel: depends-on
   to: dc-kpqg
-  at: 2
+  at: 3
 - rel: depends-on
   to: it-ubqe
   at: 2

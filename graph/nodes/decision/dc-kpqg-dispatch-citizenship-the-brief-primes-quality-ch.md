@@ -2,7 +2,7 @@
 id: dc-kpqg
 type: decision
 title: 'dispatch citizenship: the brief primes quality, choke points construct accounting, the report registers'
-v: 2
+v: 3
 status: in-force
 provenance: user
 created: 2026-08-10T06:16:57Z
@@ -16,6 +16,9 @@ edges:
   at: 1
 - rel: settles
   to: th-dbn4
+  at: 3
+- rel: builds-on
+  to: dc-cc76
   at: 3
 ---
 

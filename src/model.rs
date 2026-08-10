@@ -51,7 +51,25 @@ pub fn allowed_statuses(ty: &str) -> &'static [&'static str] {
 
 pub const RELS: &[&str] = &[
     "about", "part-of", "depends-on", "settles", "supports", "refutes", "supersedes", "source",
+    "builds-on",
 ];
+
+/// The legal shapes of each rel, in teaching order — the refusal message's
+/// authority (C4 teaches at violation time; one line, where it fires).
+pub fn legal_shapes(rel: &str) -> &'static str {
+    match rel {
+        "about" => "anything → area or file",
+        "part-of" => "item → item, area → area",
+        "depends-on" => "item/thread → item/thread/decision",
+        "settles" => "decision → thread",
+        "supports" => "claim/doc → decision/item/claim",
+        "refutes" => "claim/doc → claim/decision",
+        "supersedes" => "same type → same type",
+        "source" => "claim → doc or file",
+        "builds-on" => "builder → built-upon: decision → decision, doc → claim/decision (lineage, never status)",
+        _ => "",
+    }
+}
 
 /// The edge-type matrix. `dst_ty: None` means a `file:` target.
 pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()> {
@@ -70,14 +88,27 @@ pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()
         ("supersedes", Some(d)) => src_ty == d,
         ("source", Some(d)) => src_ty == "claim" && d == "doc",
         ("source", None) => src_ty == "claim",
+        // Informational lineage (ruled 2026-08-10): builder → built-upon.
+        // No status coupling anywhere — a refuted or superseded target never
+        // flips its builders; staleness (behind, reverse blast) is the signal.
+        ("builds-on", Some(d)) => {
+            (src_ty == "decision" && d == "decision")
+                || (src_ty == "doc" && matches!(d, "claim" | "decision"))
+        }
         _ => false,
     };
     if !ok {
+        let shapes = legal_shapes(rel);
         bail!(
-            "edge not allowed: {} -[{}]-> {} — run `q guide` for the edge matrix",
+            "edge not allowed: {} -[{}]-> {}{} — run `q guide` for the edge matrix",
             src_ty,
             rel,
-            dst_ty.unwrap_or("file")
+            dst_ty.unwrap_or("file"),
+            if shapes.is_empty() {
+                String::new()
+            } else {
+                format!(" ({} takes {})", rel, shapes)
+            }
         );
     }
     Ok(())

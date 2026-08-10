@@ -2,8 +2,8 @@
 id: th-gdtn
 type: thread
 title: how PRDs, tech specs, and spine landmarks live in the graph
-v: 3
-status: queued
+v: 4
+status: resolved
 provenance: user
 created: 2026-08-09T15:38:19Z
 actor: claude

@@ -68,6 +68,20 @@ expected relationships as ordinary edges, and is refined as threads
 resolve. Ready is a stored intent; whether anything still blocks an item is
 always derived — never write "blocked" anywhere.
 
+INTENT AND LINEAGE — NAMES ARE THE JOIN
+An item IS intent: acceptance lines name the capabilities they intend in
+the spine register (lands `name`: what it provides), and spine claim
+titles carry the names that exist — same vocabulary, so the delta derives:
+q query intent-delta reports intended-but-unlanded and landed-but-
+unintended per shared area, both directions, never a sweep. Specs and
+decisions record what they stand on with builds-on (builder → built-upon):
+informational lineage, no status coupling — a refuted target never flips
+its builders — but full staleness, so a killed capability puts the specs
+standing on it behind, and blast walks reverse builds-on to enumerate
+them. PRDs and tech specs are ordinary doc nodes (kind=prd, kind=spec)
+registered whole; alternatives live in the body until something depends on
+one (extraction-on-citation).
+
 REFS AND STALENESS
 Cite nodes and files with edges; stamps are automatic. behind is
 information, not noise: severity 1 means something you cite was refuted or
@@ -168,7 +182,9 @@ EDGE MATRIX (names only)
 about (anything → area or file) · part-of (hierarchy) · depends-on
 (item/thread → item/thread/decision) · settles (decision → thread) ·
 supports (claim/doc → decision/item/claim) · refutes (claim/doc →
-claim/decision) · supersedes (same type) · source (claim → doc)
+claim/decision) · supersedes (same type) · source (claim → doc) ·
+builds-on (decision → decision, doc → claim/decision — lineage, never
+status)
 
 ENVIRONMENT
 QUARRY_ACTOR (your model identity) and QUARRY_SESSION are auto-injected by

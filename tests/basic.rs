@@ -1081,6 +1081,216 @@ fn brief_carries_dispatch_citizenship_sections() {
 }
 
 #[test]
+fn builds_on_matrix_shapes_stamp_and_no_status_coupling() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d1 = NewArgs::bare("decision", "spine landmarks");
+    d1.provenance = Some("user".into());
+    let d1 = ops::new_node(&s, d1).unwrap();
+    let mut d2 = NewArgs::bare("decision", "intent rides items");
+    d2.provenance = Some("user".into());
+    let d2 = ops::new_node(&s, d2).unwrap();
+    // decision → decision, stamped at the target's version like any edge
+    let e = ops::link(&s, &d2.front.id, "builds-on", &d1.front.id, false, None).unwrap();
+    assert_eq!(e.at, At::V(1));
+    // doc → claim and doc → decision
+    let spec = ops::new_node(&s, NewArgs::bare("doc", "water spec")).unwrap();
+    let c = ops::claim(
+        &s,
+        "`body-graph`: bodies keep identity",
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    ops::link(&s, &spec.front.id, "builds-on", &c.front.id, false, None).unwrap();
+    ops::link(&s, &spec.front.id, "builds-on", &d1.front.id, false, None).unwrap();
+    // other shapes refuse with the teaching error naming the matrix
+    let it = ops::new_node(&s, NewArgs::bare("item", "some work")).unwrap();
+    let err = ops::link(&s, &it.front.id, "builds-on", &d1.front.id, false, None).unwrap_err();
+    assert!(err.to_string().contains("edge matrix"), "got: {}", err);
+    assert!(err.to_string().contains("builder → built-upon"), "shapes taught: {}", err);
+    let err2 = ops::link(&s, &c.front.id, "builds-on", &d1.front.id, false, None).unwrap_err();
+    assert!(err2.to_string().contains("edge not allowed"), "got: {}", err2);
+    // NO status coupling: refuting the built-upon claim leaves the builder registered
+    let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
+    ops::refute(&s, &c.front.id, &ev.front.id, None).unwrap();
+    // and superseding the built-upon decision leaves its builders untouched
+    let mut d4 = NewArgs::bare("decision", "landmarks v2");
+    d4.provenance = Some("user".into());
+    let d4 = ops::new_node(&s, d4).unwrap();
+    ops::link(&s, &d4.front.id, "supersedes", &d1.front.id, false, None).unwrap();
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &spec.front.id).unwrap().front.status, "registered");
+    assert_eq!(s.find(&all, &d2.front.id).unwrap().front.status, "in-force");
+    assert_eq!(
+        s.find(&all, &d1.front.id).unwrap().front.status,
+        "superseded",
+        "the supersedes coupling itself still fires"
+    );
+}
+
+#[test]
+fn builds_on_behind_and_reverse_blast() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let c = ops::claim(
+        &s,
+        "`geo-pass`: emits layered strata",
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let spec = ops::new_node(&s, NewArgs::bare("doc", "geo spec")).unwrap();
+    ops::link(&s, &spec.front.id, "builds-on", &c.front.id, false, None).unwrap();
+    // an ordinary bump puts the builder behind at ordinary severity
+    ops::set(&s, &c.front.id, &["method=read off the pass".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let b = queries::behind(&s, &all);
+    let e = b
+        .iter()
+        .find(|x| x.src_id == spec.front.id && x.rel == "builds-on")
+        .expect("builds-on ref reports behind");
+    assert_eq!(e.severity, 3, "ordinary severity — content changed");
+    // blast from the built-upon walks reverse builds-on to the builders
+    let ids = queries::blast(&all, &c.front.id);
+    assert!(ids.contains(&spec.front.id), "spec stands on the claim: {:?}", ids);
+    // transitive along a decision chain
+    let mut da = NewArgs::bare("decision", "root ruling");
+    da.provenance = Some("user".into());
+    let da = ops::new_node(&s, da).unwrap();
+    let mut db = NewArgs::bare("decision", "middle ruling");
+    db.provenance = Some("user".into());
+    let db = ops::new_node(&s, db).unwrap();
+    let mut dc = NewArgs::bare("decision", "leaf ruling");
+    dc.provenance = Some("user".into());
+    let dc = ops::new_node(&s, dc).unwrap();
+    ops::link(&s, &db.front.id, "builds-on", &da.front.id, false, None).unwrap();
+    ops::link(&s, &dc.front.id, "builds-on", &db.front.id, false, None).unwrap();
+    let all = s.load_all().unwrap();
+    let ids = queries::blast(&all, &da.front.id);
+    assert!(ids.contains(&db.front.id) && ids.contains(&dc.front.id), "lineage walks transitively: {:?}", ids);
+    // a refuted spine enumerates its builders — and flips no builder status
+    let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
+    let (_, blast) = ops::refute(&s, &c.front.id, &ev.front.id, None).unwrap();
+    assert!(
+        blast.iter().any(|n| n.front.id == spec.front.id),
+        "a killed capability enumerates the specs standing on it"
+    );
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &spec.front.id).unwrap().front.status, "registered");
+    let b = queries::behind(&s, &all);
+    let e = b
+        .iter()
+        .find(|x| x.src_id == spec.front.id && x.rel == "builds-on")
+        .expect("still behind after the kill");
+    assert_eq!(e.severity, 1, "dead target severity, like any rel");
+}
+
+#[test]
+fn intent_delta_both_directions_join_on_shared_areas() {
+    let s = temp_store();
+    let hydro = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let geo = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![hydro.front.id.clone()];
+    it.status = Some("ready".into());
+    it.acceptance = vec![
+        "lands `body-graph`: bodies persist across reload".into(),
+        "lands `halo-check`: the halo stays bounded".into(),
+    ];
+    let it = ops::new_node(&s, it).unwrap();
+    // a spine in the shared area lands one intent
+    let bg = ops::claim(
+        &s,
+        "`body-graph`: bodies keep identity across regen",
+        vec![hydro.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // the same name in a foreign area lands nothing (and is unintended THERE)
+    let foreign = ops::claim(
+        &s,
+        "`halo-check`: bounded halo",
+        vec![geo.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // an emergent spine in the item's area that no intent named
+    ops::claim(
+        &s,
+        "`chunk-cache`: regen hits a warm cache",
+        vec![hydro.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    let d = queries::intent_delta(&all, None);
+    assert_eq!(
+        d.unlanded.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>(),
+        vec!["halo-check"],
+        "body-graph landed; halo-check did not"
+    );
+    assert_eq!(d.unlanded[0].1.front.id, it.front.id);
+    let un: Vec<&str> = d.unintended.iter().map(|(n, _)| n.as_str()).collect();
+    assert!(un.contains(&"chunk-cache"), "emergent scope surfaces: {:?}", un);
+    assert!(un.contains(&"halo-check"), "the foreign-area spine is unintended there: {:?}", un);
+    assert!(!un.contains(&"body-graph"), "intended and landed is quiet: {:?}", un);
+    // area scoping excludes the foreign claim
+    let scoped = queries::intent_delta(&all, Some(hydro.front.id.as_str()));
+    assert!(scoped.unintended.iter().all(|(_, c)| c.front.id != foreign.front.id));
+    assert_eq!(scoped.unlanded.len(), 1);
+    // a refuted spine no longer lands its name
+    let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
+    ops::refute(&s, &bg.front.id, &ev.front.id, None).unwrap();
+    let all = s.load_all().unwrap();
+    let d = queries::intent_delta(&all, None);
+    assert!(
+        d.unlanded.iter().any(|(n, _)| n == "body-graph"),
+        "a refuted spine no longer lands the intent"
+    );
+    // settling the item removes its names from unlanded — intent settled is
+    // no longer owed — but the acceptance still counts as intent
+    ops::set(&s, &it.front.id, &["status=done".to_string()], None).unwrap();
+    let late = ops::claim(
+        &s,
+        "`halo-check`: halo bounded, measured late",
+        vec![hydro.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    let d = queries::intent_delta(&all, None);
+    assert!(d.unlanded.is_empty(), "settled intent is no longer owed: {:?}",
+        d.unlanded.iter().map(|(n, _)| n).collect::<Vec<_>>());
+    assert!(
+        !d.unintended.iter().any(|(n, c)| n == "halo-check" && c.front.id == late.front.id),
+        "landing does not un-intend: the done item's acceptance still names it"
+    );
+    assert!(
+        d.unintended.iter().any(|(n, _)| n == "chunk-cache"),
+        "never-named scope stays visible"
+    );
+}
+
+#[test]
 fn actor_recording_and_safety_prefix() {
     let s = temp_store();
     assert!(quarry::coord::chat_actor(&s, "chat-1").is_none());

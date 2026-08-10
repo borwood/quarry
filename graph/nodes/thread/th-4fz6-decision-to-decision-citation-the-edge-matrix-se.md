@@ -2,8 +2,8 @@
 id: th-4fz6
 type: thread
 title: 'decision-to-decision citation: the edge matrix seam'
-v: 5
-status: queued
+v: 6
+status: resolved
 provenance: assistant
 created: 2026-08-10T06:25:02Z
 actor: claude
@@ -13,7 +13,7 @@ edges:
   at: 1
 - rel: depends-on
   to: dc-cc76
-  at: 2
+  at: 3
 - rel: depends-on
   to: dc-grrb
   at: 1

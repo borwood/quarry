@@ -86,10 +86,11 @@ enum Cmd {
   q link it-4k7f depends-on th-j9uu       # item waits on a thread
   q link th-j9uu depends-on it-8m2x       # thread waits on its spike
   q link cl-9x2m supports dc-my9w         # evidence a decision leans on
+  q link do-3fk2 builds-on cl-9x2m        # a spec stands on this capability (lineage, never status)
   q link it-4k7f about file:src/water/body.rs:42   # blob-stamped file ref")]
     Link {
         src: String,
-        /// about | part-of | depends-on | settles | supports | refutes | supersedes | source
+        /// about | part-of | depends-on | settles | supports | refutes | supersedes | source | builds-on
         rel: String,
         dst: String,
         /// Required to cite a refuted/superseded target (C5)
@@ -365,6 +366,13 @@ enum Query {
     Unverified,
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
+    /// Intent vs reality by name: backtick-named acceptance lines of live
+    /// items against spine claim titles in shared areas — intended-but-
+    /// unlanded and landed-but-unintended, both directions
+    IntentDelta {
+        /// Scope to one area (default: every area)
+        area: Option<String>,
+    },
 }
 
 fn read_body(body: Option<String>, body_file: Option<String>) -> Result<String> {
@@ -1863,6 +1871,16 @@ fn main() -> Result<()> {
                             println!("    blocked on \"{}\" [{}] ({})", b.front.title, b.front.status, b.front.id);
                         }
                     }
+                    // Intent and reality share vocabulary — the delta derives.
+                    // Advertised where shaping is judged; silence the default.
+                    let d = queries::intent_delta(&all, None);
+                    if !d.unlanded.is_empty() || !d.unintended.is_empty() {
+                        println!(
+                            "intent delta — plan and reality join by name: {} intended-but-unlanded, {} landed-but-unintended (q query intent-delta)",
+                            d.unlanded.len(),
+                            d.unintended.len()
+                        );
+                    }
                 }
                 Query::Queue { mine } => {
                     let q = scope_mine(&store, &all, queries::queue(&all), mine);
@@ -1933,6 +1951,41 @@ fn main() -> Result<()> {
                 }
                 Query::Dispatch { item } => {
                     print!("{}", render::dispatch_trace(&store, &item)?);
+                }
+                Query::IntentDelta { area } => {
+                    let scope = match &area {
+                        Some(key) => {
+                            let n = store.find(&all, key)?;
+                            if n.front.ty != "area" {
+                                anyhow::bail!(
+                                    "{} is a {}, not an area — the delta joins on shared areas",
+                                    n.front.id,
+                                    n.front.ty
+                                );
+                            }
+                            Some(n.front.id.clone())
+                        }
+                        None => None,
+                    };
+                    let d = queries::intent_delta(&all, scope.as_deref());
+                    if d.unlanded.is_empty() && d.unintended.is_empty() {
+                        println!("no intent delta — every capability named in live acceptance has a spine in a shared area, and every registered spine was named by some intent (or nothing is named yet).");
+                    }
+                    if !d.unlanded.is_empty() {
+                        println!("intended but unlanded — named in live acceptance, no spine claim in a shared area carries it:");
+                        for (name, item) in &d.unlanded {
+                            println!("  · `{}` — \"{}\" [{}] ({})", name, item.front.title, item.front.status, item.front.id);
+                        }
+                    }
+                    if !d.unintended.is_empty() {
+                        println!("landed but unintended — a spine no intent named (emergent scope, visible instead of silent):");
+                        for (name, claim) in &d.unintended {
+                            println!("  · `{}` — \"{}\" [{}] ({})", name, claim.front.title, claim.front.status, claim.front.id);
+                        }
+                    }
+                    if !d.unlanded.is_empty() || !d.unintended.is_empty() {
+                        println!("(an index for judgment, never a sweep — land it, name it in an item's acceptance, or leave it and know why)");
+                    }
                 }
             }
         }
