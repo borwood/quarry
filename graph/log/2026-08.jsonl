@@ -466,3 +466,15 @@
 {"ts":"2026-08-11T05:26:25Z","node":"it-vztp","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T05:26:25Z","node":"th-4fz6","v":6,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T05:26:25Z","node":"dc-cc76","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:05:32Z","node":"it-j2rk","v":1,"op":"create","type":"item","title":"landing leaks the stale-view class: done and release do not regenerate the page","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T06:05:38Z","node":"it-j2rk","v":1,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:05:38Z","node":"it-j2rk","v":1,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-11T06:05:39Z","node":"it-j2rk","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-11T06:06:34Z","node":"it-j2rk","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:06:35Z","node":"it-j2rk","v":3,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:06:58Z","node":"th-nc7d","v":1,"op":"create","type":"thread","title":"item kinds as first-class species: factoring bug, debt, watch into the discovery surfaces","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T06:06:58Z","node":"th-bjk2","v":1,"op":"create","type":"thread","title":"session-held attention: what quarry's own voice sweeps aside","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T06:06:59Z","node":"th-jvwe","v":1,"op":"create","type":"thread","title":"the shaping stall: near-ready work wants an in-loop urge","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-nc7d","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-bjk2","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-jvwe","v":2,"actor":"claude","session":"quarry"}

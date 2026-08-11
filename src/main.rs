@@ -1276,6 +1276,11 @@ fn main() -> Result<()> {
             // The arc is over: land clears the badge and the observed set.
             coord::clear_dispatch(&store, &node.front.id);
             coord::clear_touched(&store, &format!("item:{}", node.front.id));
+            // Release is an arc boundary like wrap and harvest: the rendered
+            // page must not keep showing a landed arc as live.
+            if let Ok(p) = quarry::view::write(&store) {
+                println!("  view regenerated: {}", p.display());
+            }
         }
         Cmd::Dispatch { item, files, shared } => {
             let store = Store::discover()?;
@@ -1820,6 +1825,16 @@ fn main() -> Result<()> {
             area_watermarks(&store, &n.front.id);
             if fields.iter().any(|f| f == "status=done") {
                 spine_check(&store, &n, None);
+            }
+            // A settled-status flip is a landing: regenerate the page so it
+            // never shows settled work as live (the stale-view class).
+            if fields
+                .iter()
+                .any(|f| matches!(f.as_str(), "status=done" | "status=dropped" | "status=resolved" | "status=parked" | "status=superseded" | "status=refuted"))
+            {
+                if let Ok(p) = quarry::view::write(&store) {
+                    println!("  view regenerated: {}", p.display());
+                }
             }
             // Solo-path advert: taking up an item without a lease is legal —
             // leaseless writes accrue and nudge, never deny — but a declared
