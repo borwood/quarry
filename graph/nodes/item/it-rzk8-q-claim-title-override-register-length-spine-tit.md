@@ -8,6 +8,7 @@ provenance: assistant
 created: 2026-08-10T07:54:36Z
 actor: claude
 kind: debt
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

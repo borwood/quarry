@@ -7,6 +7,7 @@ status: resolved
 provenance: user
 created: 2026-08-09T16:57:21Z
 actor: claude
+archived: true
 edges:
 - rel: about
   to: ar-xa38

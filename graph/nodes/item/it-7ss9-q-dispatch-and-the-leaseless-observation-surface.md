@@ -15,6 +15,7 @@ acceptance:
 - landing prints observed-vs-leased and report-registration homework; spine_check consumes observed files when present; wrap lists leaseless touched files and unharvested dispatches
 - the brief renders spine bodies, a render-time behind check addressed to the dispatcher, and a reflections/stop-report RETURN section; a resource-rules protocol rider exists on=brief
 - cargo test passes with the raw test result line read unfiltered, and the dispatch chain is exercised end-to-end once in a scratch host repo
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

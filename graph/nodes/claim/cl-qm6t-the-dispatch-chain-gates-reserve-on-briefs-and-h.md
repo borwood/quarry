@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/teach.rs
-  at: 32a4eed56fa8
+  at: 24e723694bd1
 - rel: supports
   to: dc-cc76
   at: 3

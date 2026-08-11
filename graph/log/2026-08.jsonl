@@ -478,3 +478,21 @@
 {"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-nc7d","v":2,"actor":"claude","session":"quarry"}
 {"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-bjk2","v":2,"actor":"claude","session":"quarry"}
 {"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T06:07:08Z","node":"th-jvwe","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:01Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-c34g","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-c7q2","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-cagx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-enu7","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-h2gx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-jgnj","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-p6aj","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-qm6t","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:12:52Z","node":"cl-qxxp","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"it-7ss9","v":15,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"it-rzk8","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"it-tz94","v":17,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"th-dbn4","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"th-ejn6","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"th-gdtn","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:13:01Z","node":"it-z2sy","v":1,"op":"create","type":"item","title":"solo-lease writes accrue as leaseless: the observed set ignores live leases","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-cc76","at":3,"ts":"2026-08-11T06:13:12Z","node":"it-z2sy","v":2,"actor":"claude","session":"quarry"}
