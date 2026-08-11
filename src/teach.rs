@@ -30,8 +30,12 @@ changed behind every stale ref. Close a session by reviewing behind and
 affirming ONLY what you actually re-read: affirm is a recorded act of
 review, never a way to silence a marker. `q wrap` runs the whole boundary
 lint — owed threads, stale refs, in-flight work, unfiled nodes, unrecorded
-rulings, uncommitted graph changes. In conversation, refer to nodes by
-TITLE — ids belong in commands, not in prose to the user.
+rulings, uncommitted graph changes. THE HOUSE RULE ON NAMES SPLITS: node
+BODIES cite other nodes by bare id (dc-wwnk style — an id is an immutable
+anchor where a title is a mutable label; render unpacks every id to its
+current title, and mentioned-by backlinks derive from the same scan), while
+conversation with the user keeps TITLES — ids belong in commands and node
+bodies, never in prose to the user.
 
 PROVENANCE HONESTY
 Your analyses and proposals are assistant-provenance — the default. Mark
@@ -89,7 +93,14 @@ superseded — read it before building further. When a claim falls, blast
 enumerates everything leaning on it. That list IS the correction; there is
 no sweep. Mutating verbs print the HOMEWORK an action creates — citers put
 behind, work unblocked, threads made answerable — with the command that
-addresses each. Do the homework (or queue it) before moving on.
+addresses each. Do the homework (or queue it) before moving on. A bare id
+in a body is a MENTION, not an edge: it unpacks at render and derives a
+mentioned-by backlink, but it carries no stamp and blast and behind never
+traverse it — a mention references; an edge leans. When something genuinely
+stands on a mentioned node, record the real edge (q link) — extraction-on-
+citation applied to references. Mint and edit echo every resolved id's
+title beside it (read the echo: a wrong-but-real id reads wrong there) and
+ask about id-shapes resolving to nothing; wrap lints danglers.
 
 ATTENTION SURFACES — DELIVERY AT CHOKE POINTS
 Structure guarantees delivery and recorded acknowledgment, not reading;

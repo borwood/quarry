@@ -349,3 +349,50 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-11T04:15:34Z","node":"it-rzk8","v":3,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T04:15:34Z","node":"it-rzk8","v":3,"op":"release","actor":"claude","session":"quarry"}
 {"op":"link","rel":"supports","to":"it-rzk8","at":3,"ts":"2026-08-11T04:15:42Z","node":"cl-jgnj","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:26:28Z","node":"dc-wwnk","v":1,"op":"create","type":"decision","title":"prose ids: bodies cite by immutable id, unpacked at render; mentions derive, never store","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-w9vx","at":1,"ts":"2026-08-11T04:26:48Z","node":"dc-wwnk","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:26:48Z","node":"it-w5yv","v":1,"op":"create","type":"item","title":"prose ids: unpack, mention index, and the authoring surfaces","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-wwnk","at":2,"ts":"2026-08-11T04:26:57Z","node":"it-w5yv","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `id-unpack`: rendered bodies in open, brief, and the view expand bare ids to id [type: `title`], dead targets labeled, view hyperlinked; code spans skipped"],"ts":"2026-08-11T04:26:57Z","node":"it-w5yv","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `mention-index`: open and the view list derived mentioned-by backlinks, labeled distinct from edges; blast and behind never traverse mentions, test-covered"],"ts":"2026-08-11T04:26:57Z","node":"it-w5yv","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `mention-surfaces`: mint/edit confirmations echo resolved titles beside ids, dangling id-shapes warn quietly as a question never a gate, real-edge upgrades offered as judgment; wrap lints danglers"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=teach surfaces carry the split rule (bodies cite by id, conversation keeps titles); q init --claude regenerated"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":6,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=instance 3 retro-fixed live: th-n8h6 body names th-sjus by id and both directions render (unpack forward, derived mention reverse)"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":7,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=cargo test passes with the raw test result line read unfiltered; false-positive shapes (th-read, do-over) and code-span skipping covered"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":8,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=src/**"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":9,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=tests/**"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":10,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=.claude/**"],"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":11,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":12,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":12,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":12,"op":"reserve","globs":["src/**","tests/**",".claude/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":13,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:26:58Z","node":"it-w5yv","v":12,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**",".claude/**"],"dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:29:35Z","node":"it-n3fu","v":1,"op":"create","type":"item","title":"wrap regenerates the view: derived pages never depend on a remembered convention","actor":"claude","note":null,"session":"quarry","dispatch":"it-w5yv"}
+{"op":"body","ts":"2026-08-11T04:38:56Z","node":"th-n8h6","v":2,"actor":"claude","note":"retro-fix (it-w5yv): the deferred product-naming reference now cites th-sjus by id — prose ids' first live use","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:39:28Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:12Z","node":"cl-qxxp","v":1,"op":"create","type":"claim","title":"\\id-unpack\\: rendered bodies expand bare ids to the current title, dead targets labeled, the view hyperlinked","actor":"claude","note":null,"session":"quarry","dispatch":"it-w5yv"}
+{"op":"link","rel":"source","to":"file:src/mention.rs","at":"7d3b3cf13e86","ts":"2026-08-11T04:41:12Z","node":"cl-qxxp","v":2,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"op":"set","fields":["title=`id-unpack`: rendered bodies expand bare ids to the current title, dead targets labeled, the view hyperlinked"],"ts":"2026-08-11T04:41:28Z","node":"cl-qxxp","v":3,"actor":"claude","note":"repair: PowerShell escaping mangled the backticks at mint","session":"quarry","dispatch":"it-w5yv"}
+{"op":"body","ts":"2026-08-11T04:41:28Z","node":"cl-qxxp","v":4,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:34Z","node":"cl-cagx","v":1,"op":"create","type":"claim","title":"`mention-index`: mentioned-by backlinks derive from the body scan at render; blast and behind stay real-edge-only","actor":"claude","note":null,"session":"quarry","dispatch":"it-w5yv"}
+{"op":"link","rel":"source","to":"file:src/mention.rs","at":"7d3b3cf13e86","ts":"2026-08-11T04:41:34Z","node":"cl-cagx","v":2,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:40Z","node":"cl-c7q2","v":1,"op":"create","type":"claim","title":"`mention-surfaces`: mint and edit echo resolved titles, ask about danglers, offer the edge upgrade; wrap lints","actor":"claude","note":null,"session":"quarry","dispatch":"it-w5yv"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"17a022193429","ts":"2026-08-11T04:41:40Z","node":"cl-c7q2","v":2,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:47Z","node":"cl-enu7","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:47Z","node":"cl-p6aj","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:41:47Z","node":"cl-qm6t","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:43:48Z","node":"it-w5yv","v":13,"op":"harvest","actor":"claude","session":"quarry","dispatch":"it-w5yv"}
+{"ts":"2026-08-11T04:44:43Z","node":"do-hvup","v":1,"op":"create","type":"doc","title":"dispatch report: prose ids land and light up retroactively","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-w5yv","at":13,"ts":"2026-08-11T04:44:43Z","node":"do-hvup","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:44:43Z","node":"it-ymsj","v":1,"op":"create","type":"item","title":"boundary verbs refuse under an active dispatch badge","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-ymsj","at":1,"ts":"2026-08-11T04:45:04Z","node":"do-hvup","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T04:45:04Z","node":"it-w5yv","v":14,"actor":"claude","note":"backtick the th-read example - dangler lint answered as prose","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-w5yv","at":14,"ts":"2026-08-11T04:45:04Z","node":"cl-qxxp","v":5,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-w5yv","at":14,"ts":"2026-08-11T04:45:04Z","node":"cl-cagx","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-w5yv","at":14,"ts":"2026-08-11T04:45:04Z","node":"cl-c7q2","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-11T04:45:04Z","node":"it-w5yv","v":15,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:45:04Z","node":"it-w5yv","v":15,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:45:16Z","node":"cl-c7q2","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:45:16Z","node":"cl-cagx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:45:16Z","node":"cl-qxxp","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:45:16Z","node":"do-hvup","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}

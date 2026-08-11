@@ -106,7 +106,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
 
     if !n.body.trim().is_empty() {
         writeln!(s)?;
-        for line in n.body.lines() {
+        for line in crate::mention::unpack(&all, &n.body).lines() {
             writeln!(s, "  {}", line)?;
         }
     }
@@ -223,6 +223,32 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         }
     }
 
+    // Derived mentions: bodies citing this id — backlinks nobody stored.
+    // Distinct from edges: a mention references, an edge leans, so blast
+    // and behind never traverse these.
+    let mentions_all = crate::mention::mentioned_by(&all, &n.front.id);
+    let hidden_mentions = mentions_all
+        .iter()
+        .filter(|m| m.front.archived && !show_all)
+        .count();
+    let mentions: Vec<&&Node> = mentions_all
+        .iter()
+        .filter(|m| show_all || !m.front.archived)
+        .collect();
+    if !mentions.is_empty() || hidden_mentions > 0 {
+        writeln!(s, "\n  mentioned by (derived from body citations — a mention references; an edge leans):")?;
+        for m in mentions {
+            writeln!(s, "    {} \"{}\" [{}]", m.front.id, m.front.title, m.front.status)?;
+        }
+        if hidden_mentions > 0 {
+            writeln!(
+                s,
+                "    ({} archived mention(s) hidden — q open {} --all)",
+                hidden_mentions, n.front.id
+            )?;
+        }
+    }
+
     if matches!(n.front.ty.as_str(), "item" | "thread") {
         let blockers = queries::live_blockers(&all, n);
         if !blockers.is_empty() {
@@ -271,7 +297,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     }
     if !item.body.trim().is_empty() {
         writeln!(s, "\nTHE WORK:")?;
-        for l in item.body.lines() {
+        for l in crate::mention::unpack(&all, &item.body).lines() {
             writeln!(s, "  {}", l)?;
         }
     }
@@ -303,7 +329,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         }
         if let Some(t) = all.iter().find(|n| n.front.id == e.to) {
             writeln!(s, "  · depends on {} \"{}\" [{}] ({} v{})", t.front.ty, t.front.title, t.front.status, t.front.id, t.front.v)?;
-            for l in t.body.lines() {
+            for l in crate::mention::unpack(&all, &t.body).lines() {
                 writeln!(s, "      {}", l)?;
             }
             cited += 1;
@@ -321,12 +347,12 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         let Some(area) = all.iter().find(|n| n.front.id == *aid) else { continue };
         writeln!(s, "  · area \"{}\" ({} v{})", area.front.title, area.front.id, area.front.v)?;
         if !area.body.trim().is_empty() {
-            writeln!(s, "      {}", first_line(&area.body))?;
+            writeln!(s, "      {}", first_line(&crate::mention::unpack(&all, &area.body)))?;
         }
         for n in all.iter().filter(|n| !n.front.archived && crate::coord::in_purview(n, &[aid])) {
             match (n.front.ty.as_str(), n.front.status.as_str()) {
                 ("decision", "in-force") => {
-                    writeln!(s, "      decision in force: \"{}\" ({} v{}) — {}", n.front.title, n.front.id, n.front.v, first_line(&n.body))?;
+                    writeln!(s, "      decision in force: \"{}\" ({} v{}) — {}", n.front.title, n.front.id, n.front.v, first_line(&crate::mention::unpack(&all, &n.body)))?;
                     cited += 1;
                 }
                 ("doc", "registered") => {
@@ -342,7 +368,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
                     // agent builds from these bones without a round-trip.
                     writeln!(s, "      spine: \"{}\" [{}] ({} v{})", n.front.title, n.front.status, n.front.id, n.front.v)?;
                     if !n.body.trim().is_empty() && n.body.trim() != n.front.title.trim() {
-                        for l in n.body.lines() {
+                        for l in crate::mention::unpack(&all, &n.body).lines() {
                             writeln!(s, "        {}", l)?;
                         }
                     }

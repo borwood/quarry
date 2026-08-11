@@ -46,10 +46,31 @@ pub fn render(store: &Store) -> Result<String> {
         .map(|n| {
             let mut v = serde_json::to_value(&n.front)?;
             v["body"] = json!(n.body);
+            if !n.body.trim().is_empty() {
+                // The id-unpack, pre-rendered (dc-wwnk): bare ids expand to
+                // hyperlinked id [type: `title`]; dead targets labeled.
+                v["body_html"] = json!(crate::mention::unpack_html(&all, &n.body));
+            }
             v["slug"] = json!(n.slug());
             Ok(v)
         })
         .collect::<Result<Vec<_>>>()?;
+
+    // The derived mention index (dc-wwnk): target id → the nodes whose
+    // bodies cite it. Derived at render, never stored; distinct from edges.
+    let mut mentions = serde_json::Map::new();
+    for n in &all {
+        for id in crate::mention::cited_ids(&n.body) {
+            if id != n.front.id && all.iter().any(|t| t.front.id == id) {
+                mentions
+                    .entry(id)
+                    .or_insert_with(|| json!([]))
+                    .as_array_mut()
+                    .expect("mention index entries are arrays")
+                    .push(json!(n.front.id));
+            }
+        }
+    }
 
     // Markdown bodies of path-backed docs, embedded for in-app reading.
     // Only .md files — source code is deliberately not viewable in-app.
@@ -90,6 +111,7 @@ pub fn render(store: &Store) -> Result<String> {
         "generated": Store::now(),
         "root": root_name,
         "nodes": nodes,
+        "mentions": mentions,
         "file_current": file_current,
         "doc_content": doc_content,
         "events": events,
@@ -478,7 +500,7 @@ function viewNode(id){
     + ' · actor '+esc(n.actor)+'</p>';
   if ((n.acceptance||[]).length) html += '<h3 class="part">Acceptance</h3><ul style="margin:0;padding-left:18px">'
     + n.acceptance.map(a => '<li>'+esc(a)+'</li>').join('')+'</ul>';
-  if (n.body) html += '<div class="body">'+esc(n.body)+'</div>';
+  if (n.body) html += '<div class="body">'+(n.body_html !== undefined ? n.body_html : esc(n.body))+'</div>';
   if (n.archived) html += '<p class="meta">⚑ ARCHIVED — settled and demoted from default surfaces; every edge and query still reaches it.</p>';
   if (n.type === 'doc' && n.path && DATA.doc_content[n.path] !== undefined) {
     html += '<h3 class="part">Document — <code>'+esc(n.path)+'</code></h3>'
@@ -528,6 +550,11 @@ function viewNode(id){
     });
     html += collapsible('back-'+n.id, rows, ['Rel','Type','From','Status','Updated',
       '<span title="Whether the citing node’s stamp still matches this node’s version — stale means the citer has not reviewed this node’s newer state.">Citation</span>']);
+  }
+  const men = ((DATA.mentions||{})[n.id]||[]).map(id => byId[id]).filter(Boolean);
+  if (men.length) {
+    html += '<h3 class="part"><span class="arrow">←</span> Mentioned by <span class="arrow" title="Derived at render from body citations of this node’s id — never stored, never an edge; blast and behind do not traverse these.">(derived — a mention references; an edge leans)</span></h3>'
+      + collapsible('men-'+n.id, men.map(m => rowObj(m)), NODE_HD);
   }
   html += '</div>';
   return html;

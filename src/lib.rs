@@ -1,4 +1,5 @@
 pub mod coord;
+pub mod mention;
 pub mod model;
 pub mod ops;
 pub mod protocol;

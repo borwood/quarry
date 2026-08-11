@@ -1291,6 +1291,196 @@ fn intent_delta_both_directions_join_on_shared_areas() {
 }
 
 #[test]
+fn prose_id_scan_shapes_and_code_spans() {
+    use quarry::mention::cited_ids;
+    // the closed shape, code spans skipped, first-appearance order, dedup
+    let ids = cited_ids(
+        "builds on dc-wwnk, then `cl-aaaa` in code; th-read as hyphenated prose, do-over too; dc-wwnk again",
+    );
+    assert_eq!(ids, vec!["dc-wwnk".to_string(), "th-read".into(), "do-over".into()]);
+    // embedded shapes never match: word char before or after breaks \b
+    assert!(cited_ids("growth-reading and th-abcde and xth-abcd").is_empty());
+    // case-sensitive: ids are lowercase
+    assert!(cited_ids("DC-WWNK and Th-read and ar-XYZW").is_empty());
+    // wrong prefix or wrong length never match
+    assert!(cited_ids("zz-abcd and ar-abc and ar-abcde").is_empty());
+    // punctuation boundaries match
+    assert_eq!(cited_ids("(see it-1a2b)."), vec!["it-1a2b".to_string()]);
+}
+
+#[test]
+fn unpack_expands_labels_dead_and_skips_code() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let c = ops::claim(
+        &s,
+        "halo bounded", None,
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    let body = format!(
+        "leans on {id}; `{id}` stays literal; th-read is prose",
+        id = c.front.id
+    );
+    let un = quarry::mention::unpack(&all, &body);
+    assert!(
+        un.contains(&format!("leans on {} [claim: `halo bounded`]", c.front.id)),
+        "resolved id expands to id [type: `title`]: {}",
+        un
+    );
+    assert!(
+        un.contains(&format!("`{}` stays literal", c.front.id)),
+        "code spans skipped: {}",
+        un
+    );
+    assert!(un.contains("th-read is prose"), "danglers stay as written: {}", un);
+    // a dead target carries its status label
+    let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
+    ops::refute(&s, &c.front.id, &ev.front.id, None).unwrap();
+    let all = s.load_all().unwrap();
+    let un2 = quarry::mention::unpack(&all, &body);
+    assert!(
+        un2.contains(&format!("{} [claim, refuted: `halo bounded`]", c.front.id)),
+        "dead targets labeled: {}",
+        un2
+    );
+}
+
+#[test]
+fn open_unpacks_body_and_lists_derived_mentions_never_blast() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.body = format!("stands on {} for persistence", d.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    // forward: the citing body unpacks in open
+    let text = quarry::render::open(&s, &it.front.id, false).unwrap();
+    assert!(
+        text.contains(&format!("stands on {} [decision: `bodies persist`] for persistence", d.front.id)),
+        "open unpacks bare ids: {}",
+        text
+    );
+    // reverse: the cited node lists the mentioner under the derived label
+    let td = quarry::render::open(&s, &d.front.id, false).unwrap();
+    assert!(td.contains("mentioned by (derived"), "derived label present: {}", td);
+    assert!(td.contains(&it.front.id), "mentioner listed: {}", td);
+    // and the label is distinct from edges: the mention is not in backlinks
+    // (the item has no edge to the decision at all)
+    assert!(!td.contains("← it-"), "no edge backlink from the item: {}", td);
+    // mentions never traverse: blast from the decision is empty, and the
+    // mention leaves no stamped ref for behind
+    let all = s.load_all().unwrap();
+    assert!(
+        queries::blast(&all, &d.front.id).is_empty(),
+        "blast stays real-edge-only"
+    );
+    assert!(
+        queries::behind(&s, &all).is_empty(),
+        "a mention carries no stamp, so nothing goes behind"
+    );
+    // bumping the mentioned decision leaves the mentioner untouched
+    ops::set(&s, &d.front.id, &["title=bodies persist, voxels derive".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    assert!(queries::behind(&s, &all).is_empty(), "mentions never age");
+    let text2 = quarry::render::open(&s, &it.front.id, false).unwrap();
+    assert!(
+        text2.contains("bodies persist, voxels derive"),
+        "unpack always shows the current title: {}",
+        text2
+    );
+}
+
+#[test]
+fn brief_unpacks_ids_in_work_body() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["bodies persist across reload".into()];
+    it.body = format!("build shape ratified in {} — read its body as the spec", d.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(
+        text.contains(&format!("{} [decision: `bodies persist`]", d.front.id)),
+        "THE WORK unpacks bare ids: {}",
+        text
+    );
+}
+
+#[test]
+fn view_carries_hyperlinked_unpack_and_mention_index() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.body = format!("stands on {} for persistence", d.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    let html = quarry::view::render(&s).unwrap();
+    // body_html carries the anchor to the node (JSON-escaped in the data blob)
+    assert!(
+        html.contains(&format!("<a href=\\\"#/n/{id}\\\">{id}<\\/a>", id = d.front.id)),
+        "view unpack hyperlinks to the node anchor"
+    );
+    assert!(
+        html.contains("[decision: <code>bodies persist<\\/code>]"),
+        "view unpack expands to id [type: title]"
+    );
+    // the derived mention index is embedded, target -> mentioners
+    assert!(
+        html.contains(&format!("\"{}\":[\"{}\"]", d.front.id, it.front.id)),
+        "mention index embedded"
+    );
+    assert!(html.contains("Mentioned by"), "derived mentions section present");
+}
+
+#[test]
+fn dangling_id_shapes_lint() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let mut it = NewArgs::bare("item", "naming pass");
+    it.status = Some("done".into());
+    it.body = format!("a th-read of the do-over, next to {}", area.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    let all = s.load_all().unwrap();
+    let dang = quarry::mention::danglers(&all);
+    let shapes: Vec<&str> = dang.iter().map(|(_, id)| id.as_str()).collect();
+    assert_eq!(shapes, vec!["th-read", "do-over"], "danglers listed in order");
+    assert!(
+        dang.iter().all(|(n, _)| n.front.id == it.front.id),
+        "attributed to the citing node"
+    );
+    // resolving ids are never danglers; archived bodies leave the lint
+    ops::archive(&s, &it.front.id, false).unwrap();
+    let all = s.load_all().unwrap();
+    assert!(quarry::mention::danglers(&all).is_empty(), "archived bodies are not lint");
+    // an archived target carries its label in the unpack
+    let un = quarry::mention::unpack(&all, &format!("see {}", it.front.id));
+    assert!(
+        un.contains(&format!("{} [item, archived: `naming pass`]", it.front.id)),
+        "archived targets labeled: {}",
+        un
+    );
+}
+
+#[test]
 fn actor_recording_and_safety_prefix() {
     let s = temp_store();
     assert!(quarry::coord::chat_actor(&s, "chat-1").is_none());

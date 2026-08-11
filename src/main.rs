@@ -424,6 +424,47 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
             println!("    \"{}\" [{} {}] — {}", t.front.title, t.front.ty, t.front.id, why);
         }
     }
+    print_mention_surfaces(&all, node);
+}
+
+/// The body-citation echo (dc-wwnk): every resolved id's current title beside
+/// it — the echo IS the verification; a wrong-but-real id reads wrong here,
+/// which no dangling warning can catch. Id-shapes resolving to nothing ask a
+/// question, never gate (hyphenated prose false-positives exist); the
+/// real-edge upgrade is offered as judgment, never auto-linked.
+fn print_mention_surfaces(all: &[Node], node: &Node) {
+    let cited = quarry::mention::cited_ids(&node.body);
+    if cited.is_empty() {
+        return;
+    }
+    let mut resolved: Vec<&Node> = Vec::new();
+    let mut dangling: Vec<String> = Vec::new();
+    for id in &cited {
+        match all.iter().find(|n| &n.front.id == id) {
+            Some(t) if t.front.id != node.front.id => resolved.push(t),
+            Some(_) => {} // self-mention: nothing to verify
+            None => dangling.push(id.clone()),
+        }
+    }
+    if !resolved.is_empty() {
+        println!("  body cites — read the echo; a wrong-but-real id reads wrong here:");
+        for t in &resolved {
+            println!(
+                "    {} = \"{}\" [{} {}]",
+                t.front.id, t.front.title, t.front.ty, t.front.status
+            );
+        }
+        println!(
+            "    (render unpacks these; a mention references, an edge leans — if this stands on one, record it: q link {} <rel> <id>)",
+            node.front.id
+        );
+    }
+    for d in &dangling {
+        println!(
+            "  {} is id-shaped but resolves to nothing — a citation to fix, or hyphenated prose to leave as is? (wrap lints danglers)",
+            d
+        );
+    }
 }
 
 /// The per-area watermark surface, run after a mutating verb touched a node.
@@ -1425,6 +1466,24 @@ fn main() -> Result<()> {
                     println!("    {}", line(n));
                 }
             }
+            {
+                // Dangling id-shapes in live bodies (dc-wwnk): each is a
+                // citation to fix or hyphenated prose to leave — lint, never
+                // a gate; backtick prose shapes to quiet them.
+                let dang = quarry::mention::danglers(&all);
+                if !dang.is_empty() {
+                    println!(
+                        "  id-shapes in bodies resolving to nothing ({}) — citations to fix, or hyphenated prose to leave:",
+                        dang.len()
+                    );
+                    for (n, id) in dang.iter().take(10) {
+                        println!("    {} in {} \"{}\"", id, n.front.id, n.front.title);
+                    }
+                    if dang.len() > 10 {
+                        println!("    …and {} more", dang.len() - 10);
+                    }
+                }
+            }
             let log = store.read_log()?;
             let last_user = log.iter().rev().find(|ev| {
                 ev.get("node")
@@ -1732,6 +1791,9 @@ fn main() -> Result<()> {
             }
             let n = ops::edit_body(&store, &node, body, note)?;
             println!("✔ {}", line(&n));
+            if let Ok(all) = store.load_all() {
+                print_mention_surfaces(&all, &n);
+            }
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
             area_watermarks(&store, &n.front.id);
