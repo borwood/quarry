@@ -223,6 +223,32 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         }
     }
 
+    // Derived mentions, outbound: the nodes this body cites — the forward
+    // face of the mention index, parallel to mentioned-by below. Derived,
+    // never stored; blast and behind never traverse these.
+    let out_all = crate::mention::mentions_out(&all, n);
+    let hidden_out = out_all
+        .iter()
+        .filter(|m| m.front.archived && !show_all)
+        .count();
+    let outs: Vec<&&Node> = out_all
+        .iter()
+        .filter(|m| show_all || !m.front.archived)
+        .collect();
+    if !outs.is_empty() || hidden_out > 0 {
+        writeln!(s, "\n  mentions → (derived from this body's citations — a mention references; an edge leans):")?;
+        for m in outs {
+            writeln!(s, "    {} \"{}\" [{}]", m.front.id, m.front.title, m.front.status)?;
+        }
+        if hidden_out > 0 {
+            writeln!(
+                s,
+                "    ({} archived mention(s) hidden — q open {} --all)",
+                hidden_out, n.front.id
+            )?;
+        }
+    }
+
     // Derived mentions: bodies citing this id — backlinks nobody stored.
     // Distinct from edges: a mention references, an edge leans, so blast
     // and behind never traverse these.
@@ -236,7 +262,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         .filter(|m| show_all || !m.front.archived)
         .collect();
     if !mentions.is_empty() || hidden_mentions > 0 {
-        writeln!(s, "\n  mentioned by (derived from body citations — a mention references; an edge leans):")?;
+        writeln!(s, "\n  ← mentioned by (derived from body citations — a mention references; an edge leans):")?;
         for m in mentions {
             writeln!(s, "    {} \"{}\" [{}]", m.front.id, m.front.title, m.front.status)?;
         }

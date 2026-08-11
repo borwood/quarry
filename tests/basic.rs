@@ -1329,8 +1329,8 @@ fn unpack_expands_labels_dead_and_skips_code() {
     );
     let un = quarry::mention::unpack(&all, &body);
     assert!(
-        un.contains(&format!("leans on {} [claim: `halo bounded`]", c.front.id)),
-        "resolved id expands to id [type: `title`]: {}",
+        un.contains(&format!("leans on {} [claim asserted: `halo bounded`]", c.front.id)),
+        "resolved id expands to id [type status: `title`] — live status always renders: {}",
         un
     );
     assert!(
@@ -1366,8 +1366,8 @@ fn open_unpacks_body_and_lists_derived_mentions_never_blast() {
     // forward: the citing body unpacks in open
     let text = quarry::render::open(&s, &it.front.id, false).unwrap();
     assert!(
-        text.contains(&format!("stands on {} [decision: `bodies persist`] for persistence", d.front.id)),
-        "open unpacks bare ids: {}",
+        text.contains(&format!("stands on {} [decision in-force: `bodies persist`] for persistence", d.front.id)),
+        "open unpacks bare ids with live status: {}",
         text
     );
     // reverse: the cited node lists the mentioner under the derived label
@@ -1415,8 +1415,8 @@ fn brief_unpacks_ids_in_work_body() {
     let it = ops::new_node(&s, it).unwrap();
     let text = quarry::render::brief(&s, &it.front.id).unwrap();
     assert!(
-        text.contains(&format!("{} [decision: `bodies persist`]", d.front.id)),
-        "THE WORK unpacks bare ids: {}",
+        text.contains(&format!("{} [decision in-force: `bodies persist`]", d.front.id)),
+        "THE WORK unpacks bare ids with live status: {}",
         text
     );
 }
@@ -1440,8 +1440,8 @@ fn view_carries_hyperlinked_unpack_and_mention_index() {
         "view unpack hyperlinks to the node anchor"
     );
     assert!(
-        html.contains("[decision: <code>bodies persist<\\/code>]"),
-        "view unpack expands to id [type: title]"
+        html.contains("[decision in-force: <code>bodies persist<\\/code>]"),
+        "view unpack expands to id [type status: title]"
     );
     // the derived mention index is embedded, target -> mentioners
     assert!(
@@ -1471,11 +1471,11 @@ fn dangling_id_shapes_lint() {
     ops::archive(&s, &it.front.id, false).unwrap();
     let all = s.load_all().unwrap();
     assert!(quarry::mention::danglers(&all).is_empty(), "archived bodies are not lint");
-    // an archived target carries its label in the unpack
+    // an archived target carries status AND the archived flag in the unpack
     let un = quarry::mention::unpack(&all, &format!("see {}", it.front.id));
     assert!(
-        un.contains(&format!("{} [item, archived: `naming pass`]", it.front.id)),
-        "archived targets labeled: {}",
+        un.contains(&format!("{} [item done, archived: `naming pass`]", it.front.id)),
+        "archived targets labeled with status: {}",
         un
     );
 }
@@ -1488,4 +1488,202 @@ fn actor_recording_and_safety_prefix() {
     assert_eq!(quarry::coord::chat_actor(&s, "chat-1").as_deref(), Some("Fable 5"));
     assert_eq!(quarry::coord::safe_actor("claude-fable-5"), "claude-fable-5");
     assert_eq!(quarry::coord::safe_actor("Fable 5"), "claude:Fable 5");
+}
+
+#[test]
+fn open_and_view_show_outbound_mentions() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "bodies persist");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.body = format!("stands on {} for persistence; th-read is prose", d.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    // open on the MENTIONING node: outbound section lists the cited node,
+    // labeled derived, parallel to mentioned-by on the mentioned node
+    let text = quarry::render::open(&s, &it.front.id, false).unwrap();
+    assert!(text.contains("mentions → (derived"), "outbound section labeled derived: {}", text);
+    assert!(
+        text.contains(&format!("{} \"bodies persist\"", d.front.id)),
+        "cited node listed outbound: {}",
+        text
+    );
+    assert_eq!(
+        text.matches("th-read").count(),
+        1,
+        "a dangling shape stays in the body only — never a listed mention: {}",
+        text
+    );
+    // the mentioned node keeps its inbound section; the mentioning node
+    // does NOT list itself inbound
+    let td = quarry::render::open(&s, &d.front.id, false).unwrap();
+    assert!(td.contains("← mentioned by (derived"), "inbound stays: {}", td);
+    assert!(!td.contains("mentions → (derived"), "no outbound on a body that cites nothing: {}", td);
+    // an archived mention hides with a count, reachable via --all
+    ops::set(&s, &d.front.id, &["status=superseded".to_string()], None).unwrap();
+    ops::archive(&s, &d.front.id, false).unwrap();
+    let text = quarry::render::open(&s, &it.front.id, false).unwrap();
+    assert!(
+        text.contains("(1 archived mention(s) hidden"),
+        "archived outbound mention counted, never silent: {}",
+        text
+    );
+    let text_all = quarry::render::open(&s, &it.front.id, true).unwrap();
+    assert!(text_all.contains(&format!("{} \"bodies persist\"", d.front.id)), "--all reaches it");
+    // the view template carries the outbound section, computed from the
+    // same embedded mention index the inbound section rides
+    let html = quarry::view::render(&s).unwrap();
+    assert!(html.contains("Mentions <span class=\"arrow\">→</span>"), "view outbound section present");
+    assert!(html.contains("Mentioned by"), "view inbound section stays");
+}
+
+#[test]
+fn boundary_verbs_refuse_under_active_badge() {
+    let s = temp_store();
+    // no badge: no refusal
+    assert!(quarry::coord::boundary_refusal(&s, "q wrap").is_none());
+    // machine-local dispatch state alone suffices (env unset in tests)
+    let d = quarry::coord::DispatchState {
+        item: "it-b0nd".into(),
+        item_title: "badged work".into(),
+        session: "disp".into(),
+        globs: vec!["src/**".into()],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    let msg = quarry::coord::boundary_refusal(&s, "q wrap").expect("state file refuses");
+    assert!(msg.contains("boundary-verb capture"), "names the incident class: {}", msg);
+    assert!(msg.contains("q harvest it-b0nd"), "teaches the exit: {}", msg);
+    assert!(msg.contains("q wrap"), "names the refused verb: {}", msg);
+    // the same guard serves every boundary verb
+    let msg = quarry::coord::boundary_refusal(&s, "q session retire").unwrap();
+    assert!(msg.contains("q session retire") && msg.contains("q harvest it-b0nd"));
+    // harvest/land clears the badge and the boundary reopens
+    quarry::coord::clear_dispatch(&s, "it-b0nd");
+    assert!(quarry::coord::boundary_refusal(&s, "q wrap").is_none());
+}
+
+#[test]
+fn wrap_refuses_badged_then_regenerates_view_when_clear() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |badge: Option<&str>, args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .args(args);
+        if let Some(b) = badge {
+            c.env("QUARRY_DISPATCH", b);
+        }
+        c.output().unwrap()
+    };
+    // env badge: wrap and session resume/retire all refuse, teaching
+    for args in [&["wrap"][..], &["session", "resume"][..], &["session", "retire", "x"][..]] {
+        let out = run(Some("it-t3st"), args);
+        assert!(!out.status.success(), "{:?} must refuse under a badge", args);
+        let err = String::from_utf8_lossy(&out.stderr);
+        assert!(err.contains("boundary-verb capture"), "{:?} names the incident class: {}", args, err);
+        assert!(err.contains("q harvest it-t3st"), "{:?} teaches the exit: {}", args, err);
+    }
+    assert!(
+        !s.root.join("graph").join("view").join("index.html").exists(),
+        "a refused wrap regenerates nothing"
+    );
+    // machine-local state alone (no env) refuses the same way
+    let d = quarry::coord::DispatchState {
+        item: "it-loc4".into(),
+        item_title: "state-file badge".into(),
+        session: "disp".into(),
+        globs: vec![],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    let out = run(None, &["wrap"]);
+    assert!(!out.status.success(), "state-file badge refuses without env");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("q harvest it-loc4"));
+    quarry::coord::clear_dispatch(&s, "it-loc4");
+    // badge clear: wrap runs and the boundary regenerates the derived view
+    let out = run(None, &["wrap"]);
+    assert!(out.status.success(), "unbadged wrap runs: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("view regenerated"), "wrap names the regen: {}", stdout);
+    assert!(
+        s.root.join("graph").join("view").join("index.html").exists(),
+        "the view page exists after wrap — the stale-view class dies"
+    );
+}
+
+#[test]
+fn unlink_retires_edge_logged_without_bump() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "process")).unwrap();
+    let mut a = NewArgs::bare("decision", "the cap");
+    a.about = vec![area.front.id.clone()];
+    let a = ops::new_node(&s, a).unwrap();
+    let b = ops::new_node(&s, NewArgs::bare("decision", "prose ids")).unwrap();
+    ops::link(&s, &a.front.id, "builds-on", &b.front.id, false, None).unwrap();
+    let all = s.load_all().unwrap();
+    let src_v = s.find(&all, &a.front.id).unwrap().front.v;
+    let dst_v = s.find(&all, &b.front.id).unwrap().front.v;
+    // a badge on the machine stamps the retirement like any act
+    let d = quarry::coord::DispatchState {
+        item: "it-unlk".into(),
+        item_title: "unlink arc".into(),
+        session: "disp".into(),
+        globs: vec![],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    let (src, edge) =
+        ops::unlink(&s, &a.front.id, "builds-on", &b.front.id, Some("mislink: wrong target".into()))
+            .unwrap();
+    quarry::coord::clear_dispatch(&s, "it-unlk");
+    assert_eq!(edge.rel, "builds-on");
+    assert_eq!(edge.to, b.front.id);
+    // the edge left the frontmatter — in memory and on disk
+    assert!(src.front.edges.iter().all(|e| e.rel != "builds-on"));
+    let all = s.load_all().unwrap();
+    assert!(
+        s.find(&all, &a.front.id).unwrap().front.edges.iter().all(|e| e.rel != "builds-on"),
+        "retired edge gone from the reloaded frontmatter"
+    );
+    // NO version bump on either node (the affirm rationale)
+    assert_eq!(s.find(&all, &a.front.id).unwrap().front.v, src_v, "source never bumps");
+    assert_eq!(s.find(&all, &b.front.id).unwrap().front.v, dst_v, "target never bumps");
+    // the other edge (about) survives
+    assert!(s.find(&all, &a.front.id).unwrap().front.edges.iter().any(|e| e.rel == "about"));
+    // the log records the act: op, actor, badge, note
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| e.get("op").and_then(|v| v.as_str()) == Some("unlink"))
+        .expect("unlink logged");
+    assert_eq!(ev.get("node").and_then(|v| v.as_str()), Some(a.front.id.as_str()));
+    assert_eq!(ev.get("rel").and_then(|v| v.as_str()), Some("builds-on"));
+    assert_eq!(ev.get("to").and_then(|v| v.as_str()), Some(b.front.id.as_str()));
+    assert_eq!(ev.get("actor").and_then(|v| v.as_str()), Some("test-user"));
+    assert_eq!(ev.get("dispatch").and_then(|v| v.as_str()), Some("it-unlk"));
+    assert_eq!(ev.get("note").and_then(|v| v.as_str()), Some("mislink: wrong target"));
+    // nothing goes behind over housekeeping
+    assert!(queries::behind(&s, &all).is_empty(), "retirement leaves no stale refs");
+    // retiring what does not exist refuses and teaches what does
+    let err = ops::unlink(&s, &a.front.id, "builds-on", &b.front.id, None)
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("no edge"), "refusal names the miss: {}", err);
+    assert!(err.contains("-[about]->"), "refusal lists the edges that exist: {}", err);
 }

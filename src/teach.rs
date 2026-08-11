@@ -98,9 +98,12 @@ in a body is a MENTION, not an edge: it unpacks at render and derives a
 mentioned-by backlink, but it carries no stamp and blast and behind never
 traverse it — a mention references; an edge leans. When something genuinely
 stands on a mentioned node, record the real edge (q link) — extraction-on-
-citation applied to references. Mint and edit echo every resolved id's
-title beside it (read the echo: a wrong-but-real id reads wrong there) and
-ask about id-shapes resolving to nothing; wrap lints danglers.
+citation applied to references. A mislinked edge retires as a logged act
+(q unlink): the edge leaves the frontmatter, the log keeps who and why,
+and neither node bumps — bookkeeping, not content. Mint and edit echo
+every resolved id's title beside it (read the echo: a wrong-but-real id
+reads wrong there) and ask about id-shapes resolving to nothing; wrap
+lints danglers.
 
 ATTENTION SURFACES — DELIVERY AT CHOKE POINTS
 Structure guarantees delivery and recorded acknowledgment, not reading;

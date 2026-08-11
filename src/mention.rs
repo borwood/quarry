@@ -70,14 +70,18 @@ pub fn cited_ids(text: &str) -> Vec<String> {
     out
 }
 
-/// The status decoration a target carries into its unpack label: dead
-/// statuses and the archived flag ride along; live targets stay bare.
+/// The label a target carries into its unpack: STATUS ALWAYS (a label is a
+/// live read of the target, and its state is half the read — dc-wcyc's fast
+/// follow). Dead statuses keep their comma emphasis; live ones ride
+/// space-separated; the archived flag rides along on both.
 fn label(t: &Node) -> String {
-    let mut l = t.front.ty.clone();
-    if matches!(t.front.status.as_str(), "refuted" | "superseded" | "dropped") {
-        l.push_str(", ");
-        l.push_str(&t.front.status);
-    }
+    let dead = matches!(t.front.status.as_str(), "refuted" | "superseded" | "dropped");
+    let mut l = format!(
+        "{}{}{}",
+        t.front.ty,
+        if dead { ", " } else { " " },
+        t.front.status
+    );
     if t.front.archived {
         l.push_str(", archived");
     }
@@ -85,8 +89,8 @@ fn label(t: &Node) -> String {
 }
 
 /// Render-time unpack for text surfaces (open, brief): each resolvable bare
-/// id expands to `id [type: `title`]`, dead/archived targets labeled;
-/// unresolved shapes stay as written (wrap lints them).
+/// id expands to `id [type status: `title`]`, dead/archived targets carrying
+/// their extra label; unresolved shapes stay as written (wrap lints them).
 pub fn unpack(all: &[Node], text: &str) -> String {
     scan_replace(text, |id| {
         all.iter()
@@ -125,6 +129,17 @@ pub fn mentioned_by<'a>(all: &'a [Node], id: &str) -> Vec<&'a Node> {
     all.iter()
         .filter(|n| n.front.id != id)
         .filter(|n| cited_ids(&n.body).iter().any(|c| c == id))
+        .collect()
+}
+
+/// The derived mention index, forward: the nodes this node's body cites —
+/// outbound references, the mirror of `mentioned_by`. Resolved targets only
+/// (a dangling shape is wrap's lint, not a mention); in citation order.
+pub fn mentions_out<'a>(all: &'a [Node], node: &Node) -> Vec<&'a Node> {
+    cited_ids(&node.body)
+        .into_iter()
+        .filter(|id| *id != node.front.id)
+        .filter_map(|id| all.iter().find(|t| t.front.id == id))
         .collect()
 }
 

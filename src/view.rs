@@ -48,7 +48,8 @@ pub fn render(store: &Store) -> Result<String> {
             v["body"] = json!(n.body);
             if !n.body.trim().is_empty() {
                 // The id-unpack, pre-rendered (dc-wwnk): bare ids expand to
-                // hyperlinked id [type: `title`]; dead targets labeled.
+                // hyperlinked id [type status: `title`]; status always,
+                // dead targets keeping their extra emphasis.
                 v["body_html"] = json!(crate::mention::unpack_html(&all, &n.body));
             }
             v["slug"] = json!(n.slug());
@@ -550,6 +551,11 @@ function viewNode(id){
     });
     html += collapsible('back-'+n.id, rows, ['Rel','Type','From','Status','Updated',
       '<span title="Whether the citing node’s stamp still matches this node’s version — stale means the citer has not reviewed this node’s newer state.">Citation</span>']);
+  }
+  const menOut = Object.keys(DATA.mentions||{}).filter(t => DATA.mentions[t].includes(n.id)).map(t => byId[t]).filter(Boolean);
+  if (menOut.length) {
+    html += '<h3 class="part">Mentions <span class="arrow">→</span> <span class="arrow" title="Derived at render from this node’s body citations — never stored, never an edge; blast and behind do not traverse these.">(derived — a mention references; an edge leans)</span></h3>'
+      + collapsible('menout-'+n.id, menOut.map(m => rowObj(m)), NODE_HD);
   }
   const men = ((DATA.mentions||{})[n.id]||[]).map(id => byId[id]).filter(Boolean);
   if (men.length) {

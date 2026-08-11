@@ -99,6 +99,23 @@ enum Cmd {
         #[arg(long)]
         note: Option<String>,
     },
+    /// Retire an edge as a logged act (no version bump on either node)
+    #[command(after_help = "EXAMPLES:
+  q unlink dc-4k7f builds-on dc-9x2m --note \"mislink: minted against the wrong decision\"
+Retirement is a logged act, never an erasure: the edge leaves the source's
+frontmatter, the event records actor/session/badge and the --note why, and
+NEITHER node bumps — bookkeeping, not content (the affirm rationale), so
+citers never go behind over housekeeping. Retiring an edge that does not
+exist refuses and lists what the source carries.")]
+    Unlink {
+        src: String,
+        /// The rel of the edge to retire (about | part-of | depends-on | …)
+        rel: String,
+        dst: String,
+        /// Why the edge retires (logged on the unlink event)
+        #[arg(long)]
+        note: Option<String>,
+    },
     /// Mutate fields: status=… title=… kind=… method=… path=… acceptance+=…
     /// write-set+=… ratified=…
     Set {
@@ -1018,6 +1035,11 @@ fn main() -> Result<()> {
                     }
                 }
                 SessionCmd::Resume => {
+                    // Boundary guard (it-ymsj): a dispatched agent waking a
+                    // session identity is the same capture class as wrap.
+                    if let Some(msg) = coord::boundary_refusal(&store, "q session resume") {
+                        anyhow::bail!("{}", msg);
+                    }
                     let all = store.load_all()?;
                     let Some(sess) = coord::current_session() else {
                         anyhow::bail!("no QUARRY_SESSION set — launch via a session launcher, or ask the user which session this chat is and relaunch")
@@ -1141,6 +1163,11 @@ fn main() -> Result<()> {
                     println!("  prefer launcher-owned identity for new chats: the {}-session launcher.", name);
                 }
                 SessionCmd::Retire { name } => {
+                    // Boundary guard (it-ymsj): last rites are the
+                    // dispatcher's act, never a badged agent's.
+                    if let Some(msg) = coord::boundary_refusal(&store, "q session retire") {
+                        anyhow::bail!("{}", msg);
+                    }
                     coord::retire_session(&store, &name, &Store::actor())?;
                     println!("✔ session {} retired — registry entry removed, leases released, last rites logged.", name);
                 }
@@ -1286,6 +1313,11 @@ fn main() -> Result<()> {
             // the dispatcher's own. The observed set stays until release —
             // spine_check consumes it at landing.
             coord::clear_dispatch(&store, &n.front.id);
+            // A dispatch arc closing is a boundary too — the derived view
+            // rides along for free (it-n3fu), best-effort.
+            if let Ok(p) = quarry::view::write(&store) {
+                println!("  view regenerated: {}", p.display());
+            }
         }
         Cmd::Queue { which } => {
             let store = Store::discover()?;
@@ -1373,6 +1405,12 @@ fn main() -> Result<()> {
         }
         Cmd::Wrap => {
             let store = Store::discover()?;
+            // Boundary guard (it-ymsj): wrap under an active dispatch badge
+            // is the dispatcher's boundary run by the dispatched — refuse
+            // before any cursor moves.
+            if let Some(msg) = coord::boundary_refusal(&store, "q wrap") {
+                anyhow::bail!("{}", msg);
+            }
             let all = store.load_all()?;
             println!("wrap — boundary lint:");
             let queued: Vec<_> = all
@@ -1667,6 +1705,13 @@ fn main() -> Result<()> {
                     );
                 }
             }
+            // The view is derived; the boundary regenerates it (it-n3fu) so
+            // freshness never rides a remembered convention. Best-effort:
+            // the lint above must land even if the render cannot.
+            match quarry::view::write(&store) {
+                Ok(p) => println!("  view regenerated: {}", p.display()),
+                Err(e) => println!("  ⚠ view regeneration failed: {}", e),
+            }
         }
         Cmd::New {
             ty,
@@ -1754,6 +1799,17 @@ fn main() -> Result<()> {
             drop(all);
             print_homework(&store, &[src_id.as_str(), edge.to.as_str()]);
             area_watermarks(&store, &src_id);
+        }
+        Cmd::Unlink { src, rel, dst, note } => {
+            let store = Store::discover()?;
+            let (n, edge) = ops::unlink(&store, &src, &rel, &dst, note)?;
+            println!(
+                "✔ retired: {} -[{}]-> {} (was at {})",
+                n.front.id, edge.rel, edge.to, edge.at
+            );
+            println!(
+                "  no version bump on either node — retirement is bookkeeping, not content; the log carries who and why."
+            );
         }
         Cmd::Set { node, fields, note } => {
             let store = Store::discover()?;

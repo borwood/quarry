@@ -2,7 +2,7 @@
 id: it-2zf9
 type: item
 title: machine-readable CLI output mode
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-08T22:53:39Z

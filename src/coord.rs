@@ -327,6 +327,19 @@ pub fn current_dispatch_badge(store: &Store) -> Option<String> {
         .or_else(|| load_dispatch(store).map(|d| d.item))
 }
 
+/// C8's logic applied to boundary acts (it-ymsj): wrap and session
+/// resume/retire are the DISPATCHER'S verbs. Under an active badge — the
+/// shell env or the machine-local dispatch state, either alone suffices —
+/// they refuse with a teaching error. The incident this guard exists for:
+/// a dispatched agent ran q wrap wearing the dispatcher's injected session
+/// identity and consumed its session cursors.
+pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
+    let badge = current_dispatch_badge(store)?;
+    Some(format!(
+        "boundary-verb capture: {verb} is a session-boundary act, and an active dispatch badge ({badge}) marks this machine mid-dispatch. A badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who closes the arc first: q harvest {badge}"
+    ))
+}
+
 // ── the touched-set accrual (machine-local) ────────────────────────────────
 //
 // Leaseless code writes are observed, never denied (the lease is an arc

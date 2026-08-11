@@ -275,6 +275,74 @@ pub fn link(
     Ok(edge)
 }
 
+/// `q unlink <src> <rel> <dst>`: retire an edge as a logged act (DESIGN.md
+/// § 5 — edge mutations are log events). The edge leaves the source's
+/// frontmatter with NO version bump on either node: retirement is
+/// bookkeeping, not content (the affirm-no-bump rationale), so citers of
+/// the source never go behind over housekeeping. The log records who, when,
+/// and — via --note — why. Retiring an edge that does not exist refuses,
+/// teaching what does.
+pub fn unlink(
+    store: &Store,
+    src_key: &str,
+    rel: &str,
+    dst: &str,
+    note: Option<String>,
+) -> Result<(Node, Edge)> {
+    let all = store.load_all()?;
+    let mut src = store.find(&all, src_key)?.clone();
+    // Resolve the target: file: refs stay verbatim; node keys resolve to the
+    // id; an unresolvable key falls back to the literal — a dangling edge
+    // (target since deleted) must still be retirable.
+    let dst_id = if dst.starts_with("file:") {
+        dst.to_string()
+    } else {
+        store
+            .find(&all, dst)
+            .map(|n| n.front.id.clone())
+            .unwrap_or_else(|_| dst.to_string())
+    };
+    let Some(pos) = src
+        .front
+        .edges
+        .iter()
+        .position(|e| e.rel == rel && e.to == dst_id)
+    else {
+        let existing: Vec<String> = src
+            .front
+            .edges
+            .iter()
+            .map(|e| format!("-[{}]-> {} (at {})", e.rel, e.to, e.at))
+            .collect();
+        bail!(
+            "no edge {} -[{}]-> {} to retire — what {} carries:\n  {}",
+            src.front.id,
+            rel,
+            dst_id,
+            src.front.id,
+            if existing.is_empty() {
+                "(no edges at all)".to_string()
+            } else {
+                existing.join("\n  ")
+            }
+        );
+    };
+    let edge = src.front.edges.remove(pos);
+    // NO bump on either node: an edge retirement adds no content for the
+    // source's citers, so it must not put them behind (dc-q8p3's rationale).
+    store.save(&src)?;
+    let mut ev = json!({
+        "ts": Store::now(), "node": src.front.id, "v": src.front.v,
+        "op": "unlink", "rel": edge.rel, "to": edge.to, "at": edge.at,
+        "actor": Store::actor()
+    });
+    if let Some(n) = note {
+        ev.as_object_mut().unwrap().insert("note".into(), json!(n));
+    }
+    store.log_event(ev)?;
+    Ok((src, edge))
+}
+
 pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) -> Result<Node> {
     let all = store.load_all()?;
     let mut node = store.find(&all, key)?.clone();

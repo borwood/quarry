@@ -396,3 +396,54 @@
 {"ts":"2026-08-11T04:45:16Z","node":"cl-cagx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T04:45:16Z","node":"cl-qxxp","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T04:45:16Z","node":"do-hvup","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:03:59Z","node":"dc-wcyc","v":1,"op":"create","type":"decision","title":"gaps fix on notice; accumulation is never a prerequisite","actor":"claude","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-11T05:04:16Z","node":"dc-wwnk","v":3,"actor":"claude","note":"backtick the th-read example - dangler lint solved; cosmetic only, user-authorized (everything needs solved)","session":"quarry"}
+{"ts":"2026-08-11T05:04:16Z","node":"th-8sdq","v":1,"op":"create","type":"thread","title":"the channel back: host-repo sessions noticing quarry gaps","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-wwnk","at":3,"ts":"2026-08-11T05:04:16Z","node":"dc-wcyc","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:04:28Z","node":"it-w5yv","v":15,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:04:56Z","node":"it-69mn","v":1,"op":"create","type":"item","title":"fast follows: status labels, mentions section, boundary-verb guard, wrap view regen, q unlink","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["status=sketch"],"from_status":"sketch","ts":"2026-08-11T05:04:57Z","node":"it-2zf9","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-wcyc","at":2,"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-69mn","at":2,"ts":"2026-08-11T05:05:12Z","node":"it-ymsj","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-69mn","at":2,"ts":"2026-08-11T05:05:12Z","node":"it-n3fu","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=unpack labels carry live status everywhere bodies render (open, brief, view), test-covered"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=open and the view show a derived mentions-outbound section parallel to mentioned-by, both labeled"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=wrap and session resume/retire refuse under an active badge (env or state file) with a teaching error naming q harvest, test-covered"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=wrap regenerates the view page at close; the stale-view class dies"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":6,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `q-unlink`: edge retirement as a logged act, no version bumps, frontmatter updated; verified live by retiring the dc-wcyc builds-on dc-wwnk mislink"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":7,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=cargo test passes with the raw test result line read unfiltered"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":8,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=src/**"],"ts":"2026-08-11T05:05:12Z","node":"it-69mn","v":9,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=tests/**"],"ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":10,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["write-set+=.claude/**"],"ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":11,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":12,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":12,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":12,"op":"reserve","globs":["src/**","tests/**",".claude/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":13,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:05:13Z","node":"it-69mn","v":12,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**",".claude/**"],"dispatch":"it-69mn"}
+{"ts":"2026-08-11T05:05:41Z","node":"it-69mn","v":13,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-69mn"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-11T05:05:43Z","node":"th-8sdq","v":2,"actor":"claude","session":"quarry","dispatch":"it-69mn"}
+{"ts":"2026-08-11T05:15:22Z","node":"dc-wcyc","v":2,"op":"unlink","rel":"builds-on","to":"dc-wwnk","at":3,"actor":"claude","note":"mislink minted 2026-08-11: dc-wcyc (gaps fix on notice) does not build on dc-wwnk (prose ids) — the edge was recorded against the wrong decision","session":"quarry","dispatch":"it-69mn"}
+{"ts":"2026-08-11T05:18:00Z","node":"it-69mn","v":13,"op":"harvest","actor":"claude","session":"quarry","dispatch":"it-69mn"}
+{"ts":"2026-08-11T05:18:37Z","node":"do-jn4s","v":1,"op":"create","type":"doc","title":"dispatch report: fast follows land; the fence catches its builder","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-69mn","at":13,"ts":"2026-08-11T05:18:37Z","node":"do-jn4s","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:37Z","node":"cl-rv66","v":1,"op":"create","type":"claim","title":"`q-unlink`: edge retirement is a logged act - frontmatter updated, no v…","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"94a486783d73","ts":"2026-08-11T05:18:37Z","node":"cl-rv66","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:37Z","node":"cl-farc","v":1,"op":"create","type":"claim","title":"`boundary-badge-guard`: wrap and session resume/retire refuse while a d…","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"e57d93f2fe69","ts":"2026-08-11T05:18:37Z","node":"cl-farc","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-69mn","at":13,"ts":"2026-08-11T05:18:43Z","node":"cl-rv66","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-69mn","at":13,"ts":"2026-08-11T05:18:43Z","node":"cl-farc","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-ymsj","at":2,"ts":"2026-08-11T05:18:43Z","node":"cl-farc","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:43Z","node":"it-ymsj","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:43Z","node":"it-n3fu","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:43Z","node":"do-hvup","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-11T05:18:43Z","node":"it-69mn","v":14,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-11T05:18:43Z","node":"it-ymsj","v":3,"actor":"claude","note":"landed via the batch arc it-69mn","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-11T05:18:43Z","node":"it-n3fu","v":3,"actor":"claude","note":"landed via the batch arc it-69mn","session":"quarry"}
+{"ts":"2026-08-11T05:18:43Z","node":"it-69mn","v":14,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"it-n3fu","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"it-ymsj","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"cl-farc","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"cl-rv66","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"do-jn4s","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"cl-farc","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T05:18:55Z","node":"do-hvup","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
