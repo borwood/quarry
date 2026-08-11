@@ -43,14 +43,10 @@ machine.
   `Co-Authored-By: Claude <model> <noreply@anthropic.com>` naming the model
   that did the work.
 
-## Known compromises (deliberate, watch-listed)
+## Known compromises
 
-- `serde_yaml` is unmaintained; it works and is contained to
-  `model.rs`/frontmatter — swap candidate if it ever bites.
-- Lease/intent/heartbeat files use best-effort locking — adequate for one
-  human orchestrating a few sessions, not for real concurrency.
-- The alert check scans the whole event log — fine below ~10k events;
-  shard-aware scanning is the fix if it ever shows up in hook latency.
+- Watched compromises live in the graph as `kind: watch` items (migrated
+  2026-08-11) — surface them with `q find watch` or the areas' shaping.
 - CLI output is title-first prose for agents and humans; scripts should not
   parse it — extract ids from the trailing parenthetical or use `q find`.
   A machine-readable output mode is a filed sketch item.
