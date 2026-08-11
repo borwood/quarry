@@ -2,8 +2,8 @@
 id: it-rzk8
 type: item
 title: 'q claim --title override: register-length spine titles without the retitle two-step'
-v: 1
-status: sketch
+v: 3
+status: done
 provenance: assistant
 created: 2026-08-10T07:54:36Z
 actor: claude

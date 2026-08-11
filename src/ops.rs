@@ -401,6 +401,7 @@ pub fn rule(
 pub fn claim(
     store: &Store,
     text: &str,
+    title: Option<String>,
     about: Vec<String>,
     source: Option<String>,
     method: Option<String>,
@@ -426,7 +427,8 @@ pub fn claim(
             "C2: an assistant claim needs grounding — --source <doc or file:path> (where it was extracted or read from), --method \"...\" (how it was measured), or user provenance. No free-floating assertions."
         );
     }
-    let mut args = NewArgs::bare("claim", &truncate_title(text, 72));
+    let title = title.unwrap_or_else(|| truncate_title(text, 72));
+    let mut args = NewArgs::bare("claim", &title);
     args.body = text.to_string();
     args.about = about;
     args.method = method;

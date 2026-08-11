@@ -340,3 +340,12 @@
 {"ts":"2026-08-10T07:54:36Z","node":"do-hvmd","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-10T07:54:36Z","node":"it-rzk8","v":1,"op":"create","type":"item","title":"q claim --title override: register-length spine titles without the retitle two-step","actor":"claude","note":null,"session":"quarry"}
 {"op":"link","rel":"builds-on","to":"cl-vqdb","at":4,"ts":"2026-08-10T07:54:36Z","node":"do-hvmd","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T03:57:06Z","node":"it-vztp","v":4,"actor":"claude","note":"instance 3: sibling thread mentioned by role not title, no edge; deferred-vs-parked vocabulary trip","session":"quarry"}
+{"ts":"2026-08-11T04:14:04Z","node":"it-rzk8","v":1,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:14:04Z","node":"it-rzk8","v":1,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-11T04:14:04Z","node":"it-rzk8","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:15:34Z","node":"cl-jgnj","v":1,"op":"create","type":"claim","title":"`claim-title-override`: q claim --title carries register-length spine names past the 72-char derived cut, no retitle two-step","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"d7db148cd128","ts":"2026-08-11T04:15:34Z","node":"cl-jgnj","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-11T04:15:34Z","node":"it-rzk8","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T04:15:34Z","node":"it-rzk8","v":3,"op":"release","actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-rzk8","at":3,"ts":"2026-08-11T04:15:42Z","node":"cl-jgnj","v":3,"actor":"claude","session":"quarry"}

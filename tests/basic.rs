@@ -50,7 +50,7 @@ fn stamped_edges_go_behind_and_affirm() {
     // user-provenance claim needs no source (C2 exemption)
     let c = ops::claim(
         &s,
-        "the halo is bounded",
+        "the halo is bounded", None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -111,7 +111,7 @@ fn refute_blast_and_c5() {
 
     let c = ops::claim(
         &s,
-        "halo is 4-11 cells",
+        "halo is 4-11 cells", None,
         vec![area.front.id.clone()],
         Some(src_doc.front.id.clone()),
         Some("ring differencing".into()),
@@ -233,7 +233,7 @@ fn affirm_only_restamps_does_not_bump() {
     let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
     let c = ops::claim(
         &s,
-        "halo bounded",
+        "halo bounded", None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -378,14 +378,14 @@ fn c2_grounding_forms() {
     let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
 
     // free-floating assistant claim: denied
-    let err = ops::claim(&s, "vibes", vec![area.front.id.clone()], None, None, Some("assistant".into()), None)
+    let err = ops::claim(&s, "vibes", None, vec![area.front.id.clone()], None, None, Some("assistant".into()), None)
         .unwrap_err();
     assert!(err.to_string().contains("C2"), "got: {}", err);
     // method alone grounds it
-    ops::claim(&s, "measured thing", vec![area.front.id.clone()], None,
+    ops::claim(&s, "measured thing", None, vec![area.front.id.clone()], None,
         Some("log inspection".into()), None, None).unwrap();
     // a file: source grounds it (matrix widened), blob-stamped
-    let c = ops::claim(&s, "read off the code", vec![area.front.id.clone()],
+    let c = ops::claim(&s, "read off the code", None, vec![area.front.id.clone()],
         Some("file:evidence.rs".into()), None, Some("assistant".into()), None).unwrap();
     assert!(c.front.edges.iter().any(|e| e.rel == "source" && e.to == "file:evidence.rs"));
 }
@@ -593,7 +593,7 @@ fn spine_presence_check() {
     assert!(!queries::files_cited(&all, &["resolve.rs".to_string()]), "nothing cites yet");
     ops::claim(
         &s,
-        "materials resolve per-voxel through layered override stacks",
+        "materials resolve per-voxel through layered override stacks", None,
         vec![area.front.id.clone()],
         Some("file:resolve.rs".into()),
         None,
@@ -978,7 +978,7 @@ fn dispatch_one_act_then_harvest() {
     // acts under the badge are stamped (state-file transport)
     let c = ops::claim(
         &s,
-        "`geo-pass`: emits layered strata",
+        "`geo-pass`: emits layered strata", None,
         vec![area.front.id.clone()],
         None,
         Some("read off the pass".into()),
@@ -1097,7 +1097,7 @@ fn builds_on_matrix_shapes_stamp_and_no_status_coupling() {
     let spec = ops::new_node(&s, NewArgs::bare("doc", "water spec")).unwrap();
     let c = ops::claim(
         &s,
-        "`body-graph`: bodies keep identity",
+        "`body-graph`: bodies keep identity", None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -1138,7 +1138,7 @@ fn builds_on_behind_and_reverse_blast() {
     let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
     let c = ops::claim(
         &s,
-        "`geo-pass`: emits layered strata",
+        "`geo-pass`: emits layered strata", None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -1208,7 +1208,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // a spine in the shared area lands one intent
     let bg = ops::claim(
         &s,
-        "`body-graph`: bodies keep identity across regen",
+        "`body-graph`: bodies keep identity across regen", None,
         vec![hydro.front.id.clone()],
         None,
         None,
@@ -1219,7 +1219,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // the same name in a foreign area lands nothing (and is unintended THERE)
     let foreign = ops::claim(
         &s,
-        "`halo-check`: bounded halo",
+        "`halo-check`: bounded halo", None,
         vec![geo.front.id.clone()],
         None,
         None,
@@ -1230,7 +1230,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // an emergent spine in the item's area that no intent named
     ops::claim(
         &s,
-        "`chunk-cache`: regen hits a warm cache",
+        "`chunk-cache`: regen hits a warm cache", None,
         vec![hydro.front.id.clone()],
         None,
         None,
@@ -1268,7 +1268,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     ops::set(&s, &it.front.id, &["status=done".to_string()], None).unwrap();
     let late = ops::claim(
         &s,
-        "`halo-check`: halo bounded, measured late",
+        "`halo-check`: halo bounded, measured late", None,
         vec![hydro.front.id.clone()],
         None,
         None,

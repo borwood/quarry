@@ -145,6 +145,9 @@ intention-revealing names. Titles feed the relatedness lexicon, so a
 well-named spine surfaces itself to future work.")]
     Claim {
         text: String,
+        /// Full title when the derived first-line cut would truncate it (register-length spine names)
+        #[arg(long)]
+        title: Option<String>,
         #[arg(long = "about", required = true)]
         about: Vec<String>,
         #[arg(long)]
@@ -1752,6 +1755,7 @@ fn main() -> Result<()> {
         }
         Cmd::Claim {
             text,
+            title,
             about,
             source,
             method,
@@ -1759,7 +1763,7 @@ fn main() -> Result<()> {
             status,
         } => {
             let store = Store::discover()?;
-            let n = ops::claim(&store, &text, about, source, method, provenance, status)?;
+            let n = ops::claim(&store, &text, title, about, source, method, provenance, status)?;
             println!("✔ {}", line(&n));
             print_mint_surfaces(&store, &n);
             area_watermarks(&store, &n.front.id);
