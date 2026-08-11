@@ -496,3 +496,40 @@
 {"ts":"2026-08-11T06:13:01Z","node":"th-gdtn","v":4,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T06:13:01Z","node":"it-z2sy","v":1,"op":"create","type":"item","title":"solo-lease writes accrue as leaseless: the observed set ignores live leases","actor":"claude","note":null,"session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-cc76","at":3,"ts":"2026-08-11T06:13:12Z","node":"it-z2sy","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T06:28:36Z","node":"th-yzmj","v":1,"op":"create","type":"thread","title":"the file-size infection: mid-task warnings fail; what defense actually works","actor":"claude","note":"measured at mint: src/main.rs 2107 lines, past a 2000-line read window; next largest ops.rs 766. tension with th-jvwe (wants an in-loop urge) — deepcraft says mid-task urges get dismissed; likely settled together. deepcraft grounding: cl-eb8j, do-aurk.","session":"quarry"}
+{"ts":"2026-08-11T06:28:41Z","node":"th-6vva","v":1,"op":"create","type":"thread","title":"the user's register over time: a corpus to feed a future resolver of low-impact calls","actor":"claude","note":"the graph records rulings' outcomes; this wants the reasoning and register behind them, in the user's voice. owed at this session's wrap: the seed doc that starts the corpus.","session":"quarry"}
+{"ts":"2026-08-11T08:32:08Z","node":"cl-hd56","v":1,"op":"create","type":"claim","title":"`q-claim`: grounded extraction in one act — C1 subjects, C2 grounding, derived provenance, spine titles ride --title","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"94a486783d73","ts":"2026-08-11T08:32:08Z","node":"cl-hd56","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T09:50:32Z","node":"th-skv9","v":1,"op":"create","type":"thread","title":"the surfacing atom's scope: what no register may drop","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T09:50:47Z","node":"it-u7dp","v":1,"op":"create","type":"item","title":"the surfacing atom: one constructor, no register below it","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["acceptance+=lands \\\u0007tom-lint\\: front.title formatted outside the surface module fails the lint at wrap or CI — the invariant is checked, never remembered"],"ts":"2026-08-11T09:50:55Z","node":"it-u7dp","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands \\carrier-replumb\\: homework and query carriers hold atoms, not (id, title) pairs"],"ts":"2026-08-11T09:50:55Z","node":"it-u7dp","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands \\\find-areas\\: find hits name their areas, so foreign-domain matches arrive labeled"],"ts":"2026-08-11T09:50:55Z","node":"it-u7dp","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"th-skv9","at":1,"ts":"2026-08-11T09:50:55Z","node":"it-u7dp","v":5,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T09:51:40Z","node":"th-yzmj","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T09:51:40Z","node":"th-jvwe","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T09:51:40Z","node":"th-nc7d","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T09:51:40Z","node":"th-qv27","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T09:51:40Z","node":"th-6vva","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:27:11Z","node":"dc-nnf5","v":1,"op":"create","type":"decision","title":"the surfacing atom: one struct, three renderers, one module, lint-enforced","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-nnf5","ts":"2026-08-11T10:27:11Z","node":"th-skv9","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-skv9","at":2,"ts":"2026-08-11T10:27:11Z","node":"dc-nnf5","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:29:15Z","node":"it-ygw7","v":1,"op":"create","type":"item","title":"the surfacing atom: one struct, three renderers, no register below the floor","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supersedes","to":"it-u7dp","at":5,"ts":"2026-08-11T10:29:32Z","node":"it-ygw7","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-nnf5","at":2,"ts":"2026-08-11T10:29:33Z","node":"it-ygw7","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=dropped"],"from_status":"sketch","ts":"2026-08-11T10:29:33Z","node":"it-u7dp","v":6,"actor":"claude","note":"acceptance names corrupted in flag transit; superseded by it-ygw7","session":"quarry"}
+{"ts":"2026-08-11T10:29:33Z","node":"it-u7dp","v":6,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:29:40Z","node":"it-ygw7","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:29:40Z","node":"it-hjed","v":1,"op":"create","type":"item","title":"find match hygiene: substring matching admits foreign debris","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T10:29:40Z","node":"it-ds6b","v":1,"op":"create","type":"item","title":"acceptance lines are append-only: no replace or remove verb","actor":"claude","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-11T10:29:59Z","node":"th-yzmj","v":3,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-11T10:29:59Z","node":"th-6vva","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:30:31Z","node":"do-dspv","v":1,"op":"create","type":"doc","title":"the user register corpus","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-11T10:30:37Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-u7dp","v":6,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-69mn","v":14,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-j2rk","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-n3fu","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-w5yv","v":15,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"it-ymsj","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-11T10:31:18Z","node":"th-4fz6","v":6,"op":"archive","actor":"claude","session":"quarry"}

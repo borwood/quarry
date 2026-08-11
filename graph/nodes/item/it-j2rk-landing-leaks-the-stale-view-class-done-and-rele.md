@@ -8,6 +8,7 @@ provenance: assistant
 created: 2026-08-11T06:05:32Z
 actor: claude
 kind: bug
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
