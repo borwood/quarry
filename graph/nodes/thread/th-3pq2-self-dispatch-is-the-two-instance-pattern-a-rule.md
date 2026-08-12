@@ -2,8 +2,8 @@
 id: th-3pq2
 type: thread
 title: 'self-dispatch: is the two-instance pattern a rule wanting structure?'
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-12T10:48:33Z
 actor: claude

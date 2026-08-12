@@ -557,3 +557,64 @@
 {"ts":"2026-08-12T10:36:59Z","node":"do-ev5g","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T10:36:59Z","node":"it-ygw7","v":5,"op":"affirm","restamped":3,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T10:48:33Z","node":"th-3pq2","v":1,"op":"create","type":"thread","title":"self-dispatch: is the two-instance pattern a rule wanting structure?","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-12T11:09:24Z","node":"it-sc2u","v":1,"op":"create","type":"item","title":"lexicon compound halves: core-sample never meets core sample","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"ts":"2026-08-12T11:09:40Z","node":"it-nuw5","v":1,"op":"create","type":"item","title":"lexicon plural-folding: watches never meets watch","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"body","ts":"2026-08-12T11:10:12Z","node":"it-b5tq","v":2,"actor":"claude-fable-5","note":"widened beyond backticks: sig_token floors, census 2026-08-12","session":"ui-cleanup"}
+{"op":"body","ts":"2026-08-12T11:10:28Z","node":"it-hjed","v":2,"actor":"claude-fable-5","note":"settled design recorded: tiers, loose tail, divergent predicate","session":"ui-cleanup"}
+{"op":"set","fields":["acceptance+=a three-char query like cli returns word-boundary hits first; substring-only hits trail labeled loose, never hidden","acceptance+=find's word predicate states its divergence from the lexicon join beside its definition"],"ts":"2026-08-12T11:10:28Z","node":"it-hjed","v":3,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:21:38Z","node":"dc-5pb3","v":1,"op":"create","type":"decision","title":"the view is a render, not a record: graph/view stays untracked","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"ts":"2026-08-12T11:37:34Z","node":"dc-f79h","v":1,"op":"create","type":"decision","title":"the view renders per request: no baked freshness contract","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"ts":"2026-08-12T11:37:34Z","node":"it-6gj9","v":1,"op":"create","type":"item","title":"unpack click-target: the whole expansion is the link, and reads as one","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"ts":"2026-08-12T11:37:34Z","node":"it-5j34","v":1,"op":"create","type":"item","title":"recent activity carries type and area","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"ts":"2026-08-12T11:37:53Z","node":"it-kxdu","v":1,"op":"create","type":"item","title":"q serve: the view rendered per request","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"set","fields":["write-set+=src/mention.rs","write-set+=src/view.rs"],"ts":"2026-08-12T11:37:53Z","node":"it-6gj9","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["write-set+=src/view.rs"],"ts":"2026-08-12T11:37:54Z","node":"it-5j34","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["write-set+=src/view.rs","write-set+=src/main.rs"],"ts":"2026-08-12T11:38:12Z","node":"it-kxdu","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:38:12Z","node":"it-6gj9","v":2,"op":"brief","actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:38:12Z","node":"it-6gj9","v":2,"op":"reserve","globs":["src/mention.rs","src/view.rs"],"shared":false,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-12T11:38:12Z","node":"it-6gj9","v":3,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:38:12Z","node":"it-6gj9","v":2,"op":"dispatch","actor":"claude-fable-5","session":"ui-cleanup","globs":["src/mention.rs","src/view.rs"],"dispatch":"it-6gj9"}
+{"ts":"2026-08-12T11:46:34Z","node":"it-6gj9","v":3,"op":"harvest","actor":"claude-fable-5","session":"ui-cleanup","dispatch":"it-6gj9"}
+{"ts":"2026-08-12T11:47:11Z","node":"do-ve3g","v":1,"op":"create","type":"doc","title":"dispatch report: unpack click-target: the whole expansion is the link, and reads as one","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"link","rel":"supports","to":"it-6gj9","at":3,"ts":"2026-08-12T11:47:11Z","node":"do-ve3g","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:47:11Z","node":"it-6gj9","v":3,"op":"release","actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["write-set+=tests/basic.rs","write-set+=src/surface.rs"],"ts":"2026-08-12T11:47:54Z","node":"it-6gj9","v":4,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:48:04Z","node":"do-ve3g","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-12T11:48:49Z","node":"it-6gj9","v":5,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:48:49Z","node":"it-5j34","v":2,"op":"brief","actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:48:49Z","node":"it-5j34","v":2,"op":"reserve","globs":["src/view.rs"],"shared":false,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-12T11:48:49Z","node":"it-5j34","v":3,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:48:49Z","node":"it-5j34","v":2,"op":"dispatch","actor":"claude-fable-5","session":"ui-cleanup","globs":["src/view.rs"],"dispatch":"it-5j34"}
+{"ts":"2026-08-12T11:49:10Z","node":"it-5j34","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup","dispatch":"it-5j34"}
+{"ts":"2026-08-12T11:53:01Z","node":"it-5j34","v":3,"op":"harvest","actor":"claude-fable-5","session":"ui-cleanup","dispatch":"it-5j34"}
+{"ts":"2026-08-12T11:53:30Z","node":"do-rck7","v":1,"op":"create","type":"doc","title":"dispatch report: recent activity carries type and area","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"link","rel":"supports","to":"it-5j34","at":3,"ts":"2026-08-12T11:53:30Z","node":"do-rck7","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-12T11:53:30Z","node":"it-5j34","v":4,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:53:30Z","node":"it-5j34","v":4,"op":"release","actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:53:31Z","node":"it-kxdu","v":2,"op":"brief","actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:53:31Z","node":"it-kxdu","v":2,"op":"reserve","globs":["src/view.rs","src/main.rs"],"shared":false,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-12T11:53:31Z","node":"it-kxdu","v":3,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:53:31Z","node":"it-kxdu","v":2,"op":"dispatch","actor":"claude-fable-5","session":"ui-cleanup","globs":["src/view.rs","src/main.rs"],"dispatch":"it-kxdu"}
+{"ts":"2026-08-12T11:54:02Z","node":"it-kxdu","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup","dispatch":"it-kxdu"}
+{"ts":"2026-08-12T11:59:11Z","node":"it-kxdu","v":3,"op":"harvest","actor":"claude-fable-5","session":"ui-cleanup","dispatch":"it-kxdu"}
+{"ts":"2026-08-12T11:59:44Z","node":"do-q4qf","v":1,"op":"create","type":"doc","title":"dispatch report: q serve: the view rendered per request","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"link","rel":"supports","to":"it-kxdu","at":3,"ts":"2026-08-12T11:59:44Z","node":"do-q4qf","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:59:44Z","node":"cl-4k9e","v":1,"op":"create","type":"claim","title":"`q-serve`: the view rendered per request over the live store","actor":"claude-fable-5","note":null,"session":"ui-cleanup"}
+{"op":"link","rel":"source","to":"file:src/view.rs","at":"9f654b842a36","ts":"2026-08-12T11:59:44Z","node":"cl-4k9e","v":2,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"link","rel":"supports","to":"dc-f79h","at":1,"ts":"2026-08-12T11:59:54Z","node":"cl-4k9e","v":3,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-12T11:59:54Z","node":"it-kxdu","v":4,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T11:59:55Z","node":"it-kxdu","v":4,"op":"release","actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T12:00:06Z","node":"do-q4qf","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T12:00:06Z","node":"do-ve3g","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T12:00:06Z","node":"do-rck7","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"ui-cleanup"}
+{"ts":"2026-08-12T21:11:01Z","node":"dc-ydvb","v":1,"op":"create","type":"decision","title":"session kinds: decisions and dispatching, conventional first; dispatch is a hand-off; parallel is the normal shape","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-ydvb","ts":"2026-08-12T21:11:01Z","node":"th-3pq2","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-3pq2","at":2,"ts":"2026-08-12T21:11:01Z","node":"dc-ydvb","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["kind=debt","status=shaped","write-set+=src/**","acceptance+=lands `per-chat-badge`: dispatch state holds one entry per dispatching chat, keyed by the session-hook binding; a second dispatch refuses only from the chat that already holds one","acceptance+=lands `badge-chat-resolution`: the write guard, event stamping, trace, and harvest resolve the badge for the acting chat, not the machine - parallel agents land under their own items"],"from_status":"sketch","ts":"2026-08-12T21:11:17Z","node":"it-u8uf","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-12T21:11:23Z","node":"it-u8uf","v":3,"actor":"claude","note":"regression fact and ruling promotion recorded","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:31Z","node":"it-u8uf","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:11:31Z","node":"it-3pab","v":1,"op":"create","type":"item","title":"the dispatching-session launcher: a script that wakes the steward","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-12T21:11:34Z","node":"it-hapc","v":1,"op":"create","type":"item","title":"fire-time liveness: dispatch offers the hand-off when a dispatching session is live","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-u8uf","at":4,"ts":"2026-08-12T21:11:41Z","node":"it-hapc","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-hapc","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-3pab","v":2,"actor":"claude","session":"quarry"}
