@@ -91,16 +91,33 @@ fn esc_html(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// Render-time unpack for the HTML view: same atom expansion, hyperlinked
-/// to the node anchor. Escapes the whole text first (ids are ASCII and
-/// survive; entities never form id-shapes), then expands.
+/// Render-time unpack for the HTML view: the same atom expansion
+/// (atom_unpack — surface owns the register's content), with the WHOLE
+/// expansion `id [type status: title]` inside one anchor to the node,
+/// class-marked (`unpack`) so the page tints it as a single click target.
+/// Escapes the whole text first (ids are ASCII and survive; entities never
+/// form id-shapes), then expands; the atom's backticked title transcodes
+/// to a `<code>` span, so the replacement carries no backticks back into
+/// the scanner's parity.
 pub fn unpack_html(all: &[Node], citing: &Node, text: &str) -> String {
     let citing_areas = crate::surface::atom(all, citing).area_ids;
     let escaped = esc_html(text);
     scan_replace(&escaped, |id| {
-        all.iter()
-            .find(|n| n.front.id == id)
-            .map(|t| crate::surface::atom_unpack_html(&crate::surface::atom(all, t), &citing_areas))
+        all.iter().find(|n| n.front.id == id).map(|t| {
+            let expansion =
+                crate::surface::atom_unpack(&crate::surface::atom(all, t), &citing_areas);
+            let mut inner = String::with_capacity(expansion.len() + 13);
+            for (i, seg) in esc_html(&expansion).split('`').enumerate() {
+                if i % 2 == 1 {
+                    inner.push_str("<code>");
+                    inner.push_str(seg);
+                    inner.push_str("</code>");
+                } else {
+                    inner.push_str(seg);
+                }
+            }
+            format!("<a class=\"unpack\" href=\"#/n/{}\">{}</a>", id, inner)
+        })
     })
 }
 

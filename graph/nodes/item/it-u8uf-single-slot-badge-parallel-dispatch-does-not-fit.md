@@ -2,8 +2,8 @@
 id: it-u8uf
 type: item
 title: 'single-slot badge: parallel dispatch does not fit the machine-local state'
-v: 4
-status: shaped
+v: 7
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:18Z
 actor: claude

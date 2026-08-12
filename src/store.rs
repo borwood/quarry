@@ -165,12 +165,17 @@ impl Store {
                 }
             }
             // The dispatch badge: every verb stamps it, so "what did this
-            // dispatch write" is a query, not a reconstruction.
+            // dispatch write" is a query, not a reconstruction. Resolution is
+            // per acting chat — another chat's badge never stamps this one.
             if !obj.contains_key("dispatch") {
                 if let Some(b) = crate::coord::current_dispatch_badge(self) {
                     obj.insert("dispatch".into(), serde_json::json!(b));
                 }
             }
+            // A badged act from an identified chat teaches the machine which
+            // chat acts under the badge — hook processes (blind to shell env)
+            // resolve that chat's file writes through the association.
+            crate::coord::note_acting_chat(self);
         }
         if let Some(sess) = ev.get("session").and_then(|v| v.as_str()) {
             crate::coord::touch_session(self, sess);

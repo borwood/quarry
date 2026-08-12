@@ -619,3 +619,27 @@
 {"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-hapc","v":3,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-3pab","v":2,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T21:12:19Z","node":"it-4q6t","v":1,"op":"create","type":"item","title":"commit sweep: git add graph stages other sessions uncommitted nodes","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-12T21:16:50Z","node":"it-u8uf","v":5,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:16:50Z","node":"it-u8uf","v":5,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:16:50Z","node":"it-u8uf","v":5,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-12T21:16:50Z","node":"it-u8uf","v":6,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:16:50Z","node":"it-u8uf","v":5,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"],"dispatch":"it-u8uf"}
+{"ts":"2026-08-12T21:17:56Z","node":"it-hapc","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"ts":"2026-08-12T21:34:37Z","node":"cl-amza","v":1,"op":"create","type":"claim","title":"`per-chat-badge`: dispatch state holds one entry per dispatching chat (…","actor":"claude","note":null,"session":"quarry","dispatch":"it-u8uf"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"73738d6f07cd","ts":"2026-08-12T21:34:37Z","node":"cl-amza","v":2,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"ts":"2026-08-12T21:34:43Z","node":"cl-vsew","v":1,"op":"create","type":"claim","title":"`badge-chat-resolution`: the write guard, event stamping, trace, and ha…","actor":"claude","note":null,"session":"quarry","dispatch":"it-u8uf"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"73738d6f07cd","ts":"2026-08-12T21:34:43Z","node":"cl-vsew","v":2,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"op":"link","rel":"supports","to":"it-u8uf","at":6,"ts":"2026-08-12T21:34:57Z","node":"cl-amza","v":3,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"op":"link","rel":"supports","to":"it-u8uf","at":6,"ts":"2026-08-12T21:34:57Z","node":"cl-vsew","v":3,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"op":"link","rel":"supports","to":"it-9p3v","at":1,"ts":"2026-08-12T21:34:57Z","node":"cl-vsew","v":4,"actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"ts":"2026-08-12T21:37:04Z","node":"it-u8uf","v":6,"op":"harvest","actor":"claude","session":"quarry","dispatch":"it-u8uf"}
+{"ts":"2026-08-12T21:38:10Z","node":"do-75ut","v":1,"op":"create","type":"doc","title":"dispatch report: per-chat badge lands","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-u8uf","at":6,"ts":"2026-08-12T21:38:10Z","node":"do-75ut","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-12T21:38:10Z","node":"it-9p3v","v":2,"actor":"claude","note":"closed on cl-vsew: trace is chat-scoped now; residue (dispatching chat own acts under its held badge) recorded in do report","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-12T21:38:16Z","node":"it-u8uf","v":7,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:17Z","node":"it-u8uf","v":7,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:18Z","node":"cl-vsew","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:18Z","node":"do-75ut","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:18Z","node":"it-hapc","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:26Z","node":"cl-amza","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:38:26Z","node":"cl-vsew","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}

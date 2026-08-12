@@ -2,8 +2,8 @@
 id: it-9p3v
 type: item
 title: badge trace is machine-scoped, not agent-scoped
-v: 1
-status: sketch
+v: 2
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:18Z
 actor: claude

@@ -48,8 +48,10 @@ pub fn render(store: &Store) -> Result<String> {
             v["body"] = json!(n.body);
             if !n.body.trim().is_empty() {
                 // The id-unpack, pre-rendered (dc-wwnk): bare ids expand to
-                // hyperlinked id [type status: `title`]; status always,
-                // dead targets keeping their extra emphasis.
+                // id [type status: `title`]; status always, dead targets
+                // keeping their extra emphasis. The whole expansion is one
+                // anchor to the node, class `unpack` — the page tints it
+                // as a single click target.
                 v["body_html"] = json!(crate::mention::unpack_html(&all, n, &n.body));
             }
             v["slug"] = json!(n.slug());
@@ -129,6 +131,74 @@ pub fn write(store: &Store) -> Result<PathBuf> {
     let path = dir.join("index.html");
     std::fs::write(&path, html)?;
     Ok(path)
+}
+
+/// Default port for `q serve` — memorable, out of the well-trodden dev range.
+pub const DEFAULT_PORT: u16 = 7171;
+
+/// `q serve` (dc-f79h): the view rendered per request. A std-only accept
+/// loop — each incoming request re-runs `render` over the live store, so a
+/// long-lived tab's refresh always shows the current graph. No cache, no
+/// watcher, no new dependency. Any path serves the page (hash routing);
+/// a failed connection never kills the loop. Runs until the process dies.
+pub fn serve(store: &Store, listener: std::net::TcpListener) -> Result<()> {
+    for stream in listener.incoming() {
+        let mut stream = match stream {
+            Ok(s) => s,
+            Err(_) => continue, // a failed accept is not a failed server
+        };
+        if let Err(e) = respond(store, &mut stream) {
+            eprintln!("  ✗ request failed mid-response: {e:#}");
+        }
+    }
+    Ok(())
+}
+
+/// One connection: read the request head minimally, render fresh, answer.
+/// A render error answers 500 with the error text — the loop lives on.
+fn respond(store: &Store, stream: &mut std::net::TcpStream) -> Result<()> {
+    use std::io::{Read as _, Write as _};
+    stream.set_read_timeout(Some(std::time::Duration::from_secs(5)))?;
+    stream.set_write_timeout(Some(std::time::Duration::from_secs(30)))?;
+
+    // Read until the head's blank line, a size cap, or a stall. We never
+    // route on the path — every path is the page — so partial heads are
+    // served too; only a connection that sent nothing (a liveness probe)
+    // is dropped without an answer.
+    let mut head = Vec::new();
+    let mut buf = [0u8; 4096];
+    loop {
+        match stream.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => {
+                head.extend_from_slice(&buf[..n]);
+                if head.windows(4).any(|w| w == b"\r\n\r\n") || head.len() > 16 * 1024 {
+                    break;
+                }
+            }
+            Err(_) => break, // probe or stalled client — not the loop's problem
+        }
+    }
+    if head.is_empty() {
+        return Ok(());
+    }
+
+    let (status, content_type, body) = match render(store) {
+        Ok(html) => ("200 OK", "text/html; charset=utf-8", html),
+        Err(e) => (
+            "500 Internal Server Error",
+            "text/plain; charset=utf-8",
+            format!("render failed: {e:#}\n"),
+        ),
+    };
+    let header = format!(
+        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    stream.write_all(header.as_bytes())?;
+    stream.write_all(body.as_bytes())?;
+    stream.flush()?;
+    Ok(())
 }
 
 const TEMPLATE: &str = r##"<!DOCTYPE html>
@@ -216,6 +286,9 @@ table.tbl { border-collapse: collapse; width: 100%; }
 .body { margin: 14px 0; color: var(--ink); background: var(--page);
   border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px;
   max-width: 76ch; white-space: pre-wrap; }
+a.unpack { background: rgba(137,135,129,.14); border-radius: 5px; padding: 0 4px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+a.unpack:hover { background: rgba(137,135,129,.26); }
 .rel { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .delta { color: var(--muted); font-size: 12px; padding-left: 14px; }
 h3.part { font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
@@ -224,6 +297,7 @@ h3.part .arrow { color: var(--muted); font-weight: 400; }
 .empty { color: var(--muted); font-style: italic; }
 .crumb { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; display: block; }
 .evd { color: var(--ink2); font-size: 12.5px; }
+.areacol { color: var(--ink2); font-size: 12px; }
 .mdview { max-width: 84ch; color: var(--ink); font-size: 13.5px; }
 .mdview h2, .mdview h3, .mdview h4, .mdview h5 { margin: 18px 0 6px; line-height: 1.3; }
 .mdview h2 { font-size: 16px; } .mdview h3 { font-size: 14.5px; } .mdview h4, .mdview h5 { font-size: 13.5px; }
@@ -431,10 +505,13 @@ function viewMap(){
   let html = '';
   const recent = DATA.events.slice().filter(e => e.ts).sort((a,b) => b.ts.localeCompare(a.ts)).slice(0, 8);
   html += '<div class="panel"><h2>Recent activity</h2>'
-    + tbl(['When','Node','Event'], recent.map(ev => {
+    + tbl(['When','Type','Node','Area','Event'], recent.map(ev => {
         const n = byId[ev.node];
-        return '<tr>'+whenCell(ev.ts)+'<td>'+(n ? titleLink(n) : '<span class="id">'+esc(ev.node||'?')+'</span>')
-          + '</td><td class="evd">'+evDetail(ev)+(ev.note ? ' — '+esc(ev.note) : '')+'</td></tr>';
+        const tyCell = '<td class="ty">'+(n ? esc(n.type)+(n.kind?' · '+esc(n.kind):'') : '')+'</td>';
+        const areaCell = '<td class="areacol">'+(n ? areasOf(n)
+          .map(a => '<a href="#/n/'+esc(a)+'">'+esc(byId[a].title)+'</a>').join(' · ') : '')+'</td>';
+        return '<tr>'+whenCell(ev.ts)+tyCell+'<td>'+(n ? titleLink(n) : '<span class="id">'+esc(ev.node||'?')+'</span>')
+          + '</td>'+areaCell+'<td class="evd">'+evDetail(ev)+(ev.note ? ' — '+esc(ev.note) : '')+'</td></tr>';
       }))
     + '</div>';
   const areas = DATA.nodes.filter(n => n.type==='area' && n.status!=='retired')

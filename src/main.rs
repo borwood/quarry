@@ -292,6 +292,15 @@ machine-local badge; a partial or stop report harvests the same way.")]
         #[arg(long)]
         open: bool,
     },
+    /// Serve the view over HTTP — every request renders the live graph
+    #[command(after_help = "A std-only loop on 127.0.0.1: each request re-runs the view render over
+the live store, so a long-lived tab's refresh is always current — no baked
+file to go stale, no regeneration act (dc-f79h). Ctrl-C stops it.")]
+    Serve {
+        /// Port to listen on (default 7171)
+        #[arg(long)]
+        port: Option<u16>,
+    },
     /// Print the judgment-layer primer (when to mint what, provenance, session shape)
     Guide,
     /// Hook entry points (wired by `q init --claude`)
@@ -777,14 +786,38 @@ fn main() -> Result<()> {
             let path = quarry::view::write(&store)?;
             println!("✔ rendered {}", path.display());
             if open {
+                // If a serve loop is up on the default port, open that
+                // instead — the served page is always current; the baked
+                // file stays as the offline courtesy (dc-5pb3, dc-f79h).
+                let addr = std::net::SocketAddr::from(([127, 0, 0, 1], quarry::view::DEFAULT_PORT));
+                let served =
+                    std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(200))
+                        .is_ok();
+                let target: std::ffi::OsString = if served {
+                    let url = format!("http://127.0.0.1:{}/", quarry::view::DEFAULT_PORT);
+                    println!("  a serve loop is up — opening {} instead of the baked file", url);
+                    url.into()
+                } else {
+                    path.clone().into_os_string()
+                };
                 #[cfg(windows)]
                 std::process::Command::new("cmd")
                     .args(["/C", "start", ""])
-                    .arg(&path)
+                    .arg(&target)
                     .spawn()?;
                 #[cfg(not(windows))]
-                std::process::Command::new("open").arg(&path).spawn()?;
+                std::process::Command::new("open").arg(&target).spawn()?;
             }
+        }
+        Cmd::Serve { port } => {
+            let store = Store::discover()?;
+            let port = port.unwrap_or(quarry::view::DEFAULT_PORT);
+            let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
+            println!(
+                "✔ serving the view at http://127.0.0.1:{} — every request renders the live graph; Ctrl-C stops",
+                port
+            );
+            quarry::view::serve(&store, listener)?;
         }
         Cmd::Guide => print!("{}", quarry::teach::GUIDE),
         Cmd::Hook { which } => match which {
@@ -812,19 +845,20 @@ fn main() -> Result<()> {
                         .and_then(|r| r.strip_prefix('/'))
                         .map(String::from);
                     if let Some(rel) = rel {
+                        let chat = serde_json::from_str::<serde_json::Value>(&input)
+                            .ok()
+                            .and_then(|v| {
+                                v.get("session_id").and_then(|x| x.as_str()).map(String::from)
+                            });
                         let session = coord::current_session().or_else(|| {
-                            serde_json::from_str::<serde_json::Value>(&input)
-                                .ok()
-                                .and_then(|v| {
-                                    v.get("session_id")
-                                        .and_then(|x| x.as_str())
-                                        .and_then(|cid| coord::chat_binding(&store, cid))
-                                })
+                            chat.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
                         });
-                        // The badge: shell env when it reaches this process,
-                        // the machine-local dispatch state when it cannot (a
-                        // hook runs in the harness env, not the agent's shell).
-                        let dispatch = coord::current_dispatch_badge(&store);
+                        // The badge resolves for the ACTING chat, never the
+                        // machine: the entry this chat holds (a dispatching
+                        // chat), the association its badged q acts recorded
+                        // (a dispatched agent), or its session's entry —
+                        // another chat's dispatch is not this chat's badge.
+                        let dispatch = coord::badge_for(&store, chat.as_deref(), session.as_deref());
                         let leases = coord::load_leases(&store);
                         let mut context: Vec<String> = Vec::new();
                         match quarry::teach::lease_check(
@@ -1308,7 +1342,7 @@ fn main() -> Result<()> {
             })?;
             let out = ops::dispatch(&store, &item, files, shared, &sess, &Store::actor())?;
             println!(
-                "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, badge recorded machine-locally",
+                "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, badge recorded machine-locally for this chat",
                 out.item_title,
                 out.item_id,
                 out.globs,
@@ -1331,9 +1365,9 @@ fn main() -> Result<()> {
                 "ts": Store::now(), "node": n.front.id, "v": n.front.v,
                 "op": "harvest", "actor": Store::actor()
             }))?;
-            // Harvest clears the badge: further writes on this machine are
-            // the dispatcher's own. The observed set stays until release —
-            // spine_check consumes it at landing.
+            // Harvest clears the badge (held entry and acting associations):
+            // further writes in the dispatching chat are its own. The observed
+            // set stays until release — spine_check consumes it at landing.
             coord::clear_dispatch(&store, &n.front.id);
             // A dispatch arc closing is a boundary too — the derived view
             // rides along for free (it-n3fu), best-effort.

@@ -269,14 +269,20 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
-// ── the dispatch badge (machine-local) ─────────────────────────────────────
+// ── the dispatch badge (machine-local, per chat) ───────────────────────────
 //
 // QUARRY_DISPATCH in a shell's env stamps that shell's q acts, but a hook
 // process spawned by the harness never sees the agent's shell env — so the
 // badge also lives machine-locally, written at `q dispatch` and cleared at
-// harvest/release. Known blur (accepted, single-orchestrator): while a
-// dispatch is active, the orchestrator's own code writes on this machine are
-// indistinguishable from the dispatched agent's.
+// harvest/release. Parallel dispatch is the normal shape (dc-ydvb), so the
+// state holds one entry per DISPATCHING CHAT, keyed by the chat identity the
+// session hook injects (QUARRY_CHAT), with the q session as the fallback key
+// where no chat id reaches. A dispatched agent acting from its own chat is
+// tied to the badge by its first badged q act (note_acting_chat) — from then
+// on hook processes resolve that chat's writes to the badge without the env.
+// Known blur (accepted, per dispatching chat): a dispatching chat's own code
+// writes are indistinguishable from its dispatched agent's; OTHER chats no
+// longer inherit the badge at all.
 
 /// The active dispatch, with the contract captured at dispatch time so the
 /// write guard can echo it without loading the graph.
@@ -298,45 +304,187 @@ pub struct DispatchState {
     pub checked: String,
 }
 
+/// The machine-local dispatch state: one held entry per dispatching chat,
+/// plus the learned acting-chat associations that let hook processes resolve
+/// a dispatched agent's chat to its badge.
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct DispatchMap {
+    /// Dispatching-chat key ("chat:<id>", or "session:<name>" where no chat
+    /// id reached the dispatching shell) → the dispatch that chat holds.
+    #[serde(default)]
+    pub held: BTreeMap<String, DispatchState>,
+    /// Acting-chat key ("chat:<id>") → badge item id, learned when a badged
+    /// q act carries both QUARRY_DISPATCH and QUARRY_CHAT. Lives and dies
+    /// with the held dispatch it points at.
+    #[serde(default)]
+    pub acting: BTreeMap<String, String>,
+}
+
 fn dispatch_path(store: &Store) -> std::path::PathBuf {
     store.root.join("graph").join(".dispatch.json")
 }
 
-pub fn save_dispatch(store: &Store, d: &DispatchState) -> Result<()> {
-    fs::write(dispatch_path(store), serde_json::to_string_pretty(d)? + "\n")?;
+/// The chat identity the session hook injects (QUARRY_CHAT) — per-chat
+/// machine-local state resolves by it inside q processes.
+pub fn current_chat() -> Option<String> {
+    std::env::var("QUARRY_CHAT").ok().filter(|s| !s.trim().is_empty())
+}
+
+/// The key a dispatch is held under: the dispatching chat where the session
+/// hook's injection reached this process, the q session otherwise.
+pub fn dispatch_key(session: &str) -> String {
+    current_chat()
+        .map(|c| format!("chat:{}", c))
+        .unwrap_or_else(|| format!("session:{}", session))
+}
+
+/// Load the full dispatch state. Tolerates the pre-per-chat single-slot file
+/// (a bare DispatchState at top level): it migrates in memory under its
+/// session key and persists in the new shape at the next save — a live
+/// dispatch survives the upgrade.
+pub fn load_dispatches(store: &Store) -> DispatchMap {
+    let Ok(s) = fs::read_to_string(dispatch_path(store)) else {
+        return DispatchMap::default();
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&s) else {
+        return DispatchMap::default();
+    };
+    if v.get("item").map_or(false, |x| x.is_string()) {
+        // Legacy single-slot shape.
+        if let Ok(d) = serde_json::from_value::<DispatchState>(v) {
+            let mut m = DispatchMap::default();
+            m.held.insert(format!("session:{}", d.session), d);
+            return m;
+        }
+        return DispatchMap::default();
+    }
+    serde_json::from_value(v).unwrap_or_default()
+}
+
+fn save_dispatches(store: &Store, m: &DispatchMap) -> Result<()> {
+    if m.held.is_empty() && m.acting.is_empty() {
+        let _ = fs::remove_file(dispatch_path(store));
+        return Ok(());
+    }
+    fs::write(dispatch_path(store), serde_json::to_string_pretty(m)? + "\n")?;
     Ok(())
 }
 
-pub fn load_dispatch(store: &Store) -> Option<DispatchState> {
-    serde_json::from_str(&fs::read_to_string(dispatch_path(store)).ok()?).ok()
+/// Record a dispatch under its dispatching-chat key (upsert; other chats'
+/// entries are untouched).
+pub fn save_dispatch(store: &Store, key: &str, d: &DispatchState) -> Result<()> {
+    let mut m = load_dispatches(store);
+    m.held.insert(key.to_string(), d.clone());
+    save_dispatches(store, &m)
 }
 
-/// Clear the badge if it names this item (harvest and land both clear).
-pub fn clear_dispatch(store: &Store, item_id: &str) {
-    if load_dispatch(store).map_or(false, |d| d.item == item_id) {
-        let _ = fs::remove_file(dispatch_path(store));
+/// The dispatch a chat holds, by its key.
+pub fn held_dispatch(store: &Store, key: &str) -> Option<DispatchState> {
+    load_dispatches(store).held.get(key).cloned()
+}
+
+/// Any chat's held dispatch for this item, with the key it is held under —
+/// the per-item read harvest, trace, and the write guard's contract echo use.
+pub fn dispatch_for_item(store: &Store, item_id: &str) -> Option<(String, DispatchState)> {
+    load_dispatches(store)
+        .held
+        .into_iter()
+        .find(|(_, d)| d.item == item_id)
+}
+
+/// Tie an acting chat to a live badge: hook processes (which never see the
+/// agent's shell env) resolve that chat's file writes through this. Recorded
+/// only while some chat holds the dispatch; a no-op for the dispatching chat
+/// itself (its held entry already resolves).
+pub fn record_acting_chat(store: &Store, chat_id: &str, badge: &str) {
+    let mut m = load_dispatches(store);
+    let key = format!("chat:{}", chat_id);
+    if m.held.contains_key(&key) {
+        return;
+    }
+    if !m.held.values().any(|d| d.item == badge) {
+        return;
+    }
+    if m.acting.get(&key).map(|b| b.as_str()) == Some(badge) {
+        return;
+    }
+    m.acting.insert(key, badge.to_string());
+    let _ = save_dispatches(store, &m);
+}
+
+/// The env-transported form: a badged q act from an identified chat teaches
+/// the machine which chat the badge's agent is. Called on every logged event;
+/// early-outs make it O(1) when there is nothing to learn.
+pub fn note_acting_chat(store: &Store) {
+    let badge = std::env::var("QUARRY_DISPATCH").ok().filter(|s| !s.trim().is_empty());
+    if let (Some(b), Some(c)) = (badge, current_chat()) {
+        record_acting_chat(store, &c, &b);
     }
 }
 
-/// The active badge: QUARRY_DISPATCH env wins (explicit, per-shell); the
-/// machine-local state is the fallback for processes the env cannot reach.
+/// Clear every trace of an item's badge — held entries and acting
+/// associations alike (harvest and land both clear).
+pub fn clear_dispatch(store: &Store, item_id: &str) {
+    let mut m = load_dispatches(store);
+    let (h, a) = (m.held.len(), m.acting.len());
+    m.held.retain(|_, d| d.item != item_id);
+    m.acting.retain(|_, b| b != item_id);
+    if m.held.len() != h || m.acting.len() != a {
+        let _ = save_dispatches(store, &m);
+    }
+}
+
+/// Resolve the badge for an ACTING context — never for the machine.
+/// QUARRY_DISPATCH env wins (explicit, per-shell); then the entry this chat
+/// holds (a dispatching chat), then the association its badged q acts
+/// recorded (a dispatched agent's chat), then its session's entry. A context
+/// with no identity, or one foreign to every dispatch, resolves nothing —
+/// that is the point: parallel chats each carry their own badge or none.
+pub fn badge_for(store: &Store, chat_id: Option<&str>, session: Option<&str>) -> Option<String> {
+    if let Ok(b) = std::env::var("QUARRY_DISPATCH") {
+        if !b.trim().is_empty() {
+            return Some(b);
+        }
+    }
+    let m = load_dispatches(store);
+    if let Some(c) = chat_id {
+        let key = format!("chat:{}", c);
+        if let Some(d) = m.held.get(&key) {
+            return Some(d.item.clone());
+        }
+        if let Some(b) = m.acting.get(&key) {
+            if m.held.values().any(|d| &d.item == b) {
+                return Some(b.clone());
+            }
+        }
+    }
+    if let Some(s) = session {
+        if let Some(d) = m.held.get(&format!("session:{}", s)) {
+            return Some(d.item.clone());
+        }
+    }
+    None
+}
+
+/// The acting badge for a q process: env identity (QUARRY_CHAT and
+/// QUARRY_SESSION are hook-injected) resolved per chat.
 pub fn current_dispatch_badge(store: &Store) -> Option<String> {
-    std::env::var("QUARRY_DISPATCH")
-        .ok()
-        .filter(|s| !s.trim().is_empty())
-        .or_else(|| load_dispatch(store).map(|d| d.item))
+    badge_for(store, current_chat().as_deref(), current_session().as_deref())
 }
 
 /// C8's logic applied to boundary acts (it-ymsj): wrap and session
-/// resume/retire are the DISPATCHER'S verbs. Under an active badge — the
-/// shell env or the machine-local dispatch state, either alone suffices —
-/// they refuse with a teaching error. The incident this guard exists for:
-/// a dispatched agent ran q wrap wearing the dispatcher's injected session
-/// identity and consumed its session cursors.
+/// resume/retire are the DISPATCHER'S verbs. Under the ACTING CHAT'S active
+/// badge — the shell env or this chat's machine-local entry, either alone
+/// suffices — they refuse with a teaching error. The incident this guard
+/// exists for: a dispatched agent ran q wrap wearing the dispatcher's
+/// injected session identity and consumed its session cursors. A chat with
+/// no badge of its own is free to wrap while other chats' dispatches fly —
+/// the decisions session keeps its boundary while a steward has work in
+/// flight (dc-ydvb).
 pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
     let badge = current_dispatch_badge(store)?;
     Some(format!(
-        "boundary-verb capture: {verb} is a session-boundary act, and an active dispatch badge ({badge}) marks this machine mid-dispatch. A badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who closes the arc first: q harvest {badge}"
+        "boundary-verb capture: {verb} is a session-boundary act, and an active dispatch badge ({badge}) marks this chat mid-dispatch. A badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who closes the arc first: q harvest {badge}"
     ))
 }
 

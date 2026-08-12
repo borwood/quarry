@@ -645,10 +645,13 @@ pub fn dispatch(
             item.front.status, item.front.id
         );
     }
-    if let Some(d) = crate::coord::load_dispatch(store) {
+    // One badge per CHAT (dc-ydvb: parallel dispatch is the normal shape) —
+    // only a second dispatch from the chat already holding one refuses.
+    let dkey = crate::coord::dispatch_key(session);
+    if let Some(d) = crate::coord::held_dispatch(store, &dkey) {
         if d.item != item.front.id {
             bail!(
-                "a dispatch is already active on this machine: \"{}\" ({}) — one badge at a time keeps observation honest. Harvest it first: q harvest {}",
+                "this chat already has a dispatch in flight: \"{}\" ({}) — one badge per chat keeps observation honest; parallel dispatch belongs to parallel chats. Harvest it first: q harvest {}",
                 d.item_title, d.item, d.item
             );
         }
@@ -689,6 +692,7 @@ pub fn dispatch(
     let now = Store::now();
     crate::coord::save_dispatch(
         store,
+        &dkey,
         &crate::coord::DispatchState {
             item: item.front.id.clone(),
             item_title: crate::surface::title_raw(&item).to_string(),
@@ -710,8 +714,9 @@ pub fn dispatch(
     let payload = format!(
         "You are dispatched under badge QUARRY_DISPATCH={id}. Export it in every shell that runs q:\n  \
          pwsh: $env:QUARRY_DISPATCH='{id}'   ·   bash: export QUARRY_DISPATCH={id}\n\
-         (the write guard also reads the badge recorded machine-locally at dispatch, so your file\n\
-         writes are observed even where your shell env cannot reach; the export stamps your q acts.)\n\n{brief}",
+         (the badge is recorded machine-locally for the dispatching chat; your first badged q act\n\
+         ties your own chat to it, so file writes are observed even where a hook cannot see your\n\
+         shell env — export early, before your first file write. The export stamps your q acts.)\n\n{brief}",
         id = item.front.id,
         brief = brief_text
     );

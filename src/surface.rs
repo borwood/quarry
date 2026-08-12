@@ -143,29 +143,6 @@ pub fn atom_unpack(a: &Atom, citing_area_ids: &[String]) -> String {
     format!("{} [{}: `{}`{}]", a.id, label(a), a.title, areas)
 }
 
-fn esc_html(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-}
-
-/// atom_unpack for the HTML view: same expansion, hyperlinked to the node
-/// anchor. The caller escapes the surrounding text; the atom escapes its
-/// own fields.
-pub fn atom_unpack_html(a: &Atom, citing_area_ids: &[String]) -> String {
-    let areas = foreign_areas(a, citing_area_ids)
-        .map(|t| format!(" — areas: {}", esc_html(&t)))
-        .unwrap_or_default();
-    format!(
-        "<a href=\"#/n/{id}\">{id}</a> [{}: <code>{}</code>{}]",
-        label(a),
-        esc_html(&a.title),
-        areas,
-        id = a.id
-    )
-}
-
 /// The open header — the fullest register: the atom's identity block plus
 /// the node-only extras (actor, created, ratified, path, method). The body,
 /// acceptance, and edge shelves compose around it at the call site.

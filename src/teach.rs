@@ -208,8 +208,13 @@ coverage (e.g. from a parent directory). If unset entirely, provenance
 safely derives as assistant; user provenance is always explicit.
 QUARRY_DISPATCH is the dispatch badge: a dispatched agent exports it in
 every shell that runs q (the hand-off payload says how); q dispatch also
-records it machine-locally so the write guard observes even shells whose
-env cannot reach it. Harvest and release clear it.
+records it machine-locally, keyed per dispatching chat (QUARRY_CHAT is
+auto-injected so per-chat state resolves — never set it by hand), and a
+badged q act ties the acting chat to the badge, so the write guard
+observes even shells whose env cannot reach it. Parallel dispatches from
+parallel chats each hold their own badge; a chat with no badge keeps its
+boundary verbs while other chats' dispatches fly. Harvest and release
+clear it.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -249,9 +254,16 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
         None
     };
     let inject_sess = if env_sess.is_none() { bound.clone() } else { None };
+    // Chat identity injection applies to ANY chat with a session_id: per-chat
+    // machine-local state (the dispatch badge) resolves by chat id inside q
+    // processes, and the hook is the only place that knows it. Env wins.
+    let env_chat = std::env::var("QUARRY_CHAT").ok().filter(|s| !s.trim().is_empty());
+    let inject_chat = if env_chat.is_none() { chat_id.map(String::from) } else { None };
     let mut updated_input: Option<serde_json::Map<String, serde_json::Value>> = None;
     if matches!(tool, "Bash" | "PowerShell")
-        && (inject_sess.is_some() || (inject_actor.is_some() && chat_id.is_some()))
+        && (inject_sess.is_some()
+            || inject_chat.is_some()
+            || (inject_actor.is_some() && chat_id.is_some()))
     {
         if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
             if let Some(cmd) = ti.get("command").and_then(|c| c.as_str()) {
@@ -266,6 +278,12 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
                     prefix += &match tool {
                         "Bash" => format!("export QUARRY_ACTOR='{}'; ", qa),
                         _ => format!("$env:QUARRY_ACTOR='{}'; ", qa),
+                    };
+                }
+                if let Some(qc) = &inject_chat {
+                    prefix += &match tool {
+                        "Bash" => format!("export QUARRY_CHAT='{}'; ", qc),
+                        _ => format!("$env:QUARRY_CHAT='{}'; ", qc),
                     };
                 }
                 let mut u = ti.clone();
@@ -561,7 +579,7 @@ pub fn observe_write(
         // First badged write: echo the contract captured at dispatch time —
         // the write path reads one small state file, never the graph.
         if prior.is_empty() {
-            if let Some(d) = coord::load_dispatch(store).filter(|d| d.item == b) {
+            if let Some((_, d)) = coord::dispatch_for_item(store, b) {
                 out.push(format!(
                     "first write under dispatch {} — the contract: item \"{}\"; write-set {:?} (outside writes deny); RETURN: {} acceptance line(s), accepted by outcome. Report and stop — landing belongs to the dispatcher. (q brief {} re-renders the full brief.)",
                     b, d.item_title, d.globs, d.acceptance.len(), b
@@ -570,7 +588,7 @@ pub fn observe_write(
         }
         // Badge-keyed drift notice: has the dispatched item moved since the
         // brief? Cursor-incremental from the dispatch state, throttled.
-        if let Some(mut d) = coord::load_dispatch(store).filter(|d| d.item == b) {
+        if let Some((dkey, mut d)) = coord::dispatch_for_item(store, b) {
             let stale = {
                 use time::format_description::well_known::Rfc3339;
                 time::OffsetDateTime::parse(&d.checked, &Rfc3339)
@@ -605,7 +623,7 @@ pub fn observe_write(
                     }
                     d.cursor = log.len() as u64;
                     d.checked = crate::store::Store::now();
-                    let _ = coord::save_dispatch(store, &d);
+                    let _ = coord::save_dispatch(store, &dkey, &d);
                 }
             }
         }
