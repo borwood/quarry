@@ -556,3 +556,4 @@
 {"ts":"2026-08-12T10:36:52Z","node":"it-ygw7","v":5,"op":"release","actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T10:36:59Z","node":"do-ev5g","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T10:36:59Z","node":"it-ygw7","v":5,"op":"affirm","restamped":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:48:33Z","node":"th-3pq2","v":1,"op":"create","type":"thread","title":"self-dispatch: is the two-instance pattern a rule wanting structure?","actor":"claude","note":null,"session":"quarry"}
