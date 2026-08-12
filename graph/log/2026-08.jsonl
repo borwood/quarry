@@ -618,3 +618,4 @@
 {"op":"link","rel":"depends-on","to":"it-u8uf","at":4,"ts":"2026-08-12T21:11:41Z","node":"it-hapc","v":2,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-hapc","v":3,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-12T21:11:41Z","node":"it-3pab","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T21:12:19Z","node":"it-4q6t","v":1,"op":"create","type":"item","title":"commit sweep: git add graph stages other sessions uncommitted nodes","actor":"claude","note":null,"session":"quarry"}
