@@ -372,11 +372,11 @@ pub fn alerts_between(
     from: usize,
 ) -> Vec<String> {
     use crate::model::Node as N;
-    let title_of = |id: &str| {
+    let ref_of = |id: &str| {
         all.iter()
             .find(|n| n.front.id == id)
-            .map(|n| n.front.title.clone())
-            .unwrap_or_else(|| id.to_string())
+            .map(|n| crate::surface::atom_ref(&crate::surface::atom(all, n)))
+            .unwrap_or_else(|| format!("({})", id))
     };
     let mut out: Vec<String> = Vec::new();
     for ev in log.iter().skip(from) {
@@ -392,10 +392,9 @@ pub fn alerts_between(
                             && !matches!(n.front.status.as_str(), "done" | "dropped" | "resolved" | "superseded")
                         {
                             out.push(format!(
-                                "new from {}: \"{}\" [{}] — q open {}",
+                                "new from {}: {} — q open {}",
                                 ev_sess.unwrap_or("?"),
-                                n.front.title,
-                                n.front.status,
+                                crate::surface::atom_line(&crate::surface::atom(all, n)),
                                 n.front.id
                             ));
                         }
@@ -410,8 +409,8 @@ pub fn alerts_between(
                         .and_then(|x| x.as_str())
                         .unwrap_or("no reason recorded");
                     out.push(format!(
-                        "your lease on \"{}\" was taken by {}: {}",
-                        title_of(victim),
+                        "your lease on {} was taken by {}: {}",
+                        ref_of(victim),
                         ev_sess.unwrap_or("?"),
                         reason
                     ));
@@ -435,10 +434,10 @@ pub fn alerts_between(
                             && crate::queries::live_blockers(all, d).is_empty()
                     }) {
                         out.push(format!(
-                            "unblocked: \"{}\" — {} landed \"{}\"",
-                            d.front.title,
+                            "unblocked: {} — {} landed {}",
+                            crate::surface::atom_line(&crate::surface::atom(all, d)),
                             ev_sess.unwrap_or("?"),
-                            title_of(node_id)
+                            ref_of(node_id)
                         ));
                     }
                 }
@@ -625,7 +624,7 @@ pub fn observe_write(
             .map(|all| {
                 crate::queries::items_matching_files(&all, &touched)
                     .into_iter()
-                    .map(|n| format!("\"{}\" ({})", n.front.title, n.front.id))
+                    .map(|n| crate::surface::atom_line(&crate::surface::atom(&all, n)))
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();

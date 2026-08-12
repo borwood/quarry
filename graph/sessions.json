@@ -4,5 +4,12 @@
       "ar-xa38",
       "ar-c7f5"
     ]
+  },
+  "ui-cleanup": {
+    "areas": [
+      "ar-c7f5"
+    ],
+    "charter": "Ephemeral: quick UI cleanup only; no bearing on other threads",
+    "ephemeral": true
   }
 }

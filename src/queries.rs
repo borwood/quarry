@@ -55,11 +55,16 @@ pub fn queue<'a>(all: &'a [Node]) -> Vec<&'a Node> {
     q
 }
 
+/// A stale citation, carried as ATOMS (carrier-replumb, dc-nnf5): the print
+/// layer can render any register from this without a starved (id, title)
+/// pair baking the missing fields into the data layer.
 pub struct Behind {
-    pub src_id: String,
-    pub src_title: String,
+    pub src: crate::surface::Atom,
     pub rel: String,
     pub to: String,
+    /// Node targets resolve to their atom; file targets and danglers carry
+    /// None and describe themselves through `to_title`.
+    pub to_atom: Option<crate::surface::Atom>,
     pub to_title: String,
     pub at: String,
     pub current: String,
@@ -74,10 +79,10 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
             match &e.at {
                 At::V(v) => match all.iter().find(|t| t.front.id == e.to) {
                     None => out.push(Behind {
-                        src_id: n.front.id.clone(),
-                        src_title: n.front.title.clone(),
+                        src: crate::surface::atom(all, n),
                         rel: e.rel.clone(),
                         to: e.to.clone(),
+                        to_atom: None,
                         to_title: "?".into(),
                         at: format!("v{}", v),
                         current: "missing".into(),
@@ -87,11 +92,11 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                     Some(t) if t.front.v > *v => {
                         let dead = matches!(t.front.status.as_str(), "refuted" | "superseded");
                         out.push(Behind {
-                            src_id: n.front.id.clone(),
-                            src_title: n.front.title.clone(),
+                            src: crate::surface::atom(all, n),
                             rel: e.rel.clone(),
                             to: t.front.id.clone(),
-                            to_title: t.front.title.clone(),
+                            to_atom: Some(crate::surface::atom(all, t)),
+                            to_title: crate::surface::title_raw(t).into(),
                             at: format!("v{}", v),
                             current: format!("v{}", t.front.v),
                             severity: if dead { 1 } else { 3 },
@@ -108,10 +113,10 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                     if let Some(f) = e.to.strip_prefix("file:") {
                         match store.blob(f) {
                             Ok(nb) if &nb != b => out.push(Behind {
-                                src_id: n.front.id.clone(),
-                                src_title: n.front.title.clone(),
+                                src: crate::surface::atom(all, n),
                                 rel: e.rel.clone(),
                                 to: e.to.clone(),
+                                to_atom: None,
                                 to_title: f.into(),
                                 at: b.clone(),
                                 current: nb,
@@ -119,10 +124,10 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                                 reason: "file drifted".into(),
                             }),
                             Err(_) => out.push(Behind {
-                                src_id: n.front.id.clone(),
-                                src_title: n.front.title.clone(),
+                                src: crate::surface::atom(all, n),
                                 rel: e.rel.clone(),
                                 to: e.to.clone(),
+                                to_atom: None,
                                 to_title: f.into(),
                                 at: b.clone(),
                                 current: "missing".into(),
@@ -141,10 +146,10 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                 if let Ok(nb) = store.blob(p) {
                     if &nb != old {
                         out.push(Behind {
-                            src_id: n.front.id.clone(),
-                            src_title: n.front.title.clone(),
+                            src: crate::surface::atom(all, n),
                             rel: "path".into(),
                             to: format!("file:{}", p),
+                            to_atom: None,
                             to_title: p.clone(),
                             at: old.clone(),
                             current: nb,
@@ -313,8 +318,9 @@ fn contains_word(text: &str, word: &str) -> bool {
 /// Archived nodes, areas, and already-linked neighbors are excluded; the
 /// strongest few qualify (silence is the default).
 pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> {
-    let new_text = format!("{} {}", node.front.title, node.body).to_lowercase();
-    let new_title_toks: Vec<String> = sig_tokens(&node.front.title)
+    let new_text =
+        format!("{} {}", crate::surface::title_raw(node), node.body).to_lowercase();
+    let new_title_toks: Vec<String> = sig_tokens(crate::surface::title_raw(node))
         .into_iter()
         .filter(|t| t.len() >= 6)
         .collect();
@@ -329,8 +335,8 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
         {
             continue;
         }
-        let title_lower = cand.front.title.to_lowercase();
-        let toks = sig_tokens(&cand.front.title);
+        let title_lower = crate::surface::title_raw(cand).to_lowercase();
+        let toks = sig_tokens(crate::surface::title_raw(cand));
         let hits: Vec<&String> = toks.iter().filter(|t| contains_word(&new_text, t)).collect();
         let full_title = title_lower.len() >= 8 && new_text.contains(&title_lower);
         let tick = backticked
@@ -404,7 +410,7 @@ pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> 
         .filter(|n| {
             n.front.ty == "claim" && !matches!(n.front.status.as_str(), "refuted" | "superseded")
         })
-        .map(|n| (n, backticked_spans(&n.front.title), areas_of(n)))
+        .map(|n| (n, backticked_spans(crate::surface::title_raw(n)), areas_of(n)))
         .filter(|(_, names, areas)| !names.is_empty() && !areas.is_empty())
         .collect();
     // Intent: backtick-named acceptance lines, per item (any status), with areas.

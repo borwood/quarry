@@ -438,7 +438,7 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
     if !touches.is_empty() {
         println!("  touches — review and judge; link only what genuinely relates:");
         for (t, why) in touches {
-            println!("    \"{}\" [{} {}] — {}", t.front.title, t.front.ty, t.front.id, why);
+            println!("    {} — {}", line(&all, t), why);
         }
     }
     print_mention_surfaces(&all, node);
@@ -466,10 +466,7 @@ fn print_mention_surfaces(all: &[Node], node: &Node) {
     if !resolved.is_empty() {
         println!("  body cites — read the echo; a wrong-but-real id reads wrong here:");
         for t in &resolved {
-            println!(
-                "    {} = \"{}\" [{} {}]",
-                t.front.id, t.front.title, t.front.ty, t.front.status
-            );
+            println!("    {}", aref(all, t));
         }
         println!(
             "    (render unpacks these; a mention references, an edge leans — if this stands on one, record it: q link {} <rel> <id>)",
@@ -500,20 +497,20 @@ fn area_watermarks(store: &Store, node_id: &str) {
         .filter_map(|e| {
             all.iter()
                 .find(|n| n.front.id == e.to && n.front.ty == "area")
-                .map(|n| (n.front.id.clone(), n.front.title.clone()))
+                .map(|n| (n.front.id.clone(), aref(&all, n)))
         })
         .collect();
-    for (aid, title) in areas {
+    for (aid, area_ref) in areas {
         match coord::touch_area(store, &all, &sess, &aid) {
             coord::AreaTouch::FirstTouch => {
                 println!(
-                    "  note: first touch of area \"{}\" this session without a read — the read-first: q open {}",
-                    title, aid
+                    "  note: first touch of area {} this session without a read — the read-first: q open {}",
+                    area_ref, aid
                 );
                 coord::record_area_read(store, &sess, &aid);
             }
             coord::AreaTouch::Drift(lines) => {
-                println!("  since your last read of \"{}\" (other sessions):", title);
+                println!("  since your last read of {} (other sessions):", area_ref);
                 for l in lines {
                     println!("    · {}", l);
                 }
@@ -571,7 +568,7 @@ fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
         }
         let Ok(n) = store.find(&all, key) else { continue };
         if n.front.ty == "area" && !coord::has_area_read(store, &sess, &n.front.id) {
-            unread.push((n.front.id.clone(), n.front.title.clone()));
+            unread.push((n.front.id.clone(), aref(&all, n)));
         }
     }
     if unread.is_empty() {
@@ -579,8 +576,8 @@ fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
     }
     let token = quarry::protocol::save_intent(store, "new", serde_json::to_value(a)?)?;
     println!("⏸ gated: first write into unread area(s) this session — the read-first arrives now.");
-    for (aid, title) in &unread {
-        println!("\n── area \"{}\" ──", title);
+    for (aid, area_ref) in &unread {
+        println!("\n── area {} ──", area_ref);
         print!("{}", render::open(store, aid, false)?);
         coord::record_area_read(store, &coord::session_key(), aid);
     }
@@ -613,7 +610,7 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
             note: a.note,
         },
     )?;
-    println!("✔ {}", line(&node));
+    println!("✔ {}", line(&store.load_all().unwrap_or_default(), &node));
     if let Some(target) = supports {
         let edge = ops::link(store, &node.front.id, "supports", &target, false, None)?;
         println!("  ✔ {} -[supports]-> {} (at {})", node.front.id, edge.to, edge.at);
@@ -666,11 +663,17 @@ fn human_age(secs: i64) -> String {
     }
 }
 
-fn line(n: &Node) -> String {
-    format!(
-        "\"{}\" — {} [{}] v{} ({})",
-        n.front.title, n.front.ty, n.front.status, n.front.v, n.front.id
-    )
+/// atom_line for a list entry — the thin bridge onto the surface module
+/// (dc-nnf5): registers differ in how much of the atom they render, never
+/// in where they are built.
+fn line(all: &[Node], n: &Node) -> String {
+    quarry::surface::atom_line(&quarry::surface::atom(all, n))
+}
+
+/// atom_ref for a sentence — the floor every refusal, confirmation, and
+/// composed line stands on.
+fn aref(all: &[Node], n: &Node) -> String {
+    quarry::surface::atom_ref(&quarry::surface::atom(all, n))
 }
 
 /// After a mutation, report the homework it created: citers now behind (with
@@ -682,8 +685,8 @@ fn print_homework(store: &Store, touched: &[&str]) {
         let Ok(target) = store.find(&all, id) else { continue };
         for (citer, e) in queries::citers_behind(&all, id) {
             lines.push(format!(
-                "⚠ behind: \"{}\" -[{}]→ \"{}\" (cited {}, now v{}). Review the change, then: q affirm {} --to {}",
-                citer.front.title, e.rel, target.front.title, e.at, target.front.v,
+                "⚠ behind: {} -[{}]→ {} (cited {}, now v{}). Review the change, then: q affirm {} --to {}",
+                aref(&all, citer), e.rel, aref(&all, target), e.at, target.front.v,
                 citer.front.id, target.front.id
             ));
         }
@@ -694,7 +697,7 @@ fn print_homework(store: &Store, touched: &[&str]) {
                 ("item", "ready") => "dispatchable",
                 _ => "unblocked (still shaping)",
             };
-            lines.push(format!("✔ {}: \"{}\" ({})", what, n.front.title, n.front.id));
+            lines.push(format!("✔ {}: {}", what, line(&all, n)));
         }
     }
     if !lines.is_empty() {
@@ -893,30 +896,36 @@ fn main() -> Result<()> {
                         let queue = queries::queue(&all);
                         let ready = queries::ready(&all);
                         let behind = queries::behind(&store, &all);
-                        let titles: Vec<String> =
-                            queue.iter().map(|n| format!("\"{}\"", n.front.title)).collect();
                         println!(
-                            "quarry: {} nodes · owed to the user: {}{} · ready to dispatch: {} · behind: {}",
+                            "quarry: {} nodes · owed to the user: {} · ready to dispatch: {} · behind: {}",
                             all.len(),
                             queue.len(),
-                            if titles.is_empty() { String::new() } else { format!(" ({})", titles.join(", ")) },
                             ready.len(),
                             behind.len()
                         );
+                        for n in &queue {
+                            println!("  owed: {}", line(&all, n));
+                        }
                         if let Some((sess, areas)) = coord::purview(&store, &all) {
                             let ids: Vec<&str> = areas.iter().map(|a| a.front.id.as_str()).collect();
                             let mine_q = queue.iter().filter(|n| coord::in_purview(n, &ids)).count();
                             let mine_r = ready.iter().filter(|n| coord::in_purview(n, &ids)).count();
-                            let names: Vec<&str> = areas.iter().map(|a| a.front.title.as_str()).collect();
+                            let names: Vec<&str> =
+                                areas.iter().map(|a| quarry::surface::title_raw(a)).collect();
                             println!(
                                 "session {} purview ({}): {} answerable thread(s), {} ready item(s) — scope with --mine",
                                 sess, names.join(", "), mine_q, mine_r
                             );
                             let leases = coord::load_leases(&store);
                             for l in leases.iter().filter(|l| l.session != sess) {
+                                let what = all
+                                    .iter()
+                                    .find(|n| n.front.id == l.item)
+                                    .map(|n| aref(&all, n))
+                                    .unwrap_or_else(|| format!("\"{}\" ({})", l.item_title, l.item));
                                 println!(
-                                    "live lease elsewhere: session {} holds {:?} (\"{}\")",
-                                    l.session, l.globs, l.item_title
+                                    "live lease elsewhere: session {} holds {:?} — {}",
+                                    l.session, l.globs, what
                                 );
                             }
                             if let Ok(log) = store.read_log() {
@@ -929,8 +938,9 @@ fn main() -> Result<()> {
                                         let from = ev.get("session").and_then(|v| v.as_str()).unwrap_or("?");
                                         if !matches!(n.front.status.as_str(), "done" | "dropped" | "resolved") {
                                             println!(
-                                                "new in your purview from session {}: \"{}\" [{}]",
-                                                from, n.front.title, n.front.status
+                                                "new in your purview from session {}: {}",
+                                                from,
+                                                line(&all, n)
                                             );
                                         }
                                     }
@@ -967,7 +977,7 @@ fn main() -> Result<()> {
                 .iter()
                 .filter(|n| {
                     n.front.id.contains(&q)
-                        || n.front.title.to_lowercase().contains(&q)
+                        || quarry::surface::title_raw(n).to_lowercase().contains(&q)
                         || n.body.to_lowercase().contains(&q)
                 })
                 .collect();
@@ -975,13 +985,14 @@ fn main() -> Result<()> {
                 println!("no node matches \"{}\".", text);
             }
             for n in hits {
-                let where_ = if n.front.title.to_lowercase().contains(&q) || n.front.id.contains(&q) {
+                let where_ = if quarry::surface::title_raw(n).to_lowercase().contains(&q)
+                    || n.front.id.contains(&q)
+                {
                     ""
                 } else {
                     "  (matched in body)"
                 };
-                let arch = if n.front.archived { "  [ARCHIVED]" } else { "" };
-                println!("{}{}{}", line(n), arch, where_);
+                println!("{}{}", line(&all, n), where_);
             }
         }
         Cmd::Session { which } => {
@@ -993,7 +1004,7 @@ fn main() -> Result<()> {
                     let titles: Vec<String> = ids
                         .iter()
                         .filter_map(|id| all.iter().find(|n| &n.front.id == id))
-                        .map(|n| n.front.title.clone())
+                        .map(|n| quarry::surface::title_raw(n).to_string())
                         .collect();
                     let overlaps = coord::purview_overlaps(&store, &ids);
                     coord::save_session(&store, &name, ids, charter, ephemeral)?;
@@ -1010,7 +1021,7 @@ fn main() -> Result<()> {
                         let shared_titles: Vec<String> = shared
                             .iter()
                             .filter_map(|id| all.iter().find(|n| &n.front.id == id))
-                            .map(|n| n.front.title.clone())
+                            .map(|n| quarry::surface::title_raw(n).to_string())
                             .collect();
                         println!(
                             "  ⚠ purview overlaps session {} on: {} — legal (shared areas exist), but confirm it is deliberate; co-writes there want --shared leases.",
@@ -1057,7 +1068,7 @@ fn main() -> Result<()> {
                         .areas
                         .iter()
                         .filter_map(|id| all.iter().find(|n| &n.front.id == id))
-                        .map(|n| n.front.title.clone())
+                        .map(|n| quarry::surface::title_raw(n).to_string())
                         .collect();
                     println!("  purview: {}", area_titles.join(" · "));
                     if let Some(ts) = coord::last_seen(&store, &sess) {
@@ -1080,13 +1091,15 @@ fn main() -> Result<()> {
                     if !mine.is_empty() {
                         println!("  holdings:");
                         for l in mine {
-                            let done = all
-                                .iter()
-                                .find(|n| n.front.id == l.item)
+                            let held = all.iter().find(|n| n.front.id == l.item);
+                            let done = held
                                 .map_or(false, |n| matches!(n.front.status.as_str(), "done" | "dropped"));
+                            let what = held
+                                .map(|n| aref(&all, n))
+                                .unwrap_or_else(|| format!("\"{}\" ({})", l.item_title, l.item));
                             println!(
-                                "    \"{}\" holds {:?}{}",
-                                l.item_title,
+                                "    {} holds {:?}{}",
+                                what,
                                 l.globs,
                                 if done { format!(" — item done; release: q release {}", l.item) } else { String::new() }
                             );
@@ -1099,7 +1112,7 @@ fn main() -> Result<()> {
                     if !inflight.is_empty() {
                         println!("  in-flight in purview:");
                         for n in inflight {
-                            println!("    {}", line(n));
+                            println!("    {}", line(&all, n));
                         }
                     }
                     let log = store.read_log()?;
@@ -1112,10 +1125,14 @@ fn main() -> Result<()> {
                         println!("  your session's recent acts:");
                         for ev in my_events.iter().rev().take(8).rev() {
                             let node = ev.get("node").and_then(|v| v.as_str()).unwrap_or("?");
-                            let title = all.iter().find(|n| n.front.id == node).map(|n| n.front.title.as_str()).unwrap_or(node);
+                            let what = all
+                                .iter()
+                                .find(|n| n.front.id == node)
+                                .map(|n| aref(&all, n))
+                                .unwrap_or_else(|| format!("({})", node));
                             let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
                             let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("").split('T').nth(1).unwrap_or("");
-                            println!("    {} {} \"{}\"", ts, op, title);
+                            println!("    {} {} {}", ts, op, what);
                         }
                     }
                     let mut arrivals: Vec<&Node> = Vec::new();
@@ -1137,7 +1154,7 @@ fn main() -> Result<()> {
                     if !arrivals.is_empty() {
                         println!("  arrived in your purview since your last act:");
                         for n in arrivals {
-                            println!("    {}", line(n));
+                            println!("    {}", line(&all, n));
                         }
                     }
                     let owed: Vec<&Node> = queries::queue(&all)
@@ -1147,7 +1164,7 @@ fn main() -> Result<()> {
                     if !owed.is_empty() {
                         println!("  owed to the user in your purview:");
                         for n in owed {
-                            println!("    {}", line(n));
+                            println!("    {}", line(&all, n));
                         }
                     }
                     println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
@@ -1182,7 +1199,7 @@ fn main() -> Result<()> {
                             .areas
                             .iter()
                             .filter_map(|id| all.iter().find(|n| &n.front.id == id))
-                            .map(|n| n.front.title.clone())
+                            .map(|n| quarry::surface::title_raw(n).to_string())
                             .collect();
                         println!(
                             "{}: {}{}",
@@ -1210,8 +1227,8 @@ fn main() -> Result<()> {
             // C8: a lease follows a brief — no lease on unbriefed work.
             if !coord::briefed_this_session(&store, &node.front.id, &sess) {
                 anyhow::bail!(
-                    "C8: no brief on record for \"{}\" from session {} — a lease follows a brief. Render it (q brief {}), read it, then reserve.",
-                    node.front.title, sess, node.front.id
+                    "C8: no brief on record for {} from session {} — a lease follows a brief. Render it (q brief {}), read it, then reserve.",
+                    aref(&all, &node), sess, node.front.id
                 );
             }
             // Engine-native consequence gate: a steal demands its reason —
@@ -1241,8 +1258,8 @@ fn main() -> Result<()> {
                 reason.as_deref(),
             )?;
             println!(
-                "✔ lease: \"{}\" holds {:?}{} (session {})",
-                node.front.title,
+                "✔ lease: {} holds {:?}{} (session {})",
+                aref(&all, &node),
                 files,
                 if shared { " [shared]" } else { "" },
                 sess
@@ -1271,7 +1288,7 @@ fn main() -> Result<()> {
                 .find(|l| l.item == node.front.id)
                 .map(|l| l.globs.clone());
             coord::release(&store, &node, &sess, &Store::actor())?;
-            println!("✔ released: \"{}\"", node.front.title);
+            println!("✔ released: {}", aref(&all, &node));
             spine_check(&store, &node, held);
             // The arc is over: land clears the badge and the observed set.
             coord::clear_dispatch(&store, &node.front.id);
@@ -1342,27 +1359,27 @@ fn main() -> Result<()> {
                             let state = if blockers.is_empty() {
                                 String::new()
                             } else {
-                                format!("  (blocked on \"{}\")", blockers[0].front.title)
+                                format!("  (blocked on {})", aref(&all, blockers[0]))
                             };
                             let mark = if i == 0 { " ← next up" } else { "" };
-                            println!("{}. {}{}{}", i + 1, line(n), state, mark);
+                            println!("{}. {}{}{}", i + 1, line(&all, n), state, mark);
                         }
                     }
                 }
                 Some(QueueCmd::Push { thread }) => {
                     let n = store.find(&all, &thread)?;
                     if n.front.ty != "thread" {
-                        anyhow::bail!("{} is a {}, not a thread", n.front.id, n.front.ty);
+                        anyhow::bail!("{} is not a thread", aref(&all, n));
                     }
                     if n.front.status == "resolved" {
-                        anyhow::bail!("\"{}\" is already resolved", n.front.title);
+                        anyhow::bail!("{} is already resolved", aref(&all, n));
                     }
                     if q.contains(&n.front.id) {
-                        anyhow::bail!("\"{}\" is already in the topic queue", n.front.title);
+                        anyhow::bail!("{} is already in the topic queue", aref(&all, n));
                     }
                     q.push(n.front.id.clone());
                     coord::save_topic_queue(&store, &q)?;
-                    println!("✔ queued at {}: {}", q.len(), line(n));
+                    println!("✔ queued at {}: {}", q.len(), line(&all, n));
                 }
                 Some(QueueCmd::Pop) => {
                     if q.is_empty() {
@@ -1372,7 +1389,7 @@ fn main() -> Result<()> {
                         coord::save_topic_queue(&store, &q)?;
                         match store.find(&all, &id) {
                             Ok(n) => {
-                                println!("now: {}", line(n));
+                                println!("now: {}", line(&all, n));
                                 if !n.body.trim().is_empty() {
                                     for l in n.body.lines() {
                                         println!("  {}", l);
@@ -1383,28 +1400,28 @@ fn main() -> Result<()> {
                             Err(_) => println!("now: {}", id),
                         }
                         if let Some(next) = q.first().and_then(|id| all.iter().find(|n| &n.front.id == id)) {
-                            println!("  next after this: \"{}\"", next.front.title);
+                            println!("  next after this: {}", aref(&all, next));
                         }
                     }
                 }
                 Some(QueueCmd::Front { thread }) => {
                     let n = store.find(&all, &thread)?;
                     let Some(pos) = q.iter().position(|id| id == &n.front.id) else {
-                        anyhow::bail!("\"{}\" is not in the topic queue — q queue push first", n.front.title);
+                        anyhow::bail!("{} is not in the topic queue — q queue push first", aref(&all, n));
                     };
                     let id = q.remove(pos);
                     q.insert(0, id);
                     coord::save_topic_queue(&store, &q)?;
-                    println!("✔ front: {}", line(n));
+                    println!("✔ front: {}", line(&all, n));
                 }
                 Some(QueueCmd::Drop { thread }) => {
                     let n = store.find(&all, &thread)?;
                     let Some(pos) = q.iter().position(|id| id == &n.front.id) else {
-                        anyhow::bail!("\"{}\" is not in the topic queue", n.front.title);
+                        anyhow::bail!("{} is not in the topic queue", aref(&all, n));
                     };
                     q.remove(pos);
                     coord::save_topic_queue(&store, &q)?;
-                    println!("✔ dropped from the topic queue: {} (the thread itself is untouched)", line(n));
+                    println!("✔ dropped from the topic queue: {} (the thread itself is untouched)", line(&all, n));
                 }
             }
         }
@@ -1432,7 +1449,7 @@ fn main() -> Result<()> {
                 queued.len() - answerable.len()
             );
             for n in &answerable {
-                println!("    {}", line(n));
+                println!("    {}", line(&all, n));
             }
             let touched_ids: std::collections::HashSet<String>;
             {
@@ -1450,7 +1467,7 @@ fn main() -> Result<()> {
                     );
                     for (id, op) in touched.iter().take(15) {
                         match all.iter().find(|n| &n.front.id == id) {
-                            Some(n) => println!("    [{}] {}", op, line(n)),
+                            Some(n) => println!("    [{}] {}", op, line(&all, n)),
                             None => println!("    [{}] {}", op, id),
                         }
                     }
@@ -1470,9 +1487,18 @@ fn main() -> Result<()> {
             } else {
                 println!("  behind: {} stale ref(s), worst severity {}", behind.len(), behind[0].severity);
                 for e in behind.iter().take(5) {
+                    let target = e
+                        .to_atom
+                        .as_ref()
+                        .map(quarry::surface::atom_ref)
+                        .unwrap_or_else(|| format!("\"{}\" ({})", e.to_title, e.to));
                     println!(
-                        "    [sev {}] \"{}\" -[{}]→ \"{}\" ({})",
-                        e.severity, e.src_title, e.rel, e.to_title, e.reason
+                        "    [sev {}] {} -[{}]→ {} ({})",
+                        e.severity,
+                        quarry::surface::atom_ref(&e.src),
+                        e.rel,
+                        target,
+                        e.reason
                     );
                 }
             }
@@ -1483,7 +1509,7 @@ fn main() -> Result<()> {
             if !inflight.is_empty() {
                 println!("  in-flight items ({}) — land, park, or hand off before stopping:", inflight.len());
                 for n in inflight {
-                    println!("    {}", line(n));
+                    println!("    {}", line(&all, n));
                 }
             }
             let unfiled: Vec<_> = all
@@ -1499,14 +1525,14 @@ fn main() -> Result<()> {
             if !unfiled.is_empty() {
                 println!("  unfiled ({}) — the map cannot place these; q link <id> about <area>:", unfiled.len());
                 for n in unfiled {
-                    println!("    {}", line(n));
+                    println!("    {}", line(&all, n));
                 }
             }
             let unver = queries::unverified(&all);
             if !unver.is_empty() {
                 println!("  unverified assistant claims ({}):", unver.len());
                 for n in unver {
-                    println!("    {}", line(n));
+                    println!("    {}", line(&all, n));
                 }
             }
             {
@@ -1520,7 +1546,7 @@ fn main() -> Result<()> {
                         dang.len()
                     );
                     for (n, id) in dang.iter().take(10) {
-                        println!("    {} in {} \"{}\"", id, n.front.id, n.front.title);
+                        println!("    {} in {}", id, aref(&all, n));
                     }
                     if dang.len() > 10 {
                         println!("    …and {} more", dang.len() - 10);
@@ -1562,7 +1588,7 @@ fn main() -> Result<()> {
                     let matched = queries::items_matching_files(&all, &touched);
                     if !matched.is_empty() {
                         for m in matched.iter().take(3) {
-                            println!("    resembles: {}", line(m));
+                            println!("    resembles: {}", line(&all, m));
                         }
                     }
                     println!("    a recurring arc wants declaring next time: q brief <item>, then q reserve <item> --files <globs>");
@@ -1572,8 +1598,8 @@ fn main() -> Result<()> {
                 // seat is empty and the lease still held.
                 for n in queries::unharvested_dispatches(&all, &log) {
                     println!(
-                        "  unharvested dispatch: \"{}\" ({}) — the report is owed; judge and land: q harvest {}",
-                        n.front.title, n.front.id, n.front.id
+                        "  unharvested dispatch: {} — the report is owed; judge and land: q harvest {}",
+                        aref(&all, n), n.front.id
                     );
                 }
             }
@@ -1624,7 +1650,7 @@ fn main() -> Result<()> {
                         cold.len()
                     );
                     for n in cold.iter().take(6) {
-                        println!("    {}", line(n));
+                        println!("    {}", line(&all, n));
                     }
                     if cold.len() > 6 {
                         println!("    …and {} more", cold.len() - 6);
@@ -1636,7 +1662,7 @@ fn main() -> Result<()> {
                         cooling.len()
                     );
                     for n in cooling.iter().take(6) {
-                        println!("    {}", line(n));
+                        println!("    {}", line(&all, n));
                     }
                 }
                 // Landmark backstop: items landed this session whose held
@@ -1652,8 +1678,8 @@ fn main() -> Result<()> {
                                 .unwrap_or_else(|| n.front.write_set.clone());
                             if !globs.is_empty() && !queries::files_cited(&all, &globs) {
                                 println!(
-                                    "  landed uncited: \"{}\" held {:?} and nothing cites those files — spine or no spine? (q claim --source file:...)",
-                                    n.front.title, globs
+                                    "  landed uncited: {} held {:?} and nothing cites those files — spine or no spine? (q claim --source file:...)",
+                                    aref(&all, n), globs
                                 );
                             }
                         }
@@ -1678,14 +1704,16 @@ fn main() -> Result<()> {
                 println!("  leases:");
                 for l in &leases {
                     let owner = if l.session == sess { "yours" } else { "theirs" };
-                    let done = all
-                        .iter()
-                        .find(|n| n.front.id == l.item)
-                        .map_or(false, |n| matches!(n.front.status.as_str(), "done" | "dropped"));
+                    let held = all.iter().find(|n| n.front.id == l.item);
+                    let done =
+                        held.map_or(false, |n| matches!(n.front.status.as_str(), "done" | "dropped"));
+                    let what = held
+                        .map(|n| aref(&all, n))
+                        .unwrap_or_else(|| format!("\"{}\" ({})", l.item_title, l.item));
                     println!(
-                        "    [{}] \"{}\" holds {:?}{} since {}{}",
+                        "    [{}] {} holds {:?}{} since {}{}",
                         owner,
-                        l.item_title,
+                        what,
                         l.globs,
                         if l.shared { " [shared]" } else { "" },
                         l.since,
@@ -1695,6 +1723,26 @@ fn main() -> Result<()> {
                             String::new()
                         }
                     );
+                }
+            }
+            {
+                // The atom lint (dc-nnf5), wrap half: fires only inside
+                // quarry's own repo (src/surface.rs present) — host-repo
+                // wraps skip it naturally. Checked, never remembered.
+                let src = store.root.join("src");
+                if src.join("surface.rs").exists() {
+                    let offenders = quarry::surface::lint_sources(&src);
+                    if !offenders.is_empty() {
+                        // Worded without the scanned token itself — the
+                        // lint once caught this very message.
+                        println!(
+                            "  ⚠ atom lint: raw title access outside src/surface.rs ({}) — every register rides the atom:",
+                            offenders.len()
+                        );
+                        for (f, l) in offenders {
+                            println!("    src/{}:{}", f, l);
+                        }
+                    }
                 }
             }
             if let Ok(out) = std::process::Command::new("git")
@@ -1795,8 +1843,8 @@ fn main() -> Result<()> {
                     let blocking = !queries::live_blockers(&all, store.find(&all, &src_id)?).is_empty();
                     if blocking {
                         println!(
-                            "  note: \"{}\" is now blocked on \"{}\" — it leaves ready/queue views until that lands.",
-                            store.find(&all, &src_id)?.front.title, t.front.title
+                            "  note: {} is now blocked on {} — it leaves ready/queue views until that lands.",
+                            aref(&all, store.find(&all, &src_id)?), aref(&all, t)
                         );
                     }
                 }
@@ -1819,7 +1867,7 @@ fn main() -> Result<()> {
         Cmd::Set { node, fields, note } => {
             let store = Store::discover()?;
             let n = ops::set(&store, &node, &fields, note)?;
-            println!("✔ {}", line(&n));
+            println!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
             area_watermarks(&store, &n.front.id);
@@ -1861,8 +1909,8 @@ fn main() -> Result<()> {
                 anyhow::bail!("provide --body or --body-file");
             }
             let n = ops::edit_body(&store, &node, body, note)?;
-            println!("✔ {}", line(&n));
             if let Ok(all) = store.load_all() {
+                println!("✔ {}", line(&all, &n));
                 print_mention_surfaces(&all, &n);
             }
             presence_note(&store, &n.front.id);
@@ -1877,7 +1925,7 @@ fn main() -> Result<()> {
         } => {
             let store = Store::discover()?;
             let d = ops::rule(&store, &thread, &text, by, title)?;
-            println!("✔ {}", line(&d));
+            println!("✔ {}", line(&store.load_all().unwrap_or_default(), &d));
             println!("  thread resolved.");
             print_mint_surfaces(&store, &d);
             let all = store.load_all()?;
@@ -1897,20 +1945,21 @@ fn main() -> Result<()> {
         } => {
             let store = Store::discover()?;
             let n = ops::claim(&store, &text, title, about, source, method, provenance, status)?;
-            println!("✔ {}", line(&n));
+            println!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
             print_mint_surfaces(&store, &n);
             area_watermarks(&store, &n.front.id);
         }
         Cmd::Refute { claim, by, note } => {
             let store = Store::discover()?;
             let (c, blast) = ops::refute(&store, &claim, &by, note)?;
-            println!("✔ \"{}\" is now refuted ({})", c.front.title, c.front.id);
+            let all = store.load_all().unwrap_or_default();
+            println!("✔ {} is now refuted", aref(&all, &c));
             if blast.is_empty() {
                 println!("  nothing leaned on it.");
             } else {
                 println!("  blast radius — these leaned on it:");
                 for n in blast {
-                    println!("    {}", line(&n));
+                    println!("    {}", line(&all, &n));
                 }
             }
             print_homework(&store, &[c.front.id.as_str()]);
@@ -1927,10 +1976,11 @@ fn main() -> Result<()> {
         Cmd::Archive { node, undo } => {
             let store = Store::discover()?;
             let n = ops::archive(&store, &node, undo)?;
+            let all = store.load_all().unwrap_or_default();
             if undo {
-                println!("✔ restored to default surfaces: {}", line(&n));
+                println!("✔ restored to default surfaces: {}", line(&all, &n));
             } else {
-                println!("✔ archived: {}", line(&n));
+                println!("✔ archived: {}", line(&all, &n));
                 println!("  still reachable — ids resolve, edges hold, blast/behind see it; surfaces show counts of what they hide.");
             }
         }
@@ -1982,12 +2032,12 @@ fn main() -> Result<()> {
                             })
                             .collect();
                         if foreign.is_empty() {
-                            println!("{}", line(n));
+                            println!("{}", line(&all, n));
                             shown += 1;
                         } else {
                             println!(
                                 "{}  ⚠ write-set leased by session {} (\"{}\")",
-                                line(n),
+                                line(&all, n),
                                 foreign[0].session,
                                 foreign[0].item_title
                             );
@@ -2003,9 +2053,9 @@ fn main() -> Result<()> {
                     let items: Vec<&Node> =
                         queries::shaping(&all).into_iter().map(|(n, _)| n).collect();
                     for n in scope_mine(&store, &all, items, mine) {
-                        println!("{}", line(n));
+                        println!("{}", line(&all, n));
                         for b in queries::live_blockers(&all, n) {
-                            println!("    blocked on \"{}\" [{}] ({})", b.front.title, b.front.status, b.front.id);
+                            println!("    blocked on {}", aref(&all, b));
                         }
                     }
                     // Intent and reality share vocabulary — the delta derives.
@@ -2030,7 +2080,7 @@ fn main() -> Result<()> {
                         .count()
                         .saturating_sub(queries::queue(&all).len());
                     for n in &q {
-                        println!("{}", line(n));
+                        println!("{}", line(&all, n));
                     }
                     if waiting > 0 {
                         println!("({} queued thread(s) still blocked on intermediate work)", waiting);
@@ -2042,9 +2092,20 @@ fn main() -> Result<()> {
                         println!("nothing behind — every ref current.");
                     }
                     for e in b {
+                        let target = e
+                            .to_atom
+                            .as_ref()
+                            .map(quarry::surface::atom_ref)
+                            .unwrap_or_else(|| format!("\"{}\" ({})", e.to_title, e.to));
                         println!(
-                            "[sev {}] \"{}\" -[{}]→ \"{}\"  at {} now {}  ({})  [{} → {}]",
-                            e.severity, e.src_title, e.rel, e.to_title, e.at, e.current, e.reason, e.src_id, e.to
+                            "[sev {}] {} -[{}]→ {}  at {} now {}  ({})",
+                            e.severity,
+                            quarry::surface::atom_ref(&e.src),
+                            e.rel,
+                            target,
+                            e.at,
+                            e.current,
+                            e.reason
                         );
                     }
                 }
@@ -2056,7 +2117,7 @@ fn main() -> Result<()> {
                     }
                     for id in ids {
                         if let Some(m) = all.iter().find(|m| m.front.id == id) {
-                            println!("{}", line(m));
+                            println!("{}", line(&all, m));
                         }
                     }
                 }
@@ -2067,14 +2128,14 @@ fn main() -> Result<()> {
                     }
                     for (src, rel, dst) in c {
                         println!(
-                            "{} \"{}\" -[{}]-> {} \"{}\" (user-provenance)",
-                            src.front.id, src.front.title, rel, dst.front.id, dst.front.title
+                            "{} -[{}]-> {} (user-provenance)",
+                            aref(&all, src), rel, aref(&all, dst)
                         );
                     }
                 }
                 Query::Idle { days } => {
                     for n in queries::idle(&all, days) {
-                        println!("{}", line(n));
+                        println!("{}", line(&all, n));
                     }
                 }
                 Query::Unverified => {
@@ -2083,7 +2144,7 @@ fn main() -> Result<()> {
                         println!("no unverified assistant claims.");
                     }
                     for n in u {
-                        println!("{}", line(n));
+                        println!("{}", line(&all, n));
                     }
                 }
                 Query::Dispatch { item } => {
@@ -2095,9 +2156,8 @@ fn main() -> Result<()> {
                             let n = store.find(&all, key)?;
                             if n.front.ty != "area" {
                                 anyhow::bail!(
-                                    "{} is a {}, not an area — the delta joins on shared areas",
-                                    n.front.id,
-                                    n.front.ty
+                                    "{} is not an area — the delta joins on shared areas",
+                                    aref(&all, n)
                                 );
                             }
                             Some(n.front.id.clone())
@@ -2111,13 +2171,13 @@ fn main() -> Result<()> {
                     if !d.unlanded.is_empty() {
                         println!("intended but unlanded — named in live acceptance, no spine claim in a shared area carries it:");
                         for (name, item) in &d.unlanded {
-                            println!("  · `{}` — \"{}\" [{}] ({})", name, item.front.title, item.front.status, item.front.id);
+                            println!("  · `{}` — {}", name, aref(&all, item));
                         }
                     }
                     if !d.unintended.is_empty() {
                         println!("landed but unintended — a spine no intent named (emergent scope, visible instead of silent):");
                         for (name, claim) in &d.unintended {
-                            println!("  · `{}` — \"{}\" [{}] ({})", name, claim.front.title, claim.front.status, claim.front.id);
+                            println!("  · `{}` — {}", name, aref(&all, claim));
                         }
                     }
                     if !d.unlanded.is_empty() || !d.unintended.is_empty() {

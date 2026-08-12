@@ -1,0 +1,19 @@
+---
+id: cl-syj7
+type: claim
+title: '`atom-lint`: raw title access outside the surface module fails wrap and CI'
+v: 2
+status: asserted
+provenance: assistant
+created: 2026-08-12T10:35:48Z
+actor: claude
+edges:
+- rel: about
+  to: ar-c7f5
+  at: 1
+- rel: source
+  to: file:src/surface.rs
+  at: a7f6c9502a6c
+---
+
+The literal front-title token outside src/surface.rs fails tests/surface_lint.rs at CI, and q wrap runs the same scan when the graph root carries quarry sources; matching and mutation ride title_raw and retitle, so the ban is total and needs no judgment about which reference is formatting.

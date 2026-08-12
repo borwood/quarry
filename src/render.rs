@@ -67,35 +67,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     let log = store.read_log()?;
     let mut s = String::new();
 
-    writeln!(
-        s,
-        "■ {}  {}  v{}  [{}]{}",
-        n.front.id,
-        n.front.ty,
-        n.front.v,
-        n.front.status,
-        if n.front.archived { "  ARCHIVED" } else { "" }
-    )?;
-    writeln!(s, "  {}", n.front.title)?;
-    let mut meta = format!(
-        "  {} · {} · {}",
-        n.front.provenance,
-        n.front.actor,
-        n.front.created.split('T').next().unwrap_or("")
-    );
-    if let Some(k) = &n.front.kind {
-        meta.push_str(&format!(" · kind: {}", k));
-    }
-    if let Some(r) = &n.front.ratified {
-        meta.push_str(&format!(" · RATIFIED by {} {}", r.by, r.date));
-    }
-    if let Some(p) = &n.front.path {
-        meta.push_str(&format!(" · path: {}", p));
-    }
-    if let Some(m) = &n.front.method {
-        meta.push_str(&format!(" · method: {}", m));
-    }
-    writeln!(s, "{}", meta)?;
+    write!(s, "{}", crate::surface::atom_head(&all, n))?;
 
     if !n.front.acceptance.is_empty() {
         writeln!(s, "\n  acceptance:")?;
@@ -106,7 +78,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
 
     if !n.body.trim().is_empty() {
         writeln!(s)?;
-        for line in crate::mention::unpack(&all, &n.body).lines() {
+        for line in crate::mention::unpack(&all, n, &n.body).lines() {
             writeln!(s, "  {}", line)?;
         }
     }
@@ -143,8 +115,10 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
                             };
                             writeln!(
                                 s,
-                                "    {:<10} → {} \"{}\" [{}]{}",
-                                e.rel, t.front.id, t.front.title, t.front.status, marker
+                                "    {:<10} → {}{}",
+                                e.rel,
+                                crate::surface::atom_ref(&crate::surface::atom(&all, t)),
+                                marker
                             )?;
                             if t.front.v > *v {
                                 for ev in log.iter().filter(|ev| {
@@ -204,8 +178,10 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
             };
             writeln!(
                 s,
-                "    {:<10} ← {} \"{}\" [{}]{}",
-                e.rel, m.front.id, m.front.title, m.front.status, stale
+                "    {:<10} ← {}{}",
+                e.rel,
+                crate::surface::atom_ref(&crate::surface::atom(&all, m)),
+                stale
             )?;
         }
         if hidden_back > 0 {
@@ -238,7 +214,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     if !outs.is_empty() || hidden_out > 0 {
         writeln!(s, "\n  mentions → (derived from this body's citations — a mention references; an edge leans):")?;
         for m in outs {
-            writeln!(s, "    {} \"{}\" [{}]", m.front.id, m.front.title, m.front.status)?;
+            writeln!(s, "    {}", crate::surface::atom_ref(&crate::surface::atom(&all, m)))?;
         }
         if hidden_out > 0 {
             writeln!(
@@ -264,7 +240,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     if !mentions.is_empty() || hidden_mentions > 0 {
         writeln!(s, "\n  ← mentioned by (derived from body citations — a mention references; an edge leans):")?;
         for m in mentions {
-            writeln!(s, "    {} \"{}\" [{}]", m.front.id, m.front.title, m.front.status)?;
+            writeln!(s, "    {}", crate::surface::atom_ref(&crate::surface::atom(&all, m)))?;
         }
         if hidden_mentions > 0 {
             writeln!(
@@ -280,7 +256,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         if !blockers.is_empty() {
             writeln!(s, "\n  blocked on:")?;
             for b in blockers {
-                writeln!(s, "    {} \"{}\" [{}]", b.front.id, b.front.title, b.front.status)?;
+                writeln!(s, "    {}", crate::surface::atom_ref(&crate::surface::atom(&all, b)))?;
             }
         }
     }
@@ -312,18 +288,22 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     let all = store.load_all()?;
     let item = store.find(&all, key)?;
     if item.front.ty != "item" {
-        anyhow::bail!("{} is a {}, not an item — briefs dispatch items", item.front.id, item.front.ty);
+        anyhow::bail!(
+            "{} is not an item — briefs dispatch items",
+            crate::surface::atom_ref(&crate::surface::atom(&all, item))
+        );
     }
     let first_line = |body: &str| body.lines().next().unwrap_or("").trim().to_string();
     let mut s = String::new();
-    writeln!(s, "══ DISPATCH BRIEF — \"{}\" ({} v{}) ══", item.front.title, item.front.id, item.front.v)?;
+    writeln!(
+        s,
+        "══ DISPATCH BRIEF — {} ══",
+        crate::surface::atom_line(&crate::surface::atom(&all, item))
+    )?;
     writeln!(s, "derived from the graph at render time; if this brief reads wrong, the graph is wrong — fix the graph, re-render.")?;
-    if let Some(k) = &item.front.kind {
-        writeln!(s, "kind: {}", k)?;
-    }
     if !item.body.trim().is_empty() {
         writeln!(s, "\nTHE WORK:")?;
-        for l in crate::mention::unpack(&all, &item.body).lines() {
+        for l in crate::mention::unpack(&all, item, &item.body).lines() {
             writeln!(s, "  {}", l)?;
         }
     }
@@ -333,15 +313,20 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     // agent has to.
     let behinds: Vec<crate::queries::Behind> = crate::queries::behind(store, &all)
         .into_iter()
-        .filter(|b| b.src_id == item.front.id)
+        .filter(|b| b.src.id == item.front.id)
         .collect();
     if !behinds.is_empty() {
         writeln!(s, "\nDISPATCHER — BEHIND CHECK ({} stale ref(s) at render time):", behinds.len())?;
         for b in &behinds {
+            let target = b
+                .to_atom
+                .as_ref()
+                .map(crate::surface::atom_ref)
+                .unwrap_or_else(|| format!("\"{}\" ({})", b.to_title, b.to));
             writeln!(
                 s,
-                "  ⚠ [sev {}] this item cites \"{}\" at {}, now {} ({}) — review the change, then: q affirm {} --to {}",
-                b.severity, b.to_title, b.at, b.current, b.reason, item.front.id, b.to
+                "  ⚠ [sev {}] this item cites {} at {}, now {} ({}) — review the change, then: q affirm {} --to {}",
+                b.severity, target, b.at, b.current, b.reason, item.front.id, b.to
             )?;
         }
         writeln!(s, "  Do not hand this off until each is reviewed — the agent inherits what you did not confront.")?;
@@ -354,8 +339,8 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
             continue;
         }
         if let Some(t) = all.iter().find(|n| n.front.id == e.to) {
-            writeln!(s, "  · depends on {} \"{}\" [{}] ({} v{})", t.front.ty, t.front.title, t.front.status, t.front.id, t.front.v)?;
-            for l in crate::mention::unpack(&all, &t.body).lines() {
+            writeln!(s, "  · depends on {}", crate::surface::atom_line(&crate::surface::atom(&all, t)))?;
+            for l in crate::mention::unpack(&all, t, &t.body).lines() {
                 writeln!(s, "      {}", l)?;
             }
             cited += 1;
@@ -371,30 +356,33 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         .collect();
     for aid in &area_ids {
         let Some(area) = all.iter().find(|n| n.front.id == *aid) else { continue };
-        writeln!(s, "  · area \"{}\" ({} v{})", area.front.title, area.front.id, area.front.v)?;
+        writeln!(s, "  · area {}", crate::surface::atom_line(&crate::surface::atom(&all, area)))?;
         if !area.body.trim().is_empty() {
-            writeln!(s, "      {}", first_line(&crate::mention::unpack(&all, &area.body)))?;
+            writeln!(s, "      {}", first_line(&crate::mention::unpack(&all, area, &area.body)))?;
         }
         for n in all.iter().filter(|n| !n.front.archived && crate::coord::in_purview(n, &[aid])) {
+            let line = crate::surface::atom_line(&crate::surface::atom(&all, n));
             match (n.front.ty.as_str(), n.front.status.as_str()) {
                 ("decision", "in-force") => {
-                    writeln!(s, "      decision in force: \"{}\" ({} v{}) — {}", n.front.title, n.front.id, n.front.v, first_line(&crate::mention::unpack(&all, &n.body)))?;
+                    writeln!(s, "      decision in force: {} — {}", line, first_line(&crate::mention::unpack(&all, n, &n.body)))?;
                     cited += 1;
                 }
                 ("doc", "registered") => {
                     let p = n.front.path.as_deref().map(|p| format!(" · {}", p)).unwrap_or_default();
-                    writeln!(s, "      doc: \"{}\" ({} v{}){}", n.front.title, n.front.id, n.front.v, p)?;
+                    writeln!(s, "      doc: {}{}", line, p)?;
                     cited += 1;
                 }
                 ("thread", "open") | ("thread", "queued") => {
-                    writeln!(s, "      open thread: \"{}\" ({}) — NOT yours to settle", n.front.title, n.front.id)?;
+                    writeln!(s, "      open thread: {} — NOT yours to settle", line)?;
                 }
                 ("claim", "asserted") | ("claim", "measured") | ("claim", "ratified") => {
                     // The spine shelf carries BODIES, not name-tags: the
                     // agent builds from these bones without a round-trip.
-                    writeln!(s, "      spine: \"{}\" [{}] ({} v{})", n.front.title, n.front.status, n.front.id, n.front.v)?;
-                    if !n.body.trim().is_empty() && n.body.trim() != n.front.title.trim() {
-                        for l in crate::mention::unpack(&all, &n.body).lines() {
+                    writeln!(s, "      spine: {}", line)?;
+                    if !n.body.trim().is_empty()
+                        && n.body.trim() != crate::surface::title_raw(n).trim()
+                    {
+                        for l in crate::mention::unpack(&all, n, &n.body).lines() {
                             writeln!(s, "        {}", l)?;
                         }
                     }
@@ -412,7 +400,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         .collect();
     for ev in evidence {
         let p = ev.front.path.as_deref().map(|p| format!(" · {}", p)).unwrap_or_default();
-        writeln!(s, "  · evidence: {} \"{}\" [{}] ({} v{}){}", ev.front.ty, ev.front.title, ev.front.status, ev.front.id, ev.front.v, p)?;
+        writeln!(s, "  · evidence: {}{}", crate::surface::atom_line(&crate::surface::atom(&all, ev)), p)?;
         if ev.front.kind.as_deref() == Some("report") {
             writeln!(s, "      a prior dispatch's report — read it before repeating its ground.")?;
         }
@@ -437,7 +425,12 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     if !leaners.is_empty() {
         writeln!(s, "  who leans on this landing:")?;
         for (m, rel) in leaners {
-            writeln!(s, "    · \"{}\" [{}] ({}) -[{}]→ this item", m.front.title, m.front.status, m.front.id, rel)?;
+            writeln!(
+                s,
+                "    · {} -[{}]→ this item",
+                crate::surface::atom_ref(&crate::surface::atom(&all, m)),
+                rel
+            )?;
         }
     }
 
@@ -468,7 +461,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
 
     let riders = crate::protocol::matching(&all, "brief", None, item.front.kind.as_deref());
     for r in &riders {
-        writeln!(s, "\nPROTOCOL — {}:", r.front.title)?;
+        writeln!(s, "\nPROTOCOL — {}:", crate::surface::atom_ref(&crate::surface::atom(&all, r)))?;
         for l in r.body.lines() {
             writeln!(s, "  {}", l)?;
         }
@@ -491,12 +484,19 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     let all = store.load_all()?;
     let item = store.find(&all, key)?;
     if item.front.ty != "item" {
-        anyhow::bail!("{} is a {}, not an item — harvest judges dispatched items", item.front.id, item.front.ty);
+        anyhow::bail!(
+            "{} is not an item — harvest judges dispatched items",
+            crate::surface::atom_ref(&crate::surface::atom(&all, item))
+        );
     }
     let id = &item.front.id;
     let log = store.read_log()?;
     let mut s = String::new();
-    writeln!(s, "══ HARVEST — \"{}\" ({}) [{}] ══", item.front.title, id, item.front.status)?;
+    writeln!(
+        s,
+        "══ HARVEST — {} ══",
+        crate::surface::atom_line(&crate::surface::atom(&all, item))
+    )?;
     writeln!(s, "the agent's \"done\" was a stop signal, never a transition — judge by outcome, land by your own hand.")?;
 
     let observed = crate::coord::touched_for(store, &format!("item:{}", id));
@@ -561,7 +561,7 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     writeln!(
         s,
         "  q new doc \"dispatch report: {}\" --kind report --path <report.md> --about {} --supports {}",
-        item.front.title, area, id
+        crate::surface::title_raw(item), area, id
     )?;
     writeln!(s, "  (the supports edge carries it into any re-dispatch brief — prior reports ride along.)")?;
     writeln!(s, "\nLANDING (yours, if the outcomes hold): q set {} status=done · q release {}", id, id)?;
@@ -576,21 +576,25 @@ pub fn dispatch_trace(store: &Store, key: &str) -> Result<String> {
     let id = &item.front.id;
     let log = store.read_log()?;
     let mut s = String::new();
-    writeln!(s, "dispatch trace for \"{}\" ({}):", item.front.title, id)?;
+    writeln!(
+        s,
+        "dispatch trace for {}:",
+        crate::surface::atom_ref(&crate::surface::atom(&all, item))
+    )?;
     let mut any = false;
     for ev in log
         .iter()
         .filter(|ev| ev.get("dispatch").and_then(|v| v.as_str()) == Some(id.as_str()))
     {
         let node = ev.get("node").and_then(|v| v.as_str()).unwrap_or("?");
-        let title = all
+        let what = all
             .iter()
             .find(|n| n.front.id == node)
-            .map(|n| n.front.title.as_str())
-            .unwrap_or(node);
+            .map(|n| crate::surface::atom_ref(&crate::surface::atom(&all, n)))
+            .unwrap_or_else(|| format!("({})", node));
         let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
         let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
-        writeln!(s, "  {} {} \"{}\" ({})", ts, op, title, node)?;
+        writeln!(s, "  {} {} {}", ts, op, what)?;
         any = true;
     }
     let touched = crate::coord::touched_for(store, &format!("item:{}", id));
@@ -611,7 +615,11 @@ pub fn log(store: &Store, key: &str) -> Result<String> {
     let all = store.load_all()?;
     let n = store.find(&all, key)?;
     let mut s = String::new();
-    writeln!(s, "history of {} \"{}\":", n.front.id, n.front.title)?;
+    writeln!(
+        s,
+        "history of {}:",
+        crate::surface::atom_ref(&crate::surface::atom(&all, n))
+    )?;
     for e in queries::node_log(store, &n.front.id)? {
         writeln!(s, "  {}", event_line(&e))?;
     }

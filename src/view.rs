@@ -50,7 +50,7 @@ pub fn render(store: &Store) -> Result<String> {
                 // The id-unpack, pre-rendered (dc-wwnk): bare ids expand to
                 // hyperlinked id [type status: `title`]; status always,
                 // dead targets keeping their extra emphasis.
-                v["body_html"] = json!(crate::mention::unpack_html(&all, &n.body));
+                v["body_html"] = json!(crate::mention::unpack_html(&all, n, &n.body));
             }
             v["slug"] = json!(n.slug());
             Ok(v)

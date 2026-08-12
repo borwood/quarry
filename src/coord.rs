@@ -181,8 +181,8 @@ pub fn reserve(
     let mut leases = load_leases(store);
     if leases.iter().any(|l| l.item == item.front.id) {
         bail!(
-            "\"{}\" already holds a lease — release it first (q release {}) or reserve a different item",
-            item.front.title,
+            "{} already holds a lease — release it first (q release {}) or reserve a different item",
+            crate::surface::atom_ref(&crate::surface::atom(&[], item)),
             item.front.id
         );
     }
@@ -232,7 +232,7 @@ pub fn reserve(
         .collect();
     leases.push(Lease {
         item: item.front.id.clone(),
-        item_title: item.front.title.clone(),
+        item_title: crate::surface::title_raw(item).to_string(),
         session: session.to_string(),
         actor: actor.to_string(),
         globs: globs.clone(),
@@ -251,12 +251,12 @@ pub fn reserve(
 pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result<()> {
     let mut leases = load_leases(store);
     let Some(pos) = leases.iter().position(|l| l.item == item.front.id) else {
-        bail!("\"{}\" holds no lease", item.front.title);
+        bail!("{} holds no lease", crate::surface::atom_ref(&crate::surface::atom(&[], item)));
     };
     if leases[pos].session != session {
         bail!(
-            "the lease on \"{}\" is held by session {} — theirs to release (or reserve with --steal)",
-            item.front.title,
+            "the lease on {} is held by session {} — theirs to release (or reserve with --steal)",
+            crate::surface::atom_ref(&crate::surface::atom(&[], item)),
             leases[pos].session
         );
     }
@@ -535,12 +535,12 @@ pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> Are
         if !in_area {
             continue;
         }
-        let title = all
+        let what = all
             .iter()
             .find(|n| n.front.id == id)
-            .map(|n| n.front.title.clone())
-            .unwrap_or_else(|| id.to_string());
-        let line = format!("[{}] \"{}\" ({}) by session {}", op, title, id, ev_key);
+            .map(|n| crate::surface::atom_line(&crate::surface::atom(all, n)))
+            .unwrap_or_else(|| format!("({})", id));
+        let line = format!("[{}] {} by session {}", op, what, ev_key);
         if let Some(pos) = lines.iter().position(|(i, _)| i == id) {
             lines[pos].1 = line;
         } else {
@@ -742,7 +742,7 @@ pub fn resolve_area_ids(store: &Store, all: &[Node], keys: &[String]) -> Result<
         .map(|k| {
             let n = store.find(all, k)?;
             if n.front.ty != "area" {
-                bail!("\"{}\" is a {}, not an area", n.front.title, n.front.ty);
+                bail!("{} is not an area", crate::surface::atom_ref(&crate::surface::atom(all, n)));
             }
             Ok(n.front.id.clone())
         })

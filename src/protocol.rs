@@ -50,7 +50,7 @@ pub fn inline_texts(
     matching(all, verb, node_type, node_kind)
         .into_iter()
         .filter(|n| tier(n) == "inline")
-        .map(|n| (n.front.title.clone(), n.body.clone()))
+        .map(|n| (crate::surface::atom_ref(&crate::surface::atom(all, n)), n.body.clone()))
         .collect()
 }
 
@@ -159,7 +159,7 @@ pub fn gate_if_needed(
     Ok(Some(Gate {
         rules: pending
             .into_iter()
-            .map(|n| (n.front.title.clone(), n.body.clone()))
+            .map(|n| (crate::surface::atom_ref(&crate::surface::atom(all, n)), n.body.clone()))
             .collect(),
         token,
     }))

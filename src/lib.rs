@@ -6,5 +6,6 @@ pub mod protocol;
 pub mod queries;
 pub mod render;
 pub mod store;
+pub mod surface;
 pub mod teach;
 pub mod view;

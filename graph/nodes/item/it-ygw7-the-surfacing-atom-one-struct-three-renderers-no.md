@@ -2,8 +2,8 @@
 id: it-ygw7
 type: item
 title: 'the surfacing atom: one struct, three renderers, no register below the floor'
-v: 3
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-11T10:29:15Z
 actor: claude
@@ -22,13 +22,13 @@ edges:
   at: 1
 - rel: about
   to: file:src/main.rs
-  at: 2d2daff8ff48
+  at: a37b2a28f726
 - rel: about
   to: file:src/render.rs
-  at: e74fdd8e85fa
+  at: 806e455a0eb3
 - rel: about
   to: file:src/queries.rs
-  at: c85b3612113b
+  at: f3faffcbe1d7
 - rel: supersedes
   to: it-u7dp
   at: 6

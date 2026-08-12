@@ -66,7 +66,7 @@ fn stamped_edges_go_behind_and_affirm() {
     let all = s.load_all().unwrap();
     let behind = queries::behind(&s, &all);
     assert_eq!(behind.len(), 1);
-    assert_eq!(behind[0].src_id, c.front.id);
+    assert_eq!(behind[0].src.id, c.front.id);
     assert_eq!(behind[0].severity, 3);
 
     // affirm restamps
@@ -706,7 +706,7 @@ fn brief_renders_neighborhood_and_return_spec() {
     let text = quarry::render::brief(&s, &it.front.id).unwrap();
     assert!(text.contains("DISPATCH BRIEF"));
     assert!(text.contains("bodies persist across reload"));
-    assert!(text.contains("depends on decision"));
+    assert!(text.contains("depends on \"bodies persist\" — decision [in-force]"));
     assert!(text.contains("leaseless"), "no lease yet: research dispatch");
     assert!(text.contains("hydrology"));
     assert!(quarry::render::brief(&s, &area.front.id).is_err(), "briefs dispatch items only");
@@ -1154,7 +1154,7 @@ fn builds_on_behind_and_reverse_blast() {
     let b = queries::behind(&s, &all);
     let e = b
         .iter()
-        .find(|x| x.src_id == spec.front.id && x.rel == "builds-on")
+        .find(|x| x.src.id == spec.front.id && x.rel == "builds-on")
         .expect("builds-on ref reports behind");
     assert_eq!(e.severity, 3, "ordinary severity — content changed");
     // blast from the built-upon walks reverse builds-on to the builders
@@ -1187,7 +1187,7 @@ fn builds_on_behind_and_reverse_blast() {
     let b = queries::behind(&s, &all);
     let e = b
         .iter()
-        .find(|x| x.src_id == spec.front.id && x.rel == "builds-on")
+        .find(|x| x.src.id == spec.front.id && x.rel == "builds-on")
         .expect("still behind after the kill");
     assert_eq!(e.severity, 1, "dead target severity, like any rel");
 }
@@ -1327,7 +1327,8 @@ fn unpack_expands_labels_dead_and_skips_code() {
         "leans on {id}; `{id}` stays literal; th-read is prose",
         id = c.front.id
     );
-    let un = quarry::mention::unpack(&all, &body);
+    // citing node shares the claim's area, so the unpack stays home-quiet
+    let un = quarry::mention::unpack(&all, &c, &body);
     assert!(
         un.contains(&format!("leans on {} [claim asserted: `halo bounded`]", c.front.id)),
         "resolved id expands to id [type status: `title`] — live status always renders: {}",
@@ -1343,7 +1344,7 @@ fn unpack_expands_labels_dead_and_skips_code() {
     let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
     ops::refute(&s, &c.front.id, &ev.front.id, None).unwrap();
     let all = s.load_all().unwrap();
-    let un2 = quarry::mention::unpack(&all, &body);
+    let un2 = quarry::mention::unpack(&all, &c, &body);
     assert!(
         un2.contains(&format!("{} [claim, refuted: `halo bounded`]", c.front.id)),
         "dead targets labeled: {}",
@@ -1472,7 +1473,7 @@ fn dangling_id_shapes_lint() {
     let all = s.load_all().unwrap();
     assert!(quarry::mention::danglers(&all).is_empty(), "archived bodies are not lint");
     // an archived target carries status AND the archived flag in the unpack
-    let un = quarry::mention::unpack(&all, &format!("see {}", it.front.id));
+    let un = quarry::mention::unpack(&all, &it, &format!("see {}", it.front.id));
     assert!(
         un.contains(&format!("{} [item done, archived: `naming pass`]", it.front.id)),
         "archived targets labeled with status: {}",
@@ -1507,8 +1508,8 @@ fn open_and_view_show_outbound_mentions() {
     let text = quarry::render::open(&s, &it.front.id, false).unwrap();
     assert!(text.contains("mentions → (derived"), "outbound section labeled derived: {}", text);
     assert!(
-        text.contains(&format!("{} \"bodies persist\"", d.front.id)),
-        "cited node listed outbound: {}",
+        text.contains(&format!("\"bodies persist\" [decision in-force] ({})", d.front.id)),
+        "cited node listed outbound as its atom_ref: {}",
         text
     );
     assert_eq!(
@@ -1532,7 +1533,11 @@ fn open_and_view_show_outbound_mentions() {
         text
     );
     let text_all = quarry::render::open(&s, &it.front.id, true).unwrap();
-    assert!(text_all.contains(&format!("{} \"bodies persist\"", d.front.id)), "--all reaches it");
+    assert!(
+        text_all.contains(&format!("\"bodies persist\" [decision, superseded, archived] ({})", d.front.id)),
+        "--all reaches it, archived riding the status slot: {}",
+        text_all
+    );
     // the view template carries the outbound section, computed from the
     // same embedded mention index the inbound section rides
     let html = quarry::view::render(&s).unwrap();

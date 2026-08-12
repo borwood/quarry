@@ -533,3 +533,26 @@
 {"ts":"2026-08-11T10:31:18Z","node":"it-w5yv","v":15,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T10:31:18Z","node":"it-ymsj","v":3,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-11T10:31:18Z","node":"th-4fz6","v":6,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:11:49Z","node":"it-ygw7","v":3,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:11:49Z","node":"it-ygw7","v":3,"op":"reserve","globs":["src/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-12T10:11:49Z","node":"it-ygw7","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:11:49Z","node":"it-ygw7","v":3,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**"],"dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:19:24Z","node":"it-ygw7","v":4,"op":"release","actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:19:25Z","node":"it-ygw7","v":4,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:19:25Z","node":"it-ygw7","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:19:25Z","node":"it-ygw7","v":4,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"],"dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:35:34Z","node":"cl-3qwu","v":1,"op":"create","type":"claim","title":"`surface-atom`: one struct in one module — `atom-line`, `atom-ref`, `atom-unpack` own every register","actor":"claude","note":null,"session":"quarry","dispatch":"it-ygw7"}
+{"op":"link","rel":"source","to":"file:src/surface.rs","at":"a7f6c9502a6c","ts":"2026-08-12T10:35:34Z","node":"cl-3qwu","v":2,"actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:35:48Z","node":"cl-syj7","v":1,"op":"create","type":"claim","title":"`atom-lint`: raw title access outside the surface module fails wrap and CI","actor":"claude","note":null,"session":"quarry","dispatch":"it-ygw7"}
+{"op":"link","rel":"source","to":"file:src/surface.rs","at":"a7f6c9502a6c","ts":"2026-08-12T10:35:48Z","node":"cl-syj7","v":2,"actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:35:50Z","node":"cl-uqqn","v":1,"op":"create","type":"claim","title":"`carrier-replumb`: Behind and homework carriers hold atoms","actor":"claude","note":null,"session":"quarry","dispatch":"it-ygw7"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"f3faffcbe1d7","ts":"2026-08-12T10:35:50Z","node":"cl-uqqn","v":2,"actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:35:51Z","node":"cl-89b5","v":1,"op":"create","type":"claim","title":"`find-areas`: find hits ride atom_line with areas labeled","actor":"claude","note":null,"session":"quarry","dispatch":"it-ygw7"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"a37b2a28f726","ts":"2026-08-12T10:35:51Z","node":"cl-89b5","v":2,"actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:35:56Z","node":"it-ygw7","v":4,"op":"harvest","actor":"claude","session":"quarry","dispatch":"it-ygw7"}
+{"ts":"2026-08-12T10:36:48Z","node":"do-ev5g","v":1,"op":"create","type":"doc","title":"dispatch report: the surfacing atom lands","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-ygw7","at":4,"ts":"2026-08-12T10:36:48Z","node":"do-ev5g","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-12T10:36:51Z","node":"it-ygw7","v":5,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:36:52Z","node":"it-ygw7","v":5,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:36:59Z","node":"do-ev5g","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-12T10:36:59Z","node":"it-ygw7","v":5,"op":"affirm","restamped":3,"actor":"claude","session":"quarry"}

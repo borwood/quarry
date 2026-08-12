@@ -180,9 +180,8 @@ pub fn stamp_edge(
     validate_edge(src_ty, rel, Some(&target.front.ty))?;
     if matches!(target.front.status.as_str(), "refuted" | "superseded") && !acknowledge {
         bail!(
-            "C5: target {} \"{}\" is {} — pass --acknowledge to cite it anyway",
-            target.front.id,
-            target.front.title,
+            "C5: target {} is {} — pass --acknowledge to cite it anyway",
+            crate::surface::atom_ref(&crate::surface::atom(&[], target)),
             target.front.status
         );
     }
@@ -231,8 +230,9 @@ pub fn link(
             if let Ok(t) = store.find(&all, dst) {
                 if t.front.provenance == "user" {
                     bail!(
-                        "C3: an assistant-provenance {} may not {} the user-provenance {} \"{}\" — record the user's own ruling (`q rule --by user`) or queue a thread",
-                        src.front.ty, rel, t.front.ty, t.front.title
+                        "C3: an assistant-provenance {} may not {} the user-provenance {} — record the user's own ruling (`q rule --by user`) or queue a thread",
+                        src.front.ty, rel,
+                        crate::surface::atom_ref(&crate::surface::atom(&all, t))
                     );
                 }
             }
@@ -370,7 +370,7 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                         node.front.aliases.push(old_slug);
                     }
                 }
-                node.front.title = v.into();
+                crate::surface::retitle(&mut node, v.into());
             }
             "kind" => node.front.kind = Some(v.into()),
             "method" => node.front.method = Some(v.into()),
@@ -430,8 +430,8 @@ pub fn rule(
     };
     if provenance == "assistant" && thread.front.provenance == "user" {
         bail!(
-            "C3: thread \"{}\" is user-provenance; an assistant decision cannot settle it. Pass --by user when recording the user's own ruling.",
-            thread.front.title
+            "C3: thread {} is user-provenance; an assistant decision cannot settle it. Pass --by user when recording the user's own ruling.",
+            crate::surface::atom_ref(&crate::surface::atom(&[], &thread))
         );
     }
     let dtitle = title.unwrap_or_else(|| truncate_title(text, 64));
@@ -555,7 +555,7 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
     let mut node = store.find(&all, key)?.clone();
     if undo {
         if !node.front.archived {
-            bail!("\"{}\" is not archived", node.front.title);
+            bail!("{} is not archived", crate::surface::atom_ref(&crate::surface::atom(&all, &node)));
         }
         node.front.archived = false;
         store.save(&node)?;
@@ -566,7 +566,7 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         return Ok(node);
     }
     if node.front.archived {
-        bail!("\"{}\" is already archived", node.front.title);
+        bail!("{} is already archived", crate::surface::atom_ref(&crate::surface::atom(&all, &node)));
     }
     match node.front.ty.as_str() {
         "area" => bail!("areas never archive — they are the map; retire one with status=retired"),
@@ -578,9 +578,8 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         "done" | "dropped" | "resolved" | "refuted" | "superseded"
     ) {
         bail!(
-            "only settled statuses archive; \"{}\" is [{}] — archive follows status, never age",
-            node.front.title,
-            node.front.status
+            "only settled statuses archive; {} — archive follows status, never age",
+            crate::surface::atom_ref(&crate::surface::atom(&all, &node))
         );
     }
     let live_children: Vec<&Node> = all
@@ -592,8 +591,8 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         .collect();
     if !live_children.is_empty() {
         bail!(
-            "\"{}\" has {} live child(ren) — parents index their offspring; archive the leaves first ({})",
-            node.front.title,
+            "{} has {} live child(ren) — parents index their offspring; archive the leaves first ({})",
+            crate::surface::atom_ref(&crate::surface::atom(&all, &node)),
             live_children.len(),
             live_children
                 .iter()
@@ -641,8 +640,9 @@ pub fn dispatch(
     }
     if matches!(item.front.status.as_str(), "done" | "dropped") {
         bail!(
-            "\"{}\" is already [{}] — dispatch moves live work. If the arc truly resumes, reopen it deliberately first: q set {} status=ready",
-            item.front.title, item.front.status, item.front.id
+            "{} is already [{}] — dispatch moves live work. If the arc truly resumes, reopen it deliberately first: q set {} status=ready",
+            crate::surface::atom_ref(&crate::surface::atom(&[], &item)),
+            item.front.status, item.front.id
         );
     }
     if let Some(d) = crate::coord::load_dispatch(store) {
@@ -666,8 +666,9 @@ pub fn dispatch(
     let (globs, reused_lease) = match existing {
         Some(l) if l.session == session => (l.globs, true),
         Some(l) => bail!(
-            "\"{}\" is leased by session {} ({:?}) — a dispatch would double-hold. Coordinate with the holder, or they harvest/release first.",
-            item.front.title, l.session, l.globs
+            "{} is leased by session {} ({:?}) — a dispatch would double-hold. Coordinate with the holder, or they harvest/release first.",
+            crate::surface::atom_ref(&crate::surface::atom(&[], &item)),
+            l.session, l.globs
         ),
         None => {
             let globs = if !files.is_empty() { files } else { item.front.write_set.clone() };
@@ -690,7 +691,7 @@ pub fn dispatch(
         store,
         &crate::coord::DispatchState {
             item: item.front.id.clone(),
-            item_title: item.front.title.clone(),
+            item_title: crate::surface::title_raw(&item).to_string(),
             session: session.to_string(),
             globs: globs.clone(),
             acceptance: item.front.acceptance.clone(),
@@ -716,7 +717,7 @@ pub fn dispatch(
     );
     Ok(DispatchOutcome {
         item_id: item.front.id.clone(),
-        item_title: item.front.title.clone(),
+        item_title: crate::surface::title_raw(&item).to_string(),
         globs,
         reused_lease,
         payload,

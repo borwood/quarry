@@ -89,7 +89,7 @@ impl Store {
         let kl = key.to_lowercase();
         let by_title: Vec<&Node> = all
             .iter()
-            .filter(|n| n.front.title.to_lowercase().contains(&kl))
+            .filter(|n| crate::surface::title_raw(n).to_lowercase().contains(&kl))
             .collect();
         match by_title.len() {
             1 => Ok(by_title[0]),
@@ -99,7 +99,7 @@ impl Store {
                 key,
                 by_title
                     .iter()
-                    .map(|n| format!("{} \"{}\"", n.front.id, n.front.title))
+                    .map(|n| crate::surface::atom_ref(&crate::surface::atom(all, n)))
                     .collect::<Vec<_>>()
                     .join(" · ")
             ),

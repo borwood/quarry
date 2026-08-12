@@ -70,32 +70,17 @@ pub fn cited_ids(text: &str) -> Vec<String> {
     out
 }
 
-/// The label a target carries into its unpack: STATUS ALWAYS (a label is a
-/// live read of the target, and its state is half the read — dc-wcyc's fast
-/// follow). Dead statuses keep their comma emphasis; live ones ride
-/// space-separated; the archived flag rides along on both.
-fn label(t: &Node) -> String {
-    let dead = matches!(t.front.status.as_str(), "refuted" | "superseded" | "dropped");
-    let mut l = format!(
-        "{}{}{}",
-        t.front.ty,
-        if dead { ", " } else { " " },
-        t.front.status
-    );
-    if t.front.archived {
-        l.push_str(", archived");
-    }
-    l
-}
-
 /// Render-time unpack for text surfaces (open, brief): each resolvable bare
-/// id expands to `id [type status: `title`]`, dead/archived targets carrying
-/// their extra label; unresolved shapes stay as written (wrap lints them).
-pub fn unpack(all: &[Node], text: &str) -> String {
+/// id expands via the surfacing atom (atom_unpack — dc-nnf5), id-anchored
+/// with the current title and label; a foreign mention announces its areas,
+/// home stays quiet. `citing` is the node whose body is being rendered.
+/// Unresolved shapes stay as written (wrap lints them).
+pub fn unpack(all: &[Node], citing: &Node, text: &str) -> String {
+    let citing_areas = crate::surface::atom(all, citing).area_ids;
     scan_replace(text, |id| {
         all.iter()
             .find(|n| n.front.id == id)
-            .map(|t| format!("{} [{}: `{}`]", id, label(t), t.front.title))
+            .map(|t| crate::surface::atom_unpack(&crate::surface::atom(all, t), &citing_areas))
     })
 }
 
@@ -106,19 +91,16 @@ fn esc_html(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// Render-time unpack for the HTML view: same expansion, hyperlinked to the
-/// node anchor. Escapes the whole text first (ids are ASCII and survive;
-/// entities never form id-shapes), then expands.
-pub fn unpack_html(all: &[Node], text: &str) -> String {
+/// Render-time unpack for the HTML view: same atom expansion, hyperlinked
+/// to the node anchor. Escapes the whole text first (ids are ASCII and
+/// survive; entities never form id-shapes), then expands.
+pub fn unpack_html(all: &[Node], citing: &Node, text: &str) -> String {
+    let citing_areas = crate::surface::atom(all, citing).area_ids;
     let escaped = esc_html(text);
     scan_replace(&escaped, |id| {
-        all.iter().find(|n| n.front.id == id).map(|t| {
-            format!(
-                "<a href=\"#/n/{id}\">{id}</a> [{}: <code>{}</code>]",
-                label(t),
-                esc_html(&t.front.title)
-            )
-        })
+        all.iter()
+            .find(|n| n.front.id == id)
+            .map(|t| crate::surface::atom_unpack_html(&crate::surface::atom(all, t), &citing_areas))
     })
 }
 
