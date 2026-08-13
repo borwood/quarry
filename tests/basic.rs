@@ -879,6 +879,7 @@ fn dispatch_state_and_touched_accrual() {
         item: "it-test".into(),
         item_title: "the work".into(),
         session: "geo".into(),
+        holder: "chat:chat-a".into(),
         globs: vec!["src/**".into()],
         acceptance: vec!["it lands".into()],
         since: "2026-01-01T00:00:00Z".into(),
@@ -887,9 +888,21 @@ fn dispatch_state_and_touched_accrual() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-a", &d).unwrap();
-    assert_eq!(quarry::coord::held_dispatch(&s, "chat:chat-a").unwrap().item, "it-test");
-    assert!(quarry::coord::held_dispatch(&s, "chat:chat-b").is_none());
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-test").unwrap().holder, "chat:chat-a");
+    assert_eq!(quarry::coord::held_dispatches(&s, "chat:chat-a").len(), 1);
+    assert!(quarry::coord::held_dispatches(&s, "chat:chat-b").is_empty());
+    // FLIP (dc-qyr5, was: one held entry per chat): MULTI-HELD — the same
+    // chat holds a second live dispatch alongside the first
+    let mut dm = d.clone();
+    dm.item = "it-more".into();
+    quarry::coord::save_dispatch(&s, &dm).unwrap();
+    let held = quarry::coord::held_dispatches(&s, "chat:chat-a");
+    assert_eq!(held.len(), 2, "a chat holds many (dc-qyr5)");
+    // per-item clear stays exact under multi-held: the sibling survives
+    quarry::coord::clear_dispatch(&s, "it-more");
+    assert_eq!(quarry::coord::held_dispatches(&s, "chat:chat-a").len(), 1);
+    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-test").unwrap().item, "it-test");
     // WORK-ONLY STAMPING (dc-zbxj — the semantic flip from the per-chat
     // design): a HELD entry resolves NO stamping badge for anyone, holder
     // included. Stamping reads env and the association map only; held
@@ -904,14 +917,16 @@ fn dispatch_state_and_touched_accrual() {
         quarry::coord::current_dispatch_badge(&s).is_none(),
         "no identity, no badge — and the machine-global fallback stays gone"
     );
-    // a second chat dispatches in parallel: entries keyed apart; the holding
-    // session resolves nothing either (work-only-stamping)
+    // a second chat dispatches in parallel: entries keyed apart (by item,
+    // holder riding each); the holding session resolves nothing either
+    // (work-only-stamping)
     let mut d2 = d.clone();
     d2.item = "it-two".into();
     d2.session = "docs".into();
-    quarry::coord::save_dispatch(&s, "session:docs", &d2).unwrap();
+    d2.holder = "session:docs".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
     assert!(quarry::coord::badge_for(&s, None, None, Some("docs")).is_none());
-    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-two").unwrap().0, "session:docs");
+    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-two").unwrap().holder, "session:docs");
     // acting associations tie identities to a LIVE badge only — agent-keyed
     // and chat-keyed alike, the agent key winning (a subagent's chat id may
     // be the parent's)
@@ -929,9 +944,9 @@ fn dispatch_state_and_touched_accrual() {
     // clearing an item releases its held entry AND its acting associations,
     // leaving the other chat's dispatch alone
     quarry::coord::clear_dispatch(&s, "it-other");
-    assert!(quarry::coord::held_dispatch(&s, "chat:chat-a").is_some());
+    assert!(quarry::coord::dispatch_for_item(&s, "it-test").is_some());
     quarry::coord::clear_dispatch(&s, "it-test");
-    assert!(quarry::coord::held_dispatch(&s, "chat:chat-a").is_none());
+    assert!(quarry::coord::dispatch_for_item(&s, "it-test").is_none());
     assert!(quarry::coord::badge_for(&s, Some("ag-1"), None, None).is_none());
     assert_eq!(quarry::coord::badge_for(&s, None, Some("chat-agent"), None).as_deref(), Some("it-two"));
     quarry::coord::clear_dispatch(&s, "it-two");
@@ -962,8 +977,11 @@ fn legacy_single_slot_dispatch_state_migrates() {
     });
     std::fs::write(s.root.join("graph").join(".dispatch.json"), legacy.to_string()).unwrap();
     let m = quarry::coord::load_dispatches(&s);
-    let d = m.held.get("session:geo").expect("legacy slot migrates under its session key");
+    // FLIP (dc-qyr5, was: keyed under session): held entries key by ITEM,
+    // the old key living on as the holder field
+    let d = m.held.get("it-old").expect("legacy slot migrates under its item key");
     assert_eq!(d.item, "it-old");
+    assert_eq!(d.holder, "session:geo", "the session key became the holder");
     assert_eq!(d.cursor, 3);
     // a pre-token entry parses with no token and no joined — nothing to
     // join, but harvest, trace, and the guard's contract echo all still work
@@ -973,21 +991,60 @@ fn legacy_single_slot_dispatch_state_migrates() {
     // a foreign chat never did
     assert!(quarry::coord::badge_for(&s, None, None, Some("geo")).is_none(), "held entries never stamp (dc-zbxj)");
     assert!(quarry::coord::badge_for(&s, None, Some("chat-b"), None).is_none());
-    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-old").unwrap().0, "session:geo");
+    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-old").unwrap().holder, "session:geo");
     // joining a live legacy dispatch teaches: it has no token to match
     let err = ops::join(&s, "nosuchtok42", Some("agent:ag-l".into())).unwrap_err();
     assert!(err.to_string().contains("unknown join token"), "got: {}", err);
     // a save persists the new shape without clobbering the migrated entry
     let mut d2 = d.clone();
     d2.item = "it-new".into();
-    quarry::coord::save_dispatch(&s, "chat:chat-b", &d2).unwrap();
+    d2.holder = "chat:chat-b".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
     let m = quarry::coord::load_dispatches(&s);
     assert_eq!(m.held.len(), 2);
-    assert_eq!(m.held.get("session:geo").unwrap().item, "it-old");
+    assert_eq!(m.held.get("it-old").unwrap().holder, "session:geo");
     // clear releases the migrated entry like any other
     quarry::coord::clear_dispatch(&s, "it-old");
-    assert!(quarry::coord::load_dispatches(&s).held.get("session:geo").is_none());
+    assert!(quarry::coord::load_dispatches(&s).held.get("it-old").is_none());
     assert_eq!(quarry::coord::load_dispatches(&s).held.len(), 1);
+}
+
+#[test]
+fn per_chat_keyed_dispatch_state_migrates() {
+    let s = temp_store();
+    // The intermediate shape (per-chat badge, pre-multi-held): held keyed by
+    // dispatching chat, no holder field — possibly live mid-upgrade. The key
+    // must move into the holder field and the entry re-key by item.
+    let v2 = serde_json::json!({
+        "held": {
+            "chat:chat-a": {
+                "item": "it-mid", "item_title": "mid-upgrade arc", "session": "geo",
+                "globs": ["src/**"], "acceptance": ["lands"],
+                "since": "2026-01-01T00:00:00Z", "cursor": 5,
+                "checked": "2026-01-01T00:00:00Z", "token": "tok0ldkey1", "joined": "agent:ag-m"
+            },
+            "session:docs": {
+                "item": "it-par", "item_title": "parallel arc", "session": "docs",
+                "globs": ["docs/**"], "acceptance": [],
+                "since": "2026-01-01T00:00:00Z", "cursor": 0,
+                "checked": "2026-01-01T00:00:00Z"
+            }
+        },
+        "acting": { "agent:ag-m": "it-mid" }
+    });
+    std::fs::write(s.root.join("graph").join(".dispatch.json"), v2.to_string()).unwrap();
+    let m = quarry::coord::load_dispatches(&s);
+    assert_eq!(m.held.len(), 2);
+    let d = m.held.get("it-mid").expect("chat-keyed entry re-keys by item");
+    assert_eq!(d.holder, "chat:chat-a", "the chat key became the holder");
+    assert_eq!(d.token.as_deref(), Some("tok0ldkey1"), "token survives the re-key");
+    assert_eq!(m.held.get("it-par").unwrap().holder, "session:docs");
+    // the joined agent's association still resolves through the re-key
+    assert_eq!(quarry::coord::badge_for(&s, Some("ag-m"), None, None).as_deref(), Some("it-mid"));
+    // per-item clear is exact on migrated entries
+    quarry::coord::clear_dispatch(&s, "it-mid");
+    assert!(quarry::coord::dispatch_for_item(&s, "it-mid").is_none());
+    assert_eq!(quarry::coord::dispatch_for_item(&s, "it-par").unwrap().holder, "session:docs");
 }
 
 #[test]
@@ -998,6 +1055,7 @@ fn log_events_stamp_the_badge_from_state() {
         item: "it-bdg".into(),
         item_title: "badged".into(),
         session: "geo".into(),
+        holder: "chat:chat-a".into(),
         globs: vec![],
         acceptance: vec![],
         since: "2026-01-01T00:00:00Z".into(),
@@ -1006,7 +1064,7 @@ fn log_events_stamp_the_badge_from_state() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-a", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     // env transport is per child process — the threaded suite never sets
     // these vars in-process (see docs/reports/2026-08-11-fast-follows).
     let run = |envs: &[(&str, &str)], args: &[&str]| {
@@ -1050,7 +1108,8 @@ fn log_events_stamp_the_badge_from_state() {
     let mut d2 = d.clone();
     d2.item = "it-se55".into();
     d2.session = "docs".into();
-    quarry::coord::save_dispatch(&s, "session:docs", &d2).unwrap();
+    d2.holder = "session:docs".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
     run(&[("QUARRY_SESSION", "docs")], &["new", "thread", "t three"]);
     assert!(last_create().get("dispatch").is_none(), "the holding session's acts stamp nothing");
     // env badge (the out-of-hook-coverage override) stamps AND teaches an
@@ -1095,6 +1154,7 @@ fn observe_write_contract_echo_and_drift() {
         item: "it-bdg".into(),
         item_title: "guard growth".into(),
         session: "geo".into(),
+        holder: "chat:chat-disp".into(),
         globs: vec!["src/**".into()],
         acceptance: vec!["a".into(), "b".into()],
         since: "2026-01-01T00:00:00Z".into(),
@@ -1103,7 +1163,7 @@ fn observe_write_contract_echo_and_drift() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-disp", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     // first badged write echoes the contract once
     let out = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/main.rs");
     assert!(
@@ -1119,17 +1179,17 @@ fn observe_write_contract_echo_and_drift() {
         "ts": Store::now(), "node": "it-bdg", "v": 2, "op": "set", "actor": "someone-else"
     }))
     .unwrap();
-    let (k2, mut d2) = quarry::coord::dispatch_for_item(&s, "it-bdg").unwrap();
-    assert_eq!(k2, "chat:chat-disp", "the entry stays under its dispatching-chat key");
+    let mut d2 = quarry::coord::dispatch_for_item(&s, "it-bdg").unwrap();
+    assert_eq!(d2.holder, "chat:chat-disp", "the entry keeps its dispatching-chat holder");
     d2.checked = "2000-01-01T00:00:00Z".into();
-    quarry::coord::save_dispatch(&s, &k2, &d2).unwrap();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
     let out3 = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/other.rs");
     assert!(out3.iter().any(|l| l.contains("dispatch drift")), "got {:?}", out3);
-    // cursor advanced by the delivery — saved back under the same key
-    let (k3, mut d3) = quarry::coord::dispatch_for_item(&s, "it-bdg").unwrap();
-    assert_eq!(k3, "chat:chat-disp");
+    // cursor advanced by the delivery — saved back under the same item key
+    let mut d3 = quarry::coord::dispatch_for_item(&s, "it-bdg").unwrap();
+    assert_eq!(d3.holder, "chat:chat-disp");
     d3.checked = "2000-01-01T00:00:00Z".into();
-    quarry::coord::save_dispatch(&s, &k3, &d3).unwrap();
+    quarry::coord::save_dispatch(&s, &d3).unwrap();
     let out4 = observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/third.rs");
     assert!(!out4.iter().any(|l| l.contains("dispatch drift")), "said once, got {:?}", out4);
 }
@@ -1180,7 +1240,7 @@ fn dispatch_one_act_then_harvest() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
     // the hand-off is a FETCH (dc-zbxj): one line, token inside, nothing
     // hand-carried — the manual-export instruction is dead
     assert_eq!(out.spawn.lines().count(), 1, "spawn prompt is one line: {}", out.spawn);
@@ -1188,33 +1248,41 @@ fn dispatch_one_act_then_harvest() {
     assert!(!out.spawn.contains("QUARRY_DISPATCH"), "per-shell export died from the payload");
     assert!(!out.spawn.contains("DISPATCH BRIEF"), "the brief renders at join, never in the hand-off");
     assert!(!out.reused_lease);
+    assert!(out.stolen_from.is_none());
     let leases = quarry::coord::load_leases(&s);
     assert_eq!(leases.len(), 1);
     assert_eq!(leases[0].item, it.front.id);
     assert_eq!(leases[0].session, "geo");
     let all = s.load_all().unwrap();
     assert_eq!(s.find(&all, &it.front.id).unwrap().front.status, "in-flight");
-    // env unset in-process: the dispatch keys under its session fallback
-    let d = quarry::coord::held_dispatch(&s, "session:geo").unwrap();
-    assert_eq!(d.item, it.front.id);
+    // env unset in-process: the holder falls back to the session key
+    let d = quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap();
+    assert_eq!(d.holder, "session:geo");
     assert_eq!(d.globs, vec!["src/geo/**".to_string()]);
     assert_eq!(d.acceptance.len(), 1, "the contract rides the state file");
     assert_eq!(d.token.as_deref(), Some(out.token.as_str()), "the join token rides the held entry");
     assert!(d.joined.is_none(), "unconsumed until an agent joins");
     assert!(quarry::coord::briefed_this_session(&s, &it.front.id, "geo"), "dispatch briefs (C8)");
     // re-dispatch keeps the lease but is a NEW hand-off: fresh token
-    let again = ops::dispatch(&s, &it.front.id, vec![], false, "geo", "t").unwrap();
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
     assert!(again.reused_lease);
     assert_ne!(again.token, out.token, "a re-dispatch mints a fresh token");
-    // a second dispatch refuses only from the chat that already holds one
+    // FLIP (dc-qyr5, was: "a second dispatch refuses from the chat already
+    // holding one"): MULTI-HELD — the same chat dispatches a second item
+    // freely; fire-them-all-off from one chat is literal
     let other = ops::new_node(&s, NewArgs::bare("item", "other work")).unwrap();
-    let err = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, "geo", "t").unwrap_err();
-    assert!(err.to_string().contains("already has a dispatch in flight"), "got: {}", err);
-    // …while a PARALLEL chat dispatches freely — the normal shape (dc-ydvb)
-    let par = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, "geo2", "t").unwrap();
+    let par = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, false, None, "geo", "t").unwrap();
     assert!(!par.reused_lease);
-    assert_eq!(quarry::coord::held_dispatch(&s, "session:geo2").unwrap().item, other.front.id);
-    assert_eq!(quarry::coord::held_dispatch(&s, "session:geo").unwrap().item, it.front.id);
+    let held = quarry::coord::held_dispatches(&s, "session:geo");
+    assert_eq!(held.len(), 2, "one chat, two live dispatches (dc-qyr5)");
+    // …what refuses now is PER-ITEM ownership: another chat dispatching a
+    // live-dispatched item is turned away naming the holding chat and
+    // session, with the loud road advertised
+    let err = ops::dispatch(&s, &other.front.id, vec![], false, false, None, "geo2", "t").unwrap_err();
+    assert!(err.to_string().contains("already dispatched"), "got: {}", err);
+    assert!(err.to_string().contains("session:geo"), "holding chat named: {}", err);
+    assert!(err.to_string().contains("session geo"), "holding session named: {}", err);
+    assert!(err.to_string().contains("--steal"), "the loud road advertised: {}", err);
     // an unidentified process amid TWO live badges inherits neither — the
     // machine-global fallback is gone; env transport is the agent's stamp
     let c = ops::claim(
@@ -1269,10 +1337,13 @@ fn dispatch_one_act_then_harvest() {
     let un2 = queries::unharvested_dispatches(&all, &log2);
     assert!(!un2.iter().any(|n| n.front.id == it.front.id));
     assert!(un2.iter().any(|n| n.front.id == other.front.id), "the parallel arc stays owed");
-    // clearing one badge leaves the parallel chat's dispatch standing
+    // clearing one badge is exact under multi-held: the SAME chat's other
+    // live dispatch stands untouched
     quarry::coord::clear_dispatch(&s, &it.front.id);
-    assert!(quarry::coord::held_dispatch(&s, "session:geo").is_none());
-    assert_eq!(quarry::coord::held_dispatch(&s, "session:geo2").unwrap().item, other.front.id);
+    assert!(quarry::coord::dispatch_for_item(&s, &it.front.id).is_none());
+    let left = quarry::coord::held_dispatches(&s, "session:geo");
+    assert_eq!(left.len(), 1);
+    assert_eq!(left[0].item, other.front.id);
 }
 
 #[test]
@@ -1281,17 +1352,75 @@ fn dispatch_refuses_settled_and_foreign_lease() {
     let mut done = NewArgs::bare("item", "landed work");
     done.status = Some("done".into());
     let done = ops::new_node(&s, done).unwrap();
-    let err = ops::dispatch(&s, &done.front.id, vec!["src/**".into()], false, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &done.front.id, vec!["src/**".into()], false, false, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("[done]"), "got: {}", err);
-    // a foreign holder blocks dispatch with the holder named
+    // a foreign SOLO lease (no live dispatch) still blocks dispatch with the
+    // holder named — the dispatch steal takes dispatches, not solo leases
     let it = ops::new_node(&s, NewArgs::bare("item", "contested work")).unwrap();
     quarry::coord::reserve(&s, &it, "bodies", "t", vec!["src/x/**".into()], false, false, None).unwrap();
-    let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, false, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("bodies"), "got: {}", err);
     // no globs anywhere refuses with the teaching line
     let bare = ops::new_node(&s, NewArgs::bare("item", "bare work")).unwrap();
-    let err = ops::dispatch(&s, &bare.front.id, vec![], false, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &bare.front.id, vec![], false, false, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("--files"), "got: {}", err);
+}
+
+#[test]
+fn dispatch_steal_takes_the_dispatch_whole() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "contested pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    // an agent joined the original dispatch and works under it
+    ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap();
+    assert_eq!(quarry::coord::badge_for(&s, Some("ag-old"), None, None).as_deref(), Some(it.front.id.as_str()));
+    // --steal without --reason refuses: the reason is required (dc-qyr5),
+    // and nothing moved
+    let err = ops::dispatch(&s, &it.front.id, vec![], false, true, None, "ops", "t").unwrap_err();
+    assert!(err.to_string().contains("--reason"), "got: {}", err);
+    assert_eq!(quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap().holder, "session:geo");
+    // steal with the reason takes the dispatch WHOLE
+    let st = ops::dispatch(&s, &it.front.id, vec![], false, true, Some("holder went dark"), "ops", "t").unwrap();
+    assert_eq!(
+        st.stolen_from,
+        Some(("session:geo".to_string(), "geo".to_string())),
+        "the take-over names where it came from"
+    );
+    assert_ne!(st.token, out.token, "a steal is a new hand-off: fresh token");
+    let d = quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap();
+    assert_eq!(d.holder, "session:ops", "the held entry moved to the stealing chat");
+    assert_eq!(d.session, "ops");
+    assert!(d.joined.is_none(), "joined reset — the new agent joins fresh");
+    // the lease moved whole: same globs, re-homed session
+    let leases = quarry::coord::load_leases(&s);
+    assert_eq!(leases.len(), 1);
+    assert_eq!(leases[0].session, "ops");
+    assert_eq!(leases[0].globs, vec!["src/geo/**".to_string()], "globs survive the take-over");
+    // the old agent's association died with the steal: its acts stop
+    // stamping into an arc it no longer works
+    assert!(quarry::coord::badge_for(&s, Some("ag-old"), None, None).is_none());
+    // the old token is dead; the new one binds the new agent
+    let err = ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap_err();
+    assert!(err.to_string().contains("unknown join token"), "got: {}", err);
+    let j = ops::join(&s, &st.token, Some("agent:ag-new".into())).unwrap();
+    assert_eq!(j.bound.as_deref(), Some("agent:ag-new"));
+    // loud and logged: the steal event carries reason and provenance
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| e.get("op").and_then(|v| v.as_str()) == Some("steal"))
+        .expect("steal logged");
+    assert_eq!(ev.get("node").and_then(|v| v.as_str()), Some(it.front.id.as_str()));
+    assert_eq!(ev.get("from_chat").and_then(|v| v.as_str()), Some("session:geo"));
+    assert_eq!(ev.get("from_session").and_then(|v| v.as_str()), Some("geo"));
+    assert_eq!(ev.get("from_joined").and_then(|v| v.as_str()), Some("agent:ag-old"));
+    assert_eq!(ev.get("reason").and_then(|v| v.as_str()), Some("holder went dark"));
 }
 
 #[test]
@@ -1303,12 +1432,12 @@ fn join_consumes_token_binds_and_renders() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
     // no identity refuses WITHOUT consuming — the retry stays possible
     let err = ops::join(&s, &out.token, None).unwrap_err();
     assert!(err.to_string().contains("no identity"), "got: {}", err);
     assert!(
-        quarry::coord::held_dispatch(&s, "session:geo").unwrap().joined.is_none(),
+        quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap().joined.is_none(),
         "an identity-less join spends nothing"
     );
     // join consumes the token, binds the identity, records the association,
@@ -1321,7 +1450,7 @@ fn join_consumes_token_binds_and_renders() {
     assert!(j.brief.contains("the pass lands"), "RETURN spec rides the derived brief");
     let m = quarry::coord::load_dispatches(&s);
     assert_eq!(m.acting.get("agent:ag-1").map(|b| b.as_str()), Some(it.front.id.as_str()));
-    assert_eq!(m.held.get("session:geo").unwrap().joined.as_deref(), Some("agent:ag-1"));
+    assert_eq!(m.held.get(it.front.id.as_str()).unwrap().joined.as_deref(), Some("agent:ag-1"));
     // the joined identity now resolves the stamping badge
     assert_eq!(
         quarry::coord::badge_for(&s, Some("ag-1"), None, None).as_deref(),
@@ -1354,8 +1483,8 @@ fn join_consumes_token_binds_and_renders() {
     let err = ops::join(&s, "zzzzzzzzzz", Some("agent:ag-1".into())).unwrap_err();
     assert!(err.to_string().contains("unknown join token"), "got: {}", err);
     // a re-dispatch is a new hand-off: fresh token, joined reset, old dead
-    let again = ops::dispatch(&s, &it.front.id, vec![], false, "geo", "t").unwrap();
-    assert!(quarry::coord::held_dispatch(&s, "session:geo").unwrap().joined.is_none());
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
+    assert!(quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap().joined.is_none());
     let err = ops::join(&s, &out.token, Some("agent:ag-1".into())).unwrap_err();
     assert!(err.to_string().contains("unknown join token"), "the old token died with the re-dispatch: {}", err);
     // harvest-side clear kills the token with the entry
@@ -1375,7 +1504,7 @@ fn join_cli_env_identity_transport() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
     let q = env!("CARGO_BIN_EXE_q");
     let run = |envs: &[(&str, &str)], args: &[&str]| {
         let mut c = std::process::Command::new(q);
@@ -1417,7 +1546,7 @@ fn join_cli_env_identity_transport() {
     it2.status = Some("ready".into());
     it2.about = vec![area.front.id.clone()];
     let it2 = ops::new_node(&s, it2).unwrap();
-    let out4 = ops::dispatch(&s, &it2.front.id, vec!["docs/**".into()], false, "geo2", "t").unwrap();
+    let out4 = ops::dispatch(&s, &it2.front.id, vec!["docs/**".into()], false, false, None, "geo2", "t").unwrap();
     let out5 = run(&[("QUARRY_CHAT", "chat-f")], &["join", &out4.token]);
     assert!(out5.status.success(), "{}", String::from_utf8_lossy(&out5.stderr));
     assert_eq!(
@@ -1436,6 +1565,7 @@ fn work_only_stamping_held_entry_alone_stamps_nothing() {
         item: "it-wrk".into(),
         item_title: "the work".into(),
         session: "geo".into(),
+        holder: "chat:chat-h".into(),
         globs: vec!["src/**".into()],
         acceptance: vec![],
         since: "2026-01-01T00:00:00Z".into(),
@@ -1444,7 +1574,7 @@ fn work_only_stamping_held_entry_alone_stamps_nothing() {
         token: Some("tok4wrk123".into()),
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-h", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     // the held entry, alone, stamps nothing — for its chat, its session, or
     // anyone else
     assert!(quarry::coord::badge_for(&s, None, Some("chat-h"), None).is_none());
@@ -1980,6 +2110,7 @@ fn boundary_verbs_refuse_only_for_the_badged_chat() {
         item: "it-b0nd".into(),
         item_title: "badged work".into(),
         session: "disp".into(),
+        holder: "chat:chat-disp".into(),
         globs: vec!["src/**".into()],
         acceptance: vec![],
         since: "2026-01-01T00:00:00Z".into(),
@@ -1988,7 +2119,7 @@ fn boundary_verbs_refuse_only_for_the_badged_chat() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-disp", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     // ANOTHER chat's live badge no longer captures this context's boundary:
     // this process has no identity (env unset in tests), resolves no badge,
     // and wraps freely — the decisions session keeps its boundary while a
@@ -2044,12 +2175,13 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
         !s.root.join("graph").join("view").join("index.html").exists(),
         "a refused wrap regenerates nothing"
     );
-    // two parallel dispatches live machine-locally: one session-keyed, one
-    // chat-keyed — each captures only its own chat's boundary
+    // two parallel dispatches live machine-locally: one session-held, one
+    // chat-held — each captures only its own chat's boundary
     let d = quarry::coord::DispatchState {
         item: "it-loc4".into(),
         item_title: "state-file badge".into(),
         session: "disp".into(),
+        holder: "session:disp".into(),
         globs: vec![],
         acceptance: vec![],
         since: "2026-01-01T00:00:00Z".into(),
@@ -2058,14 +2190,24 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "session:disp", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     let mut d2 = d.clone();
     d2.item = "it-ch4t".into();
-    quarry::coord::save_dispatch(&s, "chat:chat-a", &d2).unwrap();
-    // the dispatching session refuses, named its own exit
+    d2.holder = "chat:chat-a".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
+    // BOUNDARY HARVESTS ALL (dc-qyr5): the dispatching session holds a
+    // SECOND live dispatch — the refusal enumerates every one with its
+    // q harvest command, never first-found
+    let mut d3 = d.clone();
+    d3.item = "it-mult".into();
+    quarry::coord::save_dispatch(&s, &d3).unwrap();
     let out = run(&[("QUARRY_SESSION", "disp")], &["wrap"]);
     assert!(!out.status.success(), "the badged session's wrap refuses without env badge");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("q harvest it-loc4"));
+    let err = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(err.contains("q harvest it-loc4"), "first held dispatch enumerated: {}", err);
+    assert!(err.contains("q harvest it-mult"), "second held dispatch enumerated: {}", err);
+    assert!(err.contains("2 live dispatch"), "the count is named: {}", err);
+    assert!(!err.contains("q harvest it-ch4t"), "another chat's dispatch stays out of this refusal: {}", err);
     // the dispatching chat refuses, resolved by chat identity alone
     let out = run(&[("QUARRY_CHAT", "chat-a")], &["wrap"]);
     assert!(!out.status.success(), "the badged chat's wrap refuses");
@@ -2091,6 +2233,7 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
     );
     assert!(String::from_utf8_lossy(&out.stdout).contains("view regenerated"));
     quarry::coord::clear_dispatch(&s, "it-loc4");
+    quarry::coord::clear_dispatch(&s, "it-mult");
     quarry::coord::clear_dispatch(&s, "it-ch4t");
     // badges clear: the once-badged session wraps and regenerates the view
     let out = run(&[("QUARRY_SESSION", "disp")], &["wrap"]);
@@ -2122,6 +2265,7 @@ fn unlink_retires_edge_logged_without_bump() {
         item: "it-unlk".into(),
         item_title: "unlink arc".into(),
         session: "disp".into(),
+        holder: "chat:chat-disp".into(),
         globs: vec![],
         acceptance: vec![],
         since: "2026-01-01T00:00:00Z".into(),
@@ -2130,7 +2274,7 @@ fn unlink_retires_edge_logged_without_bump() {
         token: None,
         joined: None,
     };
-    quarry::coord::save_dispatch(&s, "chat:chat-disp", &d).unwrap();
+    quarry::coord::save_dispatch(&s, &d).unwrap();
     let (src, edge) =
         ops::unlink(&s, &a.front.id, "builds-on", &b.front.id, Some("mislink: wrong target".into()))
             .unwrap();

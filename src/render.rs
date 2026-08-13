@@ -504,7 +504,7 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
         .iter()
         .find(|l| &l.item == id)
         .map(|l| l.globs.clone())
-        .or_else(|| crate::coord::dispatch_for_item(store, id).map(|(_, d)| d.globs))
+        .or_else(|| crate::coord::dispatch_for_item(store, id).map(|d| d.globs))
         .unwrap_or_else(|| item.front.write_set.clone());
     writeln!(s, "\nOBSERVED vs LEASED:")?;
     if observed.is_empty() {

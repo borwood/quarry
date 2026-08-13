@@ -269,22 +269,42 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
     Ok(())
 }
 
-// ── the dispatch badge (machine-local, per chat) ───────────────────────────
+/// Re-home an item's lease under a new session — the dispatch-steal path
+/// (dc-qyr5): a steal takes the dispatch WHOLE, lease included, so the
+/// globs survive while holder session, actor, and clock reset. The caller
+/// logs the steal event; this is the state move only.
+pub fn rehome_lease(store: &Store, item: &Node, session: &str, actor: &str) -> Result<()> {
+    let mut leases = load_leases(store);
+    let Some(l) = leases.iter_mut().find(|l| l.item == item.front.id) else {
+        bail!(
+            "{} holds no lease to take over",
+            crate::surface::atom_ref(&crate::surface::atom(&[], item))
+        );
+    };
+    l.session = session.to_string();
+    l.actor = actor.to_string();
+    l.since = Store::now();
+    save_leases(store, &leases)?;
+    Ok(())
+}
+
+// ── the dispatch badge (machine-local, per item) ───────────────────────────
 //
 // The hand-off is a FETCH (dc-zbxj): q dispatch mints a single-use join
 // token into a one-line spawn prompt; q join consumes it, binds the acting
 // agent identity to the badge in the ASSOCIATION map, and renders the brief
 // fresh. Hooks do identity injection only (QUARRY_AGENT / QUARRY_CHAT /
 // QUARRY_SESSION); QUARRY_DISPATCH env survives solely as the out-of-hook-
-// coverage override. Parallel dispatch is the normal shape (dc-ydvb): one
-// HELD entry per dispatching chat (chat-keyed, session-keyed fallback),
-// cleared at harvest/release. Stamping follows the WORK, never the holding
-// chat: held entries resolve refusal and boundary only; badge resolution
-// for stamping and the write guard reads env and the association map. In
-// the no-agent-id fallback (a subagent is otherwise indistinguishable from
-// its parent chat — probed 2026-08-13), a chat-keyed association may name
-// the dispatching chat itself; that blur is accepted and vanishes wherever
-// the harness provides an agent id.
+// coverage override. Multi-held dispatch is the normal shape (dc-qyr5): a
+// chat holds ANY number of live dispatches, an item belongs to ONE chat —
+// held entries are keyed by item, each carrying its holder (the dispatching
+// chat's key), cleared per item at harvest/release. Stamping follows the
+// WORK, never the holding chat: held entries resolve refusal and boundary
+// only; badge resolution for stamping and the write guard reads env and the
+// association map. In the no-agent-id fallback (a subagent is otherwise
+// indistinguishable from its parent chat — probed 2026-08-13), a chat-keyed
+// association may name the dispatching chat itself; that blur is accepted
+// and vanishes wherever the harness provides an agent id.
 
 /// The active dispatch, with the contract captured at dispatch time so the
 /// write guard can echo it without loading the graph.
@@ -293,6 +313,13 @@ pub struct DispatchState {
     pub item: String,
     pub item_title: String,
     pub session: String,
+    /// The dispatching chat's key ("chat:<id>", or "session:<name>" where no
+    /// chat id reached the dispatching shell). Per-item ownership (dc-qyr5):
+    /// the item is the map key, the holder rides the entry. Empty only
+    /// transiently while loading pre-multi-held files, where the map key WAS
+    /// the holder — load_dispatches fills it in.
+    #[serde(default)]
+    pub holder: String,
     pub globs: Vec<String>,
     #[serde(default)]
     pub acceptance: Vec<String>,
@@ -316,13 +343,15 @@ pub struct DispatchState {
     pub joined: Option<String>,
 }
 
-/// The machine-local dispatch state: one held entry per dispatching chat,
-/// plus the learned acting-chat associations that let hook processes resolve
-/// a dispatched agent's chat to its badge.
+/// The machine-local dispatch state: one held entry per live-dispatched
+/// ITEM (dc-qyr5: an item belongs to one chat, a chat holds many), plus the
+/// learned acting-chat associations that let hook processes resolve a
+/// dispatched agent's chat to its badge.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct DispatchMap {
-    /// Dispatching-chat key ("chat:<id>", or "session:<name>" where no chat
-    /// id reached the dispatching shell) → the dispatch that chat holds.
+    /// Item id → the live dispatch on it. The entry's holder field names
+    /// the dispatching chat; keying by item keeps the double-hold refusal
+    /// and the per-item clear exact under multi-held.
     #[serde(default)]
     pub held: BTreeMap<String, DispatchState>,
     /// Acting-chat key ("chat:<id>") → badge item id, learned when a badged
@@ -368,10 +397,12 @@ pub fn dispatch_key(session: &str) -> String {
         .unwrap_or_else(|| format!("session:{}", session))
 }
 
-/// Load the full dispatch state. Tolerates the pre-per-chat single-slot file
-/// (a bare DispatchState at top level): it migrates in memory under its
-/// session key and persists in the new shape at the next save — a live
-/// dispatch survives the upgrade.
+/// Load the full dispatch state. Tolerates both legacy on-disk shapes: the
+/// single-slot file (a bare DispatchState at top level) and the per-chat-
+/// keyed map (held keyed by dispatching chat, no holder field) — each
+/// migrates in memory to the per-item keying with the old key becoming the
+/// holder, and persists in the new shape at the next save. A live dispatch
+/// survives the upgrade.
 pub fn load_dispatches(store: &Store) -> DispatchMap {
     let Ok(s) = fs::read_to_string(dispatch_path(store)) else {
         return DispatchMap::default();
@@ -380,15 +411,27 @@ pub fn load_dispatches(store: &Store) -> DispatchMap {
         return DispatchMap::default();
     };
     if v.get("item").map_or(false, |x| x.is_string()) {
-        // Legacy single-slot shape.
-        if let Ok(d) = serde_json::from_value::<DispatchState>(v) {
+        // Legacy single-slot shape: the session key was the holder.
+        if let Ok(mut d) = serde_json::from_value::<DispatchState>(v) {
             let mut m = DispatchMap::default();
-            m.held.insert(format!("session:{}", d.session), d);
+            d.holder = format!("session:{}", d.session);
+            m.held.insert(d.item.clone(), d);
             return m;
         }
         return DispatchMap::default();
     }
-    serde_json::from_value(v).unwrap_or_default()
+    let mut m: DispatchMap = serde_json::from_value(v).unwrap_or_default();
+    // Re-key by item (dc-qyr5). A pre-multi-held entry carries no holder —
+    // its map key WAS the dispatching chat, so the key moves into the field.
+    // Current-shape entries (key == item, holder set) reinsert unchanged.
+    let held = std::mem::take(&mut m.held);
+    for (k, mut d) in held {
+        if d.holder.is_empty() {
+            d.holder = k;
+        }
+        m.held.insert(d.item.clone(), d);
+    }
+    m
 }
 
 fn save_dispatches(store: &Store, m: &DispatchMap) -> Result<()> {
@@ -400,26 +443,30 @@ fn save_dispatches(store: &Store, m: &DispatchMap) -> Result<()> {
     Ok(())
 }
 
-/// Record a dispatch under its dispatching-chat key (upsert; other chats'
-/// entries are untouched).
-pub fn save_dispatch(store: &Store, key: &str, d: &DispatchState) -> Result<()> {
+/// Record a dispatch under its item key (upsert — a re-dispatch or steal
+/// replaces the item's entry; every other item's entry is untouched). The
+/// state carries its holder.
+pub fn save_dispatch(store: &Store, d: &DispatchState) -> Result<()> {
     let mut m = load_dispatches(store);
-    m.held.insert(key.to_string(), d.clone());
+    m.held.insert(d.item.clone(), d.clone());
     save_dispatches(store, &m)
 }
 
-/// The dispatch a chat holds, by its key.
-pub fn held_dispatch(store: &Store, key: &str) -> Option<DispatchState> {
-    load_dispatches(store).held.get(key).cloned()
-}
-
-/// Any chat's held dispatch for this item, with the key it is held under —
-/// the per-item read harvest, trace, and the write guard's contract echo use.
-pub fn dispatch_for_item(store: &Store, item_id: &str) -> Option<(String, DispatchState)> {
+/// Every live dispatch a chat holds, by its holder key — multi-held
+/// (dc-qyr5): any number, enumerated in item order.
+pub fn held_dispatches(store: &Store, holder: &str) -> Vec<DispatchState> {
     load_dispatches(store)
         .held
-        .into_iter()
-        .find(|(_, d)| d.item == item_id)
+        .into_values()
+        .filter(|d| d.holder == holder)
+        .collect()
+}
+
+/// The live dispatch on this item, if any chat holds one — the per-item
+/// read harvest, trace, the double-hold refusal, and the write guard's
+/// contract echo use. Exact: held entries key by item.
+pub fn dispatch_for_item(store: &Store, item_id: &str) -> Option<DispatchState> {
+    load_dispatches(store).held.get(item_id).cloned()
 }
 
 /// The outcome of presenting a join token (dc-zbxj).
@@ -434,9 +481,10 @@ pub enum JoinBind {
 /// Consume a join token: single-use, machine-local. Finds the held entry
 /// carrying the token, marks it joined by this identity, and records the
 /// acting association that stamping and the write guard resolve. A second
-/// DIFFERENT identity refuses — one badge binds one agent (multi-badge
-/// holding is deliberately out of scope, deferred on th-6upm); re-dispatch
-/// mints a fresh token when a new agent takes the work over.
+/// DIFFERENT identity refuses — one badge binds one agent (a chat may hold
+/// many badges, dc-qyr5, but each badge is one agent's); re-dispatch mints
+/// a fresh token when a new agent takes the work over, and a steal takes
+/// the whole dispatch to another chat.
 pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<JoinBind> {
     let mut m = load_dispatches(store);
     let Some(key) = m
@@ -481,7 +529,7 @@ pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<
 /// maps: stamping reads acting, refusal reads held.
 pub fn record_acting(store: &Store, key: &str, badge: &str) {
     let mut m = load_dispatches(store);
-    if !m.held.values().any(|d| d.item == badge) {
+    if !m.held.contains_key(badge) {
         return;
     }
     if m.acting.get(key).map(|b| b.as_str()) == Some(badge) {
@@ -512,14 +560,16 @@ pub fn note_acting(store: &Store) {
     }
 }
 
-/// Clear every trace of an item's badge — held entries and acting
-/// associations alike (harvest and land both clear).
+/// Clear every trace of an item's badge — the held entry and acting
+/// associations alike (harvest, land, and the steal's take-over all clear).
+/// Exact under multi-held: item-keyed removal never touches the same chat's
+/// other live dispatches.
 pub fn clear_dispatch(store: &Store, item_id: &str) {
     let mut m = load_dispatches(store);
-    let (h, a) = (m.held.len(), m.acting.len());
-    m.held.retain(|_, d| d.item != item_id);
+    let removed = m.held.remove(item_id).is_some();
+    let a = m.acting.len();
     m.acting.retain(|_, b| b != item_id);
-    if m.held.len() != h || m.acting.len() != a {
+    if removed || m.acting.len() != a {
         let _ = save_dispatches(store, &m);
     }
 }
@@ -551,7 +601,7 @@ pub fn badge_for(
     ];
     for key in keys.iter().flatten() {
         if let Some(b) = m.acting.get(key) {
-            if m.held.values().any(|d| &d.item == b) {
+            if m.held.contains_key(b) {
                 return Some(b.clone());
             }
         }
@@ -571,41 +621,61 @@ pub fn current_dispatch_badge(store: &Store) -> Option<String> {
     )
 }
 
-/// The badge that captures this context's BOUNDARY verbs — wider than the
-/// stamping resolution: the HELD entry counts here (a dispatching chat is
-/// mid-dispatch even though its acts no longer stamp), alongside env and
-/// the acting associations. Never used for stamping.
-pub fn boundary_badge(store: &Store) -> Option<String> {
+/// Every badge that captures this context's BOUNDARY verbs — wider than the
+/// stamping resolution: every HELD entry this chat holds counts (a
+/// dispatching chat is mid-dispatch even though its acts no longer stamp),
+/// alongside env and the acting associations. Multi-held (dc-qyr5): the
+/// boundary harvests ALL, so this enumerates rather than first-finds.
+/// Never used for stamping.
+pub fn boundary_badges(store: &Store) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
     if let Some(b) = current_dispatch_badge(store) {
-        return Some(b);
+        out.push(b);
     }
     let m = load_dispatches(store);
-    if let Some(c) = current_chat() {
-        if let Some(d) = m.held.get(&format!("chat:{}", c)) {
-            return Some(d.item.clone());
+    let mine: Vec<String> = [
+        current_chat().map(|c| format!("chat:{}", c)),
+        current_session().map(|s| format!("session:{}", s)),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    for d in m.held.values() {
+        if mine.contains(&d.holder) && !out.contains(&d.item) {
+            out.push(d.item.clone());
         }
     }
-    if let Some(s) = current_session() {
-        if let Some(d) = m.held.get(&format!("session:{}", s)) {
-            return Some(d.item.clone());
-        }
-    }
-    None
+    out
 }
 
 /// C8's logic applied to boundary acts (it-ymsj): wrap and session
-/// resume/retire are the DISPATCHER'S verbs. Under this context's active
-/// badge — shell env, an acting association (a joined agent), or this
-/// chat's held entry, any alone suffices — they refuse with a teaching
-/// error. The incident this guard exists for: a dispatched agent ran q wrap
-/// wearing the dispatcher's injected session identity and consumed its
-/// session cursors. A chat with no badge of its own is free to wrap while
-/// other chats' dispatches fly — the decisions session keeps its boundary
-/// while a steward has work in flight (dc-ydvb).
+/// resume/retire are the DISPATCHER'S verbs. Under any active badge of this
+/// context — shell env, an acting association (a joined agent), or a held
+/// entry of this chat, any alone suffices — they refuse with a teaching
+/// error that enumerates EVERY live held dispatch with its q harvest
+/// command (dc-qyr5: the boundary harvests all; no parking a dispatch
+/// across a boundary). The incident this guard exists for: a dispatched
+/// agent ran q wrap wearing the dispatcher's injected session identity and
+/// consumed its session cursors. A chat with no badge of its own is free to
+/// wrap while other chats' dispatches fly — the decisions session keeps its
+/// boundary while a steward has work in flight.
 pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
-    let badge = boundary_badge(store)?;
+    let badges = boundary_badges(store);
+    if badges.is_empty() {
+        return None;
+    }
+    let m = load_dispatches(store);
+    let lines: Vec<String> = badges
+        .iter()
+        .map(|b| match m.held.get(b) {
+            Some(d) => format!("  · \"{}\" ({}) — q harvest {}", d.item_title, b, b),
+            None => format!("  · {} — q harvest {}", b, b),
+        })
+        .collect();
     Some(format!(
-        "boundary-verb capture: {verb} is a session-boundary act, and an active dispatch badge ({badge}) marks this chat mid-dispatch. A badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who closes the arc first: q harvest {badge}"
+        "boundary-verb capture: {verb} is a session-boundary act, and this chat is mid-dispatch — {n} live dispatch(es) held:\n{list}\nA badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who harvests every arc first — no parking a dispatch across a boundary (dc-qyr5).",
+        n = badges.len(),
+        list = lines.join("\n")
     ))
 }
 

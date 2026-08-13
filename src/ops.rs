@@ -617,6 +617,9 @@ pub struct DispatchOutcome {
     pub globs: Vec<String>,
     /// Re-dispatch: this session already held the lease and kept it.
     pub reused_lease: bool,
+    /// A cross-chat steal: the (holder key, session) the dispatch was taken
+    /// from — reported loud by the caller.
+    pub stolen_from: Option<(String, String)>,
     /// The single-use join token minted for this hand-off.
     pub token: String,
     /// The one-line spawn prompt (dc-zbxj): the hand-off is a fetch — the
@@ -629,11 +632,14 @@ pub struct DispatchOutcome {
 /// renders at q join, fresh), lease, in-flight, machine-local badge with a
 /// single-use join token, one-line spawn prompt. Never a landing: the item
 /// comes back through `q harvest` by the dispatcher's own hand.
+#[allow(clippy::too_many_arguments)]
 pub fn dispatch(
     store: &Store,
     key: &str,
     files: Vec<String>,
     shared: bool,
+    steal: bool,
+    reason: Option<&str>,
     session: &str,
     actor: &str,
 ) -> Result<DispatchOutcome> {
@@ -649,17 +655,46 @@ pub fn dispatch(
             item.front.status, item.front.id
         );
     }
-    // One badge per CHAT (dc-ydvb: parallel dispatch is the normal shape) —
-    // only a second dispatch from the chat already holding one refuses.
+    // Per-item ownership (dc-qyr5): a chat holds ANY number of live
+    // dispatches — the same-chat second-dispatch refusal is deleted;
+    // fire-them-all-off from one chat is literal. What refuses is
+    // dispatching an item ANOTHER chat already has live — or steals it
+    // whole, loud and logged, with the required reason.
     let dkey = crate::coord::dispatch_key(session);
-    if let Some(d) = crate::coord::held_dispatch(store, &dkey) {
-        if d.item != item.front.id {
-            bail!(
-                "this chat already has a dispatch in flight: \"{}\" ({}) — one badge per chat keeps observation honest; parallel dispatch belongs to parallel chats. Harvest it first: q harvest {}",
-                d.item_title, d.item, d.item
-            );
+    let stolen_from = match crate::coord::dispatch_for_item(store, &item.front.id) {
+        // Same-chat re-dispatch stays free: the documented recovery flow —
+        // a fresh token is minted below and the old one dies with the
+        // replaced entry.
+        Some(d) if d.holder == dkey => None,
+        Some(d) => {
+            if !steal {
+                bail!(
+                    "\"{}\" ({}) is already dispatched — held by {} (session {}, since {}). An item belongs to one chat (dc-qyr5); the holder harvests (q harvest {}) or re-dispatches. Taking it over is a steal, loud and logged: q dispatch {} --steal --reason \"why\"",
+                    d.item_title, d.item, d.holder, d.session, d.since, d.item, d.item
+                );
+            }
+            let Some(r) = reason else {
+                bail!(
+                    "--steal takes {}'s dispatch of \"{}\" ({}) over whole and demands its reason — the required response is the proof of engagement, and it lands on the logged steal event where the holder reads it. Re-run adding: --reason \"why\"",
+                    d.holder, d.item_title, d.item
+                );
+            };
+            // The steal takes the dispatch WHOLE (the lease steal pattern
+            // applied to dispatches): the held entry moves below, the old
+            // token dies, and the acting associations clear here so a
+            // stolen-from agent's later acts stop stamping into an arc it
+            // no longer works. Loud and logged, reason on the event.
+            store.log_event(json!({
+                "ts": Store::now(), "node": item.front.id, "v": item.front.v,
+                "op": "steal", "from_chat": d.holder, "from_session": d.session,
+                "from_joined": d.joined, "actor": actor, "session": session,
+                "reason": r
+            }))?;
+            crate::coord::clear_dispatch(store, &item.front.id);
+            Some((d.holder, d.session))
         }
-    }
+        None => None,
+    };
     // The brief act is logged up front (C8: the lease follows a brief); the
     // TEXT renders at q join, after the lease is taken, so the brief's
     // write-set section shows the contract the agent actually works under.
@@ -672,6 +707,12 @@ pub fn dispatch(
         .find(|l| l.item == item.front.id);
     let (globs, reused_lease) = match existing {
         Some(l) if l.session == session => (l.globs, true),
+        // The steal takes the lease with the dispatch: re-homed under the
+        // stealing session, globs intact.
+        Some(l) if stolen_from.is_some() => {
+            crate::coord::rehome_lease(store, &item, session, actor)?;
+            (l.globs, false)
+        }
         Some(l) => bail!(
             "{} is leased by session {} ({:?}) — a dispatch would double-hold. Coordinate with the holder, or they harvest/release first.",
             crate::surface::atom_ref(&crate::surface::atom(&[], &item)),
@@ -702,11 +743,11 @@ pub fn dispatch(
     let token = crate::protocol::mint_token_n(10);
     crate::coord::save_dispatch(
         store,
-        &dkey,
         &crate::coord::DispatchState {
             item: item.front.id.clone(),
             item_title: crate::surface::title_raw(&item).to_string(),
             session: session.to_string(),
+            holder: dkey,
             globs: globs.clone(),
             acceptance: item.front.acceptance.clone(),
             since: now.clone(),
@@ -730,6 +771,7 @@ pub fn dispatch(
         item_title: crate::surface::title_raw(&item).to_string(),
         globs,
         reused_lease,
+        stolen_from,
         token,
         spawn,
     })

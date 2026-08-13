@@ -217,10 +217,14 @@ alongside SESSION/ACTOR, and q resolves badges from the machine-local
 association map the join wrote — identity is structural, never
 discipline (dc-zbxj). QUARRY_DISPATCH env survives ONLY as the
 out-of-hook-coverage override (e.g. a parent-directory session).
-Parallel dispatches from parallel chats each hold their own badge; a
-chat with no badge keeps its boundary verbs while other chats'
-dispatches fly. Harvest and release clear badge, token, and
-associations alike.
+Multi-held dispatch (dc-qyr5): a chat holds any number of live
+dispatches; an item belongs to one chat (same-chat re-dispatch is free
+with a fresh token; from another chat, q dispatch --steal --reason
+takes the dispatch whole, loud and logged). Boundary verbs refuse
+while a chat holds ANY live dispatch, enumerating each with its
+q harvest command; a chat with no badge keeps its boundary verbs while
+other chats' dispatches fly. Harvest and release clear badge, token,
+and associations per item.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -655,7 +659,7 @@ pub fn observe_write(
         // First badged write: echo the contract captured at dispatch time —
         // the write path reads one small state file, never the graph.
         if prior.is_empty() {
-            if let Some((_, d)) = coord::dispatch_for_item(store, b) {
+            if let Some(d) = coord::dispatch_for_item(store, b) {
                 out.push(format!(
                     "first write under dispatch {} — the contract: item \"{}\"; write-set {:?} (outside writes deny); RETURN: {} acceptance line(s), accepted by outcome. Report and stop — landing belongs to the dispatcher. (q brief {} re-renders the full brief.)",
                     b, d.item_title, d.globs, d.acceptance.len(), b
@@ -664,7 +668,7 @@ pub fn observe_write(
         }
         // Badge-keyed drift notice: has the dispatched item moved since the
         // brief? Cursor-incremental from the dispatch state, throttled.
-        if let Some((dkey, mut d)) = coord::dispatch_for_item(store, b) {
+        if let Some(mut d) = coord::dispatch_for_item(store, b) {
             let stale = {
                 use time::format_description::well_known::Rfc3339;
                 time::OffsetDateTime::parse(&d.checked, &Rfc3339)
@@ -699,7 +703,7 @@ pub fn observe_write(
                     }
                     d.cursor = log.len() as u64;
                     d.checked = crate::store::Store::now();
-                    let _ = coord::save_dispatch(store, &dkey, &d);
+                    let _ = coord::save_dispatch(store, &d);
                 }
             }
         }

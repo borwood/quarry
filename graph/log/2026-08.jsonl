@@ -695,3 +695,28 @@
 {"ts":"2026-08-13T13:20:20Z","node":"it-xpt7","v":1,"op":"create","type":"item","title":"multi-held dispatch: many badges per chat, per-item ownership, boundary harvests all","actor":"claude-fable-5","note":null,"session":"quarry"}
 {"op":"set","fields":["status=shaped","write-set+=src/**","write-set+=tests/**","acceptance+=lands `multi-held`: a chat holds any number of live dispatches; the same-chat second-dispatch refusal is deleted","acceptance+=lands `item-one-chat`: dispatching a live-dispatched item refuses naming the holding chat and session; same-chat re-dispatch stays free with a fresh token; steal with a required reason takes the dispatch over, loud and logged","acceptance+=lands `boundary-harvests-all`: wrap, resume, and retire refuse while the chat holds any live dispatch, enumerating each with its q harvest command"],"from_status":"sketch","ts":"2026-08-13T13:20:27Z","node":"it-xpt7","v":2,"actor":"claude-fable-5","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-qyr5","at":2,"ts":"2026-08-13T13:20:27Z","node":"it-xpt7","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":4,"actor":"claude-fable-5","note":"orientation written to the item per dc-zbxj before the first one-line dispatch","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":5,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":5,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":6,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:26:35Z","node":"it-xpt7","v":5,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-13T13:26:46Z","node":"it-xpt7","v":6,"op":"join","actor":"claude-fable-5","dispatch":"it-xpt7","joined":"agent:a756bda5279908633","session":"quarry"}
+{"ts":"2026-08-13T13:41:30Z","node":"cl-s98g","v":1,"op":"create","type":"claim","title":"`multi-held-dispatch`: held entries key by item with a holder field - a chat holds many, an item belongs to one chat, steal takes it whole","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"82d257402a03","ts":"2026-08-13T13:41:30Z","node":"cl-s98g","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"supersedes","to":"cl-amza","at":3,"ts":"2026-08-13T13:41:36Z","node":"cl-s98g","v":3,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"set","field":"status","from":"asserted","to":"superseded","cause":"cl-s98g","ts":"2026-08-13T13:41:36Z","node":"cl-amza","v":4,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"supports","to":"dc-qyr5","at":2,"ts":"2026-08-13T13:41:36Z","node":"cl-s98g","v":4,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"ts":"2026-08-13T13:41:42Z","node":"cl-s98g","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"ts":"2026-08-13T13:41:49Z","node":"cl-ahzk","v":1,"op":"create","type":"claim","title":"`boundary-harvests-all`: wrap and resume/retire refuse under any live held dispatch, enumerating each with its q harvest command","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"82d257402a03","ts":"2026-08-13T13:41:49Z","node":"cl-ahzk","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"supersedes","to":"cl-farc","at":4,"ts":"2026-08-13T13:41:55Z","node":"cl-ahzk","v":3,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"set","field":"status","from":"asserted","to":"superseded","cause":"cl-ahzk","ts":"2026-08-13T13:41:55Z","node":"cl-farc","v":5,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"op":"link","rel":"supports","to":"dc-qyr5","at":2,"ts":"2026-08-13T13:41:55Z","node":"cl-ahzk","v":4,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"ts":"2026-08-13T13:41:59Z","node":"cl-ahzk","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry","dispatch":"it-xpt7"}
+{"ts":"2026-08-13T13:43:44Z","node":"it-xpt7","v":6,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:44:15Z","node":"do-jahd","v":1,"op":"create","type":"doc","title":"dispatch report: multi-held dispatch lands","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-xpt7","at":6,"ts":"2026-08-13T13:44:15Z","node":"do-jahd","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-13T13:44:15Z","node":"it-xpt7","v":7,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:44:15Z","node":"it-xpt7","v":7,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:44:21Z","node":"do-jahd","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}

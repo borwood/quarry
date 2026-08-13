@@ -272,7 +272,11 @@ machine-locally with a single-use join token, and prints the ONE-LINE
 spawn prompt. The hand-off is a fetch (dc-zbxj): the agent runs
 q join <token>, which binds its identity to the badge and renders the
 brief fresh from the graph — nothing is hand-carried. The agent reports
-and stops; YOU judge and land: q harvest <item>.")]
+and stops; YOU judge and land: q harvest <item>.
+Multi-held (dc-qyr5): a chat dispatches any number of items in parallel;
+an item belongs to one chat. Re-dispatching your own item mints a fresh
+token (the old dies); an item another chat holds live refuses — take it
+over whole with --steal --reason \"why\" (loud, logged).")]
     Dispatch {
         item: String,
         /// Write-set globs for the lease (falls back to the item's write-set)
@@ -281,6 +285,12 @@ and stops; YOU judge and land: q harvest <item>.")]
         /// Mark the lease as a co-write zone
         #[arg(long)]
         shared: bool,
+        /// Take over another chat's live dispatch of this item, whole (loud, logged)
+        #[arg(long)]
+        steal: bool,
+        /// Required with --steal: why the take-over is justified (logged on the steal event)
+        #[arg(long)]
+        reason: Option<String>,
     },
     /// Join a dispatch: consume the spawn-prompt token, bind this agent's
     /// identity to the badge, and render the brief fresh from the graph
@@ -1355,14 +1365,23 @@ fn main() -> Result<()> {
                 println!("  view regenerated: {}", p.display());
             }
         }
-        Cmd::Dispatch { item, files, shared } => {
+        Cmd::Dispatch { item, files, shared, steal, reason } => {
             let store = Store::discover()?;
             let sess = coord::current_session().ok_or_else(|| {
                 anyhow::anyhow!(
                     "q dispatch is a session act — the lease it takes needs a holder, and an unbound chat has none. Bind this chat first: q session adopt <name> (or register one: q session set <name> --areas <area>...), then re-run."
                 )
             })?;
-            let out = ops::dispatch(&store, &item, files, shared, &sess, &Store::actor())?;
+            let out = ops::dispatch(
+                &store,
+                &item,
+                files,
+                shared,
+                steal,
+                reason.as_deref(),
+                &sess,
+                &Store::actor(),
+            )?;
             println!(
                 "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, single-use join token minted",
                 out.item_title,
@@ -1370,6 +1389,12 @@ fn main() -> Result<()> {
                 out.globs,
                 if out.reused_lease { " [re-dispatch: lease kept]" } else { "" }
             );
+            if let Some((holder, from_sess)) = &out.stolen_from {
+                println!(
+                    "  ⚠ STOLEN from {} (session {}) — the dispatch moved whole: lease re-homed, old token dead, the old agent's associations cleared. Your reason is logged; tell them.",
+                    holder, from_sess
+                );
+            }
             // The behind confrontation stays the DISPATCHER'S, here at the
             // hand-off moment: the agent fetches its brief at join, so the
             // staleness check must not wait for the render it will read.

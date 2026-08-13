@@ -2,8 +2,8 @@
 id: cl-farc
 type: claim
 title: '`boundary-badge-guard`: wrap and session resume/retire refuse while a d…'
-v: 4
-status: asserted
+v: 5
+status: superseded
 provenance: assistant
 created: 2026-08-11T05:18:37Z
 actor: claude
