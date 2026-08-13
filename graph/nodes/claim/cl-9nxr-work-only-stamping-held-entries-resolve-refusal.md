@@ -1,0 +1,22 @@
+---
+id: cl-9nxr
+type: claim
+title: '`work-only-stamping`: held entries resolve refusal and boundary only; stamping resolves env and association, never the holding chat'
+v: 3
+status: asserted
+provenance: assistant
+created: 2026-08-13T11:04:46Z
+actor: claude-fable-5
+edges:
+- rel: about
+  to: ar-c7f5
+  at: 1
+- rel: source
+  to: file:src/coord.rs
+  at: e9bd98ef671e
+- rel: supersedes
+  to: cl-vsew
+  at: 5
+---
+
+Held dispatch entries resolve refusal and boundary only (boundary_badge reads env, associations, then held); badge resolution for stamping and the write guard (badge_for) reads env and the association map by agent, chat, then session key — never the holding chat or session. The dispatching chat mid-flight acts stamp nothing; no-attribution beats mis-attribution.

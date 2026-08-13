@@ -115,16 +115,21 @@ as complete. The first write into an area you have not read this session
 GATES with the area's derived read-first (a prior q open of the area
 passes silently — open first and you never see the gate); after that,
 foreign drift in an area prints inline when your own verb touches it.
-DISPATCH IS A CHAIN: q dispatch <item> runs it as one act — derived
-brief, lease, in-flight, and a hand-off payload carrying the
-QUARRY_DISPATCH badge (q brief then q reserve remains the solo path;
-C8 makes any lease follow a same-session brief; if the brief reads
-wrong, fix the graph and re-render — never hand-compose dispatch
-context). The write hook holds a badged agent to the leased set and
-OBSERVES everyone else: leaseless code writes are never denied — they
-accrue to a machine-local touched-set, nudge once at threshold with
-the items they resemble, and surface at wrap. Verbs stamp the badge on
-events (q query dispatch <item> replays what a dispatch wrote). THE
+DISPATCH IS A FETCH (dc-zbxj): q dispatch <item> runs one act — brief
+logged, lease, in-flight, and a single-use join token in a ONE-LINE
+spawn prompt. The agent runs q join <token>, which binds its identity
+to the badge and renders the brief fresh from the graph — anything the
+hand-off should carry belongs IN the graph, so the derived brief
+carries it (q brief then q reserve remains the solo path; C8 makes any
+lease follow a same-session brief; never hand-compose dispatch
+context). The write hook holds a joined agent to the leased set,
+DENIES unjoined writes into a dispatched zone (join first — the
+teaching line names the fix), and OBSERVES everyone else: leaseless
+code writes are never denied — they accrue to a machine-local
+touched-set, nudge once at threshold with the items they resemble, and
+surface at wrap. Verbs stamp the badge on the JOINED identity's events
+(q query dispatch <item> replays what a dispatch wrote); the
+dispatcher's own acts never stamp — stamping follows the work. THE
 RETURN IS A REPORT, NOT A LANDING: an agent's "done" is a stop signal
 — the dispatcher judges at q harvest <item> (observed-vs-leased,
 report registration as a doc, then status=done and release by the
@@ -206,15 +211,16 @@ the session hook for chats running in this repo — you should never set
 them by hand. Set QUARRY_ACTOR manually only when operating outside hook
 coverage (e.g. from a parent directory). If unset entirely, provenance
 safely derives as assistant; user provenance is always explicit.
-QUARRY_DISPATCH is the dispatch badge: a dispatched agent exports it in
-every shell that runs q (the hand-off payload says how); q dispatch also
-records it machine-locally, keyed per dispatching chat (QUARRY_CHAT is
-auto-injected so per-chat state resolves — never set it by hand), and a
-badged q act ties the acting chat to the badge, so the write guard
-observes even shells whose env cannot reach it. Parallel dispatches from
-parallel chats each hold their own badge; a chat with no badge keeps its
-boundary verbs while other chats' dispatches fly. Harvest and release
-clear it.
+The dispatch badge is bound at q join, never exported by hand: the
+session hook injects QUARRY_AGENT (in subagents) and QUARRY_CHAT
+alongside SESSION/ACTOR, and q resolves badges from the machine-local
+association map the join wrote — identity is structural, never
+discipline (dc-zbxj). QUARRY_DISPATCH env survives ONLY as the
+out-of-hook-coverage override (e.g. a parent-directory session).
+Parallel dispatches from parallel chats each hold their own badge; a
+chat with no badge keeps its boundary verbs while other chats'
+dispatches fly. Harvest and release clear badge, token, and
+associations alike.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -231,6 +237,7 @@ const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in thi
 pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<serde_json::Value> {
     let v: serde_json::Value = serde_json::from_str(input).ok()?;
     let chat_id = v.get("session_id").and_then(|x| x.as_str());
+    let agent_id = hook_agent_id(&v);
     let tool = v.get("tool_name").and_then(|x| x.as_str()).unwrap_or("");
     if let Some(cid) = chat_id {
         if let Some(req) = crate::coord::take_adopt_request(store) {
@@ -259,10 +266,17 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     // processes, and the hook is the only place that knows it. Env wins.
     let env_chat = std::env::var("QUARRY_CHAT").ok().filter(|s| !s.trim().is_empty());
     let inject_chat = if env_chat.is_none() { chat_id.map(String::from) } else { None };
+    // Agent identity injection (dc-zbxj): hooks run in a subagent carry an
+    // agent id — the subagent's ONLY distinguishing mark (its session_id and
+    // env match the parent chat's). q join binds by it; badge resolution
+    // reads it first. Env wins here too.
+    let env_agent = std::env::var("QUARRY_AGENT").ok().filter(|s| !s.trim().is_empty());
+    let inject_agent = if env_agent.is_none() { agent_id.clone() } else { None };
     let mut updated_input: Option<serde_json::Map<String, serde_json::Value>> = None;
     if matches!(tool, "Bash" | "PowerShell")
         && (inject_sess.is_some()
             || inject_chat.is_some()
+            || inject_agent.is_some()
             || (inject_actor.is_some() && chat_id.is_some()))
     {
         if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
@@ -284,6 +298,12 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
                     prefix += &match tool {
                         "Bash" => format!("export QUARRY_CHAT='{}'; ", qc),
                         _ => format!("$env:QUARRY_CHAT='{}'; ", qc),
+                    };
+                }
+                if let Some(qg) = &inject_agent {
+                    prefix += &match tool {
+                        "Bash" => format!("export QUARRY_AGENT='{}'; ", qg),
+                        _ => format!("$env:QUARRY_AGENT='{}'; ", qg),
                     };
                 }
                 let mut u = ti.clone();
@@ -472,6 +492,30 @@ pub fn alerts_between(
     out
 }
 
+/// The agent id a hook input carries when the harness runs the hook inside
+/// a subagent (the harness fact dc-zbxj stands on). The key shape is read
+/// DEFENSIVELY — several plausible spellings — because the field's presence
+/// is established but its exact name may vary across harness versions;
+/// whichever matches, the value injects as QUARRY_AGENT and keys the
+/// association map.
+pub fn hook_agent_id(v: &serde_json::Value) -> Option<String> {
+    for k in [
+        "agent_id",
+        "agentId",
+        "agent_session_id",
+        "agentSessionId",
+        "subagent_id",
+        "subagentId",
+    ] {
+        if let Some(s) = v.get(k).and_then(|x| x.as_str()) {
+            if !s.trim().is_empty() {
+                return Some(s.to_string());
+            }
+        }
+    }
+    None
+}
+
 /// The file path a Write/Edit/NotebookEdit hook input targets, if any.
 pub fn write_target(input: &str) -> Option<String> {
     let v: serde_json::Value = serde_json::from_str(input).ok()?;
@@ -493,18 +537,23 @@ pub enum LeaseCheck {
     Allow,
 }
 
-/// Check a repo-relative write path against the live leases. A foreign
-/// EXCLUSIVE lease covering the path denies for everyone (that is what the
-/// lease means). Under QUARRY_DISPATCH, a write outside the own session's
-/// lease denies — the brief's write-set is the contract. A main session
-/// holding leases but writing outside all of them gets a warning: scope
-/// creep made visible, not forbidden. The contract is REPO-RELATIVE: a path
-/// outside the host repo (absolute — scratchpads, temp files) is never
-/// scope creep, never contract material, and always allowed here.
+/// Check a repo-relative write path against the live leases. Under a badge,
+/// the BADGE'S lease is the contract: inside its globs allows, outside
+/// denies. With no badge, the JOIN GATE (dc-zbxj) guards every zone a live
+/// dispatch leases: a write there from the holder session or an unbound
+/// context denies with the teaching line — under join-as-fetch the
+/// dispatcher does not work the leased zone, and the unjoined agent's fix
+/// is q join. A foreign EXCLUSIVE lease still denies for everyone (C7).
+/// Solo leases (reserve without dispatch) keep the holder-session allow and
+/// the scope-creep warning. The contract is REPO-RELATIVE: a path outside
+/// the host repo (absolute — scratchpads, temp files) is never scope creep,
+/// never contract material, and always allowed here. `dispatched` lists the
+/// item ids some live dispatch holds.
 pub fn lease_check(
     leases: &[crate::coord::Lease],
     session: Option<&str>,
-    dispatch_item: Option<&str>,
+    badge: Option<&str>,
+    dispatched: &[String],
     rel_path: &str,
 ) -> LeaseCheck {
     if leases.is_empty() || rel_path.starts_with("graph/") {
@@ -512,6 +561,37 @@ pub fn lease_check(
     }
     if rel_path.starts_with('/') || rel_path.contains(':') {
         return LeaseCheck::Allow; // outside the host repo — not this graph's concern
+    }
+    if let Some(item) = badge {
+        // The badge's own lease is the contract — session identity does not
+        // enter it (a joined agent usually has none of its own). A badge
+        // with no lease is a research dispatch: every code write is outside.
+        let covered = leases.iter().any(|l| {
+            l.item == item && l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
+        });
+        if covered {
+            return LeaseCheck::Allow;
+        }
+        return LeaseCheck::Deny(format!(
+            "dispatch write outside the leased write-set: {} is not covered by the lease for {} — the brief's write-set is the contract; ask the dispatcher to extend the lease.",
+            rel_path, item
+        ));
+    }
+    // The join gate (dc-zbxj), C8's move applied to the hand-off: a zone a
+    // live dispatch leases belongs to the JOINED agent. The holder session
+    // (the dispatcher — its chores live outside the zone) and the unbound
+    // context (an agent that skipped its join) both deny and teach; a
+    // genuinely foreign session falls through to C7 below, which names the
+    // holder instead.
+    if let Some(l) = leases.iter().find(|l| {
+        dispatched.contains(&l.item)
+            && session.map_or(true, |s| l.session == s)
+            && l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
+    }) {
+        return LeaseCheck::Deny(format!(
+            "this zone belongs to a dispatch: {} is inside the write-set leased for \"{}\" ({}). Join first — run the `q join <token>` line from your spawn prompt; it binds your identity to the badge and renders the brief (no spawn prompt? ask the dispatcher). The dispatcher's own chores live outside the leased zone.",
+            rel_path, l.item_title, l.item
+        ));
     }
     let foreign_exclusive = leases.iter().find(|l| {
         session.map_or(true, |s| l.session != s)
@@ -524,20 +604,16 @@ pub fn lease_check(
             rel_path, f.session, f.globs, f.item_title
         ));
     }
-    let covered_own = leases.iter().any(|l| {
-        session.map_or(false, |s| l.session == s)
-            && l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
+    // Solo holdings only from here down: a dispatched lease is the agent's
+    // zone, not the dispatcher's own hands — the dispatcher's outside writes
+    // are ordinary leaseless observation (dc-cc76), never scope creep.
+    let own_solo = |l: &&crate::coord::Lease| {
+        session.map_or(false, |s| l.session == s) && !dispatched.contains(&l.item)
+    };
+    let covered_own = leases.iter().filter(own_solo).any(|l| {
+        l.globs.iter().any(|g| crate::coord::globs_overlap(g, rel_path))
     });
-    if let Some(item) = dispatch_item {
-        if !covered_own {
-            return LeaseCheck::Deny(format!(
-                "dispatch write outside the leased write-set: {} is not covered by the lease for {} — the brief's write-set is the contract; ask the dispatcher to extend the lease.",
-                rel_path, item
-            ));
-        }
-        return LeaseCheck::Allow;
-    }
-    let holds_any = session.map_or(false, |s| leases.iter().any(|l| l.session == s));
+    let holds_any = leases.iter().any(|l| own_solo(&l));
     if holds_any && !covered_own {
         return LeaseCheck::Warn(format!(
             "quarry: this write ({}) lands outside every lease your session holds — scope creep, or a lease wanting extension?",

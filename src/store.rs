@@ -172,10 +172,10 @@ impl Store {
                     obj.insert("dispatch".into(), serde_json::json!(b));
                 }
             }
-            // A badged act from an identified chat teaches the machine which
-            // chat acts under the badge — hook processes (blind to shell env)
-            // resolve that chat's file writes through the association.
-            crate::coord::note_acting_chat(self);
+            // A badged act from an identified context teaches the machine
+            // which agent (or chat) acts under the badge — the env override's
+            // road into the association map; q join is the constructed road.
+            crate::coord::note_acting(self);
         }
         if let Some(sess) = ev.get("session").and_then(|v| v.as_str()) {
             crate::coord::touch_session(self, sess);

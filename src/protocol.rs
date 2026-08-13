@@ -93,14 +93,17 @@ fn save(store: &Store, f: &IntentsFile) -> Result<()> {
     Ok(())
 }
 
-fn mint_token() -> String {
+/// Machine-local one-time token mint (gate intents, join tokens): lowercase
+/// unambiguous alphabet, nanos-seeded LCG — unguessable-enough for a
+/// same-machine hand-off, never a cryptographic credential.
+pub fn mint_token_n(len: usize) -> String {
     const AB: &[u8] = b"23456789abcdefghjkmnpqrstuvwxyz";
     let mut seed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(1)
         | 1;
-    (0..6)
+    (0..len)
         .map(|_| {
             seed = seed
                 .wrapping_mul(6364136223846793005)
@@ -108,6 +111,10 @@ fn mint_token() -> String {
             AB[(seed >> 33) as usize % AB.len()] as char
         })
         .collect()
+}
+
+fn mint_token() -> String {
+    mint_token_n(6)
 }
 
 pub struct Gate {

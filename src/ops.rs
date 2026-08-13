@@ -617,14 +617,18 @@ pub struct DispatchOutcome {
     pub globs: Vec<String>,
     /// Re-dispatch: this session already held the lease and kept it.
     pub reused_lease: bool,
-    /// The hand-off block: badge instruction + derived brief, paste-whole.
-    pub payload: String,
+    /// The single-use join token minted for this hand-off.
+    pub token: String,
+    /// The one-line spawn prompt (dc-zbxj): the hand-off is a fetch — the
+    /// agent runs q join and the brief renders fresh from the graph, so a
+    /// stale or dispatcher-mangled copy is impossible.
+    pub spawn: String,
 }
 
-/// `q dispatch <item>`: one act — derived brief (rendered and logged, C8's
-/// substance), lease, in-flight, machine-local badge, hand-off payload.
-/// Never a landing: the item comes back through `q harvest` by the
-/// dispatcher's own hand.
+/// `q dispatch <item>`: one act — brief logged (C8's substance; the TEXT
+/// renders at q join, fresh), lease, in-flight, machine-local badge with a
+/// single-use join token, one-line spawn prompt. Never a landing: the item
+/// comes back through `q harvest` by the dispatcher's own hand.
 pub fn dispatch(
     store: &Store,
     key: &str,
@@ -657,8 +661,8 @@ pub fn dispatch(
         }
     }
     // The brief act is logged up front (C8: the lease follows a brief); the
-    // TEXT renders after the lease is taken, so the payload's write-set
-    // section shows the contract the agent actually works under.
+    // TEXT renders at q join, after the lease is taken, so the brief's
+    // write-set section shows the contract the agent actually works under.
     store.log_event(json!({
         "ts": Store::now(), "node": item.front.id, "v": item.front.v,
         "op": "brief", "actor": actor, "session": session
@@ -690,6 +694,12 @@ pub fn dispatch(
     }
     let cursor = store.read_log().map(|l| l.len()).unwrap_or(0) as u64;
     let now = Store::now();
+    // The join token: single-use, minted fresh on every dispatch (a
+    // re-dispatch is a new hand-off — the old token dies with the replaced
+    // entry). The spawn prompt collapses to one line; the manual-export
+    // instruction is gone — identity is structural, never discipline
+    // (dc-zbxj).
+    let token = crate::protocol::mint_token_n(10);
     crate::coord::save_dispatch(
         store,
         &dkey,
@@ -702,30 +712,79 @@ pub fn dispatch(
             since: now.clone(),
             cursor,
             checked: now,
+            token: Some(token.clone()),
+            joined: None,
         },
     )?;
     store.log_event(json!({
         "ts": Store::now(), "node": item.front.id, "v": item.front.v,
         "op": "dispatch", "actor": actor, "session": session, "globs": globs
     }))?;
-    // Rendered after the lease and the state save: the payload's write-set
-    // section shows the live contract, not the pre-dispatch void.
-    let brief_text = crate::render::brief(store, &item.front.id)?;
-    let payload = format!(
-        "You are dispatched under badge QUARRY_DISPATCH={id}. Export it in every shell that runs q:\n  \
-         pwsh: $env:QUARRY_DISPATCH='{id}'   ·   bash: export QUARRY_DISPATCH={id}\n\
-         (the badge is recorded machine-locally for the dispatching chat; your first badged q act\n\
-         ties your own chat to it, so file writes are observed even where a hook cannot see your\n\
-         shell env — export early, before your first file write. The export stamps your q acts.)\n\n{brief}",
-        id = item.front.id,
-        brief = brief_text
+    let spawn = format!(
+        "You are dispatched: in {}, run: q join {} — then follow what it prints.",
+        store.root.display(),
+        token
     );
     Ok(DispatchOutcome {
         item_id: item.front.id.clone(),
         item_title: crate::surface::title_raw(&item).to_string(),
         globs,
         reused_lease,
-        payload,
+        token,
+        spawn,
+    })
+}
+
+#[derive(Debug)]
+pub struct JoinOutcome {
+    pub item_id: String,
+    pub item_title: String,
+    /// The identity key newly bound (None on an idempotent re-join).
+    pub bound: Option<String>,
+    pub rejoined: bool,
+    /// The brief, rendered fresh from the graph at join time.
+    pub brief: String,
+}
+
+/// `q join <token>`: the fetch half of the dc-zbxj hand-off. Consumes the
+/// single-use token minted at dispatch, binds the acting identity (agent →
+/// chat → session, hook-injected; resolved by the caller) to the badge in
+/// the association map, logs the join under the badge, and renders the
+/// brief fresh — the brief doctrine (derived, never hand-carried) applied
+/// to the hand-off itself. Re-join by the same identity is idempotent.
+pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<JoinOutcome> {
+    // Identity precedes consumption: a join that can bind nothing refuses
+    // WITHOUT spending the token, so the retry (from a covered shell, or
+    // with the env override) still finds it live.
+    let Some(id_key) = identity else {
+        bail!(
+            "no identity reached this q process — the session hook injects QUARRY_AGENT/QUARRY_CHAT for shells in this repo, so run q join from such a shell. Outside hook coverage, skip join and export the badge by hand (QUARRY_DISPATCH=<item id>, from your dispatcher) — the env override survives exactly for that case."
+        );
+    };
+    let bind = crate::coord::consume_join_token(store, token, &id_key)?;
+    let (d, bound, rejoined) = match bind {
+        crate::coord::JoinBind::Bound(d) => (d, Some(id_key.clone()), false),
+        crate::coord::JoinBind::Rejoined(d) => (d, None, true),
+    };
+    if bound.is_some() {
+        // Logged once, at the bind: the join is the arc's first badged act.
+        let v = store
+            .load_all()
+            .ok()
+            .and_then(|all| store.find(&all, &d.item).ok().map(|n| n.front.v))
+            .unwrap_or(0);
+        store.log_event(json!({
+            "ts": Store::now(), "node": d.item, "v": v, "op": "join",
+            "actor": Store::actor(), "dispatch": d.item, "joined": id_key
+        }))?;
+    }
+    let brief = crate::render::brief(store, &d.item)?;
+    Ok(JoinOutcome {
+        item_id: d.item,
+        item_title: d.item_title,
+        bound,
+        rejoined,
+        brief,
     })
 }
 

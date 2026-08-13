@@ -271,18 +271,20 @@ pub fn release(store: &Store, item: &Node, session: &str, actor: &str) -> Result
 
 // ── the dispatch badge (machine-local, per chat) ───────────────────────────
 //
-// QUARRY_DISPATCH in a shell's env stamps that shell's q acts, but a hook
-// process spawned by the harness never sees the agent's shell env — so the
-// badge also lives machine-locally, written at `q dispatch` and cleared at
-// harvest/release. Parallel dispatch is the normal shape (dc-ydvb), so the
-// state holds one entry per DISPATCHING CHAT, keyed by the chat identity the
-// session hook injects (QUARRY_CHAT), with the q session as the fallback key
-// where no chat id reaches. A dispatched agent acting from its own chat is
-// tied to the badge by its first badged q act (note_acting_chat) — from then
-// on hook processes resolve that chat's writes to the badge without the env.
-// Known blur (accepted, per dispatching chat): a dispatching chat's own code
-// writes are indistinguishable from its dispatched agent's; OTHER chats no
-// longer inherit the badge at all.
+// The hand-off is a FETCH (dc-zbxj): q dispatch mints a single-use join
+// token into a one-line spawn prompt; q join consumes it, binds the acting
+// agent identity to the badge in the ASSOCIATION map, and renders the brief
+// fresh. Hooks do identity injection only (QUARRY_AGENT / QUARRY_CHAT /
+// QUARRY_SESSION); QUARRY_DISPATCH env survives solely as the out-of-hook-
+// coverage override. Parallel dispatch is the normal shape (dc-ydvb): one
+// HELD entry per dispatching chat (chat-keyed, session-keyed fallback),
+// cleared at harvest/release. Stamping follows the WORK, never the holding
+// chat: held entries resolve refusal and boundary only; badge resolution
+// for stamping and the write guard reads env and the association map. In
+// the no-agent-id fallback (a subagent is otherwise indistinguishable from
+// its parent chat — probed 2026-08-13), a chat-keyed association may name
+// the dispatching chat itself; that blur is accepted and vanishes wherever
+// the harness provides an agent id.
 
 /// The active dispatch, with the contract captured at dispatch time so the
 /// write guard can echo it without loading the graph.
@@ -302,6 +304,16 @@ pub struct DispatchState {
     /// Wall-clock throttle stamp for the drift check.
     #[serde(default)]
     pub checked: String,
+    /// The single-use join token minted at dispatch (dc-zbxj). Absent on
+    /// pre-token entries — a live legacy dispatch still harvests cleanly;
+    /// it just has nothing to join.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub token: Option<String>,
+    /// The identity key ("agent:<id>" / "chat:<id>" / "session:<name>")
+    /// that consumed the token. Re-join by the same identity is idempotent;
+    /// a different identity refuses — one badge binds one agent.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub joined: Option<String>,
 }
 
 /// The machine-local dispatch state: one held entry per dispatching chat,
@@ -328,6 +340,24 @@ fn dispatch_path(store: &Store) -> std::path::PathBuf {
 /// machine-local state resolves by it inside q processes.
 pub fn current_chat() -> Option<String> {
     std::env::var("QUARRY_CHAT").ok().filter(|s| !s.trim().is_empty())
+}
+
+/// The agent identity the session hook injects (QUARRY_AGENT) when the
+/// harness names one — hooks run in a subagent carry an agent id, and the
+/// subagent is otherwise indistinguishable from its parent chat in both
+/// hook session_id and environment (probed 2026-08-13).
+pub fn current_agent() -> Option<String> {
+    std::env::var("QUARRY_AGENT").ok().filter(|s| !s.trim().is_empty())
+}
+
+/// The association key for an acting context, most-specific identity first:
+/// the agent id (a subagent's only distinguishing mark), then the chat,
+/// then the session. None when no identity reached the process at all.
+pub fn acting_key(agent: Option<&str>, chat: Option<&str>, session: Option<&str>) -> Option<String> {
+    agent
+        .map(|a| format!("agent:{}", a))
+        .or_else(|| chat.map(|c| format!("chat:{}", c)))
+        .or_else(|| session.map(|s| format!("session:{}", s)))
 }
 
 /// The key a dispatch is held under: the dispatching chat where the session
@@ -392,33 +422,93 @@ pub fn dispatch_for_item(store: &Store, item_id: &str) -> Option<(String, Dispat
         .find(|(_, d)| d.item == item_id)
 }
 
-/// Tie an acting chat to a live badge: hook processes (which never see the
-/// agent's shell env) resolve that chat's file writes through this. Recorded
-/// only while some chat holds the dispatch; a no-op for the dispatching chat
-/// itself (its held entry already resolves).
-pub fn record_acting_chat(store: &Store, chat_id: &str, badge: &str) {
+/// The outcome of presenting a join token (dc-zbxj).
+pub enum JoinBind {
+    /// Token consumed: the identity key is newly bound to the badge and the
+    /// association is recorded.
+    Bound(DispatchState),
+    /// This identity already consumed the token — idempotent re-join.
+    Rejoined(DispatchState),
+}
+
+/// Consume a join token: single-use, machine-local. Finds the held entry
+/// carrying the token, marks it joined by this identity, and records the
+/// acting association that stamping and the write guard resolve. A second
+/// DIFFERENT identity refuses — one badge binds one agent (multi-badge
+/// holding is deliberately out of scope, deferred on th-6upm); re-dispatch
+/// mints a fresh token when a new agent takes the work over.
+pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<JoinBind> {
     let mut m = load_dispatches(store);
-    let key = format!("chat:{}", chat_id);
-    if m.held.contains_key(&key) {
-        return;
+    let Some(key) = m
+        .held
+        .iter()
+        .find(|(_, d)| d.token.as_deref() == Some(token))
+        .map(|(k, _)| k.clone())
+    else {
+        bail!(
+            "unknown join token '{}' — join tokens are minted by q dispatch (single-use) and die at harvest. If the dispatch was re-issued or harvested, ask the dispatcher; q dispatch <item> mints a fresh token into a new spawn prompt.",
+            token
+        );
+    };
+    let joined = m.held[&key].joined.clone();
+    match joined {
+        None => {
+            let d = m.held.get_mut(&key).expect("entry just found");
+            d.joined = Some(identity.to_string());
+            let bound = d.clone();
+            m.acting.insert(identity.to_string(), bound.item.clone());
+            save_dispatches(store, &m)?;
+            Ok(JoinBind::Bound(bound))
+        }
+        Some(j) if j == identity => Ok(JoinBind::Rejoined(m.held[&key].clone())),
+        Some(other) => {
+            let d = &m.held[&key];
+            bail!(
+                "this token was already consumed by another identity ({}) — a join token is single-use and one badge binds one agent. If a second agent is to work \"{}\" ({}), the dispatcher re-dispatches (minting a fresh token) or dispatches a separate item.",
+                other, d.item_title, d.item
+            )
+        }
     }
+}
+
+/// Tie an acting identity key ("agent:<id>" / "chat:<id>" / "session:<name>")
+/// to a live badge: stamping and the write guard resolve the identity's work
+/// through this. q join CONSTRUCTS the association; a badged env act (the
+/// out-of-hook-coverage override) teaches it. Recorded only while some chat
+/// holds the dispatch. A key that also holds a dispatch may legally carry an
+/// association (the no-agent-id fallback, where a subagent is
+/// indistinguishable from its parent chat) — held and acting are separate
+/// maps: stamping reads acting, refusal reads held.
+pub fn record_acting(store: &Store, key: &str, badge: &str) {
+    let mut m = load_dispatches(store);
     if !m.held.values().any(|d| d.item == badge) {
         return;
     }
-    if m.acting.get(&key).map(|b| b.as_str()) == Some(badge) {
+    if m.acting.get(key).map(|b| b.as_str()) == Some(badge) {
         return;
     }
-    m.acting.insert(key, badge.to_string());
+    m.acting.insert(key.to_string(), badge.to_string());
     let _ = save_dispatches(store, &m);
 }
 
-/// The env-transported form: a badged q act from an identified chat teaches
-/// the machine which chat the badge's agent is. Called on every logged event;
-/// early-outs make it O(1) when there is nothing to learn.
-pub fn note_acting_chat(store: &Store) {
+/// Chat-keyed convenience over record_acting.
+pub fn record_acting_chat(store: &Store, chat_id: &str, badge: &str) {
+    record_acting(store, &format!("chat:{}", chat_id), badge);
+}
+
+/// The env-transported form: a badged q act from an identified context
+/// teaches the machine which agent (or chat) wears the badge — the
+/// out-of-hook-coverage override's road into the association map; q join is
+/// the constructed road. Called on every logged event; early-outs make it
+/// O(1) when there is nothing to learn.
+pub fn note_acting(store: &Store) {
     let badge = std::env::var("QUARRY_DISPATCH").ok().filter(|s| !s.trim().is_empty());
-    if let (Some(b), Some(c)) = (badge, current_chat()) {
-        record_acting_chat(store, &c, &b);
+    let Some(b) = badge else { return };
+    // Best key only: with an agent id present the chat id may be the
+    // PARENT's (subagent indistinguishability), so a chat-keyed record
+    // would smear the badge onto the dispatching chat.
+    if let Some(key) = acting_key(current_agent().as_deref(), current_chat().as_deref(), None) {
+        record_acting(store, &key, &b);
     }
 }
 
@@ -434,31 +524,68 @@ pub fn clear_dispatch(store: &Store, item_id: &str) {
     }
 }
 
-/// Resolve the badge for an ACTING context — never for the machine.
-/// QUARRY_DISPATCH env wins (explicit, per-shell); then the entry this chat
-/// holds (a dispatching chat), then the association its badged q acts
-/// recorded (a dispatched agent's chat), then its session's entry. A context
-/// with no identity, or one foreign to every dispatch, resolves nothing —
-/// that is the point: parallel chats each carry their own badge or none.
-pub fn badge_for(store: &Store, chat_id: Option<&str>, session: Option<&str>) -> Option<String> {
+/// Resolve the badge that STAMPS this acting context's work — env identity
+/// or a joined/taught association, NEVER the held entry (dc-zbxj: stamping
+/// follows the work, so the dispatching chat's unrelated acts never stamp
+/// into its dispatch's trace). QUARRY_DISPATCH env wins (explicit,
+/// per-shell — the out-of-hook-coverage override); then the association map
+/// by agent, chat, then session key, each honored only while its badge's
+/// dispatch is live. A context with no identity, or one foreign to every
+/// association, resolves nothing — no-attribution over mis-attribution.
+pub fn badge_for(
+    store: &Store,
+    agent: Option<&str>,
+    chat_id: Option<&str>,
+    session: Option<&str>,
+) -> Option<String> {
     if let Ok(b) = std::env::var("QUARRY_DISPATCH") {
         if !b.trim().is_empty() {
             return Some(b);
         }
     }
     let m = load_dispatches(store);
-    if let Some(c) = chat_id {
-        let key = format!("chat:{}", c);
-        if let Some(d) = m.held.get(&key) {
-            return Some(d.item.clone());
-        }
-        if let Some(b) = m.acting.get(&key) {
+    let keys = [
+        agent.map(|a| format!("agent:{}", a)),
+        chat_id.map(|c| format!("chat:{}", c)),
+        session.map(|s| format!("session:{}", s)),
+    ];
+    for key in keys.iter().flatten() {
+        if let Some(b) = m.acting.get(key) {
             if m.held.values().any(|d| &d.item == b) {
                 return Some(b.clone());
             }
         }
     }
-    if let Some(s) = session {
+    None
+}
+
+/// The acting badge for a q process: env identity (QUARRY_AGENT,
+/// QUARRY_CHAT, QUARRY_SESSION are hook-injected) resolved through
+/// badge_for. Stamping resolution — held entries never appear here.
+pub fn current_dispatch_badge(store: &Store) -> Option<String> {
+    badge_for(
+        store,
+        current_agent().as_deref(),
+        current_chat().as_deref(),
+        current_session().as_deref(),
+    )
+}
+
+/// The badge that captures this context's BOUNDARY verbs — wider than the
+/// stamping resolution: the HELD entry counts here (a dispatching chat is
+/// mid-dispatch even though its acts no longer stamp), alongside env and
+/// the acting associations. Never used for stamping.
+pub fn boundary_badge(store: &Store) -> Option<String> {
+    if let Some(b) = current_dispatch_badge(store) {
+        return Some(b);
+    }
+    let m = load_dispatches(store);
+    if let Some(c) = current_chat() {
+        if let Some(d) = m.held.get(&format!("chat:{}", c)) {
+            return Some(d.item.clone());
+        }
+    }
+    if let Some(s) = current_session() {
         if let Some(d) = m.held.get(&format!("session:{}", s)) {
             return Some(d.item.clone());
         }
@@ -466,23 +593,17 @@ pub fn badge_for(store: &Store, chat_id: Option<&str>, session: Option<&str>) ->
     None
 }
 
-/// The acting badge for a q process: env identity (QUARRY_CHAT and
-/// QUARRY_SESSION are hook-injected) resolved per chat.
-pub fn current_dispatch_badge(store: &Store) -> Option<String> {
-    badge_for(store, current_chat().as_deref(), current_session().as_deref())
-}
-
 /// C8's logic applied to boundary acts (it-ymsj): wrap and session
-/// resume/retire are the DISPATCHER'S verbs. Under the ACTING CHAT'S active
-/// badge — the shell env or this chat's machine-local entry, either alone
-/// suffices — they refuse with a teaching error. The incident this guard
-/// exists for: a dispatched agent ran q wrap wearing the dispatcher's
-/// injected session identity and consumed its session cursors. A chat with
-/// no badge of its own is free to wrap while other chats' dispatches fly —
-/// the decisions session keeps its boundary while a steward has work in
-/// flight (dc-ydvb).
+/// resume/retire are the DISPATCHER'S verbs. Under this context's active
+/// badge — shell env, an acting association (a joined agent), or this
+/// chat's held entry, any alone suffices — they refuse with a teaching
+/// error. The incident this guard exists for: a dispatched agent ran q wrap
+/// wearing the dispatcher's injected session identity and consumed its
+/// session cursors. A chat with no badge of its own is free to wrap while
+/// other chats' dispatches fly — the decisions session keeps its boundary
+/// while a steward has work in flight (dc-ydvb).
 pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
-    let badge = current_dispatch_badge(store)?;
+    let badge = boundary_badge(store)?;
     Some(format!(
         "boundary-verb capture: {verb} is a session-boundary act, and an active dispatch badge ({badge}) marks this chat mid-dispatch. A badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who closes the arc first: q harvest {badge}"
     ))

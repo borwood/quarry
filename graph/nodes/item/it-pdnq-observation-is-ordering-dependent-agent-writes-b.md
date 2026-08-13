@@ -2,8 +2,8 @@
 id: it-pdnq
 type: item
 title: 'observation is ordering-dependent: agent writes before the first badged act go unattributed'
-v: 1
-status: sketch
+v: 2
+status: done
 provenance: assistant
 created: 2026-08-13T08:05:16Z
 actor: claude

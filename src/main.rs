@@ -262,14 +262,17 @@ A lease follows a brief: reserve refuses unless this session rendered
     },
     /// Release an item's lease
     Release { item: String },
-    /// Dispatch an item: derived brief + lease + in-flight + hand-off
-    /// payload carrying the QUARRY_DISPATCH badge, as one act
+    /// Dispatch an item: brief logged + lease + in-flight + a single-use
+    /// join token in a one-line spawn prompt, as one act
     #[command(after_help = "EXAMPLES:
   q dispatch \"water body graph\" --files \"crates/dc-worldgen/**\"
-One act: renders the derived brief (logged — C8), reserves the write-set
-(--files, falling back to the item's recorded write-set), sets in-flight,
-records the badge machine-locally, and prints the paste-whole payload.
-The agent reports and stops; YOU judge and land: q harvest <item>.")]
+One act: logs the brief (C8), reserves the write-set (--files, falling
+back to the item's recorded write-set), sets in-flight, records the badge
+machine-locally with a single-use join token, and prints the ONE-LINE
+spawn prompt. The hand-off is a fetch (dc-zbxj): the agent runs
+q join <token>, which binds its identity to the badge and renders the
+brief fresh from the graph — nothing is hand-carried. The agent reports
+and stops; YOU judge and land: q harvest <item>.")]
     Dispatch {
         item: String,
         /// Write-set globs for the lease (falls back to the item's write-set)
@@ -279,6 +282,14 @@ The agent reports and stops; YOU judge and land: q harvest <item>.")]
         #[arg(long)]
         shared: bool,
     },
+    /// Join a dispatch: consume the spawn-prompt token, bind this agent's
+    /// identity to the badge, and render the brief fresh from the graph
+    #[command(after_help = "The fetch half of the hand-off (dc-zbxj): the spawn prompt is one line —
+q join <token> — and everything else derives here. The token is single-use
+(re-join by the same identity re-prints the brief; a second identity
+refuses). Identity is hook-injected (QUARRY_AGENT/QUARRY_CHAT) — outside
+hook coverage, export QUARRY_DISPATCH=<item> instead and skip join.")]
+    Join { token: String },
     /// Harvest a dispatch: observed-vs-leased, badge-stamped acts, report
     /// homework — the dispatcher judges acceptance and lands by hand
     #[command(after_help = "An agent's \"done\" is a stop signal, never a transition: the item stays
@@ -845,26 +856,37 @@ fn main() -> Result<()> {
                         .and_then(|r| r.strip_prefix('/'))
                         .map(String::from);
                     if let Some(rel) = rel {
-                        let chat = serde_json::from_str::<serde_json::Value>(&input)
-                            .ok()
-                            .and_then(|v| {
-                                v.get("session_id").and_then(|x| x.as_str()).map(String::from)
-                            });
+                        let parsed = serde_json::from_str::<serde_json::Value>(&input).ok();
+                        let chat = parsed.as_ref().and_then(|v| {
+                            v.get("session_id").and_then(|x| x.as_str()).map(String::from)
+                        });
+                        // The agent id rides the hook input in subagents —
+                        // the subagent's only distinguishing identity (its
+                        // session_id matches the parent chat's).
+                        let agent = parsed.as_ref().and_then(quarry::teach::hook_agent_id);
                         let session = coord::current_session().or_else(|| {
                             chat.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
                         });
-                        // The badge resolves for the ACTING chat, never the
-                        // machine: the entry this chat holds (a dispatching
-                        // chat), the association its badged q acts recorded
-                        // (a dispatched agent), or its session's entry —
-                        // another chat's dispatch is not this chat's badge.
-                        let dispatch = coord::badge_for(&store, chat.as_deref(), session.as_deref());
+                        // The badge resolves for the ACTING identity, never
+                        // the machine and never the held entry: env, then the
+                        // association q join bound (agent, chat, session
+                        // keyed) — stamping and the guard follow the WORK
+                        // (dc-zbxj); another chat's dispatch is not this
+                        // chat's badge.
+                        let dispatch =
+                            coord::badge_for(&store, agent.as_deref(), chat.as_deref(), session.as_deref());
+                        let dispatched: Vec<String> = coord::load_dispatches(&store)
+                            .held
+                            .values()
+                            .map(|d| d.item.clone())
+                            .collect();
                         let leases = coord::load_leases(&store);
                         let mut context: Vec<String> = Vec::new();
                         match quarry::teach::lease_check(
                             &leases,
                             session.as_deref(),
                             dispatch.as_deref(),
+                            &dispatched,
                             &rel,
                         ) {
                             quarry::teach::LeaseCheck::Deny(msg) => {
@@ -1342,19 +1364,62 @@ fn main() -> Result<()> {
             })?;
             let out = ops::dispatch(&store, &item, files, shared, &sess, &Store::actor())?;
             println!(
-                "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, badge recorded machine-locally for this chat",
+                "✔ dispatched: \"{}\" ({}) — lease {:?}{}, in-flight, single-use join token minted",
                 out.item_title,
                 out.item_id,
                 out.globs,
                 if out.reused_lease { " [re-dispatch: lease kept]" } else { "" }
             );
+            // The behind confrontation stays the DISPATCHER'S, here at the
+            // hand-off moment: the agent fetches its brief at join, so the
+            // staleness check must not wait for the render it will read.
+            if let Ok(all) = store.load_all() {
+                let behinds: Vec<_> = queries::behind(&store, &all)
+                    .into_iter()
+                    .filter(|b| b.src.id == out.item_id)
+                    .collect();
+                for b in &behinds {
+                    let target = b
+                        .to_atom
+                        .as_ref()
+                        .map(quarry::surface::atom_ref)
+                        .unwrap_or_else(|| format!("\"{}\" ({})", b.to_title, b.to));
+                    println!(
+                        "  ⚠ [sev {}] this item cites {} at {}, now {} ({}) — review, then: q affirm {} --to {}",
+                        b.severity, target, b.at, b.current, b.reason, out.item_id, b.to
+                    );
+                }
+                if !behinds.is_empty() {
+                    println!("  the agent inherits what you do not confront — review before spawning.");
+                }
+            }
             println!(
                 "  when the report arrives, YOU judge and land: q harvest {}  (the agent's done is a stop signal)",
                 out.item_id
             );
-            println!("\n──── HAND-OFF PAYLOAD — paste everything below to the agent ────");
-            print!("{}", out.payload);
-            println!("──── payload ends ────");
+            println!("\nSPAWN PROMPT (one line — the agent fetches its own brief at join):");
+            println!("{}", out.spawn);
+        }
+        Cmd::Join { token } => {
+            let store = Store::discover()?;
+            let identity = coord::acting_key(
+                coord::current_agent().as_deref(),
+                coord::current_chat().as_deref(),
+                coord::current_session().as_deref(),
+            );
+            let out = ops::join(&store, &token, identity)?;
+            match (&out.bound, out.rejoined) {
+                (Some(key), _) => println!(
+                    "✔ joined: \"{}\" ({}) — identity {} bound to the badge; your q acts and file writes now resolve to it. The brief below is derived fresh from the graph.\n",
+                    out.item_title, out.item_id, key
+                ),
+                (None, true) => println!(
+                    "already joined: \"{}\" ({}) — re-rendering the brief (derived fresh; a re-join is a read, not a state change).\n",
+                    out.item_title, out.item_id
+                ),
+                _ => {}
+            }
+            print!("{}", out.brief);
         }
         Cmd::Harvest { item } => {
             let store = Store::discover()?;

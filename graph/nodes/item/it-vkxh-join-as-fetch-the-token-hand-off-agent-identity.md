@@ -2,8 +2,8 @@
 id: it-vkxh
 type: item
 title: 'join-as-fetch: the token hand-off, agent identity injection, and the join gate'
-v: 3
-status: shaped
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-13T10:35:42Z
 actor: claude-fable-5
