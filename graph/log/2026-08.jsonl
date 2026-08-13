@@ -648,3 +648,4 @@
 {"op":"body","ts":"2026-08-13T07:58:17Z","node":"it-xu9g","v":2,"actor":"claude","note":"collapse set becomes per-surface protocol config","session":"quarry"}
 {"op":"body","ts":"2026-08-13T07:58:17Z","node":"th-nc7d","v":4,"actor":"claude","note":"state: consumers converged, contract reserved, vocabulary unruled","session":"quarry"}
 {"op":"body","ts":"2026-08-13T07:58:17Z","node":"th-qv27","v":4,"actor":"claude","note":"state: seed transport is scripts; offer stands; defaults unruled","session":"quarry"}
+{"ts":"2026-08-13T08:05:16Z","node":"it-pdnq","v":1,"op":"create","type":"item","title":"observation is ordering-dependent: agent writes before the first badged act go unattributed","actor":"claude","note":null,"session":"quarry"}
