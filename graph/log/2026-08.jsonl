@@ -720,3 +720,11 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-13T13:44:15Z","node":"it-xpt7","v":7,"actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-13T13:44:15Z","node":"it-xpt7","v":7,"op":"release","actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-13T13:44:21Z","node":"do-jahd","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:05Z","node":"th-uacu","v":1,"op":"create","type":"thread","title":"the brief is a dump: selection, hierarchy, and dedup for the dispatch payload","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-13T13:45:05Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"it-5j34","v":4,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"it-6gj9","v":5,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"it-kxdu","v":4,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"th-skv9","v":2,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"it-ds6b","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:45:34Z","node":"it-hjed","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}

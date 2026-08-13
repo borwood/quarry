@@ -15,6 +15,7 @@ write_set:
 - src/view.rs
 - tests/basic.rs
 - src/surface.rs
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

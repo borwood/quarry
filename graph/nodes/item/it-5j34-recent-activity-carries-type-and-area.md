@@ -12,6 +12,7 @@ acceptance:
 - recent activity rows show type and area columns
 write_set:
 - src/view.rs
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

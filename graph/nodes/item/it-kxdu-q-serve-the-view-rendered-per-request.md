@@ -13,6 +13,7 @@ acceptance:
 write_set:
 - src/view.rs
 - src/main.rs
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
