@@ -681,3 +681,5 @@
 {"ts":"2026-08-13T11:07:17Z","node":"it-vkxh","v":6,"op":"release","actor":"claude-fable-5","session":"quarry"}
 {"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-13T11:07:17Z","node":"it-pdnq","v":2,"actor":"claude-fable-5","note":"closed by it-vkxh: constructed association plus the join gate remove the learned-association window","session":"quarry"}
 {"ts":"2026-08-13T11:07:22Z","node":"do-3kyh","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T12:16:27Z","node":"th-cfmt","v":1,"op":"create","type":"thread","title":"measured species: one-off readings vs living measurements - behind must tell sediment from rot","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-13T12:16:28Z","node":"it-qxjx","v":1,"op":"create","type":"item","title":"decision-time bones: rule and shaping flips deliver no area read-first","actor":"claude-fable-5","note":null,"session":"quarry"}
