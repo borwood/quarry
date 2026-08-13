@@ -683,3 +683,9 @@
 {"ts":"2026-08-13T11:07:22Z","node":"do-3kyh","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-13T12:16:27Z","node":"th-cfmt","v":1,"op":"create","type":"thread","title":"measured species: one-off readings vs living measurements - behind must tell sediment from rot","actor":"claude-fable-5","note":null,"session":"quarry"}
 {"ts":"2026-08-13T12:16:28Z","node":"it-qxjx","v":1,"op":"create","type":"item","title":"decision-time bones: rule and shaping flips deliver no area read-first","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-13T13:16:31Z","node":"dc-wrnc","v":1,"op":"create","type":"decision","title":"the vein: spines rename into the quarry register","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-grrb","at":2,"ts":"2026-08-13T13:16:36Z","node":"dc-wrnc","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:16:40Z","node":"it-wtre","v":1,"op":"create","type":"item","title":"file-grain watermark: first touch of a file surfaces its contracts and veins","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-13T13:16:42Z","node":"it-xzp7","v":1,"op":"create","type":"item","title":"vein rename sweep: surfaces say vein where they said spine","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-13T13:17:23Z","node":"th-yzmj","v":4,"actor":"claude-fable-5","note":"state: contract shape, symbol-field note, orbit remarks recorded","session":"quarry"}
+{"op":"body","ts":"2026-08-13T13:17:23Z","node":"th-nc7d","v":5,"actor":"claude-fable-5","note":"state: claim species settled in conversation; vein rename; work-unit vocab remains","session":"quarry"}
