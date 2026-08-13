@@ -2,8 +2,8 @@
 id: th-6upm
 type: thread
 title: 'per-chat badge findings: dispatcher stamping, single-badge chats, and the five holes'
-v: 2
-status: queued
+v: 3
+status: resolved
 provenance: user
 created: 2026-08-13T08:29:59Z
 actor: claude
