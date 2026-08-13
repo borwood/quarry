@@ -2,8 +2,8 @@
 id: th-nc7d
 type: thread
 title: 'item kinds as first-class species: factoring bug, debt, watch into the discovery surfaces'
-v: 5
-status: queued
+v: 6
+status: resolved
 provenance: assistant
 created: 2026-08-11T06:06:58Z
 actor: claude
