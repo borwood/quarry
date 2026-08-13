@@ -643,3 +643,8 @@
 {"ts":"2026-08-12T21:38:18Z","node":"it-hapc","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T21:38:26Z","node":"cl-amza","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-12T21:38:26Z","node":"cl-vsew","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-13T07:57:33Z","node":"it-vzx6","v":1,"op":"create","type":"item","title":"protocol triggers cover the choke points: status flips and dispatch","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-13T07:57:35Z","node":"it-qra3","v":1,"op":"create","type":"item","title":"protocol-declared floors: required fields presence-warned, with authored warn text","actor":"claude","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-13T07:58:17Z","node":"it-xu9g","v":2,"actor":"claude","note":"collapse set becomes per-surface protocol config","session":"quarry"}
+{"op":"body","ts":"2026-08-13T07:58:17Z","node":"th-nc7d","v":4,"actor":"claude","note":"state: consumers converged, contract reserved, vocabulary unruled","session":"quarry"}
+{"op":"body","ts":"2026-08-13T07:58:17Z","node":"th-qv27","v":4,"actor":"claude","note":"state: seed transport is scripts; offer stands; defaults unruled","session":"quarry"}
