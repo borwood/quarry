@@ -13,6 +13,7 @@ acceptance:
 - 'lands `badge-chat-resolution`: the write guard, event stamping, trace, and harvest resolve the badge for the acting chat, not the machine - parallel agents land under their own items'
 write_set:
 - src/**
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

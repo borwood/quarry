@@ -2,7 +2,7 @@
 id: it-xzp7
 type: item
 title: 'vein rename sweep: surfaces say vein where they said spine'
-v: 3
+v: 5
 status: shaped
 provenance: assistant
 created: 2026-08-13T13:16:42Z
@@ -22,6 +22,12 @@ edges:
 - rel: depends-on
   to: dc-yd9s
   at: 2
+- rel: depends-on
+  to: it-vzx6
+  at: 1
+- rel: depends-on
+  to: it-qra3
+  at: 1
 ---
 
 Filed 2026-08-13 under dc-wrnc: the guide text (teach.rs), the brief shelf label, the landed-uncited prompt, spine_check naming, and test assertions migrate from spine to vein; historical node bodies stand as written. After teach.rs: rebuild, then q init --claude. Fires with the species-ruling fallout or sooner.

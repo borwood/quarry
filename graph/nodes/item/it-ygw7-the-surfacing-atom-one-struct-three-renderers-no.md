@@ -16,6 +16,7 @@ acceptance:
 - 'lands `atom-lint`: front.title formatted outside the surface module fails the lint at wrap or CI — checked, never remembered'
 - 'lands `carrier-replumb`: homework and query carriers hold atoms, not (id, title) pairs'
 - 'lands `find-areas`: find hits name their areas, so foreign-domain matches arrive labeled'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

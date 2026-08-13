@@ -733,3 +733,8 @@
 {"op":"link","rel":"settles","to":"th-nc7d","at":6,"ts":"2026-08-13T13:45:50Z","node":"dc-yd9s","v":2,"actor":"claude-fable-5","session":"quarry"}
 {"op":"set","fields":["status=shaped","write-set+=src/**","write-set+=tests/**","acceptance+=lands `vein-rename`: every surface says vein where it said spine - guide text, shelf label, landed-uncited prompt, vein_check naming; historical node bodies stand as written","acceptance+=lands `shelf-by-claim-kind`: the brief and area-open claim shelf renders by claim kind - vein:, feature:, measured: - with unknown kinds rendered as written, never validated","acceptance+=lands `claim-kind-pass`: existing claims carry their kind explicitly, assigned in one reviewed pass under dc-yd9s - the deliberate exception to on-touch"],"from_status":"sketch","ts":"2026-08-13T13:45:59Z","node":"it-xzp7","v":2,"actor":"claude-fable-5","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-yd9s","at":2,"ts":"2026-08-13T13:45:59Z","node":"it-xzp7","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-vzx6","at":1,"ts":"2026-08-13T13:56:56Z","node":"it-xzp7","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-qra3","at":1,"ts":"2026-08-13T13:56:56Z","node":"it-xzp7","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:57:01Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:57:52Z","node":"it-ygw7","v":5,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-13T13:57:52Z","node":"it-u8uf","v":7,"op":"archive","actor":"claude-fable-5","session":"quarry"}
