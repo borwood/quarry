@@ -2,7 +2,7 @@
 id: th-6upm
 type: thread
 title: 'per-chat badge findings: dispatcher stamping, single-badge chats, and the five holes'
-v: 1
+v: 2
 status: queued
 provenance: user
 created: 2026-08-13T08:29:59Z
@@ -25,3 +25,5 @@ The five holes from do-75ut, with the user's reactions to piece apart:
 3. An agent chat with no badged act yet can run wrap - the guard cannot tell it is an agent. User: understood and bad.
 4. Two hook-uncovered shells sharing one session name collide on the session fallback key. User: understood and bad.
 5. The same item dispatched from two chats of one session double-holds with first-found drift cursors. User direction: prevent dispatching an already-dispatched item outright, with an explicit override (the steal pattern: loud, reasoned, logged).
+
+State 2026-08-13, first topic RULED (dc-zbxj, hashed out in this thread's conversation): join-as-fetch settles the defect, hole 1, hole 2, and hole 3 by construction - dispatch mints a single-use token, the spawn prompt is one line, q join binds the hook-provided agent identity to the badge and renders the brief fresh; hooks inject identity only (QUARRY_AGENT; probed: subagent shells are otherwise indistinguishable from the parent chat); the join gate denies unassociated file writes into a dispatched lease with a teaching line; stamping follows the work, never the holding chat. Build shaped as it-vkxh; landing it also closes it-pdnq and hole 4 shrinks to out-of-hook-coverage shells only. STILL OPEN on this thread, one topic each: multi-badge held state, and hole 5 (double-dispatch refusal with a loud override); triage of any remainder after those.
