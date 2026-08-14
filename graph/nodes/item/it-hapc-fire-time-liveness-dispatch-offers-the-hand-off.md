@@ -2,11 +2,16 @@
 id: it-hapc
 type: item
 title: 'fire-time liveness: dispatch offers the hand-off when a dispatching session is live'
-v: 7
-status: sketch
+v: 12
+status: done
 provenance: assistant
 created: 2026-08-12T21:11:34Z
 actor: claude
+acceptance:
+- '`fire-routing`: q dispatch from a non-dispatch session derives dispatch-kind coverage (kind + purview fit + last_seen heartbeat) and stops with the leave offer when a covering dispatcher is live - nothing dispatched, nothing written, the live session(s) named'
+- 'the wake offer: none awake enumerates the registered dispatch-kind sessions covering the item, each with its launcher (script when present, inline command otherwise); one candidate is offered directly, several defer to the user'
+- --solo fires from anywhere, no reason demanded; dispatch-kind sessions, continuations of a live dispatch (re-dispatch, steal), and items no dispatcher covers never route
+- 'routing is advisory and stateless: no routed-waiting state, exit clean, the item stays honestly ready for anyone'
 edges:
 - rel: about
   to: ar-c7f5
@@ -22,7 +27,7 @@ edges:
   at: 5
 - rel: depends-on
   to: dc-crea
-  at: 2
+  at: 4
 ---
 
-Sketched 2026-08-12 from dc-ydvb; reshaped 2026-08-13 under dc-ad8b (kind is registry data) and dc-crea (routing): at q dispatch from a non-dispatch session, derive the live sessions with appropriate coverage for the item (registry kind + purview fit + last_seen heartbeat; the kind field landed with it-skpa). One appropriate, charter-certain match - prefer the hand-off, leave the item ready for it, inform the user of the routing. Multiple plausible matches or any ambiguity - defer to the user; never guess between dispatchers. None live - offer the launcher (dispatcher-session.cmd, minted under dc-wngq) or fire solo, both legitimate. A surface, never a gate.
+Reshaped 2026-08-14 under dc-crea (pull semantics): at q dispatch from a non-dispatch session, derive the live sessions with appropriate coverage for the item (kind field from it-skpa + purview fit + last_seen heartbeat). Any live - offer the leave: do not fire solo, keep the item ready (ready IS the dispatcher feed), print which live session(s) cover it; no choosing among them - the first to claim dispatches it, and the claim point guards the race (dc-qyr5). None awake - offer the wake choice: enumerate registered dispatch-kind sessions covering the item; one charter-certain candidate - offer its launcher (dispatcher-session.cmd today); several plausible - the user picks. Fire solo stays legitimate throughout. A surface, never a gate.

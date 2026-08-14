@@ -810,3 +810,34 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T01:38:48Z","node":"it-wub5","v":6,"actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-14T01:38:49Z","node":"it-wub5","v":6,"op":"release","actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-14T01:38:55Z","node":"do-sdcb","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["title=fire-time routing: a pull, never a send; the only choice is which dispatcher to wake"],"ts":"2026-08-14T05:39:41Z","node":"dc-crea","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-14T05:39:41Z","node":"dc-crea","v":4,"actor":"claude-fable-5","note":"tightened per user 2026-08-14: pull semantics; who-choice exists only at wake time","session":"quarry"}
+{"op":"body","ts":"2026-08-14T05:39:49Z","node":"it-hapc","v":8,"actor":"claude-fable-5","note":"reshape under tightened dc-crea: leave or wake, never send","session":"quarry"}
+{"ts":"2026-08-14T05:39:50Z","node":"it-hapc","v":8,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T05:40:03Z","node":"th-zzqv","v":1,"op":"create","type":"thread","title":"bundled work: a parent item with part-of children; the payload presents the bundle","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-14T06:18:10Z","node":"it-hapc","v":9,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:18:13Z","node":"it-hapc","v":9,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:18:20Z","node":"it-hapc","v":9,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:18:20Z","node":"it-hapc","v":9,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-14T06:18:20Z","node":"it-hapc","v":10,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:18:20Z","node":"it-hapc","v":9,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-14T06:18:49Z","node":"it-hapc","v":10,"op":"join","actor":"claude-fable-5","dispatch":"it-hapc","joined":"agent:a65fb28ff09baab50","session":"quarry"}
+{"op":"set","fields":["acceptance+=`fire-routing`: q dispatch from a non-dispatch session derives dispatch-kind coverage (kind + purview fit + last_seen heartbeat) and stops with the leave offer when a covering dispatcher is live - nothing dispatched, nothing written, the live session(s) named","acceptance+=the wake offer: none awake enumerates the registered dispatch-kind sessions covering the item, each with its launcher (script when present, inline command otherwise); one candidate is offered directly, several defer to the user","acceptance+=--solo fires from anywhere, no reason demanded; dispatch-kind sessions, continuations of a live dispatch (re-dispatch, steal), and items no dispatcher covers never route","acceptance+=routing is advisory and stateless: no routed-waiting state, exit clean, the item stays honestly ready for anyone"],"ts":"2026-08-14T06:26:26Z","node":"it-hapc","v":11,"actor":"claude-fable-5","session":"quarry","dispatch":"it-hapc"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-14T06:31:46Z","node":"it-hjed","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:32:40Z","node":"cl-9v7c","v":1,"op":"create","type":"claim","title":"`fire-routing`: dispatch offers the pull — the leave when a covering dispatcher is live, the wake when none; --solo fires regardless","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-hapc"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"5f2e8b4afc49","ts":"2026-08-14T06:32:40Z","node":"cl-9v7c","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-hapc"}
+{"ts":"2026-08-14T06:41:13Z","node":"it-hapc","v":11,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:17Z","node":"do-hmac","v":1,"op":"create","type":"doc","title":"dispatch report: fire-time liveness: dispatch offers the hand-off when a dispatching session is live","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-hapc","at":11,"ts":"2026-08-14T06:42:17Z","node":"do-hmac","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T06:42:17Z","node":"it-hapc","v":12,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:18Z","node":"it-hapc","v":12,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:40Z","node":"do-hmac","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:40Z","node":"th-xvv6","v":1,"op":"create","type":"thread","title":"the liveness echo: subagent acts heartbeat the dispatching session","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-14T06:42:48Z","node":"it-bj3b","v":1,"op":"create","type":"item","title":"observed-set miss: a badged tests write escaped observation","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-14T06:42:53Z","node":"it-hjed","v":4,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:53Z","node":"it-hjed","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-14T06:42:53Z","node":"it-hjed","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:42:53Z","node":"it-hjed","v":4,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-14T06:43:08Z","node":"it-hjed","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:43:21Z","node":"it-hjed","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-hjed","joined":"agent:a7948945a4a5222b1","session":"quarry"}
+{"ts":"2026-08-14T06:43:30Z","node":"it-hjed","v":5,"op":"brief","actor":"claude-fable-5","session":"quarry"}

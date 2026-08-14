@@ -276,7 +276,12 @@ and stops; YOU judge and land: q harvest <item>.
 Multi-held (dc-qyr5): a chat dispatches any number of items in parallel;
 an item belongs to one chat. Re-dispatching your own item mints a fresh
 token (the old dies); an item another chat holds live refuses — take it
-over whole with --steal --reason \"why\" (loud, logged).")]
+over whole with --steal --reason \"why\" (loud, logged).
+Fire-time routing (dc-crea): from a non-dispatch session, when a live
+dispatch-kind session covers the item, nothing fires — the item stays
+ready (ready IS the dispatcher feed) and the live session(s) are named;
+none awake offers which dispatcher to wake. Advisory, stateless, never a
+gate: --solo fires from anywhere, no reason demanded.")]
     Dispatch {
         item: String,
         /// Write-set globs for the lease (falls back to the item's write-set)
@@ -291,6 +296,10 @@ over whole with --steal --reason \"why\" (loud, logged).")]
         /// Required with --steal: why the take-over is justified (logged on the steal event)
         #[arg(long)]
         reason: Option<String>,
+        /// Fire from this session even when a dispatcher covers the item
+        /// (routing is advisory — fire solo stays legitimate, dc-crea)
+        #[arg(long)]
+        solo: bool,
     },
     /// Join a dispatch: consume the spawn-prompt token, bind this agent's
     /// identity to the badge, and render the brief fresh from the graph
@@ -1436,13 +1445,80 @@ fn main() -> Result<()> {
                 println!("  view regenerated: {}", p.display());
             }
         }
-        Cmd::Dispatch { item, files, shared, steal, reason } => {
+        Cmd::Dispatch { item, files, shared, steal, reason, solo } => {
             let store = Store::discover()?;
             let sess = coord::current_session().ok_or_else(|| {
                 anyhow::anyhow!(
                     "q dispatch is a session act — the lease it takes needs a holder, and an unbound chat has none. Bind this chat first: q session adopt <name> (or register one: q session set <name> --areas <area>...), then re-run."
                 )
             })?;
+            // Fire-time routing (it-hapc, dc-crea): a pull, never a send.
+            // Derived before anything mutates; advisory and stateless —
+            // the offer stops the fire, --solo overrides without ceremony.
+            if !solo {
+                let all = store.load_all()?;
+                let node = store.find(&all, &item)?;
+                match coord::fire_routing(&store, node, &sess) {
+                    coord::FireRouting::Fire => {}
+                    coord::FireRouting::Leave(live) => {
+                        println!(
+                            "not dispatched — a live dispatcher covers {} (fire-time routing, dc-crea):",
+                            aref(&all, node)
+                        );
+                        for c in &live {
+                            println!(
+                                "  · session {} — active {}{}",
+                                c.name,
+                                c.age_secs.map(human_age).unwrap_or_else(|| "now".into()),
+                                c.charter
+                                    .as_deref()
+                                    .map(|ch| format!(" — charter: {}", ch))
+                                    .unwrap_or_default()
+                            );
+                        }
+                        println!("  leave it: ready IS the dispatcher feed — the kind-shaped wake and the purview surfaces deliver it, and the first to claim dispatches it (the claim point guards the race, dc-qyr5).");
+                        if node.front.status != "ready" {
+                            println!(
+                                "  note: the item is [{}] — the feed carries ready items; for it to flow: q set {} status=ready",
+                                node.front.status, node.front.id
+                            );
+                        }
+                        println!(
+                            "  or fire solo from here (always legitimate): q dispatch {} --solo",
+                            node.front.id
+                        );
+                        return Ok(());
+                    }
+                    coord::FireRouting::Wake(cands) => {
+                        println!(
+                            "not dispatched — no dispatcher is awake for {} (fire-time routing, dc-crea):",
+                            aref(&all, node)
+                        );
+                        for c in &cands {
+                            println!(
+                                "  · session {} — {}{}",
+                                c.name,
+                                c.age_secs
+                                    .map(|a| format!("last active {}", human_age(a)))
+                                    .unwrap_or_else(|| "never seen on this machine".into()),
+                                c.charter
+                                    .as_deref()
+                                    .map(|ch| format!(" — charter: {}", ch))
+                                    .unwrap_or_default()
+                            );
+                            println!("      wake it: {}", coord::wake_command(&store, &c.name));
+                        }
+                        if cands.len() > 1 {
+                            println!("  several cover it — the user picks which to wake (any ambiguity defers to the user, dc-crea).");
+                        }
+                        println!(
+                            "  or fire solo from here (always legitimate): q dispatch {} --solo",
+                            node.front.id
+                        );
+                        return Ok(());
+                    }
+                }
+            }
             let out = ops::dispatch(
                 &store,
                 &item,

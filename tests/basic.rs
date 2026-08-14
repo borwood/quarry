@@ -2483,3 +2483,116 @@ fn unlink_retires_edge_logged_without_bump() {
     assert!(err.contains("no edge"), "refusal names the miss: {}", err);
     assert!(err.contains("-[about]->"), "refusal lists the edges that exist: {}", err);
 }
+
+#[test]
+fn fire_time_routing_offers_leave_and_wake() {
+    // it-hapc / dc-crea: routing is a PULL, never a send — q dispatch from a
+    // non-dispatch session derives dispatch-kind coverage (kind + purview
+    // fit + last_seen) and offers; it never denies and never writes state.
+    use quarry::coord::{self, FireRouting};
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let other_area = ops::new_node(&s, NewArgs::bare("area", "bodies")).unwrap();
+    let mut args = NewArgs::bare("item", "geo pass");
+    args.status = Some("ready".into());
+    args.about = vec![area.front.id.clone()];
+    let made = ops::new_node(&s, args).unwrap();
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, &made.front.id).unwrap();
+
+    // no dispatch-kind session registered: fire — today's behavior holds
+    coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false).unwrap();
+    assert!(matches!(coord::fire_routing(&s, it, "design"), FireRouting::Fire));
+
+    // a covering dispatch-kind session, never seen: the WAKE offer
+    coord::save_session(
+        &s, "steward", vec![area.front.id.clone()],
+        Some("dispatch".into()), Some("stewards geo".into()), false,
+    ).unwrap();
+    match coord::fire_routing(&s, it, "design") {
+        FireRouting::Wake(c) => {
+            assert_eq!(c.len(), 1);
+            assert_eq!(c[0].name, "steward");
+            assert!(!c[0].live);
+            assert!(c[0].age_secs.is_none(), "never seen carries no age");
+            assert_eq!(c[0].charter.as_deref(), Some("stewards geo"), "the charter rides the offer");
+        }
+        _ => panic!("registered but asleep routes to the wake offer"),
+    }
+
+    // heartbeat fresh: the LEAVE offer names the live session
+    coord::touch_session(&s, "steward");
+    match coord::fire_routing(&s, it, "design") {
+        FireRouting::Leave(l) => {
+            assert_eq!(l.len(), 1);
+            assert_eq!(l[0].name, "steward");
+            assert!(l[0].live);
+        }
+        _ => panic!("a live covering dispatcher routes to the leave offer"),
+    }
+    // …and routing wrote nothing: no held dispatch, item untouched
+    assert!(coord::load_dispatches(&s).held.is_empty(), "routing is stateless");
+    let all2 = s.load_all().unwrap();
+    assert_eq!(s.find(&all2, &made.front.id).unwrap().front.status, "ready", "the item stays honestly ready");
+
+    // stale heartbeat: asleep again — back to the wake offer, age carried
+    std::fs::write(
+        s.root.join("graph").join(".sessions-live.json"),
+        serde_json::json!({"steward": "2020-01-01T00:00:00Z"}).to_string(),
+    ).unwrap();
+    match coord::fire_routing(&s, it, "design") {
+        FireRouting::Wake(c) => {
+            assert!(c[0].age_secs.unwrap() > coord::DISPATCH_LIVE_SECS, "stale age surfaces for the user's eyes");
+        }
+        _ => panic!("a stale dispatcher is asleep"),
+    }
+
+    // purview fit: a dispatcher elsewhere never routes this item
+    coord::save_session(&s, "steward", vec![other_area.front.id.clone()], Some("dispatch".into()), None, false).unwrap();
+    coord::touch_session(&s, "steward");
+    assert!(
+        matches!(coord::fire_routing(&s, it, "design"), FireRouting::Fire),
+        "no purview fit — fire solo without a surface"
+    );
+
+    // an area-less item fits any dispatcher vacuously (all-areas charters, dc-wngq)
+    let bare = ops::new_node(&s, NewArgs::bare("item", "bare work")).unwrap();
+    let all3 = s.load_all().unwrap();
+    let bare = s.find(&all3, &bare.front.id).unwrap();
+    match coord::fire_routing(&s, bare, "design") {
+        FireRouting::Leave(_) => {}
+        _ => panic!("an area-less item fits vacuously"),
+    }
+
+    // the dispatch-kind session itself never routes — it IS the dispatcher
+    coord::save_session(&s, "steward", vec![area.front.id.clone()], Some("dispatch".into()), None, false).unwrap();
+    coord::touch_session(&s, "steward");
+    assert!(
+        matches!(coord::fire_routing(&s, it, "steward"), FireRouting::Fire),
+        "a dispatch session fires, never routes to itself"
+    );
+
+    // two live dispatchers: BOTH named, unranked — there is never a choice
+    // among live dispatchers; the first to claim dispatches it (dc-qyr5)
+    coord::save_session(&s, "steward2", vec![area.front.id.clone()], Some("dispatch".into()), None, false).unwrap();
+    coord::touch_session(&s, "steward2");
+    match coord::fire_routing(&s, it, "design") {
+        FireRouting::Leave(l) => assert_eq!(l.len(), 2, "no choosing among live dispatchers"),
+        _ => panic!("both live dispatchers named"),
+    }
+
+    // a continuation never routes: once the item is live-dispatched, the
+    // re-dispatch and steal flows keep their own surfaces
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t").unwrap();
+    assert!(
+        matches!(coord::fire_routing(&s, it, "design"), FireRouting::Fire),
+        "a live dispatch on the item is a continuation, not a routing case"
+    );
+
+    // the wake road: inline launch command without a script, the script when present
+    let inline = coord::wake_command(&s, "steward");
+    assert!(inline.contains("QUARRY_SESSION=steward"), "inline launch fallback: {}", inline);
+    std::fs::write(s.root.join("steward-session.cmd"), "@echo off\r\n").unwrap();
+    let script = coord::wake_command(&s, "steward");
+    assert!(script.ends_with("steward-session.cmd"), "launcher script preferred: {}", script);
+}

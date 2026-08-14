@@ -1030,6 +1030,128 @@ pub fn last_seen(store: &Store, session: &str) -> Option<String> {
     map.get(session).cloned()
 }
 
+/// Seconds since a session's heartbeat; None when it was never seen.
+pub fn last_seen_age_secs(store: &Store, session: &str) -> Option<i64> {
+    use time::format_description::well_known::Rfc3339;
+    let ts = last_seen(store, session)?;
+    let t = time::OffsetDateTime::parse(&ts, &Rfc3339).ok()?;
+    Some((time::OffsetDateTime::now_utc() - t).whole_seconds())
+}
+
+// ── fire-time liveness (it-hapc, dc-crea) ──────────────────────────────────
+//
+// Routing is a PULL, never a send: at q dispatch from a non-dispatch
+// session, derive the dispatch-kind sessions with appropriate coverage for
+// the item (kind + purview fit + the last_seen heartbeat). Any live — the
+// LEAVE offer: do not fire, the item stays where it is (ready IS the
+// dispatcher feed) and the live session(s) are named; there is never a
+// choice among live dispatchers — the first to claim dispatches it, and the
+// claim point guards the race (dc-qyr5). None awake — the WAKE offer:
+// enumerate the registered candidates with their launchers; one candidate
+// is offered directly, several defer to the user. Advisory and stateless
+// throughout: no routed-waiting state, and fire solo stays legitimate
+// (--solo). A surface, never a gate.
+
+/// A dispatch-kind session counts as LIVE when its heartbeat is fresher
+/// than this. The heartbeat is write-verb granularity (log_event touches
+/// it), so an open-but-quiet dispatcher can read asleep — the window leans
+/// forgiving, and every surface prints the age so the user's eyes overrule
+/// the threshold. Advisory only: nothing gates on it.
+pub const DISPATCH_LIVE_SECS: i64 = 15 * 60;
+
+/// A registered dispatch-kind session judged against an item at fire time.
+#[derive(Clone, Debug)]
+pub struct DispatchCoverage {
+    pub name: String,
+    pub charter: Option<String>,
+    /// Seconds since the heartbeat; None = never seen on this machine.
+    pub age_secs: Option<i64>,
+    pub live: bool,
+}
+
+/// The fire-time routing judgment (it-hapc): what q dispatch surfaces
+/// before it fires. Derivation only — the caller renders and the user
+/// chooses; nothing here writes state or denies anything.
+pub enum FireRouting {
+    /// No routing surface: fire. The dispatching session is itself
+    /// dispatch-kind, the item is a continuation of a live dispatch
+    /// (re-dispatch, steal — their own surfaces apply), or no registered
+    /// dispatch-kind session covers the item.
+    Fire,
+    /// Live dispatcher(s) cover the item — the leave offer. Every live
+    /// covering session, unranked: the first to claim dispatches it.
+    Leave(Vec<DispatchCoverage>),
+    /// Dispatchers are registered for this item but none is awake — the
+    /// wake offer, every candidate enumerated (name order).
+    Wake(Vec<DispatchCoverage>),
+}
+
+pub fn fire_routing(store: &Store, item: &Node, session: &str) -> FireRouting {
+    let reg = load_sessions(store);
+    // A dispatch-kind session IS the dispatcher: it never routes to itself.
+    if reg
+        .get(session)
+        .and_then(|p| p.kind.as_deref())
+        .map_or(false, |k| k == "dispatch")
+    {
+        return FireRouting::Fire;
+    }
+    // A live dispatch on the item is a continuation flow — same-chat
+    // re-dispatch and --steal carry their own surfaces (dc-qyr5).
+    if dispatch_for_item(store, &item.front.id).is_some() {
+        return FireRouting::Fire;
+    }
+    let item_areas: Vec<&str> = item
+        .front
+        .edges
+        .iter()
+        .filter(|e| e.rel == "about")
+        .map(|e| e.to.as_str())
+        .collect();
+    // Purview fit: every about-area of the item inside the session's
+    // purview. An area-less item fits any dispatcher vacuously — there is
+    // no basis to exclude, and the quarry dispatcher charter is all-areas
+    // (dc-wngq).
+    let covering: Vec<DispatchCoverage> = reg
+        .iter()
+        .filter(|(name, p)| {
+            name.as_str() != session && p.kind.as_deref() == Some("dispatch")
+        })
+        .filter(|(_, p)| item_areas.iter().all(|a| p.areas.iter().any(|pa| pa == a)))
+        .map(|(name, p)| {
+            let age_secs = last_seen_age_secs(store, name);
+            DispatchCoverage {
+                name: name.clone(),
+                charter: p.charter.clone(),
+                age_secs,
+                live: age_secs.map_or(false, |a| a < DISPATCH_LIVE_SECS),
+            }
+        })
+        .collect();
+    if covering.is_empty() {
+        return FireRouting::Fire;
+    }
+    let live: Vec<DispatchCoverage> = covering.iter().filter(|c| c.live).cloned().collect();
+    if !live.is_empty() {
+        FireRouting::Leave(live)
+    } else {
+        FireRouting::Wake(covering)
+    }
+}
+
+/// The wake road for a registered session: the launcher script when one
+/// exists at the repo root (`<name>-session.cmd`, written by q session set
+/// --launcher), the inline launch command otherwise — the same two roads
+/// q session set advertises.
+pub fn wake_command(store: &Store, session: &str) -> String {
+    let launcher = store.root.join(format!("{}-session.cmd", session));
+    if launcher.exists() {
+        launcher.display().to_string()
+    } else {
+        format!("cmd /c \"set QUARRY_SESSION={} && claude\"", session)
+    }
+}
+
 fn bindings_path(store: &Store) -> std::path::PathBuf {
     store.root.join("graph").join(".chat-sessions.json")
 }

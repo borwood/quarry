@@ -2,8 +2,8 @@
 id: it-hjed
 type: item
 title: 'find match hygiene: substring matching admits foreign debris'
-v: 3
-status: sketch
+v: 5
+status: in-flight
 provenance: assistant
 created: 2026-08-11T10:29:40Z
 actor: claude
@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/main.rs
-  at: 6496296e906c
+  at: a4910d6f7000
 ---
 
 find matches raw substrings across title, id, and body: the query cli matched the substring inside click, admitting dc-qhru — a deepcraft-salvage ruling — into a search for the cli area (2026-08-11; the confabulation instance motivating dc-nnf5). Wants word-boundary or token matching for short queries, or a match-quality marker on the hit line.
