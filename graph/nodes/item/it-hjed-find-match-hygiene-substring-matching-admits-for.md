@@ -2,8 +2,8 @@
 id: it-hjed
 type: item
 title: 'find match hygiene: substring matching admits foreign debris'
-v: 5
-status: in-flight
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-11T10:29:40Z
 actor: claude

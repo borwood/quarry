@@ -284,8 +284,14 @@ pub fn backticked_spans(text: &str) -> Vec<String> {
         .collect()
 }
 
-/// Word-boundary containment: `word` occurs in `text` not embedded in a
-/// longer token ("wrap" must not hit "wrapper").
+/// The lexicon join's word predicate (relatedness, intent delta): `word`
+/// occurs in `text` not embedded in a longer token ("wrap" must not hit
+/// "wrapper"). Its rule: word chars are ASCII alphanumerics AND hyphens,
+/// so hyphen compounds stay whole — "core" does not hit "core-sample";
+/// load-bearing for the naming register, where the compound is the name.
+/// Deliberately divergent from `find_word` below, find's predicate, where
+/// a hyphen is a boundary; unifying the two was considered and declined
+/// 2026-08-12 (it-hjed).
 fn contains_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
@@ -308,6 +314,66 @@ fn contains_word(text: &str, word: &str) -> bool {
         start = j;
     }
     false
+}
+
+/// Find's word predicate. Its rule: word chars are ASCII alphanumerics
+/// ONLY — everything else is a boundary, hyphens included, so a short
+/// query like "cli" hits "cli-area" and "the cli" but never "click".
+/// Deliberately divergent from `contains_word` above, the lexicon join's
+/// predicate, which keeps hyphen compounds whole for the naming register;
+/// find serves short human queries, where the hyphen rule would hide
+/// exactly the hits wanted. Unification considered and declined
+/// 2026-08-12 (it-hjed).
+pub fn find_word(text: &str, word: &str) -> bool {
+    if word.is_empty() {
+        return false;
+    }
+    let mut start = 0;
+    while let Some(pos) = text[start..].find(word) {
+        let i = start + pos;
+        let before_ok =
+            text[..i].chars().last().map_or(true, |c| !c.is_ascii_alphanumeric());
+        let j = i + word.len();
+        let after_ok =
+            text[j..].chars().next().map_or(true, |c| !c.is_ascii_alphanumeric());
+        if before_ok && after_ok {
+            return true;
+        }
+        start = j;
+    }
+    false
+}
+
+/// find's tiered matches (it-hjed). Tier one is id substring plus title
+/// and body word-boundary hits (`find_word`); substring-only hits are the
+/// loose tail — always shown, never hidden, labeled at render. The query
+/// arrives lowercased by the caller.
+pub struct FindHits<'a> {
+    /// Tier one, unlabeled: the query is a substring of the id or a
+    /// word-boundary hit in the title.
+    pub strong: Vec<&'a Node>,
+    /// Tier one, body word-boundary only — keeps the matched-in-body label.
+    pub body: Vec<&'a Node>,
+    /// Substring-only hits in title or body: the labeled loose tail.
+    pub loose: Vec<&'a Node>,
+}
+
+/// Tier every node against a lowercased find query. Graph order is kept
+/// within each tier; rendering order (strong, body, loose) is the caller's.
+pub fn find_hits<'a>(all: &'a [Node], q: &str) -> FindHits<'a> {
+    let mut hits = FindHits { strong: Vec::new(), body: Vec::new(), loose: Vec::new() };
+    for n in all {
+        let title = crate::surface::title_raw(n).to_lowercase();
+        let body = n.body.to_lowercase();
+        if n.front.id.contains(q) || find_word(&title, q) {
+            hits.strong.push(n);
+        } else if find_word(&body, q) {
+            hits.body.push(n);
+        } else if title.contains(q) || body.contains(q) {
+            hits.loose.push(n);
+        }
+    }
+    hits
 }
 
 /// Mint-time relatedness: an index of candidates the new node's text touches,

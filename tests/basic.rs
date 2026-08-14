@@ -2596,3 +2596,68 @@ fn fire_time_routing_offers_leave_and_wake() {
     let script = coord::wake_command(&s, "steward");
     assert!(script.ends_with("steward-session.cmd"), "launcher script preferred: {}", script);
 }
+
+#[test]
+fn find_word_hyphen_is_a_boundary() {
+    // it-hjed: find's word predicate — ASCII alphanumerics are the only
+    // word chars; everything else bounds, hyphens included. Deliberately
+    // divergent from the lexicon join's contains_word, which keeps hyphen
+    // compounds whole for the naming register.
+    assert!(!queries::find_word("click the button", "cli"), "cli must never hit click");
+    assert!(queries::find_word("the cli area", "cli"));
+    assert!(queries::find_word("cli-area rules", "cli"), "hyphen is a boundary for find");
+    assert!(queries::find_word("rides atom_line", "atom"), "underscore is a boundary for find");
+    assert!(!queries::find_word("the wrapper", "wrap"), "wrap must not hit wrapper");
+    assert!(queries::find_word("q wrap runs the lint", "wrap"));
+    assert!(queries::find_word("(cli)", "cli"), "punctuation bounds");
+    assert!(queries::find_word("cli", "cli"), "text edges bound");
+    assert!(!queries::find_word("anything", ""), "the empty query hits nothing");
+}
+
+#[test]
+fn find_tiers_word_hits_first_loose_tail_last() {
+    // it-hjed: tier one is id substring plus title and body word-boundary
+    // hits (body-only keeps the matched-in-body label downstream);
+    // substring-only hits are the loose tail — always shown, never hidden.
+    // The motivating debris: the query "cli" matched inside "click".
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let mut body_hit = NewArgs::bare("item", "renderer sweep");
+    body_hit.body = "the cli owns every register".into();
+    let body_hit = ops::new_node(&s, body_hit).unwrap();
+    let loose_hit =
+        ops::new_node(&s, NewArgs::bare("item", "unpack click-target polish")).unwrap();
+    let miss = ops::new_node(&s, NewArgs::bare("item", "unrelated work")).unwrap();
+    let all = s.load_all().unwrap();
+
+    let hits = queries::find_hits(&all, "cli");
+    assert!(hits.strong.iter().any(|n| n.front.id == area.front.id), "title word hit leads");
+    assert!(
+        hits.body.iter().any(|n| n.front.id == body_hit.front.id),
+        "body word hit is tier one, in the labeled body shelf"
+    );
+    assert!(
+        hits.loose.iter().any(|n| n.front.id == loose_hit.front.id),
+        "cli inside click is substring-only: the loose tail, shown but labeled"
+    );
+    assert!(
+        hits.strong.iter().chain(&hits.body).all(|n| n.front.id != loose_hit.front.id),
+        "debris never leads"
+    );
+    let every: Vec<&str> = hits
+        .strong
+        .iter()
+        .chain(&hits.body)
+        .chain(&hits.loose)
+        .map(|n| n.front.id.as_str())
+        .collect();
+    assert!(!every.contains(&miss.front.id.as_str()), "a non-match stays out entirely");
+
+    // id substring stays tier one: the suffix of a node's own id finds it
+    let frag = &body_hit.front.id[3..];
+    let hits = queries::find_hits(&all, frag);
+    assert!(
+        hits.strong.iter().any(|n| n.front.id == body_hit.front.id),
+        "id substring is tier one, never loose"
+    );
+}

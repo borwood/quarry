@@ -1089,26 +1089,23 @@ fn main() -> Result<()> {
             let store = Store::discover()?;
             let all = store.load_all()?;
             let q = text.to_lowercase();
-            let hits: Vec<&Node> = all
-                .iter()
-                .filter(|n| {
-                    n.front.id.contains(&q)
-                        || quarry::surface::title_raw(n).to_lowercase().contains(&q)
-                        || n.body.to_lowercase().contains(&q)
-                })
-                .collect();
-            if hits.is_empty() {
+            // Tiered output (it-hjed): word-boundary and id hits first,
+            // substring-only hits trailing as the labeled loose tail —
+            // always shown, never hidden, no flag. Every hit line rides
+            // atom_line; the tier label is a suffix in the same register
+            // as the matched-in-body one.
+            let hits = queries::find_hits(&all, &q);
+            if hits.strong.is_empty() && hits.body.is_empty() && hits.loose.is_empty() {
                 println!("no node matches \"{}\".", text);
             }
-            for n in hits {
-                let where_ = if quarry::surface::title_raw(n).to_lowercase().contains(&q)
-                    || n.front.id.contains(&q)
-                {
-                    ""
-                } else {
-                    "  (matched in body)"
-                };
-                println!("{}{}", line(&all, n), where_);
+            for n in hits.strong {
+                println!("{}", line(&all, n));
+            }
+            for n in hits.body {
+                println!("{}  (matched in body)", line(&all, n));
+            }
+            for n in hits.loose {
+                println!("{}  (loose: substring only)", line(&all, n));
             }
         }
         Cmd::Session { which } => {
