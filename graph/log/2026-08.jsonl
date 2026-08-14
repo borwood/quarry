@@ -841,3 +841,16 @@
 {"ts":"2026-08-14T06:43:08Z","node":"it-hjed","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-14T06:43:21Z","node":"it-hjed","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-hjed","joined":"agent:a7948945a4a5222b1","session":"quarry"}
 {"ts":"2026-08-14T06:43:30Z","node":"it-hjed","v":5,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T06:50:14Z","node":"cl-ybth","v":1,"op":"create","type":"claim","title":"`find-tiers`: word and id hits lead, substring-only hits trail labeled loose; find's word predicate states its divergence from the lexicon join","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-hjed"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"254f54de795c","ts":"2026-08-14T06:50:14Z","node":"cl-ybth","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-hjed"}
+{"op":"link","rel":"supports","to":"cl-ybth","at":2,"ts":"2026-08-14T06:50:49Z","node":"cl-89b5","v":3,"actor":"claude-fable-5","note":"the tiers render through the atom_line road find-areas laid; kill that and the labeled tail goes with it","dispatch":"it-hjed"}
+{"ts":"2026-08-14T07:18:09Z","node":"it-hjed","v":5,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T07:18:47Z","node":"do-v6e2","v":1,"op":"create","type":"doc","title":"dispatch report: find match hygiene: substring matching admits foreign debris","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-hjed","at":5,"ts":"2026-08-14T07:18:47Z","node":"do-v6e2","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T07:18:47Z","node":"it-hjed","v":6,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T07:18:49Z","node":"it-hjed","v":6,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-14T07:18:50Z","node":"cl-ybth","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T07:18:56Z","node":"do-v6e2","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T07:18:56Z","node":"cl-89b5","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T07:20:37Z","node":"do-2g8m","v":1,"op":"create","type":"doc","title":"payload spike: two dispatches review their own brief","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-14T07:21:05Z","node":"th-uacu","v":2,"actor":"claude-fable-5","note":"spike evidence appended: do-2g8m, two-dispatch payload experiment","session":"quarry"}

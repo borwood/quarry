@@ -7,6 +7,15 @@
     "kind": "dispatch",
     "charter": "dispatch session: consumes ready, drives in-flight work, harvests and lands, clears homework residue; threads are not its to settle; may dispatch anything in the graph for now"
   },
+  "followups": {
+    "areas": [
+      "ar-xa38",
+      "ar-c7f5"
+    ],
+    "kind": "design",
+    "charter": "ephemeral design branch: follow-up threads from the payload-experiment session; retire at wrap",
+    "ephemeral": true
+  },
   "quarry": {
     "areas": [
       "ar-xa38",
