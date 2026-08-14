@@ -738,3 +738,75 @@
 {"ts":"2026-08-13T13:57:01Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-13T13:57:52Z","node":"it-ygw7","v":5,"op":"archive","actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-13T13:57:52Z","node":"it-u8uf","v":7,"op":"archive","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:22:36Z","node":"it-sumw","v":1,"op":"create","type":"item","title":"orientation consumes the charter: wake surfaces carry the session's kind","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ydvb","at":2,"ts":"2026-08-14T00:22:42Z","node":"it-sumw","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-14T00:22:46Z","node":"it-sumw","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:22:53Z","node":"it-sumw","v":3,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:23:04Z","node":"it-sumw","v":3,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:23:04Z","node":"it-sumw","v":3,"op":"reserve","globs":["src/**","tests/**",".claude/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-14T00:23:04Z","node":"it-sumw","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:23:04Z","node":"it-sumw","v":3,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**",".claude/**"]}
+{"ts":"2026-08-14T00:23:20Z","node":"it-sumw","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-sumw","joined":"agent:abaa0074fc63d583b","session":"quarry"}
+{"ts":"2026-08-14T00:30:48Z","node":"cl-mk8b","v":1,"op":"create","type":"claim","title":"`charter-at-wake`: q session resume and the SessionStart orient render the bound session's charter beneath the purview line","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-sumw"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"a534ba15bc67","ts":"2026-08-14T00:30:48Z","node":"cl-mk8b","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-sumw"}
+{"op":"link","rel":"supports","to":"dc-ydvb","at":2,"ts":"2026-08-14T00:30:53Z","node":"cl-mk8b","v":3,"actor":"claude-fable-5","note":"the consumption dc-ydvb names: kind lived in the charter until orientation consumed it; the wake surfaces now render it","session":"quarry","dispatch":"it-sumw"}
+{"ts":"2026-08-14T00:31:50Z","node":"dc-ad8b","v":1,"op":"create","type":"decision","title":"session kind is a field: design | dispatch; the set stays open","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-ydvb","at":2,"ts":"2026-08-14T00:31:56Z","node":"dc-ad8b","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:32:04Z","node":"it-skpa","v":1,"op":"create","type":"item","title":"session kind as registry data: --kind on set, one validation point, open set","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ad8b","at":2,"ts":"2026-08-14T00:32:08Z","node":"it-skpa","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-14T00:32:08Z","node":"it-skpa","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-skpa","at":3,"ts":"2026-08-14T00:32:08Z","node":"it-hapc","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-14T00:32:22Z","node":"it-hapc","v":5,"actor":"claude-fable-5","note":"reshape under dc-ad8b: kind reads from the registry field, not charter prose; badge collision note retired","session":"quarry"}
+{"ts":"2026-08-14T00:32:55Z","node":"it-sumw","v":4,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:33:45Z","node":"do-uvx6","v":1,"op":"create","type":"doc","title":"dispatch report: orientation consumes the charter: wake surfaces carry the session's kind","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-sumw","at":4,"ts":"2026-08-14T00:33:45Z","node":"do-uvx6","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T00:33:49Z","node":"it-sumw","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:33:50Z","node":"it-sumw","v":5,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:34:08Z","node":"do-uvx6","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:34:16Z","node":"it-skpa","v":3,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:34:16Z","node":"it-skpa","v":3,"op":"reserve","globs":["src/**","tests/**",".claude/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-14T00:34:16Z","node":"it-skpa","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:34:16Z","node":"it-skpa","v":3,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**",".claude/**"]}
+{"ts":"2026-08-14T00:34:26Z","node":"it-skpa","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-skpa","joined":"agent:aa1e52d6c7bfcaf17","session":"quarry"}
+{"ts":"2026-08-14T00:40:28Z","node":"cl-3rx9","v":1,"op":"create","type":"claim","title":"`session-kind-field`: kind is registry data — one validation point in `parse_kind`, surfaces render what they find","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-skpa"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"a2aa307a1f00","ts":"2026-08-14T00:40:28Z","node":"cl-3rx9","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-skpa"}
+{"op":"link","rel":"supports","to":"dc-ad8b","at":2,"ts":"2026-08-14T00:41:02Z","node":"cl-3rx9","v":3,"actor":"claude-fable-5","note":"the landed capability: kind as registry data, one validation point, open set","session":"quarry","dispatch":"it-skpa"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"be7523f920c9","ts":"2026-08-14T00:41:02Z","node":"cl-3rx9","v":4,"actor":"claude-fable-5","note":"the surface half: set --kind, list, resume, orient","session":"quarry","dispatch":"it-skpa"}
+{"ts":"2026-08-14T00:42:04Z","node":"it-skpa","v":4,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:42:04Z","node":"it-skpa","v":4,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**",".claude/**"]}
+{"ts":"2026-08-14T00:42:17Z","node":"it-skpa","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-skpa","joined":"agent:a8dd3ac1ee7b8c033","session":"quarry"}
+{"ts":"2026-08-14T00:45:58Z","node":"it-skpa","v":4,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:46:31Z","node":"do-2hcu","v":1,"op":"create","type":"doc","title":"dispatch report: session kind as registry data: --kind on set, one validation point, open set","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-skpa","at":4,"ts":"2026-08-14T00:46:31Z","node":"do-2hcu","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T00:46:31Z","node":"it-skpa","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:46:32Z","node":"it-skpa","v":5,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:46:40Z","node":"it-hapc","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:46:40Z","node":"do-2hcu","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:53:11Z","node":"dc-wngq","v":1,"op":"create","type":"decision","title":"the dispatcher: quarry's dispatch session - durable, all-areas, named plainly","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-14T00:53:18Z","node":"dc-crea","v":1,"op":"create","type":"decision","title":"fire-time routing: appropriateness over mere liveness; certainty routes, ambiguity defers","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-ad8b","at":2,"ts":"2026-08-14T00:53:24Z","node":"dc-wngq","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-ydvb","at":2,"ts":"2026-08-14T00:53:24Z","node":"dc-crea","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-crea","at":2,"ts":"2026-08-14T00:53:24Z","node":"it-hapc","v":6,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:53:35Z","node":"it-wub5","v":1,"op":"create","type":"item","title":"kind-shaped wake: a dispatch session resumes into ready, in-flight, and homework","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-wngq","at":2,"ts":"2026-08-14T00:53:42Z","node":"it-wub5","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-skpa","at":5,"ts":"2026-08-14T00:53:43Z","node":"it-wub5","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-14T00:53:43Z","node":"it-wub5","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-14T00:53:43Z","node":"it-hapc","v":7,"actor":"claude-fable-5","note":"reshape under dc-crea: appropriateness over liveness, certainty routes, ambiguity defers","session":"quarry"}
+{"op":"set","fields":["title=the dispatch-session launcher: a script that wakes the dispatcher"],"ts":"2026-08-14T00:53:49Z","node":"it-3pab","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-14T00:53:58Z","node":"it-3pab","v":4,"actor":"claude-fable-5","note":"landed by registry act under dc-wngq; wake scope split to it-wub5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-14T00:53:58Z","node":"it-3pab","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T00:54:08Z","node":"th-xeqw","v":1,"op":"create","type":"thread","title":"worktree subagents: stamping does not survive the worktree boundary","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-14T01:23:27Z","node":"it-wub5","v":4,"op":"brief","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T01:23:27Z","node":"it-wub5","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-14T01:23:27Z","node":"it-wub5","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T01:23:27Z","node":"it-wub5","v":4,"op":"dispatch","actor":"claude-fable-5","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-14T01:23:38Z","node":"it-wub5","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-wub5","joined":"agent:acfc094e996cc230e","session":"quarry"}
+{"ts":"2026-08-14T01:36:13Z","node":"cl-br3p","v":1,"op":"create","type":"claim","title":"`kind-shaped-wake`: the wake shape derives from session kind at one match point - dispatch wakes into ready, in-flight with harvest commands, and homework residue","actor":"claude-fable-5","note":null,"session":"quarry","dispatch":"it-wub5"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"285165df59e9","ts":"2026-08-14T01:36:13Z","node":"cl-br3p","v":2,"actor":"claude-fable-5","session":"quarry","dispatch":"it-wub5"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"033580557c2c","ts":"2026-08-14T01:36:24Z","node":"cl-br3p","v":3,"actor":"claude-fable-5","session":"quarry","dispatch":"it-wub5"}
+{"ts":"2026-08-14T01:38:15Z","node":"it-wub5","v":5,"op":"harvest","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T01:38:48Z","node":"do-sdcb","v":1,"op":"create","type":"doc","title":"dispatch report: kind-shaped wake: a dispatch session resumes into ready, in-flight, and homework","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-wub5","at":5,"ts":"2026-08-14T01:38:48Z","node":"do-sdcb","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-14T01:38:48Z","node":"it-wub5","v":6,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T01:38:49Z","node":"it-wub5","v":6,"op":"release","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-14T01:38:55Z","node":"do-sdcb","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}

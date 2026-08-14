@@ -361,6 +361,10 @@ enum SessionCmd {
         name: String,
         #[arg(long = "areas", required = true)]
         areas: Vec<String>,
+        /// Session kind: design | dispatch (dc-ad8b — the set is open,
+        /// validated in one place; surfaces render whatever kind they find)
+        #[arg(long)]
+        kind: Option<String>,
         #[arg(long)]
         charter: Option<String>,
         /// Also write a <name>-session.cmd launcher at the repo root
@@ -962,6 +966,22 @@ fn main() -> Result<()> {
                         let queue = queries::queue(&all);
                         let ready = queries::ready(&all);
                         let behind = queries::behind(&store, &all);
+                        // The wake session (it-sumw): env identity first
+                        // (launcher-owned), then the chat binding (adopt) —
+                        // a bound chat orients AS its session, so the
+                        // charter meets every wake, not only launcher-env
+                        // chats. Resolved before anything prints: the wake
+                        // SHAPE follows the session's kind (it-wub5), and
+                        // this surface renders the shape it is handed —
+                        // coord::wake_shape is the one kind match point.
+                        let reg = coord::load_sessions(&store);
+                        let wake = coord::current_session().or_else(|| {
+                            chat_id.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
+                        });
+                        let wake_reg =
+                            wake.as_ref().and_then(|s| reg.get(s).map(|p| (s.as_str(), p)));
+                        let shape =
+                            coord::wake_shape(wake_reg.and_then(|(_, p)| p.kind.as_deref()));
                         println!(
                             "quarry: {} nodes · owed to the user: {} · ready to dispatch: {} · behind: {}",
                             all.len(),
@@ -969,10 +989,18 @@ fn main() -> Result<()> {
                             ready.len(),
                             behind.len()
                         );
-                        for n in &queue {
-                            println!("  owed: {}", line(&all, n));
+                        // Omitted under the dispatch shape: threads are not
+                        // a dispatch session's to settle (dc-wngq).
+                        if shape.owed_threads {
+                            for n in &queue {
+                                println!("  owed: {}", line(&all, n));
+                            }
                         }
-                        if let Some((sess, areas)) = coord::purview(&store, &all) {
+                        if let Some((sess, p)) = wake_reg {
+                            let areas: Vec<&Node> = all
+                                .iter()
+                                .filter(|n| n.front.ty == "area" && p.areas.contains(&n.front.id))
+                                .collect();
                             let ids: Vec<&str> = areas.iter().map(|a| a.front.id.as_str()).collect();
                             let mine_q = queue.iter().filter(|n| coord::in_purview(n, &ids)).count();
                             let mine_r = ready.iter().filter(|n| coord::in_purview(n, &ids)).count();
@@ -982,6 +1010,25 @@ fn main() -> Result<()> {
                                 "session {} purview ({}): {} answerable thread(s), {} ready item(s) — scope with --mine",
                                 sess, names.join(", "), mine_q, mine_r
                             );
+                            // Kind and charter beneath the purview line
+                            // (it-sumw, it-skpa): the same texts q session
+                            // resume renders — the kind field first, the
+                            // charter prose on top of it (dc-ad8b).
+                            if let Some(k) = coord::kind_line(p) {
+                                println!("  {}", k);
+                            }
+                            if let Some(c) = coord::charter_line(p) {
+                                println!("  {}", c);
+                            }
+                            // The dispatch-kind wake leads with what a
+                            // dispatcher owes (it-wub5): ready in purview,
+                            // in-flight with harvest commands, homework
+                            // residue — one render, both wake surfaces.
+                            if shape.dispatcher_lead {
+                                for l in quarry::render::dispatch_wake(&store, &all, &ids) {
+                                    println!("  {}", l);
+                                }
+                            }
                             let leases = coord::load_leases(&store);
                             for l in leases.iter().filter(|l| l.session != sess) {
                                 let what = all
@@ -1012,23 +1059,17 @@ fn main() -> Result<()> {
                                     }
                                 }
                             }
-                        } else if coord::current_session().is_some() {
+                        } else if let Some(sess) = &wake {
                             println!(
                                 "session '{}' has no registered purview — q session set <name> --areas <area>...",
-                                coord::current_session().unwrap_or_default()
+                                sess
                             );
-                        } else {
-                            let bound = chat_id
-                                .as_deref()
-                                .and_then(|cid| coord::chat_binding(&store, cid));
-                            let reg = coord::load_sessions(&store);
-                            if bound.is_none() && !reg.is_empty() {
-                                let names: Vec<&str> = reg.keys().map(|s| s.as_str()).collect();
-                                println!(
-                                    "unbound chat in a multi-session repo (sessions: {}). Before substantive work, ask the user: adopt one of these (q session adopt <name>), or define a new session — and if new, is it meant to persist across chats and be re-entered, or is it ephemeral, for this chat only?",
-                                    names.join(" · ")
-                                );
-                            }
+                        } else if !reg.is_empty() {
+                            let names: Vec<&str> = reg.keys().map(|s| s.as_str()).collect();
+                            println!(
+                                "unbound chat in a multi-session repo (sessions: {}). Before substantive work, ask the user: adopt one of these (q session adopt <name>), or define a new session — and if new, is it meant to persist across chats and be re-entered, or is it ephemeral, for this chat only?",
+                                names.join(" · ")
+                            );
                         }
                         println!("orient with: q query queue · q query ready · q query shaping · q guide");
                     }
@@ -1064,19 +1105,23 @@ fn main() -> Result<()> {
         Cmd::Session { which } => {
             let store = Store::discover()?;
             match which {
-                SessionCmd::Set { name, areas, charter, launcher, ephemeral } => {
+                SessionCmd::Set { name, areas, kind, charter, launcher, ephemeral } => {
                     let all = store.load_all()?;
                     let ids = coord::resolve_area_ids(&store, &all, &areas)?;
+                    // One validation point (dc-ad8b): the kind string is
+                    // judged in coord::parse_kind and nowhere else.
+                    let kind = kind.as_deref().map(coord::parse_kind).transpose()?;
                     let titles: Vec<String> = ids
                         .iter()
                         .filter_map(|id| all.iter().find(|n| &n.front.id == id))
                         .map(|n| quarry::surface::title_raw(n).to_string())
                         .collect();
                     let overlaps = coord::purview_overlaps(&store, &ids);
-                    coord::save_session(&store, &name, ids, charter, ephemeral)?;
+                    coord::save_session(&store, &name, ids, kind.clone(), charter, ephemeral)?;
                     println!(
-                        "✔ session {} covers: {}{}",
+                        "✔ session {}{} covers: {}{}",
                         name,
+                        kind.map(|k| format!(" [{}]", k)).unwrap_or_default(),
                         titles.join(" · "),
                         if ephemeral { "  (ephemeral — this chat only)" } else { "" }
                     );
@@ -1125,11 +1170,7 @@ fn main() -> Result<()> {
                     let Some(p) = reg.get(&sess) else {
                         anyhow::bail!("session '{}' is not registered — q session set {} --areas <area>...", sess, sess)
                     };
-                    println!(
-                        "resuming session {}{}",
-                        sess,
-                        p.charter.as_ref().map(|c| format!(" — {}", c)).unwrap_or_default()
-                    );
+                    println!("resuming session {}", sess);
                     let area_titles: Vec<String> = p
                         .areas
                         .iter()
@@ -1137,6 +1178,15 @@ fn main() -> Result<()> {
                         .map(|n| quarry::surface::title_raw(n).to_string())
                         .collect();
                     println!("  purview: {}", area_titles.join(" · "));
+                    // Kind and charter beneath the purview line (it-sumw,
+                    // it-skpa): the kind field first, the charter prose on
+                    // top of it (dc-ad8b) — the same texts the orient prints.
+                    if let Some(k) = coord::kind_line(p) {
+                        println!("  {}", k);
+                    }
+                    if let Some(c) = coord::charter_line(p) {
+                        println!("  {}", c);
+                    }
                     if let Some(ts) = coord::last_seen(&store, &sess) {
                         use time::format_description::well_known::Rfc3339;
                         let age_s = time::OffsetDateTime::parse(&ts, &Rfc3339)
@@ -1152,6 +1202,10 @@ fn main() -> Result<()> {
                         }
                     }
                     let ids: Vec<&str> = p.areas.iter().map(|s| s.as_str()).collect();
+                    // The wake SHAPE follows the session's kind (it-wub5):
+                    // this surface renders the shape it is handed —
+                    // coord::wake_shape is the one kind match point.
+                    let shape = coord::wake_shape(p.kind.as_deref());
                     let leases = coord::load_leases(&store);
                     let mine: Vec<_> = leases.iter().filter(|l| l.session == sess).collect();
                     if !mine.is_empty() {
@@ -1171,14 +1225,24 @@ fn main() -> Result<()> {
                             );
                         }
                     }
-                    let inflight: Vec<_> = all
-                        .iter()
-                        .filter(|n| n.front.ty == "item" && n.front.status == "in-flight" && coord::in_purview(n, &ids))
-                        .collect();
-                    if !inflight.is_empty() {
-                        println!("  in-flight in purview:");
-                        for n in inflight {
-                            println!("    {}", line(&all, n));
+                    if shape.dispatcher_lead {
+                        // The dispatch-kind wake leads with what a
+                        // dispatcher owes (it-wub5): ready in purview,
+                        // in-flight with harvest commands, homework residue
+                        // — one render, both wake surfaces.
+                        for l in quarry::render::dispatch_wake(&store, &all, &ids) {
+                            println!("  {}", l);
+                        }
+                    } else {
+                        let inflight: Vec<_> = all
+                            .iter()
+                            .filter(|n| n.front.ty == "item" && n.front.status == "in-flight" && coord::in_purview(n, &ids))
+                            .collect();
+                        if !inflight.is_empty() {
+                            println!("  in-flight in purview:");
+                            for n in inflight {
+                                println!("    {}", line(&all, n));
+                            }
                         }
                     }
                     let log = store.read_log()?;
@@ -1223,14 +1287,18 @@ fn main() -> Result<()> {
                             println!("    {}", line(&all, n));
                         }
                     }
-                    let owed: Vec<&Node> = queries::queue(&all)
-                        .into_iter()
-                        .filter(|n| coord::in_purview(n, &ids))
-                        .collect();
-                    if !owed.is_empty() {
-                        println!("  owed to the user in your purview:");
-                        for n in owed {
-                            println!("    {}", line(&all, n));
+                    // Omitted under the dispatch shape: threads are not a
+                    // dispatch session's to settle (dc-wngq).
+                    if shape.owed_threads {
+                        let owed: Vec<&Node> = queries::queue(&all)
+                            .into_iter()
+                            .filter(|n| coord::in_purview(n, &ids))
+                            .collect();
+                        if !owed.is_empty() {
+                            println!("  owed to the user in your purview:");
+                            for n in owed {
+                                println!("    {}", line(&all, n));
+                            }
                         }
                     }
                     println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
@@ -1267,9 +1335,12 @@ fn main() -> Result<()> {
                             .filter_map(|id| all.iter().find(|n| &n.front.id == id))
                             .map(|n| quarry::surface::title_raw(n).to_string())
                             .collect();
+                        // The kind rides the name as data found in the
+                        // registry (dc-ad8b) — kindless renders as today.
                         println!(
-                            "{}: {}{}",
+                            "{}{}: {}{}",
                             name,
+                            p.kind.as_ref().map(|k| format!(" [{}]", k)).unwrap_or_default(),
                             titles.join(" · "),
                             p.charter.map(|c| format!(" — {}", c)).unwrap_or_default()
                         );

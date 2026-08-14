@@ -16,12 +16,73 @@ use crate::store::Store;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Purview {
     pub areas: Vec<String>,
+    /// The session's kind (dc-ad8b): registry data, an open set. Parse and
+    /// validation live in `parse_kind` alone; every surface renders the kind
+    /// it finds without branching on the value. Kindless entries stay legal
+    /// and render exactly as before the field existed.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub kind: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub charter: Option<String>,
     /// Sessions persist by default — defining one makes it re-enterable
     /// (launcher or adopt). Ephemeral is the marked odd case: this chat only.
     #[serde(skip_serializing_if = "std::ops::Not::not", default)]
     pub ephemeral: bool,
+}
+
+/// The charter-at-wake render (it-sumw): one text, every wake choke point.
+/// dc-ydvb names the charter as kind's home until orientation consumes it —
+/// q session resume and the SessionStart orient both print this line, so a
+/// session cannot wake without meeting its own kind. None when the session
+/// has no charter: those wake exactly as before.
+pub fn charter_line(p: &Purview) -> Option<String> {
+    p.charter.as_ref().map(|c| format!("charter: {}", c))
+}
+
+/// THE one validation point for session kind (dc-ad8b, it-skpa). The set is
+/// OPEN: adding a kind is a data change plus a new arm HERE — never a sweep.
+/// Nothing downstream re-validates; surfaces render whatever kind an entry
+/// carries.
+pub fn parse_kind(s: &str) -> Result<String> {
+    let k = s.trim().to_lowercase();
+    match k.as_str() {
+        "design" | "dispatch" => Ok(k),
+        other => bail!(
+            "unknown session kind '{}' — known kinds: design · dispatch. The set is open (dc-ad8b): a new kind is one arm in coord::parse_kind.",
+            other
+        ),
+    }
+}
+
+/// The kind-at-wake render, charter_line's sibling: one text, every wake
+/// choke point, printed beside the charter. Renders the kind the entry
+/// carries — no per-kind branch. None when the session is kindless: those
+/// wake exactly as before the field.
+pub fn kind_line(p: &Purview) -> Option<String> {
+    p.kind.as_ref().map(|k| format!("kind: {}", k))
+}
+
+/// What a wake surface OWES, derived from the session's kind — the one
+/// match point for kind at the wake tier (it-wub5, dc-ad8b). Surfaces
+/// consult the shape they are handed, never the kind string, so a new
+/// kind's wake is one new arm HERE; unknown or absent kinds fall through
+/// the catch-all and keep the generic brief (parse_kind stays the only
+/// judge of the string — this maps, it never validates).
+pub struct WakeShape {
+    /// Lead with what a dispatcher owes: ready in purview, in-flight items
+    /// each with its q harvest command, homework residue (dc-wngq — the
+    /// dispatch session resumes into its own work, not the user's).
+    pub dispatcher_lead: bool,
+    /// Enumerate the threads owed to the user. Omitted under the dispatch
+    /// kind: threads are not a dispatch session's to settle (dc-wngq).
+    pub owed_threads: bool,
+}
+
+pub fn wake_shape(kind: Option<&str>) -> WakeShape {
+    match kind {
+        Some("dispatch") => WakeShape { dispatcher_lead: true, owed_threads: false },
+        _ => WakeShape { dispatcher_lead: false, owed_threads: true },
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -58,11 +119,12 @@ pub fn save_session(
     store: &Store,
     name: &str,
     areas: Vec<String>,
+    kind: Option<String>,
     charter: Option<String>,
     ephemeral: bool,
 ) -> Result<()> {
     let mut reg = load_sessions(store);
-    reg.insert(name.to_string(), Purview { areas, charter, ephemeral });
+    reg.insert(name.to_string(), Purview { areas, kind, charter, ephemeral });
     fs::write(sessions_path(store), serde_json::to_string_pretty(&reg)? + "\n")?;
     Ok(())
 }

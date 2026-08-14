@@ -476,6 +476,89 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     Ok(s)
 }
 
+/// The dispatch-kind wake lead (it-wub5): what a dispatcher owes, one
+/// render for both wake surfaces (q session resume and the SessionStart
+/// orient). Ready in purview is the feed, in-flight items each carry the
+/// q harvest command that judges them, and homework residue closes the
+/// tail — unharvested dispatches the in-flight shelf no longer shows, and
+/// stale refs awaiting review. Threads are deliberately absent: not a
+/// dispatch session's to settle (dc-wngq). Lines carry their own block
+/// indentation; call sites prefix the wake indent. Selection follows
+/// coord::wake_shape — this renders, it never consults the kind string.
+pub fn dispatch_wake(store: &Store, all: &[Node], area_ids: &[&str]) -> Vec<String> {
+    let atom_line = |n: &Node| crate::surface::atom_line(&crate::surface::atom(all, n));
+    let mut out: Vec<String> = Vec::new();
+    let ready: Vec<&Node> = crate::queries::ready(all)
+        .into_iter()
+        .filter(|n| crate::coord::in_purview(n, area_ids))
+        .collect();
+    if ready.is_empty() {
+        out.push("ready to dispatch: none in purview — q query shaping for what is still forming".into());
+    } else {
+        out.push(format!("ready to dispatch ({}) — q dispatch <item> --files <globs>:", ready.len()));
+        for n in &ready {
+            out.push(format!("  {}", atom_line(n)));
+        }
+    }
+    let inflight: Vec<&Node> = all
+        .iter()
+        .filter(|n| {
+            n.front.ty == "item"
+                && n.front.status == "in-flight"
+                && crate::coord::in_purview(n, area_ids)
+        })
+        .collect();
+    if !inflight.is_empty() {
+        out.push("in-flight — each report is owed; judge and land:".into());
+        for n in &inflight {
+            out.push(format!("  {} — q harvest {}", atom_line(n), n.front.id));
+        }
+    }
+    let mut homework: Vec<String> = Vec::new();
+    if let Ok(log) = store.read_log() {
+        for n in crate::queries::unharvested_dispatches(all, &log) {
+            if crate::coord::in_purview(n, area_ids)
+                && !inflight.iter().any(|i| i.front.id == n.front.id)
+            {
+                homework.push(format!(
+                    "unharvested dispatch: {} — the report is owed; q harvest {}",
+                    crate::surface::atom_ref(&crate::surface::atom(all, n)),
+                    n.front.id
+                ));
+            }
+        }
+    }
+    let behinds: Vec<crate::queries::Behind> = crate::queries::behind(store, all)
+        .into_iter()
+        .filter(|b| b.src.area_ids.iter().any(|id| area_ids.contains(&id.as_str())))
+        .collect();
+    for b in behinds.iter().take(5) {
+        let target = b
+            .to_atom
+            .as_ref()
+            .map(crate::surface::atom_ref)
+            .unwrap_or_else(|| format!("\"{}\" ({})", b.to_title, b.to));
+        homework.push(format!(
+            "[sev {}] {} -[{}]→ {} ({})",
+            b.severity,
+            crate::surface::atom_ref(&b.src),
+            b.rel,
+            target,
+            b.reason
+        ));
+    }
+    if behinds.len() > 5 {
+        homework.push(format!("…and {} more stale ref(s) — q query behind", behinds.len() - 5));
+    }
+    if !homework.is_empty() {
+        out.push("homework residue:".into());
+        for l in homework {
+            out.push(format!("  {}", l));
+        }
+    }
+    out
+}
+
 /// The harvest surface: the dispatcher's judgment seat at a dispatch's exit.
 /// Observed-vs-leased, the acts stamped under the badge, the RETURN spec to
 /// judge against, and the report-registration homework. Prints; never

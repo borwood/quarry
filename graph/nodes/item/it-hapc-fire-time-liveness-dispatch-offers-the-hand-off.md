@@ -2,7 +2,7 @@
 id: it-hapc
 type: item
 title: 'fire-time liveness: dispatch offers the hand-off when a dispatching session is live'
-v: 3
+v: 7
 status: sketch
 provenance: assistant
 created: 2026-08-12T21:11:34Z
@@ -17,6 +17,12 @@ edges:
 - rel: depends-on
   to: dc-ydvb
   at: 2
+- rel: depends-on
+  to: it-skpa
+  at: 5
+- rel: depends-on
+  to: dc-crea
+  at: 2
 ---
 
-Sketched 2026-08-12 from dc-ydvb: at q dispatch from a non-dispatching session, derive whether a dispatching-kind session is live (registry + last_seen heartbeat, both existing) and shape the offer: live - prefer the hand-off, leave the item ready for the steward loop; none - offer the launcher or fire solo, both legitimate. A surface, never a gate. Depends on session kind being readable (charter convention today) and collides with the single-slot badge until it-u8uf lands.
+Sketched 2026-08-12 from dc-ydvb; reshaped 2026-08-13 under dc-ad8b (kind is registry data) and dc-crea (routing): at q dispatch from a non-dispatch session, derive the live sessions with appropriate coverage for the item (registry kind + purview fit + last_seen heartbeat; the kind field landed with it-skpa). One appropriate, charter-certain match - prefer the hand-off, leave the item ready for it, inform the user of the routing. Multiple plausible matches or any ambiguity - defer to the user; never guess between dispatchers. None live - offer the launcher (dispatcher-session.cmd, minted under dc-wngq) or fire solo, both legitimate. A surface, never a gate.

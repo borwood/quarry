@@ -358,7 +358,7 @@ fn purview_scoping() {
     i2.status = Some("ready".into());
     ops::new_node(&s, i2).unwrap();
 
-    quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None, false).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None, None, false).unwrap();
     let reg = quarry::coord::load_sessions(&s);
     assert!(reg.contains_key("geo"));
     let all = s.load_all().unwrap();
@@ -446,6 +446,171 @@ fn session_heartbeat_roundtrip() {
 }
 
 #[test]
+fn charter_at_wake_line() {
+    // it-sumw: one render, both wake surfaces — q session resume and the
+    // SessionStart orient print this same text beneath the purview line,
+    // so a session meets its own kind at wake (dc-ydvb consumed).
+    let s = temp_store();
+    quarry::coord::save_session(
+        &s,
+        "geo",
+        vec![],
+        None,
+        Some("decisions session: rulings, design, the thread queue".into()),
+        false,
+    )
+    .unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert_eq!(
+        quarry::coord::charter_line(&reg["geo"]).as_deref(),
+        Some("charter: decisions session: rulings, design, the thread queue")
+    );
+    // a session without a charter wakes exactly as before: no line at all
+    quarry::coord::save_session(&s, "bare", vec![], None, None, false).unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(quarry::coord::charter_line(&reg["bare"]).is_none());
+}
+
+#[test]
+fn session_kind_is_registry_data() {
+    // it-skpa / dc-ad8b: kind parses and validates in ONE place
+    // (coord::parse_kind); surfaces render the kind they find; kindless
+    // entries stay legal and render as today.
+    assert_eq!(quarry::coord::parse_kind("design").unwrap(), "design");
+    assert_eq!(quarry::coord::parse_kind(" Dispatch ").unwrap(), "dispatch");
+    let err = quarry::coord::parse_kind("audit").unwrap_err().to_string();
+    assert!(err.contains("design") && err.contains("dispatch"), "the refusal names the known kinds: {}", err);
+
+    let s = temp_store();
+    quarry::coord::save_session(
+        &s,
+        "geo",
+        vec![],
+        Some("design".into()),
+        Some("rulings and the thread queue".into()),
+        false,
+    )
+    .unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert_eq!(quarry::coord::kind_line(&reg["geo"]).as_deref(), Some("kind: design"));
+    assert_eq!(reg["geo"].kind.as_deref(), Some("design"));
+
+    // a kindless session renders exactly as before: no kind line at all
+    quarry::coord::save_session(&s, "bare", vec![], None, None, false).unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(quarry::coord::kind_line(&reg["bare"]).is_none());
+
+    // a pre-field sessions.json entry (no kind key on disk) stays legal
+    let path = s.root.join("graph").join("sessions.json");
+    std::fs::write(&path, r#"{"legacy": {"areas": []}}"#).unwrap();
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(reg["legacy"].kind.is_none());
+    assert!(quarry::coord::kind_line(&reg["legacy"]).is_none());
+}
+
+#[test]
+fn wake_shape_follows_kind_at_one_match_point() {
+    // it-wub5 / dc-ad8b: the kind string maps to a wake shape in exactly one
+    // place (coord::wake_shape); surfaces render the shape they are handed.
+    // Dispatch leads with the dispatcher's owes and drops the owed-threads
+    // block (dc-wngq: threads are not a dispatch session's to settle).
+    let d = quarry::coord::wake_shape(Some("dispatch"));
+    assert!(d.dispatcher_lead);
+    assert!(!d.owed_threads);
+    // design, kindless, and UNKNOWN kinds all keep the generic brief — the
+    // set is open, and the catch-all is the openness.
+    for k in [Some("design"), None, Some("audit")] {
+        let g = quarry::coord::wake_shape(k);
+        assert!(!g.dispatcher_lead, "generic shape for {:?}", k);
+        assert!(g.owed_threads, "owed threads render for {:?}", k);
+    }
+}
+
+#[test]
+fn dispatch_wake_leads_with_ready_inflight_and_homework() {
+    // it-wub5: one render, both wake surfaces — ready in purview, in-flight
+    // each with its q harvest command, homework residue; threads absent.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let aid = area.front.id.clone();
+    let mut r = NewArgs::bare("item", "ready pass");
+    r.status = Some("ready".into());
+    r.about = vec![aid.clone()];
+    r.acceptance = vec!["the pass lands".into()];
+    let r = ops::new_node(&s, r).unwrap();
+    let mut f = NewArgs::bare("item", "flying pass");
+    f.status = Some("ready".into());
+    f.about = vec![aid.clone()];
+    f.acceptance = vec!["the flight lands".into()];
+    let f = ops::new_node(&s, f).unwrap();
+    ops::dispatch(&s, &f.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let mut th = NewArgs::bare("thread", "which datum wins?");
+    th.status = Some("queued".into());
+    th.about = vec![aid.clone()];
+    th.provenance = Some("user".into());
+    let th = ops::new_node(&s, th).unwrap();
+    // homework residue: a claim citing the area at v1, then the area bumps
+    let c = ops::claim(
+        &s,
+        "strata are layered", None,
+        vec![aid.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    ops::set(&s, &aid, &["title=stratigraphy".to_string()], None).unwrap();
+
+    let all = s.load_all().unwrap();
+    let out = quarry::render::dispatch_wake(&s, &all, &[aid.as_str()]);
+    let text = out.join("\n");
+    // leads with ready in purview
+    assert!(out[0].starts_with("ready to dispatch (1)"), "ready leads the wake: {:?}", out);
+    assert!(text.contains(&r.front.id), "the ready item is enumerated: {}", text);
+    // in-flight rides its harvest command
+    assert!(
+        out.iter().any(|l| l.contains(&f.front.id) && l.contains(&format!("q harvest {}", f.front.id))),
+        "the in-flight item carries its q harvest command: {}",
+        text
+    );
+    // a live-dispatched in-flight item is NOT doubled as unharvested residue
+    assert!(!text.contains("unharvested dispatch"), "in-flight shelf already carries it: {}", text);
+    // homework residue names the stale ref
+    assert!(text.contains("homework residue:"), "{}", text);
+    assert!(
+        out.iter().any(|l| l.contains(&c.front.id) && l.contains("[sev")),
+        "the behind ref surfaces as homework: {}",
+        text
+    );
+    // threads are not a dispatch session's to settle (dc-wngq): no owed
+    // block renders, and the thread surfaces only as ref hygiene (its own
+    // stale about-edge is the dispatcher's homework, not its question)
+    assert!(!text.contains("owed to the user"), "no owed block in a dispatch wake: {}", text);
+    assert!(
+        out.iter().filter(|l| l.contains(&th.front.id)).all(|l| l.contains("[sev")),
+        "the thread appears only as a stale-ref source: {}",
+        text
+    );
+
+    // a dispatch whose item left in-flight without a harvest is residue
+    ops::set(&s, &f.front.id, &["status=ready".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let out = quarry::render::dispatch_wake(&s, &all, &[aid.as_str()]);
+    assert!(
+        out.iter().any(|l| l.contains("unharvested dispatch") && l.contains(&f.front.id)),
+        "the report stays owed after the status moved: {:?}",
+        out
+    );
+
+    // a purview with nothing owed says so once, and only about ready
+    let quiet = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let out = quarry::render::dispatch_wake(&s, &all, &[quiet.front.id.as_str()]);
+    assert_eq!(out.len(), 1, "quiet purview, one line: {:?}", out);
+    assert!(out[0].starts_with("ready to dispatch: none in purview"));
+}
+
+#[test]
 fn session_injection_binds_and_rewrites() {
     let s = temp_store();
     quarry::coord::write_adopt_request(&s, "geo").unwrap();
@@ -508,7 +673,7 @@ fn purview_overlap_detection() {
     let a = ops::new_node(&s, NewArgs::bare("area", "worldgen")).unwrap();
     let b = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
     let c = ops::new_node(&s, NewArgs::bare("area", "bodies")).unwrap();
-    quarry::coord::save_session(&s, "geo", vec![a.front.id.clone(), b.front.id.clone()], None, false).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![a.front.id.clone(), b.front.id.clone()], None, None, false).unwrap();
     let overlaps = quarry::coord::purview_overlaps(&s, &[b.front.id.clone(), c.front.id.clone()]);
     assert_eq!(overlaps.len(), 1);
     assert_eq!(overlaps[0].0, "geo");
@@ -521,7 +686,7 @@ fn purview_overlap_detection() {
 fn alert_computation_closed_list() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "materials sdk")).unwrap();
-    quarry::coord::save_session(&s, "geo", vec![area.front.id.clone()], None, false).unwrap();
+    quarry::coord::save_session(&s, "geo", vec![area.front.id.clone()], None, None, false).unwrap();
     // an arrival filed into geo's purview by bodies (stays sketch), plus a
     // dependency that bodies lands, unblocking geo's item
     let mut arrival = NewArgs::bare("item", "density convention");
@@ -562,8 +727,8 @@ fn alert_computation_closed_list() {
 fn ephemeral_flag_roundtrip() {
     let s = temp_store();
     let a = ops::new_node(&s, NewArgs::bare("area", "scratch zone")).unwrap();
-    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, true).unwrap();
-    quarry::coord::save_session(&s, "geo2", vec![a.front.id.clone()], None, false).unwrap();
+    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, None, true).unwrap();
+    quarry::coord::save_session(&s, "geo2", vec![a.front.id.clone()], None, None, false).unwrap();
     let reg = quarry::coord::load_sessions(&s);
     assert!(reg["audit"].ephemeral);
     assert!(!reg["geo2"].ephemeral);
@@ -608,7 +773,7 @@ fn archive_rules_and_hierarchy() {
 fn session_retire_removes_registry_and_leases() {
     let s = temp_store();
     let a = ops::new_node(&s, NewArgs::bare("area", "scratch")).unwrap();
-    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, true).unwrap();
+    quarry::coord::save_session(&s, "audit", vec![a.front.id.clone()], None, None, true).unwrap();
     let mut it = NewArgs::bare("item", "audit probe");
     it.status = Some("in-flight".into());
     let it = ops::new_node(&s, it).unwrap();

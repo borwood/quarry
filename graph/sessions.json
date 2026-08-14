@@ -1,9 +1,19 @@
 {
+  "dispatcher": {
+    "areas": [
+      "ar-xa38",
+      "ar-c7f5"
+    ],
+    "kind": "dispatch",
+    "charter": "dispatch session: consumes ready, drives in-flight work, harvests and lands, clears homework residue; threads are not its to settle; may dispatch anything in the graph for now"
+  },
   "quarry": {
     "areas": [
       "ar-xa38",
       "ar-c7f5"
-    ]
+    ],
+    "kind": "design",
+    "charter": "design session: rulings, design, the thread queue; hands ready work off rather than building in-loop"
   },
   "ui-cleanup": {
     "areas": [

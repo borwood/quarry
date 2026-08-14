@@ -1,12 +1,14 @@
 ---
 id: it-3pab
 type: item
-title: 'the dispatching-session launcher: a script that wakes the steward'
-v: 2
-status: sketch
+title: 'the dispatch-session launcher: a script that wakes the dispatcher'
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-12T21:11:31Z
 actor: claude
+aliases:
+- the-dispatching-session-launcher-a-script-that-w
 edges:
 - rel: about
   to: ar-xa38
@@ -16,4 +18,4 @@ edges:
   at: 2
 ---
 
-Sketched 2026-08-12 from dc-ydvb: a launcher script (launcher-owned identity, the adopt flow already prefers it) that starts a dispatching-kind session - charter-carried kind per the ruling, orientation still generic until kind-on-consumption promotes it. The steward wakes into ready, in-flight, unharvested, and homework residue; threads are not its to settle. Offered at fire-time by the decisions session when no dispatching session is live.
+Landed 2026-08-13 by registry act, no new code: q session set dispatcher --kind dispatch --areas process cli --charter ... --launcher wrote the registry entry and the dispatcher-session.cmd script at the repo root - the kind field (it-skpa) plus the existing --launcher machinery covered what this sketch imagined as new build. Naming per dc-wngq: dispatcher, not steward (the sketch's coinage is retired). The remaining scope this sketch carried - a dispatch-kind wake that leads with ready, in-flight, and homework - moved to it-wub5. Fire-time offering of the launcher rides it-hapc.
