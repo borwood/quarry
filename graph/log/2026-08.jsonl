@@ -949,3 +949,4 @@
 {"ts":"2026-08-15T06:46:07Z","node":"it-6ydd","v":1,"op":"create","type":"item","title":"graph read hook: direct reads of graph/ deny with teaching toward q","actor":"claude-fable-5","note":null}
 {"op":"link","rel":"depends-on","to":"dc-pwyd","at":2,"ts":"2026-08-15T06:46:11Z","node":"it-6ydd","v":2,"actor":"claude-fable-5"}
 {"ts":"2026-08-15T06:46:29Z","node":"session:unbound","v":0,"op":"wrap","actor":"claude-fable-5"}
+{"ts":"2026-08-15T06:47:00Z","node":"session:followups","v":0,"op":"retire-session","actor":"claude-fable-5","released_leases":0}
