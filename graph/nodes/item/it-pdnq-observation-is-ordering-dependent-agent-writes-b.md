@@ -8,6 +8,7 @@ provenance: assistant
 created: 2026-08-13T08:05:16Z
 actor: claude
 kind: watch
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
