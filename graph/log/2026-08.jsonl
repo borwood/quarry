@@ -967,3 +967,4 @@
 {"ts":"2026-08-15T08:19:44Z","node":"dc-83nk","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-15T08:19:44Z","node":"dc-ez67","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-15T08:19:44Z","node":"dc-xfgz","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:33:53Z","node":"th-24u9","v":1,"op":"create","type":"thread","title":"unverified assistant claims: no channel works the asserted list","actor":"claude","note":null,"session":"quarry"}
