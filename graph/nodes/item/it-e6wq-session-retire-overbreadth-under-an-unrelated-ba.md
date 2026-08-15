@@ -2,12 +2,12 @@
 id: it-e6wq
 type: item
 title: session-retire overbreadth under an unrelated badge
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-11T05:25:26Z
 actor: claude
-kind: watch
+kind: bug
 edges:
 - rel: about
   to: ar-xa38

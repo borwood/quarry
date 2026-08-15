@@ -2,8 +2,8 @@
 id: th-dy25
 type: thread
 title: 'report dormancy needs solving: findings need triage; the shape is not ironed out'
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-13T08:29:22Z
 actor: claude

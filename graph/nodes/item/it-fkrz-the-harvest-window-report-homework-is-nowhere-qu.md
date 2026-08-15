@@ -2,8 +2,8 @@
 id: it-fkrz
 type: item
 title: 'the harvest window: report homework is nowhere queryable until executed'
-v: 1
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:07Z
 actor: claude
@@ -12,6 +12,9 @@ edges:
 - rel: about
   to: ar-xa38
   at: 1
+- rel: depends-on
+  to: dc-cbkq
+  at: 4
 ---
 
-Between a report naming homework and the dispatcher executing it, the obligation exists only in prose; a session dying mid-harvest leaves it dormant in the registered report. An actual loss decides whether harvest wants checklist state.
+Absorbed 2026-08-14 into it-afr6 (dc-cbkq delivery): extraction-or-discharge at registration converts report findings to nodes at the choke point, and the wrap lint covers the pass - the mid-harvest death window closes structurally. The an-actual-loss-decides framing retires under dc-ygzz. If general homework queryability beyond reports is wanted, that is a fresh item on its own merits. Closed absorbed, not built.

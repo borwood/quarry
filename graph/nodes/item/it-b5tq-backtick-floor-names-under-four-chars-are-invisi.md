@@ -2,12 +2,12 @@
 id: it-b5tq
 type: item
 title: 'backtick floor: names under four chars are invisible to the lexicon joins'
-v: 2
+v: 3
 status: sketch
 provenance: assistant
 created: 2026-08-11T05:25:26Z
 actor: claude
-kind: watch
+kind: bug
 edges:
 - rel: about
   to: ar-c7f5

@@ -2,12 +2,12 @@
 id: it-4q6t
 type: item
 title: 'commit sweep: git add graph stages other sessions uncommitted nodes'
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-12T21:12:19Z
 actor: claude
-kind: watch
+kind: bug
 edges:
 - rel: about
   to: ar-xa38

@@ -2,12 +2,12 @@
 id: it-kkde
 type: item
 title: 'disjoint-area joins: an intent and its spine in different areas never meet'
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-11T05:25:26Z
 actor: claude
-kind: watch
+kind: bug
 edges:
 - rel: about
   to: ar-c7f5

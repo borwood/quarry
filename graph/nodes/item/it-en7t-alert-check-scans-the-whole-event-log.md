@@ -2,12 +2,12 @@
 id: it-en7t
 type: item
 title: alert check scans the whole event log
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-11T05:25:36Z
 actor: claude
-kind: watch
+kind: debt
 edges:
 - rel: about
   to: ar-c7f5

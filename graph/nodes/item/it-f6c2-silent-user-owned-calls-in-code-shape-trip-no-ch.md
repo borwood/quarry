@@ -2,12 +2,12 @@
 id: it-f6c2
 type: item
 title: silent user-owned calls in code shape trip no choke point
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-11T05:25:07Z
 actor: claude
-kind: watch
+kind: bug
 edges:
 - rel: about
   to: ar-xa38

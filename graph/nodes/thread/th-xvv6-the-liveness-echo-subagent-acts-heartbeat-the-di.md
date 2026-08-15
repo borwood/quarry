@@ -2,8 +2,8 @@
 id: th-xvv6
 type: thread
 title: 'the liveness echo: subagent acts heartbeat the dispatching session'
-v: 2
-status: queued
+v: 3
+status: resolved
 provenance: assistant
 created: 2026-08-14T06:42:40Z
 actor: claude-fable-5

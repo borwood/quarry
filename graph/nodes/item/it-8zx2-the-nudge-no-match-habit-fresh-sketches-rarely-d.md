@@ -2,8 +2,8 @@
 id: it-8zx2
 type: item
 title: 'the nudge no-match habit: fresh sketches rarely declare write-sets'
-v: 1
-status: sketch
+v: 3
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:18Z
 actor: claude
@@ -14,4 +14,4 @@ edges:
   at: 1
 ---
 
-do-xt6f: the leaseless nudge's derived item match rides declared write-sets and file-edges, which fresh sketches rarely carry. write-set+= exists; the habit does not. Watch which arm fires more.
+Absorbed 2026-08-14 into it-qra3 (dc-ygzz sweep): the no-match habit is what declared floors fix - fresh sketches rarely declare write-sets because nothing demands them at mint; the slice floor presence-warn is the remedy. The watch-which-arm-fires-more framing retires under dc-ygzz. Closed absorbed, not built.

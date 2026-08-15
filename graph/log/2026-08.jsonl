@@ -937,3 +937,14 @@
 {"op":"link","rel":"depends-on","to":"it-sc2u","at":1,"ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":10,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"it-b5tq","at":3,"ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":11,"actor":"claude","session":"quarry"}
 {"op":"set","fields":["status=shaped"],"from_status":"sketch","ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":12,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T06:45:46Z","node":"dc-pwyd","v":1,"op":"create","type":"decision","title":"identity splits by side effect: heartbeat rides the session, attention rides the actor, raw reads deny at the hook","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-pwyd","ts":"2026-08-15T06:45:46Z","node":"th-er78","v":4,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-er78","at":4,"ts":"2026-08-15T06:45:46Z","node":"dc-pwyd","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T06:45:53Z","node":"dc-p9xr","v":1,"op":"create","type":"decision","title":"the liveness echo is correct: subagent heartbeats are truthful by harness fact","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-p9xr","ts":"2026-08-15T06:45:53Z","node":"th-xvv6","v":3,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-xvv6","at":3,"ts":"2026-08-15T06:45:53Z","node":"dc-p9xr","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["title=attention misattribution: agent verbs spend the holding session's watermarks and drift"],"ts":"2026-08-15T06:46:00Z","node":"it-csm3","v":2,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T06:46:00Z","node":"it-csm3","v":3,"actor":"claude-fable-5","note":"narrowed under dc-pwyd: heartbeat struck, attention rides the actor"}
+{"op":"link","rel":"depends-on","to":"dc-pwyd","at":2,"ts":"2026-08-15T06:46:00Z","node":"it-csm3","v":4,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T06:46:07Z","node":"it-6ydd","v":1,"op":"create","type":"item","title":"graph read hook: direct reads of graph/ deny with teaching toward q","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"depends-on","to":"dc-pwyd","at":2,"ts":"2026-08-15T06:46:11Z","node":"it-6ydd","v":2,"actor":"claude-fable-5"}

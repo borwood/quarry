@@ -47,6 +47,10 @@ machine.
 
 - Watched compromises live in the graph as `kind: watch` items (migrated
   2026-08-11) — surface them with `q find watch` or the areas' shaping.
+  **The boundary (user ruling, 2026-08-14): watch is reserved for accepted
+  compromises with a named trigger. Defects are bugs on sight — no
+  second-instance thresholds, no "we'll watch that." Quarry ships to
+  deepcraft's successor; defects fix before adoption, with urgency.**
 - CLI output is title-first prose for agents and humans; scripts should not
   parse it — extract ids from the trailing parenthetical or use `q find`.
   A machine-readable output mode is a filed sketch item.
