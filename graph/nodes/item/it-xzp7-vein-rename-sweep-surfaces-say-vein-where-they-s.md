@@ -2,8 +2,8 @@
 id: it-xzp7
 type: item
 title: 'vein rename sweep: surfaces say vein where they said spine'
-v: 5
-status: shaped
+v: 7
+status: ready
 provenance: assistant
 created: 2026-08-13T13:16:42Z
 actor: claude-fable-5
@@ -21,13 +21,9 @@ edges:
   at: 1
 - rel: depends-on
   to: dc-yd9s
-  at: 2
-- rel: depends-on
-  to: it-vzx6
-  at: 1
-- rel: depends-on
-  to: it-qra3
-  at: 1
+  at: 3
 ---
 
-Filed 2026-08-13 under dc-wrnc: the guide text (teach.rs), the brief shelf label, the landed-uncited prompt, spine_check naming, and test assertions migrate from spine to vein; historical node bodies stand as written. After teach.rs: rebuild, then q init --claude. Fires with the species-ruling fallout or sooner.
+Filed 2026-08-13 under dc-wrnc: the guide text (teach.rs), the brief shelf label, the landed-uncited prompt, spine_check naming, and test assertions migrate from spine to vein; historical node bodies stand as written. After teach.rs: rebuild, then q init --claude.
+
+Re-cut 2026-08-15 under dc-gaa9: the protocol-sketch blockers retired as logged unlinks - that blockage belonged to the per-species floors (it-vzx6, it-qra3, it-pgn9), never to this cargo. This item's dispatch covers vein-rename plus claim-kind-pass, the kind-pass reviewed at harvest. The shelf-by-claim-kind acceptance line stands but SUBSUMES into the brief renderer item: it judges satisfied when the renderer lands the capability under the same name (dc-xfgz rules the shelf shape it will land as).

@@ -854,3 +854,86 @@
 {"ts":"2026-08-14T07:18:56Z","node":"cl-89b5","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
 {"ts":"2026-08-14T07:20:37Z","node":"do-2g8m","v":1,"op":"create","type":"doc","title":"payload spike: two dispatches review their own brief","actor":"claude-fable-5","note":null,"session":"quarry"}
 {"op":"body","ts":"2026-08-14T07:21:05Z","node":"th-uacu","v":2,"actor":"claude-fable-5","note":"spike evidence appended: do-2g8m, two-dispatch payload experiment","session":"quarry"}
+{"ts":"2026-08-14T07:21:38Z","node":"th-wxr9","v":1,"op":"create","type":"thread","title":"acceptance-less dispatch: ready and fire must demand the contract","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-14T07:45:07Z","node":"it-rtkw","v":1,"op":"create","type":"item","title":"wake-surface resolution: one resolver for resume and orient; charter_line owns its render","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-14T07:45:07Z","node":"it-pafx","v":1,"op":"create","type":"item","title":"self-certifying refusals: a refused verb states nothing written","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-14T07:45:07Z","node":"it-njn9","v":1,"op":"create","type":"item","title":"find lowercases the whole graph per query","actor":"claude-fable-5","note":null}
+{"op":"body","ts":"2026-08-14T07:45:35Z","node":"cl-3rx9","v":5,"actor":"claude-fable-5","note":"sweep: absorb the judged-vs-mapped clause from do-sdcb provisional call 5"}
+{"ts":"2026-08-14T07:45:35Z","node":"cl-3rx9","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-14T07:45:35Z","node":"cl-3rx9","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-14T07:45:35Z","node":"it-b2sp","v":2,"actor":"claude-fable-5","note":"sweep: append the first-orient flood instance"}
+{"ts":"2026-08-14T07:46:19Z","node":"it-pgn9","v":1,"op":"create","type":"item","title":"spine claims mint kindless: the vein prompt is missing at land time","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-14T09:14:24Z","node":"dc-cbkq","v":1,"op":"create","type":"decision","title":"report dormancy: extraction-or-discharge at registration; enumerate and offer to the user","actor":"claude-fable-5","note":null}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-cbkq","ts":"2026-08-14T09:14:24Z","node":"th-dy25","v":2,"actor":"claude-fable-5"}
+{"op":"link","rel":"settles","to":"th-dy25","at":2,"ts":"2026-08-14T09:14:24Z","node":"dc-cbkq","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-14T09:14:30Z","node":"it-afr6","v":1,"op":"create","type":"item","title":"extraction-or-discharge surfaces: harvest demands it, wrap lints it, teaching states the user face","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"depends-on","to":"dc-cbkq","at":2,"ts":"2026-08-14T09:14:31Z","node":"it-fkrz","v":2,"actor":"claude-fable-5"}
+{"op":"link","rel":"depends-on","to":"dc-cbkq","at":2,"ts":"2026-08-14T09:14:38Z","node":"it-afr6","v":2,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-14T09:14:38Z","node":"it-yr2u","v":3,"actor":"claude-fable-5","note":"absorbed by dc-cbkq"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-14T09:14:38Z","node":"it-yr2u","v":4,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T02:59:05Z","node":"dc-cbkq","v":3,"actor":"claude-fable-5","note":"user clarification: the mandatory face binds the dispatcher/harvester triaging the deliverable"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T02:59:05Z","node":"it-bj3b","v":2,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T02:59:05Z","node":"it-bj3b","v":3,"actor":"claude-fable-5","note":"promoted watch-to-bug per user: no two-strikes; defects are bugs on sight"}
+{"ts":"2026-08-15T02:59:09Z","node":"it-afr6","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T02:59:09Z","node":"it-fkrz","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T03:32:14Z","node":"dc-ygzz","v":1,"op":"create","type":"decision","title":"defects are bugs on sight: watch is reserved for compromises with a named trigger","actor":"claude-fable-5","note":null}
+{"op":"link","rel":"builds-on","to":"dc-yd9s","at":2,"ts":"2026-08-15T03:32:14Z","node":"dc-yd9s","v":3,"actor":"claude-fable-5"}
+{"op":"link","rel":"builds-on","to":"dc-yd9s","at":3,"ts":"2026-08-15T03:32:25Z","node":"dc-ygzz","v":2,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T03:32:25Z","node":"it-xzp7","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T03:32:29Z","node":"dc-yd9s","v":3,"op":"unlink","rel":"builds-on","to":"dc-yd9s","at":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:32:36Z","node":"it-b5tq","v":3,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:32:36Z","node":"it-e6wq","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:32:36Z","node":"it-kkde","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:32:36Z","node":"it-4q6t","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:32:36Z","node":"it-f6c2","v":2,"actor":"claude-fable-5"}
+{"op":"set","fields":["kind=debt"],"ts":"2026-08-15T03:32:36Z","node":"it-en7t","v":2,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T03:33:18Z","node":"it-qra3","v":2,"actor":"claude-fable-5","note":"absorb it-8zx2 as evidence"}
+{"op":"body","ts":"2026-08-15T03:33:18Z","node":"it-8zx2","v":2,"actor":"claude-fable-5","note":"absorbed by it-qra3"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-15T03:33:18Z","node":"it-8zx2","v":3,"actor":"claude-fable-5"}
+{"ts":"2026-08-15T03:33:29Z","node":"it-xzp7","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T03:33:29Z","node":"it-xu9g","v":3,"actor":"claude-fable-5","note":"dc-ygzz constraint: bugs never collapse"}
+{"op":"body","ts":"2026-08-15T03:33:30Z","node":"it-fkrz","v":3,"actor":"claude-fable-5","note":"absorbed by it-afr6; wait-for-loss framing retired"}
+{"op":"set","fields":["status=done"],"from_status":"sketch","ts":"2026-08-15T03:33:30Z","node":"it-fkrz","v":4,"actor":"claude-fable-5"}
+{"op":"body","ts":"2026-08-15T03:33:31Z","node":"it-afr6","v":3,"actor":"claude-fable-5","note":"absorb it-fkrz"}
+{"ts":"2026-08-15T03:52:10Z","node":"dc-xfgz","v":1,"op":"create","type":"decision","title":"the shelf ruling: species framed, match-tiered, rendered once at highest fidelity","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-yd9s","at":3,"ts":"2026-08-15T03:52:15Z","node":"dc-xfgz","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-15T03:52:55Z","node":"th-yzmj","v":5,"actor":"claude","note":"user note appended: summarizer may take veins and contracts out of the brief","session":"quarry"}
+{"op":"body","ts":"2026-08-15T03:52:55Z","node":"th-cfmt","v":2,"actor":"claude","note":"note appended: shelf ruling measured section likely lands here","session":"quarry"}
+{"op":"body","ts":"2026-08-15T03:52:55Z","node":"th-xvv6","v":2,"actor":"claude","note":"user direction appended: fix, do not disclose in brief prose","session":"quarry"}
+{"op":"set","fields":["kind=bug"],"ts":"2026-08-15T03:52:55Z","node":"it-bj3b","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T04:00:13Z","node":"dc-3f5e","v":1,"op":"create","type":"decision","title":"the shelf sees before it ranks: the lexicon trio lands ahead of the renderer","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-xfgz","at":2,"ts":"2026-08-15T04:00:19Z","node":"dc-3f5e","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T04:15:10Z","node":"dc-83nk","v":1,"op":"create","type":"decision","title":"the floor line rides every brief: reading further is expected","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-kpqg","at":3,"ts":"2026-08-15T04:15:10Z","node":"dc-cbkq","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T04:15:27Z","node":"dc-cbkq","v":4,"op":"unlink","rel":"builds-on","to":"dc-kpqg","at":3,"actor":"claude","note":"mislink: wrong source id typed during dial-three recording; intended edge was dc-83nk builds-on dc-kpqg","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-kpqg","at":3,"ts":"2026-08-15T04:15:27Z","node":"dc-83nk","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-xfgz","at":2,"ts":"2026-08-15T04:15:27Z","node":"dc-83nk","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T04:15:28Z","node":"it-afr6","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T04:15:28Z","node":"it-fkrz","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T05:27:26Z","node":"dc-hjad","v":1,"op":"create","type":"decision","title":"the backdrop tiers everywhere, and edges weigh in: adjacency multiplies the match","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-xfgz","at":2,"ts":"2026-08-15T05:27:31Z","node":"dc-hjad","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T05:47:27Z","node":"th-er78","v":1,"op":"create","type":"thread","title":"identity-scoped reads: heartbeats, watermarks, and the verb-bypass workaround","actor":"claude-fable-5","note":null}
+{"ts":"2026-08-15T05:48:35Z","node":"it-csm3","v":1,"op":"create","type":"item","title":"side-effect misattribution: agent verbs spend the holding session's heartbeat, watermarks, and drift","actor":"claude-fable-5","note":null}
+{"op":"body","ts":"2026-08-15T05:48:35Z","node":"th-er78","v":2,"actor":"claude-fable-5","note":"narrowed: defect half moved to the bug; two calls remain"}
+{"op":"body","ts":"2026-08-15T05:48:45Z","node":"th-er78","v":3,"actor":"claude-fable-5","note":"fix dangler: the bug is it-csm3"}
+{"ts":"2026-08-15T05:56:16Z","node":"dc-gaa9","v":1,"op":"create","type":"decision","title":"the sweep re-cuts: rename and kind-pass fire; the shelf line subsumes into the renderer","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-xfgz","at":2,"ts":"2026-08-15T05:56:23Z","node":"dc-gaa9","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T05:56:23Z","node":"it-xzp7","v":5,"op":"unlink","rel":"depends-on","to":"it-vzx6","at":1,"actor":"claude","note":"re-cut under dc-gaa9: the blockage belonged to the per-species floors, not the sweep's cargo","session":"quarry"}
+{"ts":"2026-08-15T05:56:23Z","node":"it-xzp7","v":5,"op":"unlink","rel":"depends-on","to":"it-qra3","at":2,"actor":"claude","note":"re-cut under dc-gaa9: the blockage belonged to the per-species floors, not the sweep's cargo","session":"quarry"}
+{"op":"body","ts":"2026-08-15T05:56:31Z","node":"it-xzp7","v":6,"actor":"claude","note":"re-cut under dc-gaa9: floors path split off, shelf line subsumed","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-15T05:56:31Z","node":"it-xzp7","v":7,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T05:56:50Z","node":"dc-casn","v":1,"op":"create","type":"decision","title":"the payload rulings: five dials close the dump","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-casn","ts":"2026-08-15T05:56:50Z","node":"th-uacu","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-uacu","at":3,"ts":"2026-08-15T05:56:50Z","node":"dc-casn","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T05:57:03Z","node":"it-wcwd","v":1,"op":"create","type":"item","title":"the brief renderer: tiered, framed, mapped, rendered once","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `shelf-by-claim-kind`: the claim shelf renders per species with framing prose, satisfying it-xzp7's standing line"],"ts":"2026-08-15T05:57:09Z","node":"it-wcwd","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `brief-map`: the item's own file: edges with blobs, its mentioned-by backlinks, and claims matching those files render as the map at full fidelity"],"ts":"2026-08-15T05:57:09Z","node":"it-wcwd","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `render-once`: a node renders once at its highest earned fidelity - full > truncated > atom > count - with one-line refs elsewhere"],"ts":"2026-08-15T05:57:09Z","node":"it-wcwd","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `floor-line`: every brief opens with the ratified floor line; section framings ship as engine defaults in the ratified register"],"ts":"2026-08-15T05:57:10Z","node":"it-wcwd","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `your-writes`: the brief states the landing's expected graph acts - claim species expectation and legal edge shapes"],"ts":"2026-08-15T05:57:10Z","node":"it-wcwd","v":6,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-casn","at":2,"ts":"2026-08-15T05:57:14Z","node":"it-wcwd","v":7,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-xzp7","at":7,"ts":"2026-08-15T05:57:14Z","node":"it-wcwd","v":8,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-nuw5","at":1,"ts":"2026-08-15T05:57:14Z","node":"it-wcwd","v":9,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-sc2u","at":1,"ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":10,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-b5tq","at":3,"ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":11,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=shaped"],"from_status":"sketch","ts":"2026-08-15T05:57:15Z","node":"it-wcwd","v":12,"actor":"claude","session":"quarry"}

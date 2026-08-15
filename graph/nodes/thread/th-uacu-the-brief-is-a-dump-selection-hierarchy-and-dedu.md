@@ -2,8 +2,8 @@
 id: th-uacu
 type: thread
 title: 'the brief is a dump: selection, hierarchy, and dedup for the dispatch payload'
-v: 2
-status: queued
+v: 3
+status: resolved
 provenance: assistant
 created: 2026-08-13T13:45:05Z
 actor: claude-fable-5

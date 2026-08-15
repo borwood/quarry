@@ -2,7 +2,7 @@
 id: dc-yd9s
 type: decision
 title: 'kinds: work modes for items, material species for claims; engine kindless, defaults seeded'
-v: 2
+v: 3
 status: in-force
 provenance: user
 created: 2026-08-13T13:45:50Z
