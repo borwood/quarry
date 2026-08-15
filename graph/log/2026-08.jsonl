@@ -950,3 +950,20 @@
 {"op":"link","rel":"depends-on","to":"dc-pwyd","at":2,"ts":"2026-08-15T06:46:11Z","node":"it-6ydd","v":2,"actor":"claude-fable-5"}
 {"ts":"2026-08-15T06:46:29Z","node":"session:unbound","v":0,"op":"wrap","actor":"claude-fable-5"}
 {"ts":"2026-08-15T06:47:00Z","node":"session:followups","v":0,"op":"retire-session","actor":"claude-fable-5","released_leases":0}
+{"op":"link","rel":"builds-on","to":"dc-dsdm","at":1,"ts":"2026-08-15T07:04:15Z","node":"dc-xfgz","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-dsdm","at":1,"ts":"2026-08-15T07:04:15Z","node":"dc-83nk","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T07:04:32Z","node":"dc-3f5e","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T07:04:32Z","node":"dc-83nk","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T07:04:32Z","node":"dc-gaa9","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T07:04:32Z","node":"dc-hjad","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:18:43Z","node":"dc-ez67","v":1,"op":"create","type":"decision","title":"quest repair: mention what relates, link what leans; edges judged at harvest","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-hjad","at":2,"ts":"2026-08-15T08:18:48Z","node":"dc-ez67","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-dsdm","at":1,"ts":"2026-08-15T08:18:48Z","node":"dc-ez67","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:19:14Z","node":"do-g8r4","v":1,"op":"create","type":"doc","title":"the brief framings: ratified prose for every section","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-wcwd","at":12,"ts":"2026-08-15T08:19:14Z","node":"do-g8r4","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-15T08:19:39Z","node":"dc-dsdm","v":2,"actor":"claude","note":"expanded per user ruling 2026-08-15: every agent-visible surface, open list, length follows the moment, verbiage user-ratified; word inventory recorded","session":"quarry"}
+{"ts":"2026-08-15T08:19:39Z","node":"it-vy97","v":1,"op":"create","type":"item","title":"harvest enumerates link acts: agent-built edges surface for affirm-or-unlink","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ez67","at":3,"ts":"2026-08-15T08:19:44Z","node":"it-vy97","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:19:44Z","node":"dc-83nk","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:19:44Z","node":"dc-ez67","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-15T08:19:44Z","node":"dc-xfgz","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}

@@ -19,7 +19,7 @@ edges:
   at: 1
 - rel: builds-on
   to: dc-xfgz
-  at: 2
+  at: 3
 ---
 
 Ruled 2026-08-15 by the user, dial four of the payload rulings (th-uacu). ONE SCHEME EVERYWHERE: the non-claim backdrop sections - the area's decisions, docs, and open threads - adopt dc-xfgz's match-tier machinery, each with its own framing prose in the ratify-before-landing set. Decisions framed as the in-force rulings the work must not contradict; docs framed as registered records whose dispatch reports carry where-things-live maps of past landings; threads framed with the C3 guardrail doing the structural work - open questions, not yours to settle, file toward them, never resolve. The item's own record (read-first semantics, the map) stays full-fidelity regardless of match - the intrinsic class, untouched.

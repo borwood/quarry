@@ -2,7 +2,7 @@
 id: dc-83nk
 type: decision
 title: 'the floor line rides every brief: reading further is expected'
-v: 3
+v: 4
 status: in-force
 provenance: user
 created: 2026-08-15T04:15:10Z
@@ -22,6 +22,9 @@ edges:
   at: 3
 - rel: builds-on
   to: dc-xfgz
+  at: 3
+- rel: builds-on
+  to: dc-dsdm
   at: 2
 ---
 

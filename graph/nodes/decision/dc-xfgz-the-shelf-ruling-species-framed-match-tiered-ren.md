@@ -2,7 +2,7 @@
 id: dc-xfgz
 type: decision
 title: 'the shelf ruling: species framed, match-tiered, rendered once at highest fidelity'
-v: 2
+v: 3
 status: in-force
 provenance: user
 created: 2026-08-15T03:52:10Z
@@ -20,6 +20,9 @@ edges:
 - rel: builds-on
   to: dc-yd9s
   at: 3
+- rel: builds-on
+  to: dc-dsdm
+  at: 2
 ---
 
 Ruled 2026-08-14 by the user, dial one of the payload rulings (th-uacu). The claim shelf renders PER SPECIES, each section opening with framing prose that places the agent in relation to that species - the agent does not know our terminology or the manner in which anything is meant to be relevant to it; the brief must place it in context to set up the appropriate behavior. The vein framing, in the user's register: your job is to build from these rather than re-derive and handroll; the list may not be complete; entries are programmatically rendered leads offered in sympathy with your predicament of having no prior context in this repo - they require some scrutiny and reasoning, but build maximally from the good veins rather than reaching for novel invention; q open any entry and take your time digging while planning before you execute. Framings for the other species draft in this register and ratify before landing; they ship as engine defaults, customizable at setup (th-qv27), never optional.
