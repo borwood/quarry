@@ -194,7 +194,7 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
         if n.front.ty == "area" && has_claim_backlink {
             writeln!(
                 s,
-                "  (claim backlinks are this area's veins — load-bearing structure; build from vein before handrolling anew)"
+                "  (claim backlinks are this area's `veins` — load-bearing structure; build from `vein` before handrolling anew)"
             )?;
         }
     }
@@ -468,7 +468,7 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     }
 
     writeln!(s, "\nACTOR RULES:")?;
-    writeln!(s, "  · Build from vein: the claims above are load-bearing structure — design from them before proposing new structure.")?;
+    writeln!(s, "  · Build from `vein`: the claims above are load-bearing structure — design from them before proposing new structure.")?;
     writeln!(s, "  · All graph writes go through q verbs; your work logs under QUARRY_ACTOR (auto-injected).")?;
     writeln!(s, "  · C3: never settle or supersede user-provenance nodes. When the work hits a call that is the user's — a fork that would contradict or overturn a user ruling — queue a thread, take the least-committal provisional path consistent with standing rulings, and keep building; flag the provisional call in your report. The thread surfaces the call; it never blocks your arc.")?;
     writeln!(s, "  · Cite what you build on (q link ... / q claim --source ...); harvest is judged from the diff, not the report.")?;

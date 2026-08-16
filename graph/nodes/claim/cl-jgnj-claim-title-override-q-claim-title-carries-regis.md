@@ -1,13 +1,15 @@
 ---
 id: cl-jgnj
 type: claim
-title: '`claim-title-override`: q claim --title carries register-length spine names past the 72-char derived cut, no retitle two-step'
-v: 4
+title: '`claim-title-override`: q claim --title carries register-length vein names past the 72-char derived cut, no retitle two-step'
+v: 5
 status: asserted
 provenance: assistant
 created: 2026-08-11T04:15:34Z
 actor: claude
 kind: vein
+aliases:
+- claim-title-override-q-claim-title-carries-regis
 edges:
 - rel: about
   to: ar-c7f5

@@ -135,7 +135,7 @@ RETURN IS A REPORT, NOT A LANDING: an agent's "done" is a stop signal
 report registration as a doc, then status=done and release by the
 dispatcher's own hand). A landed capability registers
 its vein: a claim titled name-first (`name`: what it provides), source
-the code it was read off — the area's claims are its veins —
+the code it was read off — the area's claims are its `veins` —
 load-bearing structure — and building starts from them. The user's
 single-thread conversation order lives in q queue (push/pop/front/drop)
 — it is working state; what the user owes stays the graph's queued

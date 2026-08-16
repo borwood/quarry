@@ -24,7 +24,7 @@ edges:
   at: 3
 - rel: depends-on
   to: dc-eq9d
-  at: 3
+  at: 4
 ---
 
 Filed 2026-08-13 under dc-wrnc: the guide text (teach.rs), the brief shelf label, the landed-uncited prompt, spine_check naming, and test assertions migrate from spine to vein; historical node bodies stand as written. After teach.rs: rebuild, then q init --claude.

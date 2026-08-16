@@ -1029,3 +1029,11 @@
 {"ts":"2026-08-16T01:59:09Z","node":"it-xzp7","v":11,"op":"release","actor":"claude","session":"quarry"}
 {"ts":"2026-08-16T01:59:19Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-16T01:59:20Z","node":"do-ahmn","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:19:33Z","node":"dc-eq9d","v":4,"actor":"claude","note":"user-ruled: backticks teach names; live surfaces are never historical; three spine titles migrate","session":"quarry"}
+{"op":"set","fields":["title=`intent-delta`: acceptance names join vein titles per shared area — unlanded intent and emergent scope, both directions"],"ts":"2026-08-16T02:19:55Z","node":"cl-gu5f","v":6,"actor":"claude","note":"live titles follow the register (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:19:55Z","node":"cl-gu5f","v":7,"actor":"claude","note":"body follows the register (dc-eq9d)","session":"quarry"}
+{"op":"set","fields":["title=`q-claim`: grounded extraction in one act — C1 subjects, C2 grounding, derived provenance, vein titles ride --title"],"ts":"2026-08-16T02:20:05Z","node":"cl-hd56","v":4,"actor":"claude","note":"live titles follow the register (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:20:06Z","node":"cl-hd56","v":5,"actor":"claude","note":"body follows the register (dc-eq9d)","session":"quarry"}
+{"op":"set","fields":["title=`claim-title-override`: q claim --title carries register-length vein names past the 72-char derived cut, no retitle two-step"],"ts":"2026-08-16T02:20:06Z","node":"cl-jgnj","v":5,"actor":"claude","note":"live titles follow the register (dc-eq9d)","session":"quarry"}
+{"ts":"2026-08-16T02:21:23Z","node":"it-xzp7","v":11,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:21:41Z","node":"it-xzp7","v":11,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
