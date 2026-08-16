@@ -975,3 +975,57 @@
 {"ts":"2026-08-15T08:42:02Z","node":"it-vkxh","v":6,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-15T08:42:02Z","node":"it-xpt7","v":7,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-15T08:42:02Z","node":"it-yr2u","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:46:16Z","node":"dc-eq9d","v":1,"op":"create","type":"decision","title":"the vein is precious: continuous, hard-won, prospected-for; bones folds in","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-wrnc","at":2,"ts":"2026-08-16T01:46:26Z","node":"dc-eq9d","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-dsdm","at":2,"ts":"2026-08-16T01:46:27Z","node":"dc-eq9d","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-eq9d","at":3,"ts":"2026-08-16T01:46:27Z","node":"it-xzp7","v":8,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-16T01:46:45Z","node":"it-xzp7","v":9,"actor":"claude","note":"verbiage pass ratified under dc-eq9d; bones folds into vein","session":"quarry"}
+{"ts":"2026-08-16T01:46:54Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:47:05Z","node":"it-xzp7","v":9,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:47:05Z","node":"it-xzp7","v":9,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-16T01:47:05Z","node":"it-xzp7","v":10,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:47:05Z","node":"it-xzp7","v":9,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-16T01:47:19Z","node":"it-xzp7","v":10,"op":"join","actor":"claude","dispatch":"it-xzp7","joined":"agent:ad1ef908ce7060818","session":"quarry"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:27Z","node":"cl-2pc9","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:27Z","node":"cl-3qwu","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:27Z","node":"cl-3rx9","v":6,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:27Z","node":"cl-4k9e","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:27Z","node":"cl-6ctr","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-89b5","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-9nxr","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-9v7c","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-ahzk","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-amza","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-br3p","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-c7q2","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:28Z","node":"cl-cagx","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-enu7","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-farc","v":6,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-gu5f","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-h2gx","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-hd56","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-jgnj","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:29Z","node":"cl-mk8b","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-p6aj","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-qxxp","v":6,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-rv66","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-s98g","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-syj7","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-uqqn","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-vqdb","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:30Z","node":"cl-vsew","v":6,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T01:54:31Z","node":"cl-z6gc","v":3,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7)","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=measured"],"ts":"2026-08-16T01:54:37Z","node":"cl-c34g","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7); cl-eb8j judged one-off reading off the autopsy doc","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=measured"],"ts":"2026-08-16T01:54:38Z","node":"cl-en99","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7); cl-eb8j judged one-off reading off the autopsy doc","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=measured"],"ts":"2026-08-16T01:54:38Z","node":"cl-qm6t","v":5,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7); cl-eb8j judged one-off reading off the autopsy doc","session":"quarry","dispatch":"it-xzp7"}
+{"op":"set","fields":["kind=measured"],"ts":"2026-08-16T01:54:38Z","node":"cl-eb8j","v":4,"actor":"claude","note":"claim-kind pass under dc-yd9s (it-xzp7); cl-eb8j judged one-off reading off the autopsy doc","session":"quarry","dispatch":"it-xzp7"}
+{"ts":"2026-08-16T01:55:03Z","node":"it-xzp7","v":10,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-xzp7"}
+{"ts":"2026-08-16T01:55:12Z","node":"it-xzp7","v":10,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-xzp7"}
+{"ts":"2026-08-16T01:55:20Z","node":"it-xzp7","v":10,"op":"brief","actor":"claude","session":"quarry","dispatch":"it-xzp7"}
+{"ts":"2026-08-16T01:58:05Z","node":"it-xzp7","v":10,"op":"harvest","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:58:58Z","node":"do-ahmn","v":1,"op":"create","type":"doc","title":"dispatch report: vein rename sweep: surfaces say vein where they said spine","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-xzp7","at":10,"ts":"2026-08-16T01:58:58Z","node":"do-ahmn","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-16T01:59:08Z","node":"it-xzp7","v":11,"actor":"claude","note":"vein-rename and claim-kind-pass landed; shelf line subsumes into the renderer per dc-gaa9","session":"quarry"}
+{"ts":"2026-08-16T01:59:09Z","node":"it-xzp7","v":11,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:59:19Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T01:59:20Z","node":"do-ahmn","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}

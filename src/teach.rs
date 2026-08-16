@@ -74,7 +74,7 @@ always derived — never write "blocked" anywhere.
 
 INTENT AND LINEAGE — NAMES ARE THE JOIN
 An item IS intent: acceptance lines name the capabilities they intend in
-the spine register (lands `name`: what it provides), and spine claim
+the vein register (lands `name`: what it provides), and vein claim
 titles carry the names that exist — same vocabulary, so the delta derives:
 q query intent-delta reports intended-but-unlanded and landed-but-
 unintended per shared area, both directions, never a sweep. Specs and
@@ -134,11 +134,12 @@ RETURN IS A REPORT, NOT A LANDING: an agent's "done" is a stop signal
 — the dispatcher judges at q harvest <item> (observed-vs-leased,
 report registration as a doc, then status=done and release by the
 dispatcher's own hand). A landed capability registers
-its spine: a claim titled name-first (`name`: what it provides), source
-the code it was read off — the area's claims are its `load-bearing
-bones`, and building starts from them. The user's single-thread
-conversation order lives in q queue (push/pop/front/drop) — it is
-working state; what the user owes stays the graph's queued threads.
+its vein: a claim titled name-first (`name`: what it provides), source
+the code it was read off — the area's claims are its veins —
+load-bearing structure — and building starts from them. The user's
+single-thread conversation order lives in q queue (push/pop/front/drop)
+— it is working state; what the user owes stays the graph's queued
+threads.
 
 PROJECT PROTOCOL — HOUSE RULES AS CONTENT
 Quarry is an engine; this project's house rules are content, living IN the
@@ -735,7 +736,7 @@ pub fn observe_write(
             )
         };
         out.push(format!(
-            "quarry: {} source files touched this session with no lease ({}) — an arc is forming. A lease is an arc declaration, not permission (leaseless writes never deny), but a declared arc gets spine extraction and presence. {}",
+            "quarry: {} source files touched this session with no lease ({}) — an arc is forming. A lease is an arc declaration, not permission (leaseless writes never deny), but a declared arc gets vein extraction and presence. {}",
             coord::LEASELESS_NUDGE_THRESHOLD,
             touched.join(", "),
             hint

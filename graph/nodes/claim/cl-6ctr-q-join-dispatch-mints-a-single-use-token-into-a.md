@@ -2,11 +2,12 @@
 id: cl-6ctr
 type: claim
 title: '`q-join`: dispatch mints a single-use token into a one-line spawn prompt; q join consumes it, binds the acting identity to the badge, and renders the brief fresh'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-13T11:04:24Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

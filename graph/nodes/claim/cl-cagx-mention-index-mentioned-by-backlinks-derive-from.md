@@ -2,11 +2,12 @@
 id: cl-cagx
 type: claim
 title: '`mention-index`: mentioned-by backlinks derive from the body scan at render; blast and behind stay real-edge-only'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-11T04:41:34Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

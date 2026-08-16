@@ -2,11 +2,12 @@
 id: cl-mk8b
 type: claim
 title: '`charter-at-wake`: q session resume and the SessionStart orient render the bound session''s charter beneath the purview line'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-14T00:30:48Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

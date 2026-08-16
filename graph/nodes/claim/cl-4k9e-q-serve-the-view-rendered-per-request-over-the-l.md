@@ -2,11 +2,12 @@
 id: cl-4k9e
 type: claim
 title: '`q-serve`: the view rendered per request over the live store'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-12T11:59:44Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

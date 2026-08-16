@@ -2,11 +2,12 @@
 id: cl-vsew
 type: claim
 title: '`badge-chat-resolution`: the write guard, event stamping, trace, and ha…'
-v: 5
+v: 6
 status: superseded
 provenance: assistant
 created: 2026-08-12T21:34:43Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

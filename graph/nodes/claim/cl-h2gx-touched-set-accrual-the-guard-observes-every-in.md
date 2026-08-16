@@ -2,11 +2,12 @@
 id: cl-h2gx
 type: claim
 title: '`touched-set-accrual`: the guard observes every in-repo write into mach…'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-10T06:59:29Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

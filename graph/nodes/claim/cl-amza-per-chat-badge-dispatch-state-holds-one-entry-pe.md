@@ -2,11 +2,12 @@
 id: cl-amza
 type: claim
 title: '`per-chat-badge`: dispatch state holds one entry per dispatching chat (…'
-v: 4
+v: 5
 status: superseded
 provenance: assistant
 created: 2026-08-12T21:34:37Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

@@ -2,11 +2,12 @@
 id: cl-9v7c
 type: claim
 title: '`fire-routing`: dispatch offers the pull — the leave when a covering dispatcher is live, the wake when none; --solo fires regardless'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-14T06:32:40Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

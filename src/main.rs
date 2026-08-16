@@ -156,13 +156,13 @@ user-provenance thread without --by user.")]
 Extract a claim only when something depends on the statement or kills it —
 never while writing prose. C1: at least one --about. C2: non-user claims
 name their --source doc. A landing counts as dependence: register a landed
-capability as a SPINE claim (--source file:<the code>), titled name-first
+capability as a VEIN claim (--source file:<the code>), titled name-first
 in the project's register (`name`: what it provides) — systematic,
 intention-revealing names. Titles feed the relatedness lexicon, so a
-well-named spine surfaces itself to future work.")]
+well-named vein surfaces itself to future work.")]
     Claim {
         text: String,
-        /// Full title when the derived first-line cut would truncate it (register-length spine names)
+        /// Full title when the derived first-line cut would truncate it (register-length vein names)
         #[arg(long)]
         title: Option<String>,
         #[arg(long = "about", required = true)]
@@ -430,7 +430,7 @@ enum Query {
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
     /// Intent vs reality by name: backtick-named acceptance lines of live
-    /// items against spine claim titles in shared areas — intended-but-
+    /// items against vein claim titles in shared areas — intended-but-
     /// unlanded and landed-but-unintended, both directions
     IntentDelta {
         /// Scope to one area (default: every area)
@@ -566,7 +566,7 @@ fn area_watermarks(store: &Store, node_id: &str) {
 /// Land-time landmark check (ratified 2026-08-09): when an item lands, does
 /// anything in the graph cite the files it held? PRESENCE of citation only,
 /// and a prompt, never a gate — a blocked done breeds Goodhart claims.
-fn spine_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
+fn vein_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
     if item.front.ty != "item" {
         return;
     }
@@ -589,7 +589,7 @@ fn spine_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
         return;
     }
     println!(
-        "  landed uncited: no claim or doc cites {:?}. If this work left a durable capability, register its spine while the diff is warm:",
+        "  landed uncited: no claim or doc cites {:?}. If this work left a durable capability, register its vein while the diff is warm:",
         globs
     );
     println!("    q claim \"`capability-name`: what it now provides\" --about <area> --source file:<path>");
@@ -1432,7 +1432,7 @@ fn main() -> Result<()> {
                 .map(|l| l.globs.clone());
             coord::release(&store, &node, &sess, &Store::actor())?;
             println!("✔ released: {}", aref(&all, &node));
-            spine_check(&store, &node, held);
+            vein_check(&store, &node, held);
             // The arc is over: land clears the badge and the observed set.
             coord::clear_dispatch(&store, &node.front.id);
             coord::clear_touched(&store, &format!("item:{}", node.front.id));
@@ -1601,7 +1601,7 @@ fn main() -> Result<()> {
             }))?;
             // Harvest clears the badge (held entry and acting associations):
             // further writes in the dispatching chat are its own. The observed
-            // set stays until release — spine_check consumes it at landing.
+            // set stays until release — vein_check consumes it at landing.
             coord::clear_dispatch(&store, &n.front.id);
             // A dispatch arc closing is a boundary too — the derived view
             // rides along for free (it-n3fu), best-effort.
@@ -1934,7 +1934,7 @@ fn main() -> Result<()> {
                     }
                 }
                 // Landmark backstop: items landed this session whose held
-                // files nothing cites — spine or no spine, decided while warm.
+                // files nothing cites — vein or no vein, decided while warm.
                 let leases = coord::load_leases(&store);
                 for id in &touched_ids {
                     if let Some(n) = all.iter().find(|n| &n.front.id == id) {
@@ -1946,7 +1946,7 @@ fn main() -> Result<()> {
                                 .unwrap_or_else(|| n.front.write_set.clone());
                             if !globs.is_empty() && !queries::files_cited(&all, &globs) {
                                 println!(
-                                    "  landed uncited: {} held {:?} and nothing cites those files — spine or no spine? (q claim --source file:...)",
+                                    "  landed uncited: {} held {:?} and nothing cites those files — vein or no vein? (q claim --source file:...)",
                                     aref(&all, n), globs
                                 );
                             }
@@ -2140,7 +2140,7 @@ fn main() -> Result<()> {
             print_homework(&store, &[n.front.id.as_str()]);
             area_watermarks(&store, &n.front.id);
             if fields.iter().any(|f| f == "status=done") {
-                spine_check(&store, &n, None);
+                vein_check(&store, &n, None);
             }
             // A settled-status flip is a landing: regenerate the page so it
             // never shows settled work as live (the stale-view class).
@@ -2434,16 +2434,16 @@ fn main() -> Result<()> {
                     };
                     let d = queries::intent_delta(&all, scope.as_deref());
                     if d.unlanded.is_empty() && d.unintended.is_empty() {
-                        println!("no intent delta — every capability named in live acceptance has a spine in a shared area, and every registered spine was named by some intent (or nothing is named yet).");
+                        println!("no intent delta — every capability named in live acceptance has a vein in a shared area, and every registered vein was named by some intent (or nothing is named yet).");
                     }
                     if !d.unlanded.is_empty() {
-                        println!("intended but unlanded — named in live acceptance, no spine claim in a shared area carries it:");
+                        println!("intended but unlanded — named in live acceptance, no vein claim in a shared area carries it:");
                         for (name, item) in &d.unlanded {
                             println!("  · `{}` — {}", name, aref(&all, item));
                         }
                     }
                     if !d.unintended.is_empty() {
-                        println!("landed but unintended — a spine no intent named (emergent scope, visible instead of silent):");
+                        println!("landed but unintended — a vein no intent named (emergent scope, visible instead of silent):");
                         for (name, claim) in &d.unintended {
                             println!("  · `{}` — {}", name, aref(&all, claim));
                         }

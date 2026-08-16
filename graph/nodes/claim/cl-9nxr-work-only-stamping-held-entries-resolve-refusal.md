@@ -2,11 +2,12 @@
 id: cl-9nxr
 type: claim
 title: '`work-only-stamping`: held entries resolve refusal and boundary only; stamping resolves env and association, never the holding chat'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-13T11:04:46Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

@@ -2,11 +2,12 @@
 id: cl-3rx9
 type: claim
 title: '`session-kind-field`: kind is registry data — one validation point in `parse_kind`, surfaces render what they find'
-v: 5
+v: 6
 status: asserted
 provenance: assistant
 created: 2026-08-14T00:40:28Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

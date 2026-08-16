@@ -2,11 +2,12 @@
 id: cl-c34g
 type: claim
 title: the area gate and per-area watermarks deliver read-firsts and foreign d…
-v: 3
+v: 4
 status: measured
 provenance: measured
 created: 2026-08-09T16:57:36Z
 actor: claude
+kind: measured
 method: integration tests (tests/basic.rs)
 edges:
 - rel: about

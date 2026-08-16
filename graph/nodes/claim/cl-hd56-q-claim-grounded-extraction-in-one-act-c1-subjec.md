@@ -2,11 +2,12 @@
 id: cl-hd56
 type: claim
 title: '`q-claim`: grounded extraction in one act — C1 subjects, C2 grounding, derived provenance, spine titles ride --title'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-11T08:32:08Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

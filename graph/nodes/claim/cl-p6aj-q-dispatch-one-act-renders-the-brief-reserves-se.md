@@ -2,11 +2,12 @@
 id: cl-p6aj
 type: claim
 title: '`q-dispatch`: one act renders the brief, reserves, sets in-flight, and…'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-10T06:59:29Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

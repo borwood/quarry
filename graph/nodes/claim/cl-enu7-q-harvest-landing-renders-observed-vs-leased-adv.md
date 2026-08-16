@@ -2,11 +2,12 @@
 id: cl-enu7
 type: claim
 title: '`q-harvest`: landing renders observed-vs-leased, advertises the dispatc…'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-10T06:59:29Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

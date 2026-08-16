@@ -2,11 +2,12 @@
 id: cl-vqdb
 type: claim
 title: '`builds-on-edge`: q link records builder-to-built-upon lineage, stamped and status-free; behind reports it, blast walks it in reverse'
-v: 4
+v: 5
 status: asserted
 provenance: assistant
 created: 2026-08-10T07:50:03Z
 actor: claude
+kind: vein
 aliases:
 - builds-on-edge-q-link-records-builder-to-built-u
 edges:

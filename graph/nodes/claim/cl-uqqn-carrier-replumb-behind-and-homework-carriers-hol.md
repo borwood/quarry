@@ -2,11 +2,12 @@
 id: cl-uqqn
 type: claim
 title: '`carrier-replumb`: Behind and homework carriers hold atoms'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-12T10:35:50Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

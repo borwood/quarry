@@ -2,11 +2,12 @@
 id: cl-c7q2
 type: claim
 title: '`mention-surfaces`: mint and edit echo resolved titles, ask about danglers, offer the edge upgrade; wrap lints'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-11T04:41:40Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

@@ -2,11 +2,12 @@
 id: cl-z6gc
 type: claim
 title: '`agent-identity-injection`: the session hook injects QUARRY_AGENT from the hook-provided agent_id alongside CHAT/SESSION/ACTOR; badges resolve from the association map'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-13T11:04:31Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

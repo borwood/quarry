@@ -2,11 +2,12 @@
 id: cl-farc
 type: claim
 title: '`boundary-badge-guard`: wrap and session resume/retire refuse while a d…'
-v: 5
+v: 6
 status: superseded
 provenance: assistant
 created: 2026-08-11T05:18:37Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-xa38

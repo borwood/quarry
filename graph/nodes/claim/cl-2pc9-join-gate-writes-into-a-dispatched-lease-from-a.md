@@ -2,11 +2,12 @@
 id: cl-2pc9
 type: claim
 title: '`join-gate`: writes into a dispatched lease from a context resolving no badge deny with the teaching line naming q join'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-13T11:04:37Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

@@ -2,11 +2,12 @@
 id: cl-s98g
 type: claim
 title: '`multi-held-dispatch`: held entries key by item with a holder field - a chat holds many, an item belongs to one chat, steal takes it whole'
-v: 4
+v: 5
 status: asserted
 provenance: assistant
 created: 2026-08-13T13:41:30Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

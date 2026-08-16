@@ -2,11 +2,12 @@
 id: cl-gu5f
 type: claim
 title: '`intent-delta`: acceptance names join spine titles per shared area — unlanded intent and emergent scope, both directions'
-v: 4
+v: 5
 status: asserted
 provenance: assistant
 created: 2026-08-10T07:50:16Z
 actor: claude
+kind: vein
 aliases:
 - intent-delta-backtick-named-acceptance-lines-of
 edges:

@@ -2,11 +2,12 @@
 id: cl-en99
 type: claim
 title: mint-time relatedness matches the title lexicon forward and nodehood re…
-v: 3
+v: 4
 status: measured
 provenance: measured
 created: 2026-08-09T16:57:37Z
 actor: claude
+kind: measured
 method: integration tests (tests/basic.rs)
 edges:
 - rel: about

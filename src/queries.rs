@@ -442,17 +442,17 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
 
 /// The intent delta, both directions. Never a sweep — an index for judgment.
 pub struct IntentDelta<'a> {
-    /// Named in a live item's acceptance, no live spine claim in a shared
+    /// Named in a live item's acceptance, no live vein claim in a shared
     /// area carries it — intended but unlanded.
     pub unlanded: Vec<(String, &'a Node)>,
-    /// A live spine claim's registered name that no item's acceptance ever
+    /// A live vein claim's registered name that no item's acceptance ever
     /// named — landed but unintended: emergent scope, visible not silent.
     pub unintended: Vec<(String, &'a Node)>,
 }
 
 /// Derive the intent delta (the intent ruling, 2026-08-10): acceptance
-/// lines name their intended capabilities in the spine register (lands
-/// `name`: what it provides); spine claim titles carry the names that
+/// lines name their intended capabilities in the vein register (lands
+/// `name`: what it provides); vein claim titles carry the names that
 /// exist. Same vocabulary, so the comparison derives — joined per shared
 /// area, scoped by `area` when given. Unlanded intent is read off LIVE
 /// items only (settled intent is no longer owed); the unintended check
@@ -470,8 +470,8 @@ pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> 
     };
     let in_scope = |areas: &[String]| area.map_or(true, |a| areas.iter().any(|x| x == a));
     let shares = |a: &[String], b: &[String]| a.iter().any(|x| b.contains(x));
-    // Live spine claims carrying registered names in their titles.
-    let spines: Vec<(&Node, Vec<String>, Vec<String>)> = all
+    // Live vein claims carrying registered names in their titles.
+    let veins: Vec<(&Node, Vec<String>, Vec<String>)> = all
         .iter()
         .filter(|n| {
             n.front.ty == "claim" && !matches!(n.front.status.as_str(), "refuted" | "superseded")
@@ -503,7 +503,7 @@ pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> 
             continue;
         }
         for name in names {
-            let landed = spines
+            let landed = veins
                 .iter()
                 .any(|(_, snames, sareas)| snames.contains(name) && shares(iareas, sareas));
             if !landed && !unlanded.iter().any(|(x, i)| x == name && i.front.id == item.front.id) {
@@ -512,7 +512,7 @@ pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> 
         }
     }
     let mut unintended: Vec<(String, &Node)> = Vec::new();
-    for (claim, names, careas) in &spines {
+    for (claim, names, careas) in &veins {
         if !in_scope(careas) {
             continue;
         }

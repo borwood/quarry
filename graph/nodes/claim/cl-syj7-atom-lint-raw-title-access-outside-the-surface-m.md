@@ -2,11 +2,12 @@
 id: cl-syj7
 type: claim
 title: '`atom-lint`: raw title access outside the surface module fails wrap and CI'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-12T10:35:48Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

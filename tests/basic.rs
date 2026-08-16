@@ -786,10 +786,10 @@ fn session_retire_removes_registry_and_leases() {
 }
 
 #[test]
-fn spine_presence_check() {
+fn vein_presence_check() {
     let s = temp_store();
     std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
-    std::fs::write(s.root.join("resolve.rs"), "fn spine() {}\n").unwrap();
+    std::fs::write(s.root.join("resolve.rs"), "fn vein() {}\n").unwrap();
     let area = ops::new_node(&s, NewArgs::bare("area", "materials")).unwrap();
     let all = s.load_all().unwrap();
     assert!(!queries::files_cited(&all, &["resolve.rs".to_string()]), "nothing cites yet");
@@ -804,7 +804,7 @@ fn spine_presence_check() {
     )
     .unwrap();
     let all = s.load_all().unwrap();
-    assert!(queries::files_cited(&all, &["resolve.rs".to_string()]), "the spine claim cites it");
+    assert!(queries::files_cited(&all, &["resolve.rs".to_string()]), "the vein claim cites it");
     assert!(queries::files_cited(&all, &["resolve.rs:12".to_string().replace(":12", "")]),);
     assert!(!queries::files_cited(&all, &["src/**".to_string()]), "unrelated globs stay uncited");
 }
@@ -1761,11 +1761,11 @@ fn work_only_stamping_held_entry_alone_stamps_nothing() {
 fn brief_carries_dispatch_citizenship_sections() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
-    let mut spine = NewArgs::bare("claim", "`body-graph`: bodies keep identity");
-    spine.about = vec![area.front.id.clone()];
-    spine.body = "water bodies keep identity across chunk regeneration by graph persistence".into();
-    spine.provenance = Some("user".into());
-    ops::new_node(&s, spine).unwrap();
+    let mut vein = NewArgs::bare("claim", "`body-graph`: bodies keep identity");
+    vein.about = vec![area.front.id.clone()];
+    vein.body = "water bodies keep identity across chunk regeneration by graph persistence".into();
+    vein.provenance = Some("user".into());
+    ops::new_node(&s, vein).unwrap();
     let mut d = NewArgs::bare("decision", "bodies persist");
     d.provenance = Some("user".into());
     d.about = vec![area.front.id.clone()];
@@ -1788,7 +1788,7 @@ fn brief_carries_dispatch_citizenship_sections() {
     assert!(!text.contains("status=done, release any lease"), "the stale landing rule is gone");
     assert!(
         text.contains("graph persistence"),
-        "spine shelf renders bodies, not titles: {}",
+        "vein shelf renders bodies, not titles: {}",
         text
     );
     assert!(text.contains("who leans on this landing"), "backlinks considered");
@@ -1805,7 +1805,7 @@ fn brief_carries_dispatch_citizenship_sections() {
 fn builds_on_matrix_shapes_stamp_and_no_status_coupling() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
-    let mut d1 = NewArgs::bare("decision", "spine landmarks");
+    let mut d1 = NewArgs::bare("decision", "vein landmarks");
     d1.provenance = Some("user".into());
     let d1 = ops::new_node(&s, d1).unwrap();
     let mut d2 = NewArgs::bare("decision", "intent rides items");
@@ -1896,7 +1896,7 @@ fn builds_on_behind_and_reverse_blast() {
     let all = s.load_all().unwrap();
     let ids = queries::blast(&all, &da.front.id);
     assert!(ids.contains(&db.front.id) && ids.contains(&dc.front.id), "lineage walks transitively: {:?}", ids);
-    // a refuted spine enumerates its builders — and flips no builder status
+    // a refuted vein enumerates its builders — and flips no builder status
     let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
     let (_, blast) = ops::refute(&s, &c.front.id, &ev.front.id, None).unwrap();
     assert!(
@@ -1926,7 +1926,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
         "lands `halo-check`: the halo stays bounded".into(),
     ];
     let it = ops::new_node(&s, it).unwrap();
-    // a spine in the shared area lands one intent
+    // a vein in the shared area lands one intent
     let bg = ops::claim(
         &s,
         "`body-graph`: bodies keep identity across regen", None,
@@ -1948,7 +1948,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
         None,
     )
     .unwrap();
-    // an emergent spine in the item's area that no intent named
+    // an emergent vein in the item's area that no intent named
     ops::claim(
         &s,
         "`chunk-cache`: regen hits a warm cache", None,
@@ -1969,20 +1969,20 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     assert_eq!(d.unlanded[0].1.front.id, it.front.id);
     let un: Vec<&str> = d.unintended.iter().map(|(n, _)| n.as_str()).collect();
     assert!(un.contains(&"chunk-cache"), "emergent scope surfaces: {:?}", un);
-    assert!(un.contains(&"halo-check"), "the foreign-area spine is unintended there: {:?}", un);
+    assert!(un.contains(&"halo-check"), "the foreign-area vein is unintended there: {:?}", un);
     assert!(!un.contains(&"body-graph"), "intended and landed is quiet: {:?}", un);
     // area scoping excludes the foreign claim
     let scoped = queries::intent_delta(&all, Some(hydro.front.id.as_str()));
     assert!(scoped.unintended.iter().all(|(_, c)| c.front.id != foreign.front.id));
     assert_eq!(scoped.unlanded.len(), 1);
-    // a refuted spine no longer lands its name
+    // a refuted vein no longer lands its name
     let ev = ops::new_node(&s, NewArgs::bare("doc", "remeasurement")).unwrap();
     ops::refute(&s, &bg.front.id, &ev.front.id, None).unwrap();
     let all = s.load_all().unwrap();
     let d = queries::intent_delta(&all, None);
     assert!(
         d.unlanded.iter().any(|(n, _)| n == "body-graph"),
-        "a refuted spine no longer lands the intent"
+        "a refuted vein no longer lands the intent"
     );
     // settling the item removes its names from unlanded — intent settled is
     // no longer owed — but the acceptance still counts as intent

@@ -2,11 +2,12 @@
 id: cl-3qwu
 type: claim
 title: '`surface-atom`: one struct in one module — `atom-line`, `atom-ref`, `atom-unpack` own every register'
-v: 2
+v: 3
 status: asserted
 provenance: assistant
 created: 2026-08-12T10:35:34Z
 actor: claude
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

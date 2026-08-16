@@ -2,11 +2,12 @@
 id: cl-br3p
 type: claim
 title: '`kind-shaped-wake`: the wake shape derives from session kind at one match point - dispatch wakes into ready, in-flight with harvest commands, and homework residue'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-14T01:36:13Z
 actor: claude-fable-5
+kind: vein
 edges:
 - rel: about
   to: ar-c7f5

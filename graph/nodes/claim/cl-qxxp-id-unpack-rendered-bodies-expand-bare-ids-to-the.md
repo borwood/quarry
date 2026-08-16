@@ -2,11 +2,12 @@
 id: cl-qxxp
 type: claim
 title: '`id-unpack`: rendered bodies expand bare ids to the current title, dead targets labeled, the view hyperlinked'
-v: 5
+v: 6
 status: asserted
 provenance: assistant
 created: 2026-08-11T04:41:12Z
 actor: claude
+kind: vein
 aliases:
 - id-unpack-rendered-bodies-expand-bare-ids-to-the
 edges:
