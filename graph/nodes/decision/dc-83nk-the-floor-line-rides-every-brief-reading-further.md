@@ -19,7 +19,7 @@ edges:
   at: 1
 - rel: builds-on
   to: dc-kpqg
-  at: 3
+  at: 4
 - rel: builds-on
   to: dc-xfgz
   at: 3

@@ -1037,3 +1037,36 @@
 {"op":"set","fields":["title=`claim-title-override`: q claim --title carries register-length vein names past the 72-char derived cut, no retitle two-step"],"ts":"2026-08-16T02:20:06Z","node":"cl-jgnj","v":5,"actor":"claude","note":"live titles follow the register (dc-eq9d)","session":"quarry"}
 {"ts":"2026-08-16T02:21:23Z","node":"it-xzp7","v":11,"op":"brief","actor":"claude","session":"quarry"}
 {"ts":"2026-08-16T02:21:41Z","node":"it-xzp7","v":11,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["title=vein claims mint kindless: the vein prompt is missing at land time"],"ts":"2026-08-16T02:42:49Z","node":"it-pgn9","v":2,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"set","fields":["title=disjoint-area joins: an intent and its vein in different areas never meet"],"ts":"2026-08-16T02:42:49Z","node":"it-kkde","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"set","fields":["title=decision-time veins: rule and shaping flips deliver no area read-first"],"ts":"2026-08-16T02:42:49Z","node":"it-qxjx","v":2,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"set","fields":["title=vein landmarks: land-time extraction, presence prompts, never gates"],"ts":"2026-08-16T02:42:49Z","node":"dc-grrb","v":3,"actor":"claude","note":"register scrub (dc-eq9d): live titles follow the register","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:07Z","node":"it-pgn9","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:07Z","node":"it-kkde","v":4,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:07Z","node":"it-qxjx","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:07Z","node":"dc-grrb","v":4,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:07Z","node":"dc-cc76","v":4,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:27Z","node":"dc-e6pp","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:27Z","node":"dc-je5b","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:27Z","node":"dc-jsvp","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:28Z","node":"dc-kpqg","v":4,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:40Z","node":"it-vztp","v":5,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:40Z","node":"th-nc7d","v":7,"actor":"claude","note":"register scrub (dc-eq9d); rename-meta mentions stand","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:41Z","node":"th-uacu","v":4,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"op":"body","ts":"2026-08-16T02:43:41Z","node":"th-cfmt","v":3,"actor":"claude","note":"register scrub (dc-eq9d)","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"it-vztp","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"th-4fz6","v":6,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"dc-cc76","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"dc-wrnc","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"it-tz94","v":17,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"cl-gu5f","v":7,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"it-tz94","v":17,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"cl-vqdb","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"it-7ss9","v":15,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:21Z","node":"th-fu73","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:22Z","node":"dc-83nk","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:22Z","node":"cl-eb8j","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:22Z","node":"dc-yd9s","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:22Z","node":"dc-casn","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:22Z","node":"dc-kpqg","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T02:44:35Z","node":"it-8tcy","v":1,"op":"create","type":"item","title":"broken pipe panics the verb: stdout closes mid-print and homework is lost","actor":"claude","note":null,"session":"quarry"}
