@@ -1070,3 +1070,65 @@
 {"ts":"2026-08-16T02:44:22Z","node":"dc-casn","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-16T02:44:22Z","node":"dc-kpqg","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-16T02:44:35Z","node":"it-8tcy","v":1,"op":"create","type":"item","title":"broken pipe panics the verb: stdout closes mid-print and homework is lost","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:21:23Z","node":"dc-qvtz","v":1,"op":"create","type":"decision","title":"the deliberate-name floor: backticked joins from two characters; bare floors stand","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-e6pp","at":3,"ts":"2026-08-16T03:21:33Z","node":"dc-qvtz","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-eq9d","at":4,"ts":"2026-08-16T03:21:33Z","node":"dc-qvtz","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-qvtz","at":3,"ts":"2026-08-16T03:21:33Z","node":"it-b5tq","v":4,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-16T03:21:34Z","node":"it-b5tq","v":5,"actor":"claude","note":"shaped under dc-qvtz","session":"quarry"}
+{"op":"body","ts":"2026-08-16T03:21:46Z","node":"it-nuw5","v":2,"actor":"claude","note":"shaped for the trio build","session":"quarry"}
+{"op":"body","ts":"2026-08-16T03:21:46Z","node":"it-sc2u","v":2,"actor":"claude","note":"shaped for the trio build","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `backtick-floor`: backticked spans join from two characters (2-60 filter); bare-token floors stand as the noise gate - cli joins backticked, bare short prose stays below","write-set+=src/**","write-set+=tests/**","status=ready"],"from_status":"sketch","ts":"2026-08-16T03:21:56Z","node":"it-b5tq","v":6,"actor":"claude","note":"shaped to ready under dc-qvtz","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `plural-fold`: s/es folds at compare time, lexicon side only - watches meets watch, leases meets lease; find's predicate stays exact","write-set+=src/**","write-set+=tests/**","status=ready"],"from_status":"sketch","ts":"2026-08-16T03:21:56Z","node":"it-nuw5","v":3,"actor":"claude","note":"shaped to ready for the trio build","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `compound-halves`: sig_tokens emits hyphen compounds whole plus halves of five-plus chars; contains_word adopts hyphen-as-boundary; compound hits outrank fragment hits","write-set+=src/**","write-set+=tests/**","status=ready"],"from_status":"sketch","ts":"2026-08-16T03:21:56Z","node":"it-sc2u","v":3,"actor":"claude","note":"shaped to ready for the trio build","session":"quarry"}
+{"ts":"2026-08-16T03:22:04Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:04Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:04Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:17Z","node":"it-b5tq","v":6,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:17Z","node":"it-b5tq","v":6,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-16T03:22:17Z","node":"it-b5tq","v":7,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:17Z","node":"it-b5tq","v":6,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-16T03:22:19Z","node":"it-nuw5","v":3,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:19Z","node":"it-nuw5","v":3,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-16T03:22:19Z","node":"it-nuw5","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:19Z","node":"it-nuw5","v":3,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-16T03:22:21Z","node":"it-sc2u","v":3,"op":"brief","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:21Z","node":"it-sc2u","v":3,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-16T03:22:21Z","node":"it-sc2u","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:21Z","node":"it-sc2u","v":3,"op":"dispatch","actor":"claude","session":"quarry","globs":["src/**","tests/**"]}
+{"ts":"2026-08-16T03:22:49Z","node":"it-nuw5","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:49Z","node":"it-sc2u","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:22:56Z","node":"it-b5tq","v":7,"op":"join","actor":"claude","dispatch":"it-b5tq","joined":"agent:a04671f9c969be59f","session":"quarry"}
+{"ts":"2026-08-16T03:23:06Z","node":"it-nuw5","v":4,"op":"join","actor":"claude","dispatch":"it-nuw5","joined":"agent:a04671f9c969be59f","session":"quarry"}
+{"ts":"2026-08-16T03:23:18Z","node":"it-sc2u","v":4,"op":"join","actor":"claude","dispatch":"it-sc2u","joined":"agent:a04671f9c969be59f","session":"quarry"}
+{"ts":"2026-08-16T03:33:03Z","node":"cl-baxa","v":1,"op":"create","type":"claim","title":"`backtick-floor`: backticked spans join from two characters; bare floors stand as the noise gate","actor":"claude","note":null,"session":"quarry","dispatch":"it-sc2u"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"7e6fd77e3803","ts":"2026-08-16T03:33:03Z","node":"cl-baxa","v":2,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"ts":"2026-08-16T03:33:12Z","node":"cl-rbp9","v":1,"op":"create","type":"claim","title":"`plural-fold`: s/es folds at compare time, lexicon side only; find stays exact","actor":"claude","note":null,"session":"quarry","dispatch":"it-sc2u"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"7e6fd77e3803","ts":"2026-08-16T03:33:12Z","node":"cl-rbp9","v":2,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"ts":"2026-08-16T03:33:18Z","node":"cl-2dj3","v":1,"op":"create","type":"claim","title":"`compound-halves`: compounds emit whole plus five-plus halves, hyphen bounds the edge, compound hits outrank fragments","actor":"claude","note":null,"session":"quarry","dispatch":"it-sc2u"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"7e6fd77e3803","ts":"2026-08-16T03:33:18Z","node":"cl-2dj3","v":2,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T03:33:26Z","node":"cl-baxa","v":3,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T03:33:26Z","node":"cl-rbp9","v":3,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-16T03:33:27Z","node":"cl-2dj3","v":3,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"ts":"2026-08-16T03:33:37Z","node":"cl-en99","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry","dispatch":"it-sc2u"}
+{"ts":"2026-08-16T03:35:25Z","node":"it-b5tq","v":7,"op":"harvest","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:35:26Z","node":"it-nuw5","v":4,"op":"harvest","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:35:27Z","node":"it-sc2u","v":4,"op":"harvest","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:00Z","node":"do-2kw8","v":1,"op":"create","type":"doc","title":"dispatch report: the lexicon trio - backtick floor, plural fold, compound halves","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"supports","to":"it-b5tq","at":7,"ts":"2026-08-16T03:36:00Z","node":"do-2kw8","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-nuw5","at":4,"ts":"2026-08-16T03:36:08Z","node":"do-2kw8","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-sc2u","at":4,"ts":"2026-08-16T03:36:08Z","node":"do-2kw8","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-16T03:36:09Z","node":"it-b5tq","v":8,"actor":"claude","note":"backtick-floor landed and measured; companion tick fix endorsed","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-16T03:36:10Z","node":"it-nuw5","v":5,"actor":"claude","note":"plural-fold landed and measured","session":"quarry"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-16T03:36:11Z","node":"it-sc2u","v":5,"actor":"claude","note":"compound-halves landed and measured","session":"quarry"}
+{"ts":"2026-08-16T03:36:12Z","node":"it-b5tq","v":8,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:13Z","node":"it-nuw5","v":5,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:14Z","node":"it-sc2u","v":5,"op":"release","actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"it-wcwd","v":12,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"do-2kw8","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"do-2kw8","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:34Z","node":"do-2kw8","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-16T03:36:35Z","node":"it-tanf","v":1,"op":"create","type":"item","title":"multi-join stamping: one agent, many badges - acts stamp the last join, not the item served","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:36:35Z","node":"it-6kvu","v":1,"op":"create","type":"item","title":"q serve holds the exe lock: rebuild dispatches must stop-build-restart the view server","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:36:35Z","node":"it-vck9","v":1,"op":"create","type":"item","title":"bump-free bookkeeping channel: frontmatter-only sets ripple versions they do not deserve","actor":"claude","note":null,"session":"quarry"}

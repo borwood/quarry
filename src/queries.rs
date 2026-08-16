@@ -258,15 +258,27 @@ const GENERIC_TOKENS: &[&str] = &[
     "assistant", "title", "titles", "about", "content", "record", "records",
 ];
 
-/// Distinctive tokens of a title: length ≥ 5, hyphen-compounds kept
-/// (core-sample, deep-time), generic graph vocabulary dropped.
+/// Distinctive tokens of a title: length ≥ 5, generic graph vocabulary
+/// dropped. Hyphen compounds are kept whole AND emit their halves of
+/// five-plus chars (it-sc2u, user-ruled 2026-08-15): the name stays an
+/// atom — deep-time survives — while spelling variance (core sample) and
+/// bare fragments (sample) join; `relatedness` scores compound hits above
+/// fragment hits, so fragment noise stays behind the score gate.
 fn sig_tokens(title: &str) -> Vec<String> {
+    fn push(out: &mut Vec<String>, t: &str) {
+        if t.len() >= 5 && !GENERIC_TOKENS.contains(&t) && !out.iter().any(|x| x == t) {
+            out.push(t.to_string());
+        }
+    }
     let lower = title.to_lowercase();
     let mut out: Vec<String> = Vec::new();
     for raw in lower.split(|c: char| !(c.is_ascii_alphanumeric() || c == '-')) {
         let t = raw.trim_matches('-');
-        if t.len() >= 5 && !GENERIC_TOKENS.contains(&t) && !out.iter().any(|x| x == t) {
-            out.push(t.to_string());
+        push(&mut out, t);
+        if t.contains('-') {
+            for half in t.split('-') {
+                push(&mut out, half);
+            }
         }
     }
     out
@@ -275,55 +287,63 @@ fn sig_tokens(title: &str) -> Vec<String> {
 /// Backticked spans of a text, trimmed and lowercased — the naming
 /// register's marks (`name`). One extraction shared by the relatedness
 /// matcher and the intent delta: plan and reality join on one vocabulary.
+/// The deliberate-name floor (dc-qvtz, user-ruled 2026-08-15): backticked
+/// joins from TWO characters — floors are the noise gate, backticks are
+/// the deliberateness gate, so a short name someone chose to register
+/// (`cli`) deserves to join while bare short prose stays below the
+/// bare-token floors.
 pub fn backticked_spans(text: &str) -> Vec<String> {
     text.split('`')
         .skip(1)
         .step_by(2)
         .map(|s| s.trim().to_lowercase())
-        .filter(|s| s.len() >= 4 && s.len() <= 60)
+        .filter(|s| s.len() >= 2 && s.len() <= 60)
         .collect()
 }
 
-/// The lexicon join's word predicate (relatedness, intent delta): `word`
-/// occurs in `text` not embedded in a longer token ("wrap" must not hit
-/// "wrapper"). Its rule: word chars are ASCII alphanumerics AND hyphens,
-/// so hyphen compounds stay whole — "core" does not hit "core-sample";
-/// load-bearing for the naming register, where the compound is the name.
-/// Deliberately divergent from `find_word` below, find's predicate, where
-/// a hyphen is a boundary; unifying the two was considered and declined
-/// 2026-08-12 (it-hjed).
+/// The lexicon join's word predicate (relatedness): `word` occurs in
+/// `text` not embedded in a longer token ("wrap" must not hit "wrapper").
+/// Boundary rule: word chars are ASCII alphanumerics only — the hyphen is
+/// a boundary, find's edge rule adopted 2026-08-15 (it-sc2u), so "sample"
+/// hits inside "core-sample" and spelling variance joins. Names stay
+/// atoms not through this predicate but through emission and scoring:
+/// `sig_tokens` emits compounds whole plus their halves, and
+/// `relatedness` scores compound hits above fragment hits.
+/// Compare-time plural fold (it-nuw5, lexicon side ONLY): s/es folds in
+/// both directions — watches meets watch, leases meets lease. This fold
+/// is the remaining deliberate divergence from `find_word` below, find's
+/// predicate, which stays exact for short human queries.
 fn contains_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
     }
-    let mut start = 0;
-    while let Some(pos) = text[start..].find(word) {
-        let i = start + pos;
-        let before_ok = text[..i]
-            .chars()
-            .last()
-            .map_or(true, |c| !(c.is_ascii_alphanumeric() || c == '-'));
-        let j = i + word.len();
-        let after_ok = text[j..]
-            .chars()
-            .next()
-            .map_or(true, |c| !(c.is_ascii_alphanumeric() || c == '-'));
-        if before_ok && after_ok {
-            return true;
-        }
-        start = j;
+    if find_word(text, word) {
+        return true;
     }
-    false
+    // The plural fold: try the word's own s/es variants, so either side
+    // of the compare may carry the inflection.
+    let mut variants: Vec<String> = vec![format!("{word}s"), format!("{word}es")];
+    if let Some(stem) = word.strip_suffix("es") {
+        if stem.len() >= 3 {
+            variants.push(stem.to_string());
+        }
+    }
+    if let Some(stem) = word.strip_suffix('s') {
+        if stem.len() >= 3 {
+            variants.push(stem.to_string());
+        }
+    }
+    variants.iter().any(|v| find_word(text, v))
 }
 
 /// Find's word predicate. Its rule: word chars are ASCII alphanumerics
 /// ONLY — everything else is a boundary, hyphens included, so a short
 /// query like "cli" hits "cli-area" and "the cli" but never "click".
-/// Deliberately divergent from `contains_word` above, the lexicon join's
-/// predicate, which keeps hyphen compounds whole for the naming register;
-/// find serves short human queries, where the hyphen rule would hide
-/// exactly the hits wanted. Unification considered and declined
-/// 2026-08-12 (it-hjed).
+/// The lexicon join's `contains_word` above adopted this edge rule
+/// 2026-08-15 (it-sc2u); the remaining deliberate divergence is the
+/// plural fold — the lexicon folds s/es at compare time (it-nuw5), find
+/// stays exact. Full unification considered and declined 2026-08-12
+/// (it-hjed).
 pub fn find_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
@@ -405,18 +425,24 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
         let toks = sig_tokens(crate::surface::title_raw(cand));
         let hits: Vec<&String> = toks.iter().filter(|t| contains_word(&new_text, t)).collect();
         let full_title = title_lower.len() >= 8 && new_text.contains(&title_lower);
+        // Word-boundary, not substring: with the two-char deliberate-name
+        // floor (dc-qvtz) a raw contains would let `cli` hit "click" —
+        // the debris species it-hjed evicted from find.
         let tick = backticked
             .iter()
-            .any(|b| title_lower.contains(b.as_str()) || toks.iter().any(|t| t == b));
+            .any(|b| find_word(&title_lower, b) || toks.iter().any(|t| t == b));
         if full_title || hits.len() >= 2 || hits.iter().any(|t| t.len() >= 6) || tick {
+            // Compound hits outrank fragment hits (it-sc2u): a hit on the
+            // whole hyphenated name weighs double a hit on a bare half.
+            let weight: i32 = hits.iter().map(|t| if t.contains('-') { 2 } else { 1 }).sum();
             let why = if full_title {
                 "mentions its title".to_string()
-            } else if let Some(t) = hits.first() {
+            } else if let Some(t) = hits.iter().find(|t| t.contains('-')).or(hits.first()) {
                 format!("mentions '{}'", t)
             } else {
                 "backtick reference".to_string()
             };
-            let score = hits.len() as i32 + if full_title { 2 } else { 0 } + if tick { 2 } else { 0 };
+            let score = weight + if full_title { 2 } else { 0 } + if tick { 2 } else { 0 };
             scored.push((score, cand, why));
             continue;
         }
@@ -427,11 +453,10 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
                 .filter(|t| contains_word(&cbody, t))
                 .collect();
             if !rhits.is_empty() {
-                scored.push((
-                    rhits.len() as i32,
-                    cand,
-                    format!("its body mentions '{}'", rhits[0]),
-                ));
+                let weight: i32 =
+                    rhits.iter().map(|t| if t.contains('-') { 2 } else { 1 }).sum();
+                let named = rhits.iter().find(|t| t.contains('-')).unwrap_or(&rhits[0]);
+                scored.push((weight, cand, format!("its body mentions '{}'", named)));
             }
         }
     }

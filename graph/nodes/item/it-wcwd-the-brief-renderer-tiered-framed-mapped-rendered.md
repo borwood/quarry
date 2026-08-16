@@ -27,13 +27,13 @@ edges:
   at: 11
 - rel: depends-on
   to: it-nuw5
-  at: 1
+  at: 5
 - rel: depends-on
   to: it-sc2u
-  at: 1
+  at: 5
 - rel: depends-on
   to: it-b5tq
-  at: 3
+  at: 8
 ---
 
 Files the payload rulings (th-uacu settled by dc-casn; dials dc-xfgz, dc-3f5e, dc-83nk, dc-hjad, dc-gaa9): one renderer serves the brief and the area-open shelf per the surfacing-atom discipline (dc-nnf5). Hierarchy: contract first, semantics once, the map from the item's own record, your-writes, then the tiered backdrop - every section opening with framing prose in the user's ratified register (framings and the floor line ratify before landing; drafts on the settlement conversation). Evidence base: the payload spike (do-2g8m). Sequencing per dc-3f5e and dc-gaa9: the lexicon trio (it-nuw5, it-sc2u, it-b5tq) and the sweep (it-xzp7) land ahead; this item lands the shelf-by-claim-kind capability the sweep's standing line names.

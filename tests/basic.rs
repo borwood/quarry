@@ -2600,9 +2600,9 @@ fn fire_time_routing_offers_leave_and_wake() {
 #[test]
 fn find_word_hyphen_is_a_boundary() {
     // it-hjed: find's word predicate — ASCII alphanumerics are the only
-    // word chars; everything else bounds, hyphens included. Deliberately
-    // divergent from the lexicon join's contains_word, which keeps hyphen
-    // compounds whole for the naming register.
+    // word chars; everything else bounds, hyphens included. The lexicon
+    // join's contains_word adopted this edge rule (it-sc2u); the remaining
+    // divergence is the plural fold — find stays exact.
     assert!(!queries::find_word("click the button", "cli"), "cli must never hit click");
     assert!(queries::find_word("the cli area", "cli"));
     assert!(queries::find_word("cli-area rules", "cli"), "hyphen is a boundary for find");
@@ -2612,6 +2612,128 @@ fn find_word_hyphen_is_a_boundary() {
     assert!(queries::find_word("(cli)", "cli"), "punctuation bounds");
     assert!(queries::find_word("cli", "cli"), "text edges bound");
     assert!(!queries::find_word("anything", ""), "the empty query hits nothing");
+}
+
+#[test]
+fn lexicon_backtick_floor_two_chars() {
+    // it-b5tq under dc-qvtz: the deliberate-name floor — backticked spans
+    // join from two characters (2-60); one char stays below the floor.
+    let spans =
+        queries::backticked_spans("the `cli` verbs and the `q` binary ride `intent-delta`");
+    assert_eq!(
+        spans,
+        vec!["cli".to_string(), "intent-delta".to_string()],
+        "cli joins at three chars; q stays below the two-char floor"
+    );
+
+    // Through relatedness: a body that backticks `cli` reaches a node
+    // whose title carries cli as a word — invisible before the ruling.
+    let s = temp_store();
+    let cli = ops::new_node(&s, NewArgs::bare("item", "cli output conventions")).unwrap();
+    let mut d = NewArgs::bare("decision", "the register ruling");
+    d.body = "the `cli` register is title-first prose".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == cli.front.id),
+        "a two-plus-char backticked name joins relatedness: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // Bare short prose stays below the bare-token floors: the same words
+    // unbackticked join nothing — nothing deliberate happened there.
+    let mut p = NewArgs::bare("doc", "meeting minutes");
+    p.body = "the cli register is title-first prose".into();
+    let p = ops::new_node(&s, p).unwrap();
+    let all = s.load_all().unwrap();
+    let pn = s.find(&all, &p.front.id).unwrap();
+    let rel = queries::relatedness(&all, pn);
+    assert!(
+        rel.iter().all(|(n, _)| n.front.id != cli.front.id),
+        "bare short prose stays below the floor"
+    );
+}
+
+#[test]
+fn lexicon_plural_fold_compare_time() {
+    // it-nuw5: s/es folds at compare time, lexicon side only — watches
+    // meets watch, leases meets lease.
+    let s = temp_store();
+    let watch = ops::new_node(&s, NewArgs::bare("item", "watches collapse behind counts")).unwrap();
+    let mut d = NewArgs::bare("decision", "the trigger boundary");
+    d.body = "every watch names its trigger before filing".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == watch.front.id),
+        "watches meets watch across the inflection: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // The reverse direction of the fold: a singular title token (six-plus
+    // chars — the reverse floor stands) meets its plural in an old body.
+    let mut old = NewArgs::bare("doc", "sweep diary");
+    old.body = "three renderers own every register".into();
+    let old = ops::new_node(&s, old).unwrap();
+    let renderer = ops::new_node(&s, NewArgs::bare("item", "renderer cadence policy")).unwrap();
+    let all = s.load_all().unwrap();
+    let rn = s.find(&all, &renderer.front.id).unwrap();
+    let rel = queries::relatedness(&all, rn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == old.front.id),
+        "renderer meets renderers in the reverse pass: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // Find's predicate stays exact — the fold is lexicon side only.
+    assert!(!queries::find_word("the watch fires", "watches"), "find stays exact");
+    assert!(!queries::find_word("all watches fire", "watch"), "find stays exact");
+}
+
+#[test]
+fn lexicon_compound_halves_join_and_outrank() {
+    // it-sc2u: sig_tokens emits hyphen compounds whole plus halves of
+    // five-plus chars; contains_word adopts hyphen-as-boundary; compound
+    // hits outrank fragment hits.
+    let s = temp_store();
+    let comp = ops::new_node(&s, NewArgs::bare("item", "core-sample archive shelf")).unwrap();
+
+    // Spelling variance joins: the spaced mention meets the compound.
+    let mut spaced = NewArgs::bare("doc", "field diary");
+    spaced.body = "the core sample readings arrived unlabeled".into();
+    let spaced = ops::new_node(&s, spaced).unwrap();
+    let all = s.load_all().unwrap();
+    let sn = s.find(&all, &spaced.front.id).unwrap();
+    let rel = queries::relatedness(&all, sn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == comp.front.id),
+        "core sample meets core-sample: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // Compound hits outrank fragment hits, and the why names the whole name.
+    let frag = ops::new_node(&s, NewArgs::bare("item", "sample handling bench")).unwrap();
+    let mut both = NewArgs::bare("doc", "rig diary");
+    both.body = "the core-sample rig hums all night".into();
+    let both = ops::new_node(&s, both).unwrap();
+    let all = s.load_all().unwrap();
+    let bn = s.find(&all, &both.front.id).unwrap();
+    let rel = queries::relatedness(&all, bn);
+    let pos_comp = rel
+        .iter()
+        .position(|(n, _)| n.front.id == comp.front.id)
+        .expect("the compound-titled node joins");
+    let pos_frag = rel
+        .iter()
+        .position(|(n, _)| n.front.id == frag.front.id)
+        .expect("the fragment-titled node joins");
+    assert!(pos_comp < pos_frag, "the whole-name hit ranks above the fragment hit");
+    let (_, why) = &rel[pos_comp];
+    assert!(why.contains("core-sample"), "the why names the whole name: {why}");
 }
 
 #[test]
