@@ -2,8 +2,8 @@
 id: th-24u9
 type: thread
 title: 'unverified assistant claims: no channel works the asserted list'
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: user
 created: 2026-08-15T08:33:53Z
 actor: claude

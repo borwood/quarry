@@ -1132,3 +1132,31 @@
 {"ts":"2026-08-16T03:36:35Z","node":"it-tanf","v":1,"op":"create","type":"item","title":"multi-join stamping: one agent, many badges - acts stamp the last join, not the item served","actor":"claude","note":null,"session":"quarry"}
 {"ts":"2026-08-16T03:36:35Z","node":"it-6kvu","v":1,"op":"create","type":"item","title":"q serve holds the exe lock: rebuild dispatches must stop-build-restart the view server","actor":"claude","note":null,"session":"quarry"}
 {"ts":"2026-08-16T03:36:35Z","node":"it-vck9","v":1,"op":"create","type":"item","title":"bump-free bookkeeping channel: frontmatter-only sets ripple versions they do not deserve","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:41:54Z","node":"it-rddg","v":1,"op":"create","type":"item","title":"derivational misses stand: leases never meets leaseless","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:41:54Z","node":"it-wa6e","v":1,"op":"create","type":"item","title":"the reverse floor blinds one fold direction: five-char pairs join forward only","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-16T03:41:54Z","node":"it-fd7v","v":1,"op":"create","type":"item","title":"the compound weight is uncalibrated: doubled by taste, not measurement","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-16T07:31:42Z","node":"it-wcwd","v":13,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-16T07:31:50Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T07:28:17Z","node":"dc-bzdj","v":1,"op":"create","type":"decision","title":"the cold-encounter test: every term audited by a contextless first meeting","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-17T07:28:49Z","node":"dc-6gn9","v":1,"op":"create","type":"decision","title":"readings and measurements: sediment tells from rot; the instrument keeps it honest","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-6gn9","ts":"2026-08-17T07:28:49Z","node":"th-cfmt","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-cfmt","at":4,"ts":"2026-08-17T07:28:49Z","node":"dc-6gn9","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:29:06Z","node":"dc-6gn9","v":3,"actor":"claude","note":"full ratified body from the trust conversation","session":"quarry"}
+{"ts":"2026-08-17T07:29:06Z","node":"dc-drr6","v":1,"op":"create","type":"decision","title":"the assay office: veins ratify at harvest; load is display; the ladder is species-shaped","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-drr6","ts":"2026-08-17T07:29:06Z","node":"th-24u9","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-24u9","at":2,"ts":"2026-08-17T07:29:06Z","node":"dc-drr6","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:29:15Z","node":"dc-drr6","v":3,"actor":"claude","note":"full ratified body from the trust conversation","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-dsdm","at":2,"ts":"2026-08-17T07:29:16Z","node":"dc-bzdj","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-e6pp","at":3,"ts":"2026-08-17T07:29:16Z","node":"dc-bzdj","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-yd9s","at":3,"ts":"2026-08-17T07:29:16Z","node":"dc-6gn9","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-eq9d","at":4,"ts":"2026-08-17T07:29:16Z","node":"dc-6gn9","v":5,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"dc-6gn9","at":5,"ts":"2026-08-17T07:29:16Z","node":"cl-eb8j","v":5,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-eq9d","at":4,"ts":"2026-08-17T07:29:16Z","node":"dc-drr6","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-kpqg","at":4,"ts":"2026-08-17T07:29:16Z","node":"dc-drr6","v":5,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-drr6","at":5,"ts":"2026-08-17T07:29:17Z","node":"it-wcwd","v":14,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-6gn9","at":5,"ts":"2026-08-17T07:29:17Z","node":"it-wcwd","v":15,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T07:29:39Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T07:29:40Z","node":"it-swsy","v":1,"op":"create","type":"item","title":"the assay office: harvest ratifies, solo self-ratifies, load is display","actor":"claude","note":null,"session":"quarry"}
+{"ts":"2026-08-17T07:29:40Z","node":"it-nmzn","v":1,"op":"create","type":"item","title":"sediment and rot: the reading split, the behind classifier, archive-on-consumption","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-drr6","at":5,"ts":"2026-08-17T07:29:53Z","node":"it-swsy","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-6gn9","at":5,"ts":"2026-08-17T07:29:53Z","node":"it-nmzn","v":2,"actor":"claude","session":"quarry"}

@@ -2,7 +2,7 @@
 id: cl-eb8j
 type: claim
 title: '`enforcement-beats-doctrine`: the one invariant that stopped failing be…'
-v: 4
+v: 5
 status: asserted
 provenance: assistant
 created: 2026-08-10T06:16:39Z
@@ -18,6 +18,9 @@ edges:
 - rel: supports
   to: dc-kpqg
   at: 4
+- rel: supports
+  to: dc-6gn9
+  at: 5
 ---
 
 `enforcement-beats-doctrine`: the one invariant that stopped failing became a hook; priming is never load-bearing for accounting
