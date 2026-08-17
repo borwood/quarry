@@ -10,6 +10,7 @@ actor: claude-fable-5
 kind: slice
 acceptance:
 - 'lands `kind-shaped-wake`: dispatch-kind wake briefs lead with ready, in-flight with harvest commands, and homework residue, omitting owed threads; design and kindless wakes unchanged'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

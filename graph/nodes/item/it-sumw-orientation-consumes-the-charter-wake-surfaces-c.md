@@ -10,6 +10,7 @@ actor: claude-fable-5
 kind: slice
 acceptance:
 - 'lands `charter-at-wake`: q session resume and the SessionStart orient line render the bound session''s charter'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

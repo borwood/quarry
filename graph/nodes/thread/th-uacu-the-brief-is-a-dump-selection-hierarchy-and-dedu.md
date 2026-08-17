@@ -7,12 +7,12 @@ status: resolved
 provenance: assistant
 created: 2026-08-13T13:45:05Z
 actor: claude-fable-5
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
   at: 1
 ---
-
 
 Opened 2026-08-13 at the branch wrap, from the user asking for a cold-eyes review of the dispatch payload. The review's findings: the brief has no attention hierarchy (THE WORK, the shelves, and the RETURN spec render with equal weight; the task and the contract sit below the fold); the area shelf is a dump, not a selection (every in-force decision, every vein claim with body, every doc in the area - for it-u8uf that meant ~18 veins about mention-indexing between the reader and the four claims that mattered; density grows linearly with every landing, forever, because relevance is by-area and ar-c7f5 is effectively the whole binary); id-unpacks strangle dense prose (three per sentence in body text - the append-never-subtract ruling's readability bill landing where text concentrates); repeated nodes render in full twice across shelves (dc-nnf5 appeared twice in one payload). What the brief gets right: complete, anchored, derived - three cold agents built correctly from it; as an anti-hallucination document it works; the RETURN spec is crisp.
 

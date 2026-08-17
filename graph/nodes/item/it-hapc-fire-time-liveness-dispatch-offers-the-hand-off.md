@@ -12,6 +12,7 @@ acceptance:
 - 'the wake offer: none awake enumerates the registered dispatch-kind sessions covering the item, each with its launcher (script when present, inline command otherwise); one candidate is offered directly, several defer to the user'
 - --solo fires from anywhere, no reason demanded; dispatch-kind sessions, continuations of a live dispatch (re-dispatch, steal), and items no dispatcher covers never route
 - 'routing is advisory and stateless: no routed-waiting state, exit clean, the item stays honestly ready for anyone'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

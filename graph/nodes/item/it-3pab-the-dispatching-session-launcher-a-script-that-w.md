@@ -9,6 +9,7 @@ created: 2026-08-12T21:11:31Z
 actor: claude
 aliases:
 - the-dispatching-session-launcher-a-script-that-w
+archived: true
 edges:
 - rel: about
   to: ar-xa38

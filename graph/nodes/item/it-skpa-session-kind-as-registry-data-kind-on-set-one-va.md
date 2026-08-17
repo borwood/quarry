@@ -10,6 +10,7 @@ actor: claude-fable-5
 kind: slice
 acceptance:
 - 'lands `session-kind-field`: registry entries carry kind, set via q session set --kind, validated in one place, rendered by list and the wake surfaces'
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

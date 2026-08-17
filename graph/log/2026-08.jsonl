@@ -1173,3 +1173,21 @@
 {"op":"body","ts":"2026-08-17T07:53:43Z","node":"th-qv27","v":5,"actor":"claude","note":"seed pack and cold-encounter dogear","session":"quarry"}
 {"op":"body","ts":"2026-08-17T07:53:43Z","node":"th-bjk2","v":3,"actor":"claude","note":"pre-wrap spend-down evidence","session":"quarry"}
 {"ts":"2026-08-17T07:54:02Z","node":"do-dspv","v":1,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:07Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:45Z","node":"it-7ss9","v":15,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:45Z","node":"it-z2sy","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:45Z","node":"it-3pab","v":5,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:45Z","node":"it-fkrz","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:45Z","node":"it-hapc","v":12,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:46Z","node":"it-hjed","v":6,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:46Z","node":"it-skpa","v":5,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:46Z","node":"it-sumw","v":5,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:03:46Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:18Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"it-wub5","v":6,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-3pq2","v":2,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-6upm","v":3,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-dy25","v":2,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-er78","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-nc7d","v":7,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:04:55Z","node":"th-uacu","v":4,"op":"archive","actor":"claude","session":"quarry"}

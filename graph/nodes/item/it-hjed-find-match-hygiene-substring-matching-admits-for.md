@@ -11,6 +11,7 @@ kind: bug
 acceptance:
 - a three-char query like cli returns word-boundary hits first; substring-only hits trail labeled loose, never hidden
 - find's word predicate states its divergence from the lexicon join beside its definition
+archived: true
 edges:
 - rel: about
   to: ar-c7f5
