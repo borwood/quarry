@@ -30,6 +30,10 @@ pub struct Atom {
     /// neither carries None (the provenance is the grounding); a non-user
     /// claim with neither says so loudly.
     pub grounding: Option<String>,
+    /// Claims only: weight held — how many standing builds this claim's
+    /// supports edges hold up (dc-drr6: load is display, never status).
+    /// None for non-claims; Some(0) renders nothing.
+    pub weight: Option<usize>,
     pub archived: bool,
 }
 
@@ -60,6 +64,11 @@ pub fn atom(all: &[Node], n: &Node) -> Atom {
     } else {
         None
     };
+    let weight = if n.front.ty == "claim" {
+        Some(crate::queries::weight_held(all, n))
+    } else {
+        None
+    };
     Atom {
         id: n.front.id.clone(),
         ty: n.front.ty.clone(),
@@ -71,6 +80,7 @@ pub fn atom(all: &[Node], n: &Node) -> Atom {
         area_ids,
         provenance: n.front.provenance.clone(),
         grounding,
+        weight,
         archived: n.front.archived,
     }
 }
@@ -110,6 +120,13 @@ pub fn atom_line(a: &Atom) -> String {
     if let Some(g) = &a.grounding {
         s.push('·');
         s.push_str(g);
+    }
+    // Load display (dc-drr6): weight held renders wherever the claim does —
+    // silence at zero, never a status.
+    if let Some(w) = a.weight {
+        if w > 0 {
+            s.push_str(&format!(" · holds {}", w));
+        }
     }
     s.push_str(&format!(" ({})", a.id));
     s
@@ -172,6 +189,11 @@ pub fn atom_head(all: &[Node], n: &Node) -> String {
     }
     if let Some(r) = &n.front.ratified {
         meta.push_str(&format!(" · RATIFIED by {} {}", r.by, r.date));
+    }
+    if let Some(w) = a.weight {
+        if w > 0 {
+            meta.push_str(&format!(" · holds {} build(s)", w));
+        }
     }
     if let Some(p) = &n.front.path {
         meta.push_str(&format!(" · path: {}", p));

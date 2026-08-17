@@ -9,7 +9,7 @@ created: 2026-08-15T08:19:14Z
 actor: claude
 kind: spec
 path: docs/brief-framings.md
-blob: 2545f8524bcf
+blob: 1ff720a16a4e
 edges:
 - rel: about
   to: ar-c7f5

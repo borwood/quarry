@@ -294,6 +294,117 @@ pub fn unverified<'a>(all: &'a [Node]) -> Vec<&'a Node> {
         .collect()
 }
 
+/// Weight held (dc-drr6): how many standing builds this claim's supports
+/// edges hold up — the vein supports the feature, so the feature stands on
+/// the vein. Derived at render, display only, never status. A target
+/// counts when it resolves and still stands (not archived, not
+/// dropped/refuted/superseded — a done item stands: it is built).
+pub fn weight_held(all: &[Node], c: &Node) -> usize {
+    let mut seen: Vec<&str> = Vec::new();
+    for e in &c.front.edges {
+        if e.rel != "supports" || seen.contains(&e.to.as_str()) {
+            continue;
+        }
+        let standing = all.iter().any(|t| {
+            t.front.id == e.to
+                && !t.front.archived
+                && !matches!(t.front.status.as_str(), "dropped" | "refuted" | "superseded")
+        });
+        if standing {
+            seen.push(&e.to);
+        }
+    }
+    seen.len()
+}
+
+/// Load-bearing but never assayed (dc-drr6): claims on the
+/// asserted-to-ratified ladder that builds stand on while no judge has
+/// verified them — fool's gold risk rises with weight, so the heaviest
+/// lead. Measured claims live by their instrument, readings settle as
+/// sediment, and contracts keep their normative ladder — none of those
+/// belong here.
+pub fn load_bearing_unassayed<'a>(all: &'a [Node]) -> Vec<(&'a Node, usize)> {
+    let mut out: Vec<(&Node, usize)> = all
+        .iter()
+        .filter(|n| {
+            n.front.ty == "claim"
+                && !n.front.archived
+                && n.front.status == "asserted"
+                && !matches!(
+                    n.front.kind.as_deref(),
+                    Some("measured") | Some("reading") | Some("contract")
+                )
+        })
+        .map(|n| (n, weight_held(all, n)))
+        .filter(|(_, w)| *w > 0)
+        .collect();
+    out.sort_by(|a, b| {
+        b.1.cmp(&a.1)
+            .then_with(|| crate::surface::title_raw(a.0).cmp(crate::surface::title_raw(b.0)))
+    });
+    out
+}
+
+/// Claim ids minted under an item's dispatch badge — read off the log's
+/// badge stamps, so the trace survives release and clear_dispatch.
+pub fn badge_claim_mints(log: &[serde_json::Value], item_id: &str) -> Vec<String> {
+    log.iter()
+        .filter(|ev| ev.get("dispatch").and_then(|v| v.as_str()) == Some(item_id))
+        .filter(|ev| {
+            ev.get("op").and_then(|v| v.as_str()) == Some("create")
+                && ev.get("type").and_then(|v| v.as_str()) == Some("claim")
+        })
+        .filter_map(|ev| ev.get("node").and_then(|v| v.as_str()).map(String::from))
+        .collect()
+}
+
+/// Claim ids a session minted from `since` on — the solo arc's own mints
+/// (dc-drr6: a session landing its own work ratifies its own mints).
+/// RFC3339 UTC stamps compare lexicographically; `since` is inclusive.
+pub fn session_claim_mints(log: &[serde_json::Value], session: &str, since: &str) -> Vec<String> {
+    log.iter()
+        .filter(|ev| ev.get("session").and_then(|v| v.as_str()) == Some(session))
+        .filter(|ev| {
+            ev.get("op").and_then(|v| v.as_str()) == Some("create")
+                && ev.get("type").and_then(|v| v.as_str()) == Some("claim")
+        })
+        .filter(|ev| ev.get("ts").and_then(|v| v.as_str()).map_or(false, |ts| ts >= since))
+        .filter_map(|ev| ev.get("node").and_then(|v| v.as_str()).map(String::from))
+        .collect()
+}
+
+/// Whether an item ever flew as a dispatch: a dispatch event on the item,
+/// or any act stamped with its badge. Splits the landing's assay paths —
+/// a dispatched arc ratifies its badge mints; only a never-dispatched arc
+/// self-ratifies as solo (dc-drr6).
+pub fn item_was_dispatched(log: &[serde_json::Value], item_id: &str) -> bool {
+    log.iter().any(|ev| {
+        (ev.get("op").and_then(|v| v.as_str()) == Some("dispatch")
+            && ev.get("node").and_then(|v| v.as_str()) == Some(item_id))
+            || ev.get("dispatch").and_then(|v| v.as_str()) == Some(item_id)
+    })
+}
+
+/// The claims a landing may assay (dc-drr6): of the arc's mints, the vein
+/// and feature receipts still on the asserted rung. The ladder is
+/// species-shaped — measured, readings, contracts, and kindless mints
+/// never ratify here.
+pub fn assayable<'a>(all: &'a [Node], mint_ids: &[String]) -> Vec<&'a Node> {
+    let mut out: Vec<&Node> = Vec::new();
+    for id in mint_ids {
+        let Some(n) = all.iter().find(|n| &n.front.id == id) else { continue };
+        if n.front.ty == "claim"
+            && !n.front.archived
+            && n.front.status == "asserted"
+            && matches!(n.front.kind.as_deref(), Some("vein") | Some("feature"))
+            && !out.iter().any(|m| m.front.id == n.front.id)
+        {
+            out.push(n);
+        }
+    }
+    out
+}
+
 /// Graph-generic vocabulary excluded from relatedness matching: on any
 /// quarry graph these words appear everywhere and carry no subject signal.
 const GENERIC_TOKENS: &[&str] = &[

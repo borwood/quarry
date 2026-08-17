@@ -11,11 +11,9 @@
 /// Opens every brief; carries the floor line (dc-83nk).
 pub const PREAMBLE: &str = "You woke into this task with no memory of how it came to be — that is the condition of every mind that works here, and this machine is built around it. The graph is a stigmergic memory: durable artifacts — decisions, claims, threads, reports — left by the design conversations and builders before you, linked with earnest effort to be found, in the hope that where links are missing, a smart agent going looking closes the gap. This brief is a derived view of that graph — a floor, not the whole interface. It may read complete; it is not. Reading past it (`q open`, `q find`, `q query`) is expected work, not a detour. Where construction ends, discipline carries: what you build and what you record become the ground the next mind stands on.";
 
-/// The vein species framing. The assay sentence ("Each vein carries its
-/// assay: …") deliberately does NOT ship here — it lands with the assay
-/// office slice (it-swsy); until its marks land, the shelf shows no assay
-/// state.
-pub const VEINS: &str = "In a human codebase, continuity lives in people — someone carries the DRY systems, the utilities, the pipelines, and feels \"we already have something for that\" before writing a twin. Here every builder is ephemeral, and a codebase takes the shape of the minds that build it: left uncountered, fragmented and short-lived. Veins are the counterforce — the gold previous sessions won, marked so that what proved durable keeps being developed instead of rediscovered. Build from them as much as possible; the list is ranked programmatically and may be incomplete — scrutinize, `q open`, dig while you plan, before you execute. Where no vein honestly covers you, the other mode is minting one: if extracting a utility or mechanism would serve the agents after you, do it — and make your labor and hopes loud in your report, so the harvester can help your discoveries endure. The one forbidden move is quiet invention — novelty that dies with your session.";
+/// The vein species framing, carrying the assay sentence (dc-drr6; landed
+/// with the assay office slice, it-swsy).
+pub const VEINS: &str = "In a human codebase, continuity lives in people — someone carries the DRY systems, the utilities, the pipelines, and feels \"we already have something for that\" before writing a twin. Here every builder is ephemeral, and a codebase takes the shape of the minds that build it: left uncountered, fragmented and short-lived. Veins are the counterforce — the gold previous sessions won, marked so that what proved durable keeps being developed instead of rediscovered. Build from them as much as possible; the list is ranked programmatically and may be incomplete — scrutinize, `q open`, dig while you plan, before you execute. Where no vein honestly covers you, the other mode is minting one: if extracting a utility or mechanism would serve the agents after you, do it — and make your labor and hopes loud in your report, so the harvester can help your discoveries endure. The one forbidden move is quiet invention — novelty that dies with your session. Each vein carries its assay: ratified means a landing's judge verified it against the diff; asserted means one mind wrote it down and no one has stood behind it since — weigh accordingly, and let load-bearing-but-unassayed sharpen your scrutiny, not stop your build.";
 
 pub const RECEIPTS: &str = "Receipts are the index of what already exists — one per landed capability: what it is, does, and why. This machine grows by accretion, and the fastest way to build wrong is to build a twin of something standing. If your work touches anything a receipt names, find that capability before building its sibling.";
 
@@ -61,6 +59,30 @@ pub const AFFIRM_MANUAL: &str = "living measurement, manual method - affirm reco
 pub fn sediment_line(n: usize) -> String {
     format!("sediment: {} dated reading(s) drifted with their sources - expected stratification, not rot", n)
 }
+
+/// The harvest assay line (dc-drr6; ratified 2026-08-17 on it-swsy): the
+/// dispatcher's landing judgment already verifies badge-minted claims
+/// against the diff — ratification records that act. Shown at the harvest
+/// seat and again at the landing act itself.
+pub fn assay_harvest_line(n: usize) -> String {
+    format!("assay: {} claim(s) minted under this badge ratify with your landing - the diff is the evidence, your judgment is the act. Ratified never means true; refute and blast stand.", n)
+}
+
+/// The solo assay line (dc-drr6; ratified 2026-08-17 on it-swsy): a session
+/// landing its own work ratifies its own mints — the ratifier is stamped,
+/// so one mind stays legible against two-minds-against-evidence.
+pub fn assay_solo_line(n: usize) -> String {
+    format!("assay: {} claim(s) from this arc self-ratify with your landing - stamped to your hand; one mind, on the record.", n)
+}
+
+/// The claim ladder taught at the claim verb (dc-drr6; ratified 2026-08-17
+/// on it-swsy).
+pub const ASSAY_CLAIM_HELP: &str = "Claims mint asserted. Veins ratify when a landing's judge verifies them against the diff - at harvest, or your own solo landing. Ratified records who assayed, never truth.";
+
+/// The load-bearing-but-never-assayed warning header (dc-drr6; ratified
+/// 2026-08-17 on it-swsy): the prospector's warning — visibility as the
+/// only pressure. No verify queue, no gates.
+pub const ASSAY_WARNING: &str = "load-bearing but never assayed - builds stand on these and no judge has: fool's gold risk rises with weight. Assay on next touch, or refute.";
 
 /// The claim species in shelf order (dc-yd9s, dc-6gn9): frontmatter kind,
 /// section label, ratified framing. The engine stays kindless-but-kind-aware

@@ -150,7 +150,7 @@ user-provenance thread without --by user.")]
         title: Option<String>,
     },
     /// Extract a claim (extraction-on-citation)
-    #[command(after_help = "EXAMPLES:
+    #[command(after_help = format!("EXAMPLES:
   q claim \"halo is 4-11 cells\" --about hydrology --source s11-results --method \"ring differencing\"
   q claim \"`body-graph`: water bodies keep identity across chunk regen\" --about hydrology --source file:src/water/body.rs
 Extract a claim only when something depends on the statement or kills it —
@@ -159,7 +159,8 @@ name their --source doc. A landing counts as dependence: register a landed
 capability as a VEIN claim (--source file:<the code>), titled name-first
 in the project's register (`name`: what it provides) — systematic,
 intention-revealing names. Titles feed the relatedness lexicon, so a
-well-named vein surfaces itself to future work.")]
+well-named vein surfaces itself to future work.
+{}", quarry::framings::ASSAY_CLAIM_HELP))]
     Claim {
         text: String,
         /// Full title when the derived first-line cut would truncate it (register-length vein names)
@@ -432,6 +433,10 @@ enum Query {
     },
     /// Assistant claims never verified
     Unverified,
+    /// Load-bearing but never assayed: builds stand on these and no judge
+    /// has — the prospector's warning (dc-drr6), heaviest first
+    #[command(visible_alias = "unassayed")]
+    Load,
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
     /// Intent vs reality by name: backtick-named acceptance lines of live
@@ -2213,6 +2218,31 @@ fn main() -> Result<()> {
             area_watermarks(&store, &n.front.id);
             if fields.iter().any(|f| f == "status=done") {
                 vein_check(&store, &n, None);
+                // The assay office (dc-drr6): the landing act ratifies the
+                // arc's vein and feature mints — harvest by the dispatcher's
+                // hand, solo self-ratified on the record. Silence when the
+                // arc leaves nothing to assay.
+                if n.front.ty == "item" {
+                    if let Ok(Some(assay)) = ops::ratify_landing(
+                        &store,
+                        &n.front.id,
+                        coord::current_session().as_deref(),
+                    ) {
+                        let all2 = store.load_all().unwrap_or_default();
+                        let count = assay.ratified.len();
+                        println!(
+                            "  {}",
+                            if assay.solo {
+                                quarry::framings::assay_solo_line(count)
+                            } else {
+                                quarry::framings::assay_harvest_line(count)
+                            }
+                        );
+                        for c in &assay.ratified {
+                            println!("    · {}", line(&all2, c));
+                        }
+                    }
+                }
             }
             // A settled-status flip is a landing: regenerate the page so it
             // never shows settled work as live (the stale-view class).
@@ -2537,6 +2567,17 @@ fn main() -> Result<()> {
                     }
                     for n in u {
                         println!("{}", line(&all, n));
+                    }
+                }
+                Query::Load => {
+                    let u = queries::load_bearing_unassayed(&all);
+                    if u.is_empty() {
+                        println!("no load-bearing unassayed claims — every claim builds stand on has a judge on record.");
+                    } else {
+                        println!("{}", quarry::framings::ASSAY_WARNING);
+                        for (n, _) in u {
+                            println!("  {}", line(&all, n));
+                        }
                     }
                 }
                 Query::Dispatch { item } => {

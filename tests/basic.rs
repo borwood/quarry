@@ -3327,3 +3327,243 @@ fn readings_archive_by_species_not_ladder() {
     let err = ops::archive(&s, &vein.front.id, false).unwrap_err();
     assert!(err.to_string().contains("only settled statuses archive"), "got: {}", err);
 }
+
+#[test]
+fn landing_ratifies_badge_mints_and_harvest_names_the_assay() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "assay pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+        .unwrap();
+    let mk = |title: &str, kind: &str| {
+        ops::claim(
+            &s,
+            title,
+            None,
+            Some(kind.into()),
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    let vein = mk("`geo-pass`: emits layered strata", "vein");
+    let feat = mk("`geo-pass-cli`: the pass runs end to end", "feature");
+    let reading = mk("pass runtime was 40ms", "reading");
+    let unstamped = mk("`geo-cache`: caches strata", "vein");
+    // badge-stamped acts (explicit transport, as an agent's env provides)
+    for c in [&vein, &feat, &reading] {
+        s.log_event(serde_json::json!({
+            "ts": Store::now(), "node": c.front.id, "v": 1, "op": "create", "type": "claim",
+            "actor": "t", "dispatch": it.front.id
+        }))
+        .unwrap();
+    }
+    // the harvest seat names the assay with the ratified line (dc-drr6)
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains("assay: 2 claim(s) minted under this badge ratify with your landing - the diff is the evidence, your judgment is the act. Ratified never means true; refute and blast stand."),
+        "harvest teaches the assay verbatim: {}", h
+    );
+    assert!(
+        h.contains(&vein.front.id) && h.contains(&feat.front.id),
+        "the assayable mints are listed: {}", h
+    );
+    // the landing act ratifies — dispatched arc, harvest path
+    let v_before = vein.front.v;
+    let assay = ops::ratify_landing(&s, &it.front.id, Some("geo")).unwrap().unwrap();
+    assert!(!assay.solo, "a dispatched arc ratifies at harvest, never solo");
+    assert_eq!(assay.ratified.len(), 2);
+    let all = s.load_all().unwrap();
+    let v2 = s.find(&all, &vein.front.id).unwrap();
+    assert_eq!(v2.front.status, "ratified");
+    let r = v2.front.ratified.as_ref().expect("the assayer is stamped");
+    assert_eq!(r.by, "test-user");
+    assert_eq!(v2.front.v, v_before, "an assay is bookkeeping — no bump, citers never go behind");
+    assert_eq!(s.find(&all, &feat.front.id).unwrap().front.status, "ratified");
+    assert_eq!(
+        s.find(&all, &reading.front.id).unwrap().front.status,
+        "asserted",
+        "the ladder is species-shaped: readings never ride it"
+    );
+    assert_eq!(
+        s.find(&all, &unstamped.front.id).unwrap().front.status,
+        "asserted",
+        "mints outside the badge are not this landing's to assay"
+    );
+    // the act is loud in the log: op ratify, assay harvest, the landing as cause
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("ratify")
+                && e.get("node").and_then(|v| v.as_str()) == Some(vein.front.id.as_str())
+        })
+        .expect("ratify logged");
+    assert_eq!(ev.get("assay").and_then(|v| v.as_str()), Some("harvest"));
+    assert_eq!(ev.get("cause").and_then(|v| v.as_str()), Some(it.front.id.as_str()));
+    // idempotent: a second landing finds nothing on the asserted rung
+    assert!(ops::ratify_landing(&s, &it.front.id, Some("geo")).unwrap().is_none());
+}
+
+#[test]
+fn solo_landing_self_ratifies_its_own_arc_mints() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "solo shaft");
+    it.about = vec![area.front.id.clone()];
+    let it = ops::new_node(&s, it).unwrap();
+    let mk = |title: &str| {
+        ops::claim(
+            &s,
+            title,
+            None,
+            Some("vein".into()),
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    // a session mint from before the arc: outside the window, never assayed here
+    let early = mk("`old-lode`: predates the arc");
+    s.log_event(serde_json::json!({
+        "ts": "2020-01-01T00:00:00Z", "node": early.front.id, "v": 1, "op": "create",
+        "type": "claim", "actor": "t", "session": "solo1"
+    }))
+    .unwrap();
+    // the arc declares: a lease, and the in-flight flip
+    quarry::coord::reserve(&s, &it, "solo1", "t", vec!["src/solo/**".into()], false, false, None)
+        .unwrap();
+    ops::set(&s, &it.front.id, &["status=in-flight".to_string()], None).unwrap();
+    let vein = mk("`new-lode`: cut this arc");
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": vein.front.id, "v": 1, "op": "create",
+        "type": "claim", "actor": "t", "session": "solo1"
+    }))
+    .unwrap();
+    // another session's mint in the window is never this landing's to assay
+    let foreign = mk("`foreign-lode`: another hand");
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": foreign.front.id, "v": 1, "op": "create",
+        "type": "claim", "actor": "t", "session": "solo2"
+    }))
+    .unwrap();
+    // no session at the landing: nothing traceable, nothing ratifies
+    assert!(ops::ratify_landing(&s, &it.front.id, None).unwrap().is_none());
+    let assay = ops::ratify_landing(&s, &it.front.id, Some("solo1")).unwrap().unwrap();
+    assert!(assay.solo, "a never-dispatched arc self-ratifies");
+    assert_eq!(assay.ratified.len(), 1);
+    assert_eq!(assay.ratified[0].front.id, vein.front.id);
+    let all = s.load_all().unwrap();
+    let v2 = s.find(&all, &vein.front.id).unwrap();
+    assert_eq!(v2.front.status, "ratified");
+    assert_eq!(v2.front.ratified.as_ref().unwrap().by, "test-user", "stamped to your hand");
+    assert_eq!(
+        s.find(&all, &early.front.id).unwrap().front.status,
+        "asserted",
+        "pre-arc mints stay asserted (standing claims stay least-committal)"
+    );
+    assert_eq!(
+        s.find(&all, &foreign.front.id).unwrap().front.status,
+        "asserted",
+        "another session's mints are never yours to assay"
+    );
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| e.get("op").and_then(|v| v.as_str()) == Some("ratify"))
+        .unwrap();
+    assert_eq!(ev.get("assay").and_then(|v| v.as_str()), Some("solo"));
+}
+
+#[test]
+fn weight_held_is_display_and_the_load_query_warns() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut b1 = NewArgs::bare("item", "built thing");
+    b1.status = Some("done".into());
+    let b1 = ops::new_node(&s, b1).unwrap();
+    let b2 = ops::new_node(&s, NewArgs::bare("decision", "a ruling")).unwrap();
+    let mut dr = NewArgs::bare("item", "dropped thing");
+    dr.status = Some("dropped".into());
+    let dr = ops::new_node(&s, dr).unwrap();
+    let mk = |title: &str| {
+        ops::claim(
+            &s,
+            title,
+            None,
+            Some("vein".into()),
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    let heavy = mk("`heavy-lode`: two builds stand on it");
+    ops::link(&s, &heavy.front.id, "supports", &b1.front.id, false, None).unwrap();
+    ops::link(&s, &heavy.front.id, "supports", &b2.front.id, false, None).unwrap();
+    ops::link(&s, &heavy.front.id, "supports", &dr.front.id, false, None).unwrap();
+    let light = mk("`light-lode`: nothing stands on it");
+    let judged = mk("`judged-lode`: assayed already");
+    ops::link(&s, &judged.front.id, "supports", &b1.front.id, false, None).unwrap();
+    ops::set(&s, &judged.front.id, &["status=ratified".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let h = s.find(&all, &heavy.front.id).unwrap();
+    assert_eq!(queries::weight_held(&all, h), 2, "dropped targets never count");
+    let atom = quarry::surface::atom(&all, h);
+    assert_eq!(atom.weight, Some(2));
+    assert!(
+        quarry::surface::atom_line(&atom).contains("holds 2"),
+        "load is display on the atom line: {}",
+        quarry::surface::atom_line(&atom)
+    );
+    let l = s.find(&all, &light.front.id).unwrap();
+    assert!(!quarry::surface::atom_line(&quarry::surface::atom(&all, l)).contains("holds"));
+    let load = queries::load_bearing_unassayed(&all);
+    assert!(
+        load.iter().any(|(n, w)| n.front.id == heavy.front.id && *w == 2),
+        "load-bearing and unassayed warns"
+    );
+    assert!(
+        !load.iter().any(|(n, _)| n.front.id == light.front.id),
+        "weightless stays off the warning"
+    );
+    assert!(
+        !load.iter().any(|(n, _)| n.front.id == judged.front.id),
+        "an assayed claim carries no warning"
+    );
+    // the ratified verbiage ships verbatim (dc-dsdm: never invented silently)
+    assert_eq!(
+        quarry::framings::ASSAY_WARNING,
+        "load-bearing but never assayed - builds stand on these and no judge has: fool's gold risk rises with weight. Assay on next touch, or refute."
+    );
+    assert_eq!(
+        quarry::framings::ASSAY_CLAIM_HELP,
+        "Claims mint asserted. Veins ratify when a landing's judge verifies them against the diff - at harvest, or your own solo landing. Ratified records who assayed, never truth."
+    );
+    assert_eq!(
+        quarry::framings::assay_solo_line(3),
+        "assay: 3 claim(s) from this arc self-ratify with your landing - stamped to your hand; one mind, on the record."
+    );
+    assert_eq!(
+        quarry::framings::assay_harvest_line(2),
+        "assay: 2 claim(s) minted under this badge ratify with your landing - the diff is the evidence, your judgment is the act. Ratified never means true; refute and blast stand."
+    );
+    assert!(
+        quarry::framings::VEINS.contains("Each vein carries its assay: ratified means a landing's judge verified it against the diff; asserted means one mind wrote it down and no one has stood behind it since"),
+        "the veins framing carries the assay sentence"
+    );
+}

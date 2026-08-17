@@ -2,8 +2,8 @@
 id: it-swsy
 type: item
 title: 'the assay office: harvest ratifies, solo self-ratifies, load is display'
-v: 5
-status: ready
+v: 7
+status: done
 provenance: assistant
 created: 2026-08-17T07:29:40Z
 actor: claude

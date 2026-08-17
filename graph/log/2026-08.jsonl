@@ -1267,3 +1267,26 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-17T09:04:15Z","node":"it-nmzn","v":6,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T09:04:17Z","node":"it-nmzn","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T09:04:25Z","node":"do-ahg4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:30Z","node":"it-swsy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:30Z","node":"it-swsy","v":5,"op":"reserve","globs":["src/**","tests/**","docs/brief-framings.md"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-17T09:04:30Z","node":"it-swsy","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:30Z","node":"it-swsy","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**","docs/brief-framings.md"]}
+{"ts":"2026-08-17T09:04:44Z","node":"it-swsy","v":6,"op":"join","actor":"claude-fable-5","dispatch":"it-swsy","joined":"agent:a3d4a5d903fa00925","session":"dispatcher"}
+{"ts":"2026-08-17T09:21:13Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"ts":"2026-08-17T09:21:56Z","node":"cl-az38","v":1,"op":"create","type":"claim","title":"`ratify-at-harvest`: the landing act ratifies the arc's vein and feature mints - badge by the dispatcher's hand, solo self-ratified, assayer stamped, no bump","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-swsy"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"8e91a8783853","ts":"2026-08-17T09:21:56Z","node":"cl-az38","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"ts":"2026-08-17T09:22:03Z","node":"cl-hv3m","v":1,"op":"create","type":"claim","title":"`weight-held`: load display derives from supports edges at render - the atom carries it, every register shows holds N, the load query warns heaviest-first","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-swsy"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"58164139476e","ts":"2026-08-17T09:22:03Z","node":"cl-hv3m","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"ts":"2026-08-17T09:22:10Z","node":"cl-2cam","v":1,"op":"create","type":"claim","title":"`assay-office`: harvest ratifies, solo self-ratifies, load is display - the assay rung is live on every ruled surface","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-swsy"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"262d83602616","ts":"2026-08-17T09:22:10Z","node":"cl-2cam","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"op":"link","rel":"supports","to":"cl-2cam","at":2,"ts":"2026-08-17T09:22:16Z","node":"cl-az38","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"op":"link","rel":"supports","to":"cl-2cam","at":2,"ts":"2026-08-17T09:22:16Z","node":"cl-hv3m","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-swsy"}
+{"ts":"2026-08-17T09:24:09Z","node":"it-swsy","v":6,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:45Z","node":"do-gkpp","v":1,"op":"create","type":"doc","title":"dispatch report: the assay office: harvest ratifies, solo self-ratifies, load is display","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-swsy","at":6,"ts":"2026-08-17T09:24:45Z","node":"do-gkpp","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-17T09:24:45Z","node":"it-swsy","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:45Z","node":"cl-az38","v":3,"op":"ratify","from":"asserted","cause":"it-swsy","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:45Z","node":"cl-hv3m","v":3,"op":"ratify","from":"asserted","cause":"it-swsy","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:45Z","node":"cl-2cam","v":2,"op":"ratify","from":"asserted","cause":"it-swsy","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:47Z","node":"it-swsy","v":7,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:24:57Z","node":"do-gkpp","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

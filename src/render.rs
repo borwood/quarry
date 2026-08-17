@@ -996,6 +996,17 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
         acts.len(), count_of("claim"), count_of("thread"), count_of("doc"), id
     )?;
 
+    // The assay office (dc-drr6): the landing act will ratify the badge's
+    // vein and feature mints — named here, at the judgment seat, before the
+    // dispatcher's hand moves.
+    let assay = crate::queries::assayable(&all, &crate::queries::badge_claim_mints(&log, id));
+    if !assay.is_empty() {
+        writeln!(s, "\n  {}", crate::framings::assay_harvest_line(assay.len()))?;
+        for c in &assay {
+            writeln!(s, "    · {}", crate::surface::atom_line(&crate::surface::atom(&all, c)))?;
+        }
+    }
+
     if !item.front.acceptance.is_empty() {
         writeln!(s, "\nJUDGE EACH BY OUTCOME (the RETURN spec):")?;
         for a in &item.front.acceptance {

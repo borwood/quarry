@@ -551,6 +551,86 @@ pub fn refute(
     Ok((c2, nodes))
 }
 
+/// What a landing assayed (dc-drr6): the arc's freshly ratified claims and
+/// which path ratified them — harvest (badge mints, the dispatcher's hand)
+/// or solo (a session's own mints, self-ratified on the record).
+pub struct LandingAssay {
+    pub solo: bool,
+    pub ratified: Vec<Node>,
+}
+
+/// The assay office (dc-drr6): the landing act ratifies the arc's vein and
+/// feature mints. A dispatched item's landing ratifies the claims minted
+/// under its badge — the dispatcher's landing judgment already verified
+/// them against the diff, and ratification records that act by the
+/// dispatcher's own hand. A never-dispatched item landing under the session
+/// that worked it self-ratifies the session's own mints across the arc
+/// (lease since, else the last in-flight flip) — the ratifier is always
+/// stamped, so one mind stays legible against two-minds-against-evidence.
+/// Ratified never means true: refute and blast stand. Returns None when the
+/// arc leaves nothing to assay.
+pub fn ratify_landing(
+    store: &Store,
+    item_id: &str,
+    session: Option<&str>,
+) -> Result<Option<LandingAssay>> {
+    let all = store.load_all()?;
+    let log = store.read_log()?;
+    let (ids, solo) = if crate::queries::item_was_dispatched(&log, item_id) {
+        (crate::queries::badge_claim_mints(&log, item_id), false)
+    } else {
+        let Some(sess) = session else { return Ok(None) };
+        let since = crate::coord::load_leases(store)
+            .iter()
+            .find(|l| l.item == item_id && l.session == sess)
+            .map(|l| l.since.clone())
+            .or_else(|| {
+                log.iter()
+                    .rev()
+                    .find(|ev| {
+                        ev.get("node").and_then(|v| v.as_str()) == Some(item_id)
+                            && ev.get("op").and_then(|v| v.as_str()) == Some("set")
+                            && ev
+                                .get("fields")
+                                .and_then(|v| v.as_array())
+                                .map_or(false, |fs| {
+                                    fs.iter().any(|f| f.as_str() == Some("status=in-flight"))
+                                })
+                    })
+                    .and_then(|ev| ev.get("ts").and_then(|v| v.as_str()).map(String::from))
+            });
+        let Some(since) = since else { return Ok(None) };
+        (crate::queries::session_claim_mints(&log, sess, &since), true)
+    };
+    let claims: Vec<Node> =
+        crate::queries::assayable(&all, &ids).into_iter().cloned().collect();
+    if claims.is_empty() {
+        return Ok(None);
+    }
+    let actor = Store::actor();
+    let mut ratified = Vec::new();
+    for mut n in claims {
+        n.front.status = "ratified".into();
+        n.front.ratified = Some(Ratified {
+            by: actor.clone(),
+            date: Store::today(),
+        });
+        // No version bump: an assay records who stood behind the claim, not
+        // new content — the affirm-no-bump rationale (th-uvu9), so citers of
+        // a freshly ratified vein never go behind over good news. The act is
+        // loud in the log instead: op ratify, the assayer stamped, the
+        // landing item as cause — a fallen claim shows its assayer (dc-drr6).
+        store.save(&n)?;
+        store.log_event(json!({
+            "ts": Store::now(), "node": n.front.id, "v": n.front.v,
+            "op": "ratify", "from": "asserted", "cause": item_id,
+            "assay": if solo { "solo" } else { "harvest" }, "actor": actor
+        }))?;
+        ratified.push(n);
+    }
+    Ok(Some(LandingAssay { solo, ratified }))
+}
+
 /// Archive (or --undo): a presentation flag, never a removal. Only settled
 /// statuses qualify; parents with live children never do — a parent indexes
 /// its archived offspring. Docs/journals are the record and never archive;
