@@ -1290,3 +1290,12 @@
 {"ts":"2026-08-17T09:24:45Z","node":"cl-2cam","v":2,"op":"ratify","from":"asserted","cause":"it-swsy","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T09:24:47Z","node":"it-swsy","v":7,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T09:24:57Z","node":"do-gkpp","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T22:52:29Z","node":"dc-2wes","v":1,"op":"create","type":"decision","title":"ratification never bumps: the assay stamp is bookkeeping, citers stay fresh","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"builds-on","to":"dc-drr6","at":5,"ts":"2026-08-17T22:52:36Z","node":"dc-2wes","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"builds-on","to":"dc-q8p3","at":2,"ts":"2026-08-17T22:52:36Z","node":"dc-2wes","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-17T22:52:50Z","node":"th-4w3a","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-17T22:52:50Z","node":"th-4w3a","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["title=composed mechanical strings: ratify or amend the register across three landings"],"ts":"2026-08-17T22:53:02Z","node":"th-4w3a","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-17T22:53:34Z","node":"th-xeqw","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-17T22:53:44Z","node":"th-wxr9","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-17T22:54:06Z","node":"th-jvwe","v":4,"actor":"claude-fable-5","session":"dispatcher"}
