@@ -52,7 +52,7 @@ fn stamped_edges_go_behind_and_affirm() {
     // user-provenance claim needs no source (C2 exemption)
     let c = ops::claim(
         &s,
-        "the halo is bounded", None,
+        "the halo is bounded", None, None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -113,7 +113,7 @@ fn refute_blast_and_c5() {
 
     let c = ops::claim(
         &s,
-        "halo is 4-11 cells", None,
+        "halo is 4-11 cells", None, None,
         vec![area.front.id.clone()],
         Some(src_doc.front.id.clone()),
         Some("ring differencing".into()),
@@ -235,7 +235,7 @@ fn affirm_only_restamps_does_not_bump() {
     let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
     let c = ops::claim(
         &s,
-        "halo bounded", None,
+        "halo bounded", None, None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -380,14 +380,14 @@ fn c2_grounding_forms() {
     let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
 
     // free-floating assistant claim: denied
-    let err = ops::claim(&s, "vibes", None, vec![area.front.id.clone()], None, None, Some("assistant".into()), None)
+    let err = ops::claim(&s, "vibes", None, None, vec![area.front.id.clone()], None, None, Some("assistant".into()), None)
         .unwrap_err();
     assert!(err.to_string().contains("C2"), "got: {}", err);
     // method alone grounds it
-    ops::claim(&s, "measured thing", None, vec![area.front.id.clone()], None,
+    ops::claim(&s, "measured thing", None, None, vec![area.front.id.clone()], None,
         Some("log inspection".into()), None, None).unwrap();
     // a file: source grounds it (matrix widened), blob-stamped
-    let c = ops::claim(&s, "read off the code", None, vec![area.front.id.clone()],
+    let c = ops::claim(&s, "read off the code", None, None, vec![area.front.id.clone()],
         Some("file:evidence.rs".into()), None, Some("assistant".into()), None).unwrap();
     assert!(c.front.edges.iter().any(|e| e.rel == "source" && e.to == "file:evidence.rs"));
 }
@@ -552,7 +552,7 @@ fn dispatch_wake_leads_with_ready_inflight_and_homework() {
     // homework residue: a claim citing the area at v1, then the area bumps
     let c = ops::claim(
         &s,
-        "strata are layered", None,
+        "strata are layered", None, None,
         vec![aid.clone()],
         None,
         None,
@@ -795,7 +795,7 @@ fn vein_presence_check() {
     assert!(!queries::files_cited(&all, &["resolve.rs".to_string()]), "nothing cites yet");
     ops::claim(
         &s,
-        "materials resolve per-voxel through layered override stacks", None,
+        "materials resolve per-voxel through layered override stacks", None, None,
         vec![area.front.id.clone()],
         Some("file:resolve.rs".into()),
         None,
@@ -1452,7 +1452,7 @@ fn dispatch_one_act_then_harvest() {
     // machine-global fallback is gone; env transport is the agent's stamp
     let c = ops::claim(
         &s,
-        "`geo-pass`: emits layered strata", None,
+        "`geo-pass`: emits layered strata", None, None,
         vec![area.front.id.clone()],
         None,
         Some("read off the pass".into()),
@@ -1818,7 +1818,7 @@ fn builds_on_matrix_shapes_stamp_and_no_status_coupling() {
     let spec = ops::new_node(&s, NewArgs::bare("doc", "water spec")).unwrap();
     let c = ops::claim(
         &s,
-        "`body-graph`: bodies keep identity", None,
+        "`body-graph`: bodies keep identity", None, None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -1859,7 +1859,7 @@ fn builds_on_behind_and_reverse_blast() {
     let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
     let c = ops::claim(
         &s,
-        "`geo-pass`: emits layered strata", None,
+        "`geo-pass`: emits layered strata", None, None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -1929,7 +1929,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // a vein in the shared area lands one intent
     let bg = ops::claim(
         &s,
-        "`body-graph`: bodies keep identity across regen", None,
+        "`body-graph`: bodies keep identity across regen", None, None,
         vec![hydro.front.id.clone()],
         None,
         None,
@@ -1940,7 +1940,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // the same name in a foreign area lands nothing (and is unintended THERE)
     let foreign = ops::claim(
         &s,
-        "`halo-check`: bounded halo", None,
+        "`halo-check`: bounded halo", None, None,
         vec![geo.front.id.clone()],
         None,
         None,
@@ -1951,7 +1951,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     // an emergent vein in the item's area that no intent named
     ops::claim(
         &s,
-        "`chunk-cache`: regen hits a warm cache", None,
+        "`chunk-cache`: regen hits a warm cache", None, None,
         vec![hydro.front.id.clone()],
         None,
         None,
@@ -1989,7 +1989,7 @@ fn intent_delta_both_directions_join_on_shared_areas() {
     ops::set(&s, &it.front.id, &["status=done".to_string()], None).unwrap();
     let late = ops::claim(
         &s,
-        "`halo-check`: halo bounded, measured late", None,
+        "`halo-check`: halo bounded, measured late", None, None,
         vec![hydro.front.id.clone()],
         None,
         None,
@@ -2035,7 +2035,7 @@ fn unpack_expands_labels_dead_and_skips_code() {
     let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
     let c = ops::claim(
         &s,
-        "halo bounded", None,
+        "halo bounded", None, None,
         vec![area.front.id.clone()],
         None,
         None,
@@ -2967,6 +2967,7 @@ fn brief_map_renders_file_geography_claims_and_mentions() {
         &s,
         "the flow mechanism holds through regeneration",
         None,
+        None,
         vec!["file:src/hydro.rs".to_string()],
         Some("file:src/hydro.rs".into()),
         None,
@@ -3029,4 +3030,300 @@ fn your_writes_states_expected_acts_by_kind() {
     assert!(text.contains("a `vein` for each mechanism"), "slice expectation derives from kind");
     assert!(text.contains("fool's gold"), "the ratified close ships");
     assert!(text.contains("--kind <species>"), "the claim shape is stated");
+}
+
+// ── sediment and rot (dc-6gn9, it-nmzn): the reading split, the behind
+// classifier, archive-on-consumption, species-shaped affirm ─────────────
+
+#[test]
+fn claim_kind_plumbs_at_mint() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let c = ops::claim(
+        &s,
+        "the weir gauge read 4m at survey time",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        Some("gauge inspection".into()),
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(c.front.kind.as_deref(), Some("reading"));
+}
+
+#[test]
+fn behind_tells_sediment_from_rot() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let reading = ops::claim(
+        &s,
+        "flow was 4m/s on Tuesday",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let measured = ops::claim(
+        &s,
+        "the gauge reports live flow",
+        None,
+        Some("measured".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // Bump the area: both claims drift — the reading as sediment, the
+    // living measurement as rot.
+    ops::set(&s, &area.front.id, &["title=hydrology".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let behind = queries::behind(&s, &all);
+    let r = behind.iter().find(|b| b.src.id == reading.front.id).unwrap();
+    assert!(r.sediment, "drift over a reading is sediment");
+    let m = behind.iter().find(|b| b.src.id == measured.front.id).unwrap();
+    assert!(!m.sediment, "drift on a living measurement is rot");
+}
+
+#[test]
+fn dead_source_rots_even_under_a_reading() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let evidence = ops::new_node(&s, NewArgs::bare("doc", "counter-survey")).unwrap();
+    let upstream = ops::claim(
+        &s,
+        "the sluice holds at spring tide",
+        None,
+        None,
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let reading = ops::claim(
+        &s,
+        "read 2m against the sluice mark",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    ops::link(&s, &reading.front.id, "supports", &upstream.front.id, false, None).unwrap();
+    ops::refute(&s, &upstream.front.id, &evidence.front.id, None).unwrap();
+    let all = s.load_all().unwrap();
+    let behind = queries::behind(&s, &all);
+    let e = behind
+        .iter()
+        .find(|b| b.src.id == reading.front.id && b.to == upstream.front.id)
+        .unwrap();
+    assert_eq!(e.severity, 1, "refuted target is sev 1");
+    assert!(!e.sediment, "a refuted source rots anywhere, reading or not");
+}
+
+#[test]
+fn affirm_teaching_is_species_shaped() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("tests")).unwrap();
+    std::fs::write(s.root.join("tests/basic.rs"), "#[test] fn weir() {}\n").unwrap();
+    std::fs::create_dir_all(s.root.join("src")).unwrap();
+    std::fs::write(s.root.join("src/gauge.rs"), "fn gauge() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let instrumented = ops::claim(
+        &s,
+        "the weir suite holds the gauge honest",
+        None,
+        Some("measured".into()),
+        vec![area.front.id.clone()],
+        Some("file:tests/basic.rs".into()),
+        Some("integration tests".into()),
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        queries::affirm_teaching(&instrumented),
+        Some(quarry::framings::AFFIRM_INSTRUMENT),
+        "a file:tests source is the instrument — affirm teaches re-read"
+    );
+    let manual = ops::claim(
+        &s,
+        "the outflow probe answers",
+        None,
+        Some("measured".into()),
+        vec![area.front.id.clone()],
+        None,
+        Some("liveness probe".into()),
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        queries::affirm_teaching(&manual),
+        Some(quarry::framings::AFFIRM_MANUAL),
+        "a manual method teaches re-run"
+    );
+    let reading = ops::claim(
+        &s,
+        "read 4m off the gauge",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        queries::affirm_teaching(&reading),
+        Some(quarry::framings::first_sentence(quarry::framings::READINGS)),
+        "a reading teaches its own sediment framing"
+    );
+    let vein = ops::claim(
+        &s,
+        "`gauge-loop`: the polling loop owns retry",
+        None,
+        Some("vein".into()),
+        vec![area.front.id.clone()],
+        Some("file:src/gauge.rs".into()),
+        None,
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(queries::affirm_teaching(&vein), None, "other species teach nothing here");
+}
+
+#[test]
+fn readings_archive_when_last_consumer_settles() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let reading = ops::claim(
+        &s,
+        "the weir gauge read 4m",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // Consumerless: nothing consumed it, so nothing settles it.
+    assert!(ops::consume_readings(&s).unwrap().is_empty());
+    // Two consumers lean on it (supports: the reading informed them).
+    let i1 = ops::new_node(&s, NewArgs::bare("item", "sluice design")).unwrap();
+    let i2 = ops::new_node(&s, NewArgs::bare("item", "weir survey")).unwrap();
+    ops::link(&s, &reading.front.id, "supports", &i1.front.id, false, None).unwrap();
+    ops::link(&s, &reading.front.id, "supports", &i2.front.id, false, None).unwrap();
+    // First consumer settles: the reading stays live.
+    ops::set(&s, &i1.front.id, &["status=done".to_string()], None).unwrap();
+    assert!(ops::consume_readings(&s).unwrap().is_empty());
+    // The LAST live consumer settles: the reading archives itself.
+    ops::set(&s, &i2.front.id, &["status=done".to_string()], None).unwrap();
+    let swept = ops::consume_readings(&s).unwrap();
+    assert_eq!(swept.len(), 1);
+    assert_eq!(swept[0].front.id, reading.front.id);
+    let all = s.load_all().unwrap();
+    assert!(s.find(&all, &reading.front.id).unwrap().front.archived);
+    // Idempotent: a second sweep finds nothing.
+    assert!(ops::consume_readings(&s).unwrap().is_empty());
+}
+
+#[test]
+fn reading_supporting_in_force_decision_is_consumed() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let reading = ops::claim(
+        &s,
+        "spring tide crested at 5m",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    let mut d = NewArgs::bare("decision", "raise the sluice wall");
+    d.provenance = Some("user".into());
+    let d = ops::new_node(&s, d).unwrap();
+    ops::link(&s, &reading.front.id, "supports", &d.front.id, false, None).unwrap();
+    // An in-force ruling has consumed its inputs: the reading is done serving.
+    let swept = ops::consume_readings(&s).unwrap();
+    assert_eq!(swept.len(), 1);
+    assert_eq!(swept[0].front.id, reading.front.id);
+    // A measured claim in the same position stays live: its currency is its value.
+    let living = ops::claim(
+        &s,
+        "the tide gauge streams live",
+        None,
+        Some("measured".into()),
+        vec![area.front.id.clone()],
+        None,
+        Some("gauge poll".into()),
+        None,
+        None,
+    )
+    .unwrap();
+    ops::link(&s, &living.front.id, "supports", &d.front.id, false, None).unwrap();
+    assert!(ops::consume_readings(&s).unwrap().is_empty());
+    let all = s.load_all().unwrap();
+    assert!(!s.find(&all, &living.front.id).unwrap().front.archived);
+}
+
+#[test]
+fn readings_archive_by_species_not_ladder() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("src")).unwrap();
+    std::fs::write(s.root.join("src/culvert.rs"), "fn culvert() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "water")).unwrap();
+    let reading = ops::claim(
+        &s,
+        "the culvert ran dry in August",
+        None,
+        Some("reading".into()),
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // A reading archives at any ladder status: it settled when it landed.
+    let n = ops::archive(&s, &reading.front.id, false).unwrap();
+    assert!(n.front.archived);
+    // Every other claim species still follows the ladder.
+    let vein = ops::claim(
+        &s,
+        "`dry-run`: the culvert check is a pure function",
+        None,
+        Some("vein".into()),
+        vec![area.front.id.clone()],
+        Some("file:src/culvert.rs".into()),
+        None,
+        None,
+        None,
+    )
+    .unwrap();
+    let err = ops::archive(&s, &vein.front.id, false).unwrap_err();
+    assert!(err.to_string().contains("only settled statuses archive"), "got: {}", err);
 }

@@ -39,6 +39,29 @@ pub const YOUR_WRITES_OPEN: &str = "Your code lands once; what you record about 
 
 pub const YOUR_WRITES_CLOSE: &str = "And if your questing found two truths with no recorded relationship: mention what relates, link only what leans — a mention costs nothing and is never wrong; an edge is a load-bearing claim, judged at harvest like the rest of your work (dc-ez67: depends-on, about, source, supports only; settling rels are never yours). These writes are how your work becomes ground instead of history. Claims you mint will be assayed at harvest against your diff — write them to survive that reading. A claim minted to satisfy a prompt is fool's gold; a claim the next builder can stand on is the point.";
 
+/// The mint species prompt (dc-6gn9; ratified 2026-08-17 on it-nmzn):
+/// fires when a method-carrying claim mints kindless — the species
+/// question asked at the choke point, a prompt, never a gate.
+pub const SPECIES_PROMPT: &str = "this claim carries a method - taken once to inform a decision (--kind reading, settles as sediment), or relied on to stay true (--kind measured, lives by its instrument)?";
+
+/// Species-shaped affirm, instrument-backed (dc-6gn9; ratified 2026-08-17
+/// on it-nmzn): a measured claim whose source is a test file — the living
+/// method is the instrument; affirm on drift means re-read it.
+pub const AFFIRM_INSTRUMENT: &str = "living measurement, instrument drifted - re-read the test: does this claim still describe what it asserts? Your affirm records that reading.";
+
+/// Species-shaped affirm, manual method (dc-6gn9; ratified 2026-08-17 on
+/// it-nmzn): the irreducible remainder — liveness probes, field
+/// observations, user-facts. Affirm records a re-run, never a re-read.
+pub const AFFIRM_MANUAL: &str = "living measurement, manual method - affirm records a re-run, not a re-read: run it, then affirm what you saw.";
+
+/// The behind sediment collapse (dc-6gn9; ratified 2026-08-17 on it-nmzn):
+/// drift over readings is expected stratification — it collapses to this
+/// count while rot enumerates loud. The lint's signal returns: when behind
+/// shows an entry, it means something.
+pub fn sediment_line(n: usize) -> String {
+    format!("sediment: {} dated reading(s) drifted with their sources - expected stratification, not rot", n)
+}
+
 /// The claim species in shelf order (dc-yd9s, dc-6gn9): frontmatter kind,
 /// section label, ratified framing. The engine stays kindless-but-kind-aware
 /// — kinds outside this table still render, grouped under their own string,

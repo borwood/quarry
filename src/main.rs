@@ -165,6 +165,11 @@ well-named vein surfaces itself to future work.")]
         /// Full title when the derived first-line cut would truncate it (register-length vein names)
         #[arg(long)]
         title: Option<String>,
+        /// Material species (dc-yd9s, dc-6gn9): vein | feature | measured |
+        /// reading | contract — any string renders; nothing validates. A
+        /// method-carrying claim minted kindless draws the species prompt.
+        #[arg(long)]
+        kind: Option<String>,
         #[arg(long = "about", required = true)]
         about: Vec<String>,
         #[arg(long)]
@@ -476,6 +481,13 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
             node.front.id
         );
     }
+    // The species prompt (dc-6gn9, ratified on it-nmzn): a method-carrying
+    // claim minted kindless gets the species question at the choke point —
+    // a prompt, never a gate; the mint already stands.
+    if node.front.ty == "claim" && node.front.kind.is_none() && node.front.method.is_some() {
+        println!("  species: {}", quarry::framings::SPECIES_PROMPT);
+        println!("    settle it: q set {} kind=reading (or kind=measured)", node.front.id);
+    }
     let Ok(all) = store.load_all() else { return };
     let touches = quarry::queries::relatedness(&all, node);
     if !touches.is_empty() {
@@ -724,9 +736,21 @@ fn aref(all: &[Node], n: &Node) -> String {
 fn print_homework(store: &Store, touched: &[&str]) {
     let Ok(all) = store.load_all() else { return };
     let mut lines: Vec<String> = Vec::new();
+    let mut sediment = 0usize;
     for &id in touched {
         let Ok(target) = store.find(&all, id) else { continue };
         for (citer, e) in queries::citers_behind(&all, id) {
+            // A reading drifting with its target is sediment (dc-6gn9) —
+            // no affirm is owed; the collapse says so once below. A dead
+            // target rots anywhere, reading or not.
+            let dead = matches!(target.front.status.as_str(), "refuted" | "superseded");
+            if !dead
+                && citer.front.ty == "claim"
+                && citer.front.kind.as_deref() == Some("reading")
+            {
+                sediment += 1;
+                continue;
+            }
             lines.push(format!(
                 "⚠ behind: {} -[{}]→ {} (cited {}, now v{}). Review the change, then: q affirm {} --to {}",
                 aref(&all, citer), e.rel, aref(&all, target), e.at, target.front.v,
@@ -743,11 +767,32 @@ fn print_homework(store: &Store, touched: &[&str]) {
             lines.push(format!("✔ {}: {}", what, line(&all, n)));
         }
     }
+    if sediment > 0 {
+        lines.push(quarry::framings::sediment_line(sediment));
+    }
     if !lines.is_empty() {
         println!("homework:");
         for l in lines {
             println!("  {}", l);
         }
+    }
+}
+
+/// Archive-on-consumption (dc-6gn9): run after any settling act — a reading
+/// whose last live consumer just settled archives itself, and this surface
+/// says what was hidden. Automation replaces agent discipline where only
+/// one end state exists.
+fn sweep_readings(store: &Store) {
+    let Ok(swept) = ops::consume_readings(store) else { return };
+    if swept.is_empty() {
+        return;
+    }
+    let all = store.load_all().unwrap_or_default();
+    for n in &swept {
+        println!(
+            "  ⚑ reading archived on consumption — its last live consumer settled: {}",
+            aref(&all, n)
+        );
     }
 }
 
@@ -991,12 +1036,18 @@ fn main() -> Result<()> {
                             wake.as_ref().and_then(|s| reg.get(s).map(|p| (s.as_str(), p)));
                         let shape =
                             coord::wake_shape(wake_reg.and_then(|(_, p)| p.kind.as_deref()));
+                        // Sediment stays out of the wants-action count
+                        // (dc-6gn9): behind means rot and breakage; the
+                        // strata report themselves beside it.
+                        let rot = behind.iter().filter(|b| !b.sediment).count();
+                        let sed = behind.len() - rot;
                         println!(
-                            "quarry: {} nodes · owed to the user: {} · ready to dispatch: {} · behind: {}",
+                            "quarry: {} nodes · owed to the user: {} · ready to dispatch: {} · behind: {}{}",
                             all.len(),
                             queue.len(),
                             ready.len(),
-                            behind.len()
+                            rot,
+                            if sed > 0 { format!(" · sediment: {}", sed) } else { String::new() }
                         );
                         // Omitted under the dispatch shape: threads are not
                         // a dispatch session's to settle (dc-wngq).
@@ -1749,10 +1800,14 @@ fn main() -> Result<()> {
                     "v": 0, "op": "wrap", "actor": Store::actor()
                 }))?;
             }
-            let behind = queries::behind(&store, &all);
-            if behind.is_empty() {
+            // Wrap tells sediment from rot (dc-6gn9): only rot and breakage
+            // enumerate; the strata collapse to the ratified count.
+            let (sed, behind): (Vec<_>, Vec<_>) =
+                queries::behind(&store, &all).into_iter().partition(|e| e.sediment);
+            if behind.is_empty() && sed.is_empty() {
                 println!("  behind: none — every ref current");
-            } else {
+            }
+            if !behind.is_empty() {
                 println!("  behind: {} stale ref(s), worst severity {}", behind.len(), behind[0].severity);
                 for e in behind.iter().take(5) {
                     let target = e
@@ -1769,6 +1824,9 @@ fn main() -> Result<()> {
                         e.reason
                     );
                 }
+            }
+            if !sed.is_empty() {
+                println!("  {}", quarry::framings::sediment_line(sed.len()));
             }
             let inflight: Vec<_> = all
                 .iter()
@@ -2117,9 +2175,23 @@ fn main() -> Result<()> {
                     }
                 }
             }
+            // A lean declared late (dc-6gn9): a reading linked into
+            // consumers that already settled is already done serving —
+            // sweep now, not at some later settling act.
+            let reading_touched = store
+                .find(&all, &src_id)
+                .map(|n| n.front.ty == "claim" && n.front.kind.as_deref() == Some("reading"))
+                .unwrap_or(false)
+                || store
+                    .find(&all, &edge.to)
+                    .map(|n| n.front.ty == "claim" && n.front.kind.as_deref() == Some("reading"))
+                    .unwrap_or(false);
             drop(all);
             print_homework(&store, &[src_id.as_str(), edge.to.as_str()]);
             area_watermarks(&store, &src_id);
+            if reading_touched {
+                sweep_readings(&store);
+            }
         }
         Cmd::Unlink { src, rel, dst, note } => {
             let store = Store::discover()?;
@@ -2151,6 +2223,15 @@ fn main() -> Result<()> {
                 if let Ok(p) = quarry::view::write(&store) {
                     println!("  view regenerated: {}", p.display());
                 }
+            }
+            // A settling act may have been a reading's last live consumer
+            // (dc-6gn9); a kind flip to reading may find its consumers
+            // already settled. Either way the sweep says what it hid.
+            if fields
+                .iter()
+                .any(|f| f.starts_with("status=") || f.starts_with("kind="))
+            {
+                sweep_readings(&store);
             }
             // Solo-path advert: taking up an item without a lease is legal —
             // leaseless writes accrue and nudge, never deny — but a declared
@@ -2201,10 +2282,14 @@ fn main() -> Result<()> {
             drop(all);
             print_homework(&store, &[th_id.as_str(), d.front.id.as_str()]);
             area_watermarks(&store, &d.front.id);
+            // A ruling settles its thread and lands in force (dc-6gn9):
+            // readings either consumed may now archive.
+            sweep_readings(&store);
         }
         Cmd::Claim {
             text,
             title,
+            kind,
             about,
             source,
             method,
@@ -2212,7 +2297,7 @@ fn main() -> Result<()> {
             status,
         } => {
             let store = Store::discover()?;
-            let n = ops::claim(&store, &text, title, about, source, method, provenance, status)?;
+            let n = ops::claim(&store, &text, title, kind, about, source, method, provenance, status)?;
             println!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
             print_mint_surfaces(&store, &n);
             area_watermarks(&store, &n.front.id);
@@ -2231,13 +2316,29 @@ fn main() -> Result<()> {
                 }
             }
             print_homework(&store, &[c.front.id.as_str()]);
+            // A refuted claim is settled (dc-6gn9): readings it consumed
+            // may just have lost their last live consumer.
+            sweep_readings(&store);
         }
         Cmd::Affirm { node, to } => {
             let store = Store::discover()?;
+            // Affirm is species-shaped by method (dc-6gn9): the ratified
+            // teaching frames what this affirm records — re-read for
+            // instrument-backed measurements, re-run for manual methods,
+            // the sediment framing for readings. A prompt, never a gate.
+            let teaching = store.load_all().ok().and_then(|all| {
+                store
+                    .find(&all, &node)
+                    .ok()
+                    .and_then(queries::affirm_teaching)
+            });
             let count = ops::affirm(&store, &node, to)?;
             if count == 0 {
                 println!("nothing behind — no restamp needed.");
             } else {
+                if let Some(t) = teaching {
+                    println!("{}", t);
+                }
                 println!("✔ restamped {} ref(s)", count);
             }
         }
@@ -2250,6 +2351,9 @@ fn main() -> Result<()> {
             } else {
                 println!("✔ archived: {}", line(&all, &n));
                 println!("  still reachable — ids resolve, edges hold, blast/behind see it; surfaces show counts of what they hide.");
+                // Archiving a consumer settles it (dc-6gn9): its readings
+                // may just have lost their last live consumer.
+                sweep_readings(&store);
             }
         }
         Cmd::Open { node, all } => {
@@ -2355,18 +2459,25 @@ fn main() -> Result<()> {
                     }
                 }
                 Query::Behind => {
-                    let b = queries::behind(&store, &all);
-                    if b.is_empty() {
+                    // The classifier (dc-6gn9): rot enumerates loud under a
+                    // wants-action header; sediment — drift over readings —
+                    // collapses to the ratified count with its reach-line.
+                    let (sed, rot): (Vec<_>, Vec<_>) =
+                        queries::behind(&store, &all).into_iter().partition(|e| e.sediment);
+                    if rot.is_empty() && sed.is_empty() {
                         println!("nothing behind — every ref current.");
                     }
-                    for e in b {
+                    if !rot.is_empty() {
+                        println!("wants action ({} — every entry means something):", rot.len());
+                    }
+                    for e in rot {
                         let target = e
                             .to_atom
                             .as_ref()
                             .map(quarry::surface::atom_ref)
                             .unwrap_or_else(|| format!("\"{}\" ({})", e.to_title, e.to));
                         println!(
-                            "[sev {}] {} -[{}]→ {}  at {} now {}  ({})",
+                            "  [sev {}] {} -[{}]→ {}  at {} now {}  ({})",
                             e.severity,
                             quarry::surface::atom_ref(&e.src),
                             e.rel,
@@ -2374,6 +2485,19 @@ fn main() -> Result<()> {
                             e.at,
                             e.current,
                             e.reason
+                        );
+                    }
+                    if !sed.is_empty() {
+                        println!("{}", quarry::framings::sediment_line(sed.len()));
+                        let mut strata: Vec<&str> = Vec::new();
+                        for e in &sed {
+                            if !strata.contains(&e.src.id.as_str()) {
+                                strata.push(&e.src.id);
+                            }
+                        }
+                        println!(
+                            "  the strata: {} — q open <id> reads one at its date",
+                            strata.join(", ")
                         );
                     }
                 }

@@ -794,6 +794,25 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
             .copied()
             .collect();
         backdrop_section(&mut s, &all, &ctx, "CLAIMS (no species recorded)", None, &kindless, &mut placed, &shelf_hint)?;
+        // Archive-on-consumption (dc-6gn9): the shelf says how many it hid —
+        // settled readings among them — instead of hiding silently.
+        let hidden_claims = all
+            .iter()
+            .filter(|n| {
+                n.front.archived
+                    && n.front.ty == "claim"
+                    && n.front.id != item.front.id
+                    && crate::coord::in_purview(n, &area_ids)
+            })
+            .count();
+        if hidden_claims > 0 {
+            let all_hint = area_ids
+                .iter()
+                .map(|a| format!("q open {} --all", a))
+                .collect::<Vec<_>>()
+                .join(" · ");
+            writeln!(s, "\n  ({} archived claim(s) hidden — {})", hidden_claims, all_hint)?;
+        }
         let record_hint = format!("the full record: {}", hint);
         let decisions: Vec<&Node> = all
             .iter()
@@ -873,10 +892,13 @@ pub fn dispatch_wake(store: &Store, all: &[Node], area_ids: &[&str]) -> Vec<Stri
             }
         }
     }
-    let behinds: Vec<crate::queries::Behind> = crate::queries::behind(store, all)
-        .into_iter()
-        .filter(|b| b.src.area_ids.iter().any(|id| area_ids.contains(&id.as_str())))
-        .collect();
+    // Sediment tells from rot at the wake too (dc-6gn9): only rot and
+    // breakage enumerate as residue; the strata collapse to their count.
+    let (sediment, behinds): (Vec<crate::queries::Behind>, Vec<crate::queries::Behind>) =
+        crate::queries::behind(store, all)
+            .into_iter()
+            .filter(|b| b.src.area_ids.iter().any(|id| area_ids.contains(&id.as_str())))
+            .partition(|b| b.sediment);
     for b in behinds.iter().take(5) {
         let target = b
             .to_atom
@@ -894,6 +916,9 @@ pub fn dispatch_wake(store: &Store, all: &[Node], area_ids: &[&str]) -> Vec<Stri
     }
     if behinds.len() > 5 {
         homework.push(format!("…and {} more stale ref(s) — q query behind", behinds.len() - 5));
+    }
+    if !sediment.is_empty() {
+        homework.push(crate::framings::sediment_line(sediment.len()));
     }
     if !homework.is_empty() {
         out.push("homework residue:".into());

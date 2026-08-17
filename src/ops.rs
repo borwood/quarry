@@ -470,6 +470,7 @@ pub fn claim(
     store: &Store,
     text: &str,
     title: Option<String>,
+    kind: Option<String>,
     about: Vec<String>,
     source: Option<String>,
     method: Option<String>,
@@ -499,6 +500,11 @@ pub fn claim(
     let mut args = NewArgs::bare("claim", &title);
     args.body = text.to_string();
     args.about = about;
+    // The species split at mint (dc-6gn9): --kind carries any species
+    // string — the engine stays kindless-but-kind-aware (dc-yd9s), never
+    // validates. A method-carrying claim minted kindless draws the species
+    // prompt at the mint surface, a prompt, never a gate.
+    args.kind = kind;
     args.method = method;
     args.provenance = Some(prov);
     args.status = status;
@@ -573,10 +579,16 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         "doc" => bail!("docs and journals never archive — they are the record"),
         _ => {}
     }
-    if !matches!(
-        node.front.status.as_str(),
-        "done" | "dropped" | "resolved" | "refuted" | "superseded"
-    ) {
+    // A reading settles by species, not by ladder (dc-6gn9): it is done
+    // serving the moment it lands, so any ladder status archives.
+    let reading =
+        node.front.ty == "claim" && node.front.kind.as_deref() == Some("reading");
+    if !reading
+        && !matches!(
+            node.front.status.as_str(),
+            "done" | "dropped" | "resolved" | "refuted" | "superseded"
+        )
+    {
         bail!(
             "only settled statuses archive; {} — archive follows status, never age",
             crate::surface::atom_ref(&crate::surface::atom(&all, &node))
@@ -608,6 +620,83 @@ pub fn archive(store: &Store, key: &str, undo: bool) -> Result<Node> {
         "op": "archive", "actor": Store::actor()
     }))?;
     Ok(node)
+}
+
+/// Archive-on-consumption (dc-6gn9): a reading is done serving the moment
+/// its last live consumer settles — when only one end exists after a
+/// condition, automating the transition removes a dependency on agent
+/// discipline and attention budget (the user's principle, kin to
+/// enforcement-beats-doctrine). Consumers are the nodes that lean on the
+/// reading, in blast's own vocabulary (queries::blast): inbound depends-on,
+/// source, and builds-on edges, plus the targets of its own supports edges
+/// (the decisions and items it informed). Inbound supports and refutes are
+/// evidence and attack, never a lean. A consumer counts as
+/// settled when it is archived or its status is terminal for its type —
+/// items done/dropped, threads resolved/dropped, decisions in-force or
+/// superseded (an in-force ruling has consumed its inputs), claims
+/// refuted/superseded (a live claim still leans), docs always (registered
+/// is the record). A consumerless reading never sweeps — nothing consumed
+/// it, so nothing settles it. Returns the readings this sweep archived;
+/// callers say what was hidden.
+pub fn consume_readings(store: &Store) -> Result<Vec<Node>> {
+    let all = store.load_all()?;
+    let mut swept = Vec::new();
+    for n in &all {
+        if n.front.ty != "claim"
+            || n.front.archived
+            || n.front.kind.as_deref() != Some("reading")
+        {
+            continue;
+        }
+        let mut consumer_ids: Vec<&str> = all
+            .iter()
+            .filter(|m| {
+                m.front.id != n.front.id
+                    && m.front.edges.iter().any(|e| {
+                        matches!(e.rel.as_str(), "depends-on" | "source" | "builds-on")
+                            && e.to == n.front.id
+                    })
+            })
+            .map(|m| m.front.id.as_str())
+            .collect();
+        for e in &n.front.edges {
+            if e.rel == "supports" && !consumer_ids.contains(&e.to.as_str()) {
+                consumer_ids.push(&e.to);
+            }
+        }
+        let consumers: Vec<&Node> = consumer_ids
+            .iter()
+            .filter_map(|id| all.iter().find(|m| &m.front.id == id))
+            .collect();
+        if consumers.is_empty() || !consumers.iter().all(|c| consumer_settled(c)) {
+            continue;
+        }
+        let mut node = n.clone();
+        node.front.archived = true;
+        store.save(&node)?;
+        store.log_event(json!({
+            "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+            "op": "archive", "cause": "consumption", "actor": Store::actor()
+        }))?;
+        swept.push(node);
+    }
+    Ok(swept)
+}
+
+/// Settledness for consumption (dc-6gn9): terminal by type, archived
+/// always. Unknown types (areas among them) hold their readings live.
+fn consumer_settled(c: &Node) -> bool {
+    if c.front.archived {
+        return true;
+    }
+    match c.front.ty.as_str() {
+        "item" => matches!(c.front.status.as_str(), "done" | "dropped"),
+        "thread" => matches!(c.front.status.as_str(), "resolved" | "dropped"),
+        "decision" => matches!(c.front.status.as_str(), "in-force" | "superseded"),
+        "claim" => matches!(c.front.status.as_str(), "refuted" | "superseded"),
+        "doc" => true,
+        _ => false,
+    }
 }
 
 #[derive(Debug)]

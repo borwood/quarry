@@ -15,7 +15,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 7e6fd77e3803
+  at: 6054c8a87fa5
 ---
 
 mint-time relatedness matches the title lexicon forward and nodehood reverse, for judgment

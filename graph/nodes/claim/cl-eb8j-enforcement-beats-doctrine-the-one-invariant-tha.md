@@ -2,12 +2,13 @@
 id: cl-eb8j
 type: claim
 title: '`enforcement-beats-doctrine`: the one invariant that stopped failing be…'
-v: 5
+v: 6
 status: asserted
 provenance: assistant
 created: 2026-08-10T06:16:39Z
 actor: claude
-kind: measured
+kind: reading
+archived: true
 edges:
 - rel: about
   to: ar-xa38

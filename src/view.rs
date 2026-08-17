@@ -662,12 +662,19 @@ function viewState(){
   html += panelT('Ready to dispatch', NODE_HD, ready.map(n => nodeRow(n)), 'nothing dispatchable');
   html += panelT('Shaping — upcoming work', NODE_HD.concat('Blocked on'),
     shaping.map(n => nodeRow(n, blockers(n).map(x => titleLink(x)).join(', ') || '—')), 'nothing sketched');
-  html += panelT('Behind — stale refs', ['Sev','Source','Rel','Target','Issue'],
-    behind.map(x =>
+  // The classifier (dc-6gn9): sediment — drift over readings — collapses
+  // to its ratified count; rot and breakage enumerate as wants-action.
+  const isSed = x => x.n.type==='claim' && x.n.kind==='reading' && x.s.sev>=3;
+  const rot = behind.filter(x => !isSed(x)), sed = behind.filter(isSed);
+  const rotRows = rot.map(x =>
       '<tr><td>'+statusDot(x.s.sev)+'</td><td>'+titleLink(x.n)+'</td>'
       + '<td class="rel">'+esc(x.e.rel)+'</td>'
       + '<td>'+(x.e.to.startsWith('file:') ? '<code>'+esc(x.e.to.slice(5))+'</code>' : (byId[x.e.to] ? titleLink(byId[x.e.to]) : esc(x.e.to)))+'</td>'
-      + '<td class="rel">'+esc(sevLabel[x.s.sev])+': '+esc(x.s.label)+'</td></tr>'), 'every ref current');
+      + '<td class="rel">'+esc(sevLabel[x.s.sev])+': '+esc(x.s.label)+'</td></tr>');
+  html += '<div class="panel"><h2>Behind — wants action</h2>'
+    + (rot.length ? tbl(['Sev','Source','Rel','Target','Issue'], rotRows) : '<p class="empty">every live ref current</p>')
+    + (sed.length ? '<p class="empty">sediment: '+sed.length+' dated reading(s) drifted with their sources - expected stratification, not rot</p>' : '')
+    + '</div>';
   const unver = DATA.nodes.filter(n => n.type==='claim' && n.provenance==='assistant' && n.status==='asserted' && !n.method).sort(byUpdatedDesc);
   html += panelT('Unverified assistant claims', NODE_HD, unver.map(n => nodeRow(n)), 'none');
   return html;

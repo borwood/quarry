@@ -2,8 +2,8 @@
 id: it-nmzn
 type: item
 title: 'sediment and rot: the reading split, the behind classifier, archive-on-consumption'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-17T07:29:40Z
 actor: claude

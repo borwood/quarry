@@ -1235,3 +1235,35 @@
 {"ts":"2026-08-17T08:36:39Z","node":"it-swsy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T08:36:39Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-17T08:36:39Z","node":"do-uj9c","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:58Z","node":"it-nmzn","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:58Z","node":"it-nmzn","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-17T08:36:58Z","node":"it-nmzn","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:58Z","node":"it-nmzn","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-17T08:37:08Z","node":"it-nmzn","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-nmzn","joined":"agent:a769b405185262231","session":"dispatcher"}
+{"op":"set","fields":["kind=reading"],"ts":"2026-08-17T08:58:12Z","node":"cl-eb8j","v":6,"actor":"claude-fable-5","note":"micro-pass under it-nmzn (dc-6gn9): judged a reading at the kind-pass with no vocabulary for it - a one-off value from the deepcraft autopsy, taken to inform dc-kpqg and dc-6gn9, done serving when they landed","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:58:12Z","node":"cl-eb8j","v":6,"op":"archive","cause":"consumption","actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:58:23Z","node":"cl-c34g","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:58:30Z","node":"cl-en99","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:58:30Z","node":"cl-qm6t","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:58:56Z","node":"cl-34ra","v":1,"op":"create","type":"claim","title":"`sediment-classifier`: behind carries the sediment/rot split at one point; surfaces collapse the strata to the ratified count","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"6054c8a87fa5","ts":"2026-08-17T08:58:56Z","node":"cl-34ra","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:01Z","node":"cl-aruk","v":1,"op":"create","type":"claim","title":"`consume-readings`: settling verbs sweep readings whose last live consumer settled; the sweep archives and says what it hid","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"3d01fde92bd6","ts":"2026-08-17T08:59:01Z","node":"cl-aruk","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:13Z","node":"cl-rr2j","v":1,"op":"create","type":"claim","title":"`affirm-teaching`: the species-shaped affirm line resolves at one point - re-read for instrumented, re-run for manual, sediment for readings","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"6054c8a87fa5","ts":"2026-08-17T08:59:13Z","node":"cl-rr2j","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:19Z","node":"cl-9z95","v":1,"op":"create","type":"claim","title":"`reading-kind`: reading and measured split at mint; behind tells sediment from rot; readings archive on consumption","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"41e8ebe2c745","ts":"2026-08-17T08:59:19Z","node":"cl-9z95","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"supports","to":"cl-9z95","at":2,"ts":"2026-08-17T08:59:29Z","node":"cl-34ra","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"supports","to":"cl-9z95","at":2,"ts":"2026-08-17T08:59:29Z","node":"cl-aruk","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"supports","to":"cl-9z95","at":2,"ts":"2026-08-17T08:59:29Z","node":"cl-rr2j","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"op":"link","rel":"supports","to":"dc-6gn9","at":5,"ts":"2026-08-17T08:59:29Z","node":"cl-9z95","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:36Z","node":"cl-34ra","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:36Z","node":"cl-aruk","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T08:59:36Z","node":"cl-rr2j","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-nmzn"}
+{"ts":"2026-08-17T09:03:29Z","node":"it-nmzn","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:02Z","node":"do-ahg4","v":1,"op":"create","type":"doc","title":"dispatch report: sediment and rot: the reading split, the behind classifier, archive-on-consumption","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-nmzn","at":5,"ts":"2026-08-17T09:04:03Z","node":"do-ahg4","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:11Z","node":"it-ez2y","v":1,"op":"create","type":"item","title":"re-source the standing measured claims to their instruments","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-17T09:04:15Z","node":"it-nmzn","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:17Z","node":"it-nmzn","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T09:04:25Z","node":"do-ahg4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

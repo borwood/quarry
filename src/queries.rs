@@ -70,11 +70,18 @@ pub struct Behind {
     pub current: String,
     pub severity: u8, // 1 dead target · 2 dangling · 3 content changed · 4 file drifted
     pub reason: String,
+    /// The classifier (dc-6gn9): sediment is ordinary drift (sev 3/4) under
+    /// a reading — dated by design, collapsed to a count at every surface.
+    /// Everything else — drift on living measurements, dead or dangling
+    /// targets anywhere — is rot or breakage and enumerates loud.
+    pub sediment: bool,
 }
 
 pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
     let mut out = Vec::new();
     for n in all {
+        let reading_src =
+            n.front.ty == "claim" && n.front.kind.as_deref() == Some("reading");
         for e in &n.front.edges {
             match &e.at {
                 At::V(v) => match all.iter().find(|t| t.front.id == e.to) {
@@ -88,6 +95,7 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                         current: "missing".into(),
                         severity: 2,
                         reason: "dangling — target not found".into(),
+                        sediment: false,
                     }),
                     Some(t) if t.front.v > *v => {
                         let dead = matches!(t.front.status.as_str(), "refuted" | "superseded");
@@ -105,6 +113,9 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                             } else {
                                 "target content changed".into()
                             },
+                            // A refuted or superseded source rots anywhere,
+                            // reading or not (dc-6gn9).
+                            sediment: reading_src && !dead,
                         });
                     }
                     _ => {}
@@ -122,6 +133,7 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                                 current: nb,
                                 severity: 4,
                                 reason: "file drifted".into(),
+                                sediment: reading_src,
                             }),
                             Err(_) => out.push(Behind {
                                 src: crate::surface::atom(all, n),
@@ -133,6 +145,7 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                                 current: "missing".into(),
                                 severity: 2,
                                 reason: "dangling — file not found".into(),
+                                sediment: false,
                             }),
                             _ => {}
                         }
@@ -155,6 +168,7 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
                             current: nb,
                             severity: 4,
                             reason: "registered doc drifted — affirm to bump".into(),
+                            sediment: false,
                         });
                     }
                 }
@@ -163,6 +177,37 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
     }
     out.sort_by_key(|b| b.severity);
     out
+}
+
+/// Affirm is species-shaped by method (dc-6gn9): the ratified teaching the
+/// affirm surface prints for the node under review. Test-methodized measured
+/// claims (a file:tests source — the instrument) teach re-read; manual
+/// measured claims teach re-run; readings teach their own sediment framing
+/// (an affirm on sediment was never owed). Prompts, never gates — the verb
+/// proceeds regardless.
+pub fn affirm_teaching(n: &Node) -> Option<&'static str> {
+    if n.front.ty != "claim" {
+        return None;
+    }
+    match n.front.kind.as_deref() {
+        Some("measured") => {
+            let instrumented = n.front.edges.iter().any(|e| {
+                e.rel == "source"
+                    && e.to.strip_prefix("file:").map_or(false, |f| {
+                        crate::store::strip_line(f)
+                            .split(['/', '\\'])
+                            .any(|c| c == "tests")
+                    })
+            });
+            Some(if instrumented {
+                crate::framings::AFFIRM_INSTRUMENT
+            } else {
+                crate::framings::AFFIRM_MANUAL
+            })
+        }
+        Some("reading") => Some(crate::framings::first_sentence(crate::framings::READINGS)),
+        _ => None,
+    }
 }
 
 /// Who leans on this node: forward closure of its `supports`, plus inbound
