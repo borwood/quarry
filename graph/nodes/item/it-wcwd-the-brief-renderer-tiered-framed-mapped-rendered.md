@@ -2,7 +2,7 @@
 id: it-wcwd
 type: item
 title: 'the brief renderer: tiered, framed, mapped, rendered once'
-v: 15
+v: 16
 status: ready
 provenance: assistant
 created: 2026-08-15T05:57:03Z
@@ -42,4 +42,7 @@ edges:
   at: 5
 ---
 
+
 Files the payload rulings (th-uacu settled by dc-casn; dials dc-xfgz, dc-3f5e, dc-83nk, dc-hjad, dc-gaa9): one renderer serves the brief and the area-open shelf per the surfacing-atom discipline (dc-nnf5). Hierarchy: contract first, semantics once, the map from the item's own record, your-writes, then the tiered backdrop - every section opening with framing prose in the user's ratified register (framings and the floor line ratify before landing; drafts on the settlement conversation). Evidence base: the payload spike (do-2g8m). Sequencing per dc-3f5e and dc-gaa9: the lexicon trio (it-nuw5, it-sc2u, it-b5tq) and the sweep (it-xzp7) land ahead; this item lands the shelf-by-claim-kind capability the sweep's standing line names.
+
+Glanced 2026-08-17 after the trust rulings (dc-drr6, dc-6gn9): shape stands, acceptance unchanged. The species set now includes reading - do-g8r4 carries its ratified framing and the Measured rewrite (the not-yet-ruled line is now ruled); assay marks and weight display are it-swsy cargo, layering on this renderer after it lands.

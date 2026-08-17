@@ -1160,3 +1160,9 @@
 {"ts":"2026-08-17T07:29:40Z","node":"it-nmzn","v":1,"op":"create","type":"item","title":"sediment and rot: the reading split, the behind classifier, archive-on-consumption","actor":"claude","note":null,"session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-drr6","at":5,"ts":"2026-08-17T07:29:53Z","node":"it-swsy","v":2,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-6gn9","at":5,"ts":"2026-08-17T07:29:53Z","node":"it-nmzn","v":2,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:50:12Z","node":"it-swsy","v":3,"actor":"claude","note":"verbiage ratified","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-17T07:50:12Z","node":"it-swsy","v":4,"actor":"claude","note":"verbiage pass complete; ready for the dispatcher feed","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:50:12Z","node":"it-nmzn","v":3,"actor":"claude","note":"verbiage ratified","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"shaped","ts":"2026-08-17T07:50:12Z","node":"it-nmzn","v":4,"actor":"claude","note":"verbiage pass complete; ready for the dispatcher feed","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:50:12Z","node":"it-wcwd","v":16,"actor":"claude","note":"post-rulings glance recorded; framings extended in do-g8r4","session":"quarry"}
+{"ts":"2026-08-17T07:50:26Z","node":"do-g8r4","v":2,"op":"affirm","restamped":2,"actor":"claude","session":"quarry"}
