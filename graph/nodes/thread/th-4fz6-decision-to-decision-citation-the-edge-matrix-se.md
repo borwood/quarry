@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: depends-on
   to: dc-cc76
-  at: 3
+  at: 4
 - rel: depends-on
   to: dc-grrb
   at: 4

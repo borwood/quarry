@@ -2783,3 +2783,250 @@ fn find_tiers_word_hits_first_loose_tail_last() {
         "id substring is tier one, never loose"
     );
 }
+
+// ── the brief renderer (it-wcwd): tiered, framed, mapped, rendered once ──
+
+#[test]
+fn brief_opens_with_floor_line_and_contract_first() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["bodies persist across reload".into()];
+    it.body = "build the graph".into();
+    let it = ops::new_node(&s, it).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    let preamble = text
+        .find("a floor, not the whole interface")
+        .expect("the ratified preamble opens every brief");
+    let ret = text.find("RETURN SPEC").unwrap();
+    let ws = text.find("WRITE-SET").unwrap();
+    let rf = text.find("READ-FIRST").unwrap();
+    assert!(preamble < ret, "floor line before the contract");
+    assert!(ret < ws && ws < rf, "contract precedes semantics: {} {} {}", ret, ws, rf);
+}
+
+#[test]
+fn backdrop_tiers_by_distinct_shared_terms() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d_full = NewArgs::bare("decision", "erosion carves canyon walls");
+    d_full.provenance = Some("user".into());
+    d_full.about = vec![area.front.id.clone()];
+    d_full.body =
+        "sediment transport is why erosion carves deepest\nsecond line rides the full render"
+            .into();
+    ops::new_node(&s, d_full).unwrap();
+    let mut d_trunc = NewArgs::bare("decision", "glacier retreat opens moraine");
+    d_trunc.provenance = Some("user".into());
+    d_trunc.about = vec![area.front.id.clone()];
+    d_trunc.body =
+        "the canyon line is the one that matters\nunrelated moraine detail hides".into();
+    let d_trunc = ops::new_node(&s, d_trunc).unwrap();
+    let mut d_none = NewArgs::bare("decision", "aquifer depth ruling");
+    d_none.provenance = Some("user".into());
+    d_none.about = vec![area.front.id.clone()];
+    d_none.body = "basalt columns cool evenly".into();
+    ops::new_node(&s, d_none).unwrap();
+    let mut it = NewArgs::bare("item", "canyon erosion survey");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["walls mapped".into()];
+    it.body = "map sediment walls of the canyon".into();
+    let it = ops::new_node(&s, it).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    // 3+ distinct shared terms: full body
+    assert!(
+        text.contains("second line rides the full render"),
+        "3+ terms earn the full body: {}",
+        text
+    );
+    // 1-2: truncated to matching lines, elision marked, dig-in closing
+    assert!(text.contains("the canyon line is the one that matters"), "matching line renders");
+    assert!(!text.contains("unrelated moraine detail hides"), "non-matching line elides");
+    assert!(
+        text.contains(&format!("q open {} if it appears to bear on your task", d_trunc.front.id)),
+        "the dig-in command closes the truncation"
+    );
+    assert!(text.contains("[...]"), "elision marks itself");
+    // 0: counted, never shown, reachable
+    assert!(!text.contains("basalt columns cool evenly"), "0-match body stays out");
+    assert!(text.contains("matched nothing here"), "the remainder is counted: {}", text);
+    // weight-then-alphabetical: the full-body entry leads the truncated one
+    assert!(
+        text.find("erosion carves canyon walls").unwrap()
+            < text.find("glacier retreat opens moraine").unwrap(),
+        "weight descending order"
+    );
+}
+
+#[test]
+fn shared_capability_name_is_automatic_full_body() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut c = NewArgs::bare("claim", "`core-shelf`: groups species rows");
+    c.kind = Some("vein".into());
+    c.provenance = Some("user".into());
+    c.about = vec![area.front.id.clone()];
+    c.body = "first line about grouping\nsecond line about nothing shared".into();
+    ops::new_node(&s, c).unwrap();
+    let mut it = NewArgs::bare("item", "render pass");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["lands `core-shelf`: the claim shelf renders".into()];
+    it.body = "build it".into();
+    let it = ops::new_node(&s, it).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(
+        text.contains("second line about nothing shared"),
+        "a shared backticked capability name is an automatic full body: {}",
+        text
+    );
+    assert!(text.contains("Veins are the counterforce"), "the ratified vein framing frames the section");
+}
+
+#[test]
+fn adjacency_multiplies_the_match() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mk_dec = |title: &str| {
+        let mut d = NewArgs::bare("decision", title);
+        d.provenance = Some("user".into());
+        d.about = vec![area.front.id.clone()];
+        ops::new_node(&s, d).unwrap()
+    };
+    let x1 = mk_dec("silt gauging protocol");
+    let x2 = mk_dec("flume calibration ruling");
+    // the candidate: one lexical match plus two cared edges into the adjacency set
+    let mut cand = NewArgs::bare("decision", "delta sediment canyon");
+    cand.provenance = Some("user".into());
+    cand.about = vec![area.front.id.clone()];
+    cand.body = "canyon deltas shift\nhidden line adjacency reveals".into();
+    let cand = ops::new_node(&s, cand).unwrap();
+    ops::link(&s, &cand.front.id, "builds-on", &x1.front.id, false, None).unwrap();
+    ops::link(&s, &cand.front.id, "builds-on", &x2.front.id, false, None).unwrap();
+    let mut it = NewArgs::bare("item", "canyon erosion survey");
+    it.about = vec![area.front.id.clone()];
+    it.body = "map the walls".into();
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &x1.front.id, false, None).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &x2.front.id, false, None).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(
+        text.contains("hidden line adjacency reveals"),
+        "1 lexical match + 2 adjacency edges clears the full-body tier: {}",
+        text
+    );
+}
+
+#[test]
+fn claim_shelf_renders_per_species_and_area_open_carries_it() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mk_claim = |title: &str, kind: &str| {
+        let mut c = NewArgs::bare("claim", title);
+        c.kind = Some(kind.into());
+        c.provenance = Some("user".into());
+        c.about = vec![area.front.id.clone()];
+        ops::new_node(&s, c).unwrap()
+    };
+    mk_claim("`silt-gauge`: reads the flume", "vein");
+    mk_claim("`delta-index`: the receipt of deltas", "feature");
+    mk_claim("flume throughput holds at depth", "measured");
+    mk_claim("august silt values inform the weir", "reading");
+    let text = quarry::render::open(&s, &area.front.id, false).unwrap();
+    assert!(text.contains("claims shelf"), "area open carries the species shelf: {}", text);
+    assert!(text.contains("VEINS — In a human codebase"), "one-line disposition frames the species");
+    assert!(text.contains("RECEIPTS — Receipts are the index"));
+    assert!(text.contains("MEASURED — Measured claims are living facts"));
+    assert!(text.contains("READINGS — Readings are values taken at a moment"));
+    assert!(!text.contains("handrolling anew"), "the old hint line died into the shelf");
+    // the brief renders the same species sections, framed in full
+    let mut it = NewArgs::bare("item", "weir survey");
+    it.about = vec![area.front.id.clone()];
+    it.body = "study the flume and the weir".into();
+    let it = ops::new_node(&s, it).unwrap();
+    let brief = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(brief.contains("VEINS:"), "brief claim shelf groups per species: {}", brief);
+    assert!(brief.contains("READINGS:"));
+    assert!(brief.contains("sediment, not signal"), "the readings framing ships ratified");
+}
+
+#[test]
+fn brief_map_renders_file_geography_claims_and_mentions() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("src")).unwrap();
+    std::fs::write(s.root.join("src").join("hydro.rs"), "fn flow() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut it = NewArgs::bare("item", "weir survey");
+    it.about = vec![area.front.id.clone()];
+    it.body = "study the weir".into();
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "about", "file:src/hydro.rs", false, None).unwrap();
+    // a claim over the same file — deliberately zero lexical overlap
+    ops::claim(
+        &s,
+        "the flow mechanism holds through regeneration",
+        None,
+        vec!["file:src/hydro.rs".to_string()],
+        Some("file:src/hydro.rs".into()),
+        None,
+        Some("assistant".into()),
+        None,
+    )
+    .unwrap();
+    // a body that cites the item
+    let mut th = NewArgs::bare("thread", "does the weir shade the flume?");
+    th.provenance = Some("user".into());
+    th.about = vec![area.front.id.clone()];
+    th.body = format!("evidence may come from {}", it.front.id);
+    ops::new_node(&s, th).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(text.contains("THE MAP"), "the map renders: {}", text);
+    assert!(text.contains("file:src/hydro.rs"), "the item's file edges render with blobs");
+    assert!(
+        text.contains("the flow mechanism holds"),
+        "claims over the item's files ride the map at full fidelity"
+    );
+    assert!(text.contains("mentioned by"), "the item's mentioned-by backlinks ride the map");
+    assert!(text.contains("does the weir shade the flume?"), "the citing body appears");
+}
+
+#[test]
+fn render_once_a_read_first_body_refs_in_backdrop() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "erosion carves canyon walls");
+    d.provenance = Some("user".into());
+    d.about = vec![area.front.id.clone()];
+    d.body = "distinctive-erosion-substance holds the canyon walls story".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "canyon erosion survey");
+    it.about = vec![area.front.id.clone()];
+    it.body = "map sediment walls of the canyon".into();
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &d.front.id, false, None).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert_eq!(
+        text.matches("distinctive-erosion-substance").count(),
+        1,
+        "a node renders once at its highest earned fidelity: {}",
+        text
+    );
+    assert!(text.contains("body in READ-FIRST above"), "the backdrop position is a one-line ref");
+}
+
+#[test]
+fn your_writes_states_expected_acts_by_kind() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut it = NewArgs::bare("item", "weir survey");
+    it.kind = Some("slice".into());
+    it.about = vec![area.front.id.clone()];
+    it.body = "study the weir".into();
+    let it = ops::new_node(&s, it).unwrap();
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(text.contains("YOUR-WRITES"), "the your-writes section renders: {}", text);
+    assert!(text.contains("a `vein` for each mechanism"), "slice expectation derives from kind");
+    assert!(text.contains("fool's gold"), "the ratified close ships");
+    assert!(text.contains("--kind <species>"), "the claim shape is stated");
+}

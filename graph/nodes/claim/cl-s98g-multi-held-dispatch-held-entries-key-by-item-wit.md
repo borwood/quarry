@@ -17,7 +17,7 @@ edges:
   at: 82d257402a03
 - rel: supersedes
   to: cl-amza
-  at: 4
+  at: 5
 - rel: supports
   to: dc-qyr5
   at: 2

@@ -19,7 +19,7 @@ edges:
   at: 5
 - rel: depends-on
   to: it-wcwd
-  at: 16
+  at: 18
 ---
 
 Build item for dc-drr6. Also lands load-display: shelves show weight held derived from supports edges, and the load-bearing-but-never-assayed query warns - fool's gold named at the surface. Depth rider: every touched surface teaches the assay (harvest line, claim help, shelf marks, warning query line); verbiage drafts return for user ratification before ship (dc-dsdm). Sub-fork held least-committal: standing claims stay asserted until load, affirm, or a reviewed retroactive pass reaches them - the pass is available on ask.

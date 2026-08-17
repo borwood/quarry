@@ -1,0 +1,40 @@
+# DISPATCH REPORT — it-wcwd, the brief renderer: tiered, framed, mapped, rendered once
+
+All writes stayed inside the lease: `src/lib.rs`, `src/queries.rs`, `src/render.rs`, `tests/basic.rs` modified, `src/framings.rs` new; graph writes went through q verbs under the badge. Sanity checks: full suite green (77 passed, 0 failed, plus the surface lint), release binary rebuilt, and both live specimens (the dispatch's own brief, the cli area open) render correctly.
+
+## Against the RETURN spec
+
+**`match-tiers` — landed.** Every backdrop section (claims per species, decisions, threads, docs) tiers by distinct shared terms plus adjacency weight. Terms are the title lexicon (compounds whole plus five-plus halves) plus backticked names from title, body, and acceptance, matched both directions through the trio-repaired `contains_word` — plural fold, compound halves, and the two-char backtick floor all reach the shelf. 0 terms → counted remainder with its reach-them hint; 1-2 → atom line plus only the body lines carrying a match, elisions marked `[...]`, closing with `(q open <id> if it appears to bear on your task)`; 3+ → full body; a shared backticked capability name is automatic full body. Adjacency (dc-hjad): +1 per depends-on/builds-on/supports edge between the candidate and the item or its one-edge neighborhood, applied only with at least one lexical match — the test proves 1 match + 2 adjacency edges clears full body. Ordering is weight descending then alphabetical. Machinery: `queries::ShelfCtx`/`shelf_match` (src/queries.rs), rendering: `backdrop_section` (src/render.rs). Method: tests `backdrop_tiers_by_distinct_shared_terms`, `shared_capability_name_is_automatic_full_body`, `adjacency_multiplies_the_match`, plus the live specimen below.
+
+**`shelf-by-claim-kind` — landed, satisfying it-xzp7's standing line under the same name.** Claims group per species — vein, feature (RECEIPTS), measured, reading, contract — each opening with its ratified framing; unknown kinds group under their own string, kindless render plainly (engine stays kindless-but-kind-aware). One renderer serves both registers per dc-nnf5: the brief tiers with full framings; `q open <area>` renders the same shelf at the directory register — the framing's first sentence as the one-line disposition plus atom lines — replacing the old claim-backlink hint line. Method: test `claim_shelf_renders_per_species_and_area_open_carries_it`; live `q open ar-c7f5` shows VEINS and MEASURED groups with dispositions.
+
+**`brief-map` — landed.** THE MAP renders the item's own file: edges with blob drift status, live claims whose about/source file edges overlap those paths at full fidelity, and the item's derived mentioned-by — full fidelity regardless of match, skipped silently when the item carries neither file edges nor citations (correctly absent from it-wcwd's own brief). Method: test `brief_map_renders_file_geography_claims_and_mentions`.
+
+**`render-once` — landed.** A placed-map keyed by node id records which section rendered a body (READ-FIRST and THE MAP seed; backdrop consumes); every later position renders a one-line ref (`— body in READ-FIRST above`). Live proof: dc-casn, dc-drr6, dc-6gn9 render whole in READ-FIRST and appear as one-line refs in DECISIONS. Method: test `render_once_a_read_first_body_refs_in_backdrop` (distinctive string count == 1).
+
+**`floor-line` — landed.** Every brief opens with the ratified preamble carrying the floor line; all framings ship as engine defaults in `src/framings.rs`, verbatim from do-g8r4 — preamble, five species framings (the ruled Measured rewrite and the Readings framing included), decisions/threads/docs framings, your-writes frame. The vein framing deliberately ships **without** the assay sentence per do-g8r4's own note — that sentence is it-swsy cargo. Method: test `brief_opens_with_floor_line_and_contract_first` (also proves contract-first hierarchy: RETURN → WRITE-SET → PROTOCOL before READ-FIRST).
+
+**`your-writes` — landed.** The section renders the ratified frame around a derived expected-acts bracket: species expectation by item kind (slice → vein + feature receipt; spike → readings; bug/debt → vein where extracted + affirms; catch-all names all five species), the claim shape with grounding flags, edges by q link; the ratified close carries the legal rels (dc-ez67) and the assay warning. Method: test `your_writes_states_expected_acts_by_kind`.
+
+**Live specimen:** `q brief it-wcwd` under the new binary is 313 lines with visibly correct selection — the renderer-adjacent veins lead with full bodies, the dispatch-machinery corpus sits behind dig-ins, and remainders count ("11 more matched nothing here — the full shelf: q open ar-c7f5").
+
+## Graph acts under the badge
+
+Six vein claims, one per acceptance name, each `--about ar-c7f5` and sourced: cl-pmm3 (`match-tiers`, src/queries.rs), cl-866n (`shelf-by-claim-kind`), cl-yjce (`brief-map`), cl-jdg3 (`render-once`), cl-h3r8 (`floor-line`, src/framings.rs), cl-9vvr (`your-writes`) — kinds set by `q set kind=vein` since q claim mints kindless (the standing it-pgn9 gap, felt live). Intent delta for cli confirms all six names landed. No edges built beyond the mints' own — mentions carry the relations.
+
+## Flagged for the harvester (compositions and provisional calls, per dc-dsdm)
+
+1. **Composed, not ratified:** the your-writes derived bracket (species-by-kind sentences), and the mechanical section strings — "BACKDROP (…tiered against this work…)", "THE MAP (the item's own record — rendered whole regardless of match)", "claims shelf — this area's record by species (…)", "matched nothing here — the full shelf/record: q open <area>", "body in <section> above". Review at harvest; all framing prose proper is verbatim do-g8r4.
+2. **Term matching interpretation:** terms extract from titles and backticked spans (of title+body+acceptance) and match against the other side's full text — bare body words appearing in neither a title nor backticks do not join. Read as dc-xfgz's intent (the lexicon is title-first by construction); a stricter body-vs-body reading would balloon counts with no damping.
+3. **Area-open register:** first-sentence dispositions instead of full framings — a reading of the dc-dsdm craft constraint ("each framing's first sentence stands alone as the one-line disposition"); full framings ride the brief.
+4. Threads lost the per-line "NOT yours to settle" suffix — dc-hjad puts the C3 guardrail in the framing, which now does that work.
+5. Dead claims (refuted/superseded) stay ordinary area-open backlinks; the shelf carries live claims only.
+6. Evidence docs stay atom-register in READ-FIRST; if one earns full in the DOCS backdrop the body renders there, once — a resolution of dc-xfgz's "higher section" vs "highest earned fidelity" phrasing.
+7. `docs/brief-framings.md` leased but untouched — nothing needed changing (the v2 prose had already landed from the trust conversation).
+
+## Reflections
+
+The trio-first sequencing (dc-3f5e) proved itself immediately: the capability-name automatic-full-body path only works because compound names and two-char backticks now join — `shelf-by-claim-kind` connected this item to dc-casn's body at mint time. Two doubts worth keeping: distinct-term counting treats an inflected pair (watch/watches) matched via the fold as two distinct terms in rare cases — cosmetic weight inflation, invisible in practice. And the truncated register on prose whose every line mentions a common matched term renders nearly-full bodies; the no-damping ruling accepts this, but "ballooning evidence" should be watched at the shelf, where the ontology words are densest. The strongest impression: rendering the dispatch's own brief with its own renderer at the end — the dump the agent woke into became a document where everything visible had a reason to be visible, and everything hidden said where it went.
+
+---
+Harvested by the dispatcher 2026-08-17: observed-vs-leased clean (5 files, all in-lease), suite re-run and read raw (77 passed, 0 failed), framings verified verbatim against docs/brief-framings.md v2, live specimen re-rendered. Landed done.

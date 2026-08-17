@@ -1191,3 +1191,47 @@
 {"ts":"2026-08-17T08:04:55Z","node":"th-er78","v":4,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-17T08:04:55Z","node":"th-nc7d","v":7,"op":"archive","actor":"claude","session":"quarry"}
 {"ts":"2026-08-17T08:04:55Z","node":"th-uacu","v":4,"op":"archive","actor":"claude","session":"quarry"}
+{"ts":"2026-08-17T08:06:29Z","node":"it-wcwd","v":16,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:06:47Z","node":"it-wcwd","v":16,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:06:47Z","node":"it-wcwd","v":16,"op":"reserve","globs":["src/**","tests/**","docs/brief-framings.md"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-17T08:06:47Z","node":"it-wcwd","v":17,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:06:47Z","node":"it-wcwd","v":16,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**","docs/brief-framings.md"]}
+{"ts":"2026-08-17T08:07:04Z","node":"it-wcwd","v":17,"op":"join","actor":"claude-fable-5","dispatch":"it-wcwd","joined":"agent:ac719a9558d38f480","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"cl-9nxr","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"cl-ahzk","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"cl-s98g","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"it-swsy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"th-4fz6","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"th-dbn4","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"cl-qm6t","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:11:10Z","node":"do-hvmd","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:29:58Z","node":"it-wcwd","v":17,"op":"brief","actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:05Z","node":"cl-pmm3","v":1,"op":"create","type":"claim","title":"`match-tiers`: backdrop sections tier by distinct shared terms; adjacency multiplies a lexical match","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"fc5971117294","ts":"2026-08-17T08:31:05Z","node":"cl-pmm3","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:16Z","node":"cl-866n","v":1,"op":"create","type":"claim","title":"`shelf-by-claim-kind`: the claim shelf renders per species with ratified framing prose, in the brief and at area open","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"5762e22f59c0","ts":"2026-08-17T08:31:16Z","node":"cl-866n","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:27Z","node":"cl-yjce","v":1,"op":"create","type":"claim","title":"`brief-map`: the item file edges with blobs, claims over those files, and mentioned-by render whole","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"5762e22f59c0","ts":"2026-08-17T08:31:27Z","node":"cl-yjce","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:27Z","node":"cl-jdg3","v":1,"op":"create","type":"claim","title":"`render-once`: a node renders once at its highest earned fidelity; every other position is a one-line ref","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"5762e22f59c0","ts":"2026-08-17T08:31:27Z","node":"cl-jdg3","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:39Z","node":"cl-h3r8","v":1,"op":"create","type":"claim","title":"`floor-line`: every brief opens with the ratified preamble; section framings ship as engine defaults","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/framings.rs","at":"f67385f423a4","ts":"2026-08-17T08:31:39Z","node":"cl-h3r8","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:31:40Z","node":"cl-9vvr","v":1,"op":"create","type":"claim","title":"`your-writes`: the brief states the expected graph acts — species expectation by item kind, grounding, legal edges","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"5762e22f59c0","ts":"2026-08-17T08:31:40Z","node":"cl-9vvr","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:49Z","node":"cl-pmm3","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:49Z","node":"cl-866n","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:49Z","node":"cl-yjce","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:50Z","node":"cl-jdg3","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:50Z","node":"cl-h3r8","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"op":"set","fields":["kind=vein"],"ts":"2026-08-17T08:31:50Z","node":"cl-9vvr","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-wcwd"}
+{"ts":"2026-08-17T08:34:54Z","node":"it-wcwd","v":17,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:35:23Z","node":"it-nmzn","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:12Z","node":"do-uj9c","v":1,"op":"create","type":"doc","title":"dispatch report: the brief renderer: tiered, framed, mapped, rendered once","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-wcwd","at":17,"ts":"2026-08-17T08:36:12Z","node":"do-uj9c","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:23Z","node":"th-4w3a","v":1,"op":"create","type":"thread","title":"renderer composed strings: ratify or amend the mechanical register","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-17T08:36:30Z","node":"it-wcwd","v":18,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:31Z","node":"it-wcwd","v":18,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:39Z","node":"it-swsy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:39Z","node":"do-g8r4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-17T08:36:39Z","node":"do-uj9c","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

@@ -313,7 +313,7 @@ pub fn backticked_spans(text: &str) -> Vec<String> {
 /// both directions — watches meets watch, leases meets lease. This fold
 /// is the remaining deliberate divergence from `find_word` below, find's
 /// predicate, which stays exact for short human queries.
-fn contains_word(text: &str, word: &str) -> bool {
+pub(crate) fn contains_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
     }
@@ -551,6 +551,139 @@ pub fn intent_delta<'a>(all: &'a [Node], area: Option<&str>) -> IntentDelta<'a> 
         }
     }
     IntentDelta { unlanded, unintended }
+}
+
+/// The shelf match (dc-xfgz, dc-hjad): how strongly a backdrop candidate
+/// bears on the dispatched work. Distinct shared terms count, occurrences
+/// never; no term damping — in this register the common words are the
+/// ontology. The adjacency bonus applies only with at least one lexical
+/// match; a shared backticked capability name is the automatic-full-body
+/// signal, tier machinery aside.
+pub struct ShelfMatch {
+    /// Distinct shared terms plus the adjacency bonus — the sort key
+    /// (weight descending, then alphabetical by title).
+    pub weight: i32,
+    /// The matched terms themselves (lowercased) — the truncated register
+    /// renders exactly the body lines carrying one of these.
+    pub terms: Vec<String>,
+    /// A backticked capability name shared by both sides: automatic full
+    /// body (dc-xfgz).
+    pub capability: bool,
+}
+
+/// The work item's side of the shelf match, resolved once per brief:
+/// its match text (title + body + acceptance, lowercased), its term set
+/// (title lexicon plus backticked names — the trio-repaired join: plural
+/// fold, compound halves, two-char backtick floor all apply), and the
+/// adjacency set (dc-hjad): every node one cared-about edge — depends-on,
+/// builds-on, supports — from the item, either direction. about is
+/// excluded (area membership is the backdrop's baseline); part-of is
+/// excluded (hierarchy is th-zzqv's business).
+pub struct ShelfCtx {
+    pub item_id: String,
+    pub text: String,
+    pub terms: Vec<String>,
+    pub ticks: Vec<String>,
+    pub adjacent: HashSet<String>,
+}
+
+fn cared_rel(rel: &str) -> bool {
+    matches!(rel, "depends-on" | "builds-on" | "supports")
+}
+
+/// Match text of a node: title, body, and acceptance capability names —
+/// the three surfaces dc-xfgz says matching reads, on both sides.
+fn match_text(n: &Node) -> String {
+    format!(
+        "{}\n{}\n{}",
+        crate::surface::title_raw(n),
+        n.body,
+        n.front.acceptance.join("\n")
+    )
+    .to_lowercase()
+}
+
+/// A node's term set: the title lexicon (compounds whole plus their
+/// five-plus halves, it-sc2u) plus every backticked name in its match
+/// text (two-char floor, dc-qvtz) — deliberate names join from either
+/// side's body or acceptance, not only titles.
+fn shelf_terms(n: &Node) -> (Vec<String>, Vec<String>) {
+    let ticks = backticked_spans(&match_text(n));
+    let mut terms = sig_tokens(crate::surface::title_raw(n));
+    for t in &ticks {
+        if !terms.iter().any(|x| x == t) {
+            terms.push(t.clone());
+        }
+    }
+    (terms, ticks)
+}
+
+pub fn shelf_ctx(all: &[Node], item: &Node) -> ShelfCtx {
+    let mut adjacent: HashSet<String> = HashSet::new();
+    for e in &item.front.edges {
+        if cared_rel(&e.rel) && !e.to.starts_with("file:") {
+            adjacent.insert(e.to.clone());
+        }
+    }
+    for n in all {
+        if n.front.edges.iter().any(|e| cared_rel(&e.rel) && e.to == item.front.id) {
+            adjacent.insert(n.front.id.clone());
+        }
+    }
+    let (terms, ticks) = shelf_terms(item);
+    ShelfCtx {
+        item_id: item.front.id.clone(),
+        text: match_text(item),
+        terms,
+        ticks,
+        adjacent,
+    }
+}
+
+/// Score one backdrop candidate against the work (dc-xfgz tiers,
+/// dc-hjad adjacency). Terms match through `contains_word` — the
+/// trio-repaired lexicon join — in both directions; the bonus is +1 per
+/// cared-about edge between the candidate and the item or its adjacency
+/// set, and applies only when at least one term matched.
+pub fn shelf_match(all: &[Node], ctx: &ShelfCtx, cand: &Node) -> ShelfMatch {
+    let cand_text = match_text(cand);
+    let (cand_terms, cand_ticks) = shelf_terms(cand);
+    let mut terms: Vec<String> = Vec::new();
+    for t in &cand_terms {
+        if contains_word(&ctx.text, t) && !terms.iter().any(|x| x == t) {
+            terms.push(t.clone());
+        }
+    }
+    for t in &ctx.terms {
+        if contains_word(&cand_text, t) && !terms.iter().any(|x| x == t) {
+            terms.push(t.clone());
+        }
+    }
+    let capability = ctx.ticks.iter().any(|t| cand_ticks.contains(t));
+    let mut weight = terms.len() as i32;
+    if weight > 0 {
+        let leans_on = |to: &str| to == ctx.item_id || ctx.adjacent.contains(to);
+        let mut bonus = cand
+            .front
+            .edges
+            .iter()
+            .filter(|e| cared_rel(&e.rel) && leans_on(&e.to))
+            .count();
+        for n in all {
+            if n.front.id != cand.front.id
+                && (n.front.id == ctx.item_id || ctx.adjacent.contains(&n.front.id))
+            {
+                bonus += n
+                    .front
+                    .edges
+                    .iter()
+                    .filter(|e| cared_rel(&e.rel) && e.to == cand.front.id)
+                    .count();
+            }
+        }
+        weight += bonus as i32;
+    }
+    ShelfMatch { weight, terms, capability }
 }
 
 /// Citers of `id` whose stamp is now behind the target's version — the
