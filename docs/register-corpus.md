@@ -61,3 +61,65 @@ hit):
 - A structural lesson generalizes: one instance of a pattern (area-less
   find hits) warrants auditing the whole class (every surfacing register),
   not patching the instance.
+
+## 2026-08-15/17 — the vein and trust session
+
+**Verbatim, rejecting bedrock for the register:**
+
+> Actually veins as bedrock are a mixed metaphor - bedrock does not run in
+> veins. Veins are precious ore to be refined and wrought. The codebase
+> ideally is maximally made of veins - "good" veins (whatever that means).
+> In other words it is a continuous structure, like a tree or spine+bones,
+> that is hard won, precious, and prospected for - requiring much
+> consideration, questing, sensing, uncovering, appraising.
+
+**Verbatim, ruling archive-on-consumption:**
+
+> if there's only one end for an item after a condition, automating it
+> reduces overall dependency on agent discipline and attention budget
+
+**Verbatim, founding the cold-encounter practice:**
+
+> let's make a practice of imagining what it should be like for a cold
+> agent to encounter any terms.
+
+**Verbatim, on the render backticks:**
+
+> render output strings carried backticks originally to promote the meme
+> and understanding that backticked phrases are purposeful names
+
+**Register notes observed this session:**
+
+- Teaches philosophy Socratically — poses a pop quiz inviting the agent
+  into a frame rather than lecturing it ("this is appropriate to our
+  circumstances in AI native codebases why?").
+- Extends structural insight past the offered scope when the marginal
+  instance is free: asked whether historical nodes are even perceivable
+  as historical, then ruled the full rename — "there's literally no
+  reason to save it for later."
+- Runs multi-part designs one species at a time, demanding cold-reader
+  unpacks; names their own experience limits and asks for pushback ("i do
+  not have enough experience low level to reason through this alone").
+- Reasons from concrete inventories before abstracting: enumerated where
+  living measurements actually appear before questioning whether the
+  species deserves to exist.
+- Hunts a proposed node type's double before accepting it ("there's the
+  test, and there's the node") — suspicious of parallel authorities,
+  consistent with no-second-authority-that-drifts.
+- Delegates sequencing to session judgment when held context is the
+  differentiator ("pull whichever you think is the natural next...
+  leveraging your context").
+- Closes sessions by asking where held context is best spent before the
+  boundary sweeps it.
+
+**Decision heuristics, candidate until confirmed by recurrence:**
+
+- Single-outcome transitions automate; automated boundary acts return
+  discipline budget to judgment work.
+- A metaphor must be load-bearing in its own economy — mixed register is
+  rejected even when each word is individually apt.
+- Terms are audited by the cold first meeting: the prior does the
+  teaching, or the surface must.
+- Defect-class findings file as bugs regardless of size; watch stays
+  reserved for accepted compromises with a named trigger (reaffirmed:
+  "file as bugs").

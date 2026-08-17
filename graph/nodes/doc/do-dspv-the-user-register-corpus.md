@@ -9,7 +9,7 @@ created: 2026-08-11T10:30:31Z
 actor: claude
 kind: corpus
 path: docs/register-corpus.md
-blob: 3721659da1e4
+blob: 429bc7cc7399
 edges:
 - rel: about
   to: ar-xa38

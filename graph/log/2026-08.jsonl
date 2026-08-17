@@ -1167,3 +1167,9 @@
 {"op":"body","ts":"2026-08-17T07:50:12Z","node":"it-wcwd","v":16,"actor":"claude","note":"post-rulings glance recorded; framings extended in do-g8r4","session":"quarry"}
 {"ts":"2026-08-17T07:50:26Z","node":"do-g8r4","v":2,"op":"affirm","restamped":2,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"it-wcwd","at":16,"ts":"2026-08-17T07:50:45Z","node":"it-swsy","v":5,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:53:42Z","node":"th-zzqv","v":2,"actor":"claude","note":"trio-as-bundle evidence","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:53:42Z","node":"th-wxr9","v":2,"actor":"claude","note":"acceptance-first dispatch evidence","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:53:43Z","node":"th-yzmj","v":6,"actor":"claude","note":"trust rulings bear on the summarizer","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:53:43Z","node":"th-qv27","v":5,"actor":"claude","note":"seed pack and cold-encounter dogear","session":"quarry"}
+{"op":"body","ts":"2026-08-17T07:53:43Z","node":"th-bjk2","v":3,"actor":"claude","note":"pre-wrap spend-down evidence","session":"quarry"}
+{"ts":"2026-08-17T07:54:02Z","node":"do-dspv","v":1,"op":"affirm","restamped":1,"actor":"claude","session":"quarry"}
