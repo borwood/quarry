@@ -84,6 +84,41 @@ pub fn awaiting_acceptance<'a>(all: &'a [Node]) -> Vec<&'a Node> {
     v
 }
 
+/// The lean prompt's enumeration (dc-ez67, dc-grrb; it-6349): body-cited
+/// decisions and claims with no edge between them and the item in either
+/// direction, each paired with its ready-made link command — depends-on
+/// for a ruling the item stands on; supports, reversed, for a claim that
+/// holds the item up (item → claim has no legal rel; the lean runs claim
+/// → item, which is exactly how weight_held counts the load). Superseded,
+/// refuted, and archived targets never enumerate — the prompt recommends
+/// leans, and leaning on settled strata is C5's deliberate act, never a
+/// recommendation. Derived at the flip to ready, rendered as a presence
+/// prompt, never a gate: mention-only is often correct, and the judgment
+/// is the shaper's, at the station where shaping completes.
+pub fn unleaned_citations<'a>(all: &'a [Node], item: &Node) -> Vec<(&'a Node, String)> {
+    crate::mention::mentions_out(all, item)
+        .into_iter()
+        .filter(|t| !t.front.archived)
+        .filter(|t| match t.front.ty.as_str() {
+            "decision" => t.front.status == "in-force",
+            "claim" => !matches!(t.front.status.as_str(), "refuted" | "superseded"),
+            _ => false,
+        })
+        .filter(|t| {
+            !item.front.edges.iter().any(|e| e.to == t.front.id)
+                && !t.front.edges.iter().any(|e| e.to == item.front.id)
+        })
+        .map(|t| {
+            let cmd = if t.front.ty == "decision" {
+                format!("q link {} depends-on {}", item.front.id, t.front.id)
+            } else {
+                format!("q link {} supports {}", t.front.id, item.front.id)
+            };
+            (t, cmd)
+        })
+        .collect()
+}
+
 /// A stale citation, carried as ATOMS (carrier-replumb, dc-nnf5): the print
 /// layer can render any register from this without a starved (id, title)
 /// pair baking the missing fields into the data layer.

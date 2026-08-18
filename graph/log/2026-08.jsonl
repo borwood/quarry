@@ -1347,3 +1347,36 @@
 {"ts":"2026-08-18T01:27:56Z","node":"cl-88ma","v":2,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T01:27:58Z","node":"it-33bb","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T01:28:14Z","node":"do-4hbt","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-18T01:34:41Z","node":"th-4w3a","v":5,"actor":"claude","note":"run one part one: the renderer's six composed strings user-ratified as-is","session":"quarry"}
+{"op":"body","ts":"2026-08-18T01:47:31Z","node":"th-4w3a","v":6,"actor":"claude","note":"run one closed: renderer strings and interpretive calls all user-ratified","session":"quarry"}
+{"op":"body","ts":"2026-08-18T01:51:08Z","node":"th-4w3a","v":7,"actor":"claude","note":"run two closed: sediment-and-rot strings user-ratified as-is","session":"quarry"}
+{"ts":"2026-08-18T01:56:53Z","node":"dc-vzvf","v":1,"op":"create","type":"decision","title":"the composed register across three landings is ratified as-is; the flag channel stands","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-vzvf","ts":"2026-08-18T01:56:53Z","node":"th-4w3a","v":8,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-4w3a","at":8,"ts":"2026-08-18T01:56:53Z","node":"dc-vzvf","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T02:06:48Z","node":"it-fwn3","v":1,"op":"create","type":"item","title":"load-bearing unassayed claims surface on the design wake","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-p6z4","at":2,"ts":"2026-08-18T02:06:56Z","node":"it-fwn3","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-drr6","at":5,"ts":"2026-08-18T02:06:56Z","node":"it-fwn3","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `unassayed-wake`: the design-kind wake counts load-bearing unassayed claims beside owed threads, query command in hand","acceptance+=holds the boundary: zero-holds unassayed never counts on the wake - the set is waiter-earned; the general pressure question stays with th-jvwe","status=ready"],"from_status":"sketch","ts":"2026-08-18T02:06:56Z","node":"it-fwn3","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T02:08:14Z","node":"it-6349","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:08:14Z","node":"it-6349","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T02:08:14Z","node":"it-6349","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:08:14Z","node":"it-6349","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T02:08:36Z","node":"it-6349","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-6349","joined":"agent:a9de1eb93a33b3b51","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=lands `vein-prompt`: a kindless mint with a backtick-name-first title draws the vein species question at every mint surface (q claim, q new, q rule), settle command in hand - prompt, never a gate","acceptance+=lands `land-time-ask`: harvest lists kindless backtick-titled badge mints with the settle command before ratification passes them by asserted - the silent-repair path (the cl-ybth instance) is dead","status=ready"],"from_status":"sketch","ts":"2026-08-18T02:09:38Z","node":"it-pgn9","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T02:19:01Z","node":"cl-gd6c","v":1,"op":"create","type":"claim","title":"`lean-prompt`: the flip to ready enumerates un-edged body citations beside ready-made link commands; the why taught, the close open-ended","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-6349"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"a9965eaee3fb","ts":"2026-08-18T02:19:01Z","node":"cl-gd6c","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-6349"}
+{"ts":"2026-08-18T02:19:13Z","node":"cl-btnr","v":1,"op":"create","type":"claim","title":"`legal-rels`: the edge matrix has one authority — a refusal derives the pair redirect from the same check that refused","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-6349"}
+{"op":"link","rel":"source","to":"file:src/model.rs","at":"f588d937ada9","ts":"2026-08-18T02:19:14Z","node":"cl-btnr","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-6349"}
+{"ts":"2026-08-18T02:19:25Z","node":"cl-5ggz","v":1,"op":"create","type":"claim","title":"`ready-teaches-leans`: ready enumerates un-edged mentions with the why; refused links redirect to the pair legal rels","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-6349"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"a1772490e64e","ts":"2026-08-18T02:19:25Z","node":"cl-5ggz","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-6349"}
+{"op":"link","rel":"supports","to":"cl-5ggz","at":2,"ts":"2026-08-18T02:19:31Z","node":"cl-gd6c","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-6349"}
+{"op":"link","rel":"supports","to":"cl-5ggz","at":2,"ts":"2026-08-18T02:19:31Z","node":"cl-btnr","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-6349"}
+{"ts":"2026-08-18T02:21:19Z","node":"it-6349","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:21:54Z","node":"do-5945","v":1,"op":"create","type":"doc","title":"dispatch report: ready teaches the leans: un-edged mentions enumerate with the why; refused links name the legal rels","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-6349","at":5,"ts":"2026-08-18T02:21:54Z","node":"do-5945","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T02:21:54Z","node":"it-6349","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:21:54Z","node":"cl-gd6c","v":3,"op":"ratify","from":"asserted","cause":"it-6349","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:21:54Z","node":"cl-btnr","v":3,"op":"ratify","from":"asserted","cause":"it-6349","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:21:54Z","node":"cl-5ggz","v":2,"op":"ratify","from":"asserted","cause":"it-6349","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:21:56Z","node":"it-6349","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:22:09Z","node":"do-5945","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

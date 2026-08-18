@@ -3827,3 +3827,199 @@ fn design_wake_counts_shaped_and_acceptance_less() {
         "authoring acceptance clears the wake count"
     );
 }
+
+// ── ready teaches the leans (dc-ez67, dc-grrb, it-6349): un-edged mentions
+// enumerate with the why; refused links name the legal rels ─────────────
+
+#[test]
+fn ready_flip_enumerates_unleaned_citations() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d1 = NewArgs::bare("decision", "already leaned on");
+    d1.provenance = Some("user".into());
+    let d1 = ops::new_node(&s, d1).unwrap();
+    let mut d2 = NewArgs::bare("decision", "cited, never edged");
+    d2.provenance = Some("user".into());
+    let d2 = ops::new_node(&s, d2).unwrap();
+    let mut d3 = NewArgs::bare("decision", "superseded stratum");
+    d3.provenance = Some("user".into());
+    let d3 = ops::new_node(&s, d3).unwrap();
+    let mut d4 = NewArgs::bare("decision", "the successor");
+    d4.provenance = Some("user".into());
+    let d4 = ops::new_node(&s, d4).unwrap();
+    ops::link(&s, &d4.front.id, "supersedes", &d3.front.id, false, None).unwrap();
+    let mk_claim = |text: &str| {
+        ops::claim(
+            &s,
+            text, None, None,
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    let c1 = mk_claim("`halo-bound`: the halo is bounded");
+    let c2 = mk_claim("`ring-diff`: rings difference cleanly");
+    let th = ops::new_node(&s, NewArgs::bare("thread", "open question")).unwrap();
+    // the item's body cites all of them; only d2 and c1 are un-edged
+    let mut it = NewArgs::bare("item", "the work at hand");
+    it.acceptance = vec!["it lands".into()];
+    it.body = format!(
+        "Builds within {} and {}, from {} and {}; {} is history, {} is open.",
+        d1.front.id, d2.front.id, c1.front.id, c2.front.id, d3.front.id, th.front.id
+    );
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &d1.front.id, false, None).unwrap();
+    ops::link(&s, &c2.front.id, "supports", &it.front.id, false, None).unwrap();
+    let all = s.load_all().unwrap();
+    let item = s.find(&all, &it.front.id).unwrap();
+    let unleaned = queries::unleaned_citations(&all, item);
+    let got: Vec<(&str, &str)> =
+        unleaned.iter().map(|(n, cmd)| (n.front.id.as_str(), cmd.as_str())).collect();
+    let dep = format!("q link {} depends-on {}", it.front.id, d2.front.id);
+    let sup = format!("q link {} supports {}", c1.front.id, it.front.id);
+    assert_eq!(
+        got,
+        vec![(d2.front.id.as_str(), dep.as_str()), (c1.front.id.as_str(), sup.as_str())],
+        "un-edged citations only, in citation order, each with its ready-made command — \
+         edged (either direction), superseded, and non-decision-non-claim citations stay out: {:?}",
+        got
+    );
+}
+
+#[test]
+fn lean_prompt_fires_at_ready_teaches_why_and_closes_open() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        let out = std::process::Command::new(q)
+            .current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "q {:?}: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    };
+    let mut d = NewArgs::bare("decision", "the governing ruling");
+    d.provenance = Some("user".into());
+    let d = ops::new_node(&s, d).unwrap();
+    let mut it = NewArgs::bare("item", "work citing its ruling");
+    it.acceptance = vec!["it lands".into()];
+    it.body = format!("Built to the shape {} ruled.", d.front.id);
+    let it = ops::new_node(&s, it).unwrap();
+    // the flip enumerates, teaches the why, and closes open-ended
+    let out = run(&["set", &it.front.id, "status=ready"]);
+    assert!(
+        out.contains("a mention references, an edge leans"),
+        "the prompt teaches the doctrine: {}",
+        out
+    );
+    assert!(
+        out.contains("READ-FIRST"),
+        "the why names what an edge does — leaned nodes pin the brief: {}",
+        out
+    );
+    let cmd = format!("q link {} depends-on {}", it.front.id, d.front.id);
+    assert!(out.contains(&cmd), "each line carries its ready-made link command: {}", out);
+    assert!(
+        out.contains("what else does the item stand on"),
+        "the close is open-ended — reflection past the enumeration: {}",
+        out
+    );
+    // never a gate: the flip stood
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &it.front.id).unwrap().front.status, "ready");
+    // once the lean is recorded, the prompt has nothing to say
+    run(&["link", &it.front.id, "depends-on", &d.front.id]);
+    run(&["set", &it.front.id, "status=shaped"]);
+    let out2 = run(&["set", &it.front.id, "status=ready"]);
+    assert!(
+        !out2.contains("an edge leans"),
+        "an edged citation never re-prompts — presence, not nagging: {}",
+        out2
+    );
+    // mint-to-ready is the other construction path: the prompt fires there too
+    let mut d2 = NewArgs::bare("decision", "second ruling");
+    d2.provenance = Some("user".into());
+    let d2 = ops::new_node(&s, d2).unwrap();
+    let out3 = run(&[
+        "new",
+        "item",
+        "minted hot with a citation",
+        "--status",
+        "ready",
+        "--acceptance",
+        "it lands",
+        "--body",
+        &format!("Stands on {}.", d2.front.id),
+    ]);
+    assert!(
+        out3.contains("a mention references, an edge leans"),
+        "no construction path reaches ready untaught: {}",
+        out3
+    );
+}
+
+#[test]
+fn link_refusal_names_legal_rels_for_the_pair() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut d = NewArgs::bare("decision", "a ruling");
+    d.provenance = Some("user".into());
+    let d = ops::new_node(&s, d).unwrap();
+    let it = ops::new_node(&s, NewArgs::bare("item", "some work")).unwrap();
+    let th = ops::new_node(&s, NewArgs::bare("thread", "a question")).unwrap();
+    let c = ops::claim(
+        &s,
+        "the halo is bounded", None, None,
+        vec![area.front.id.clone()],
+        None,
+        None,
+        Some("user".into()),
+        None,
+    )
+    .unwrap();
+    // the near-miss shape (it-33bb): item builds-on decision refused — the
+    // refusal now names the legal rel for the exact pair, a one-step redirect
+    let err = ops::link(&s, &it.front.id, "builds-on", &d.front.id, false, None).unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("legal rels for item → decision: depends-on"),
+        "the pair's legal rels are named: {}",
+        msg
+    );
+    assert!(msg.contains("builder → built-upon"), "the attempted rel's shapes still teach: {}", msg);
+    assert!(msg.contains("edge matrix"), "the guide pointer stands: {}", msg);
+    // no forward rel exists item → claim; the lean runs the other way
+    let err = ops::link(&s, &it.front.id, "depends-on", &c.front.id, false, None).unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("the lean runs the other way: claim -[supports]-> item"),
+        "the reverse redirect is named: {}",
+        msg
+    );
+    // nothing joins thread → claim in either direction: the mention IS the channel
+    let err = ops::link(&s, &th.front.id, "supports", &c.front.id, false, None).unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("no rel joins thread → claim in either direction"),
+        "a true dead end says so: {}",
+        msg
+    );
+    assert!(
+        msg.contains("cite the id in the body"),
+        "mention-only is taught as correct, not a downgrade: {}",
+        msg
+    );
+}

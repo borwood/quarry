@@ -71,9 +71,11 @@ pub fn legal_shapes(rel: &str) -> &'static str {
     }
 }
 
-/// The edge-type matrix. `dst_ty: None` means a `file:` target.
-pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()> {
-    let ok = match (rel, dst_ty) {
+/// One legality check for one (src, rel, dst) triple — the matrix's single
+/// authority. `validate_edge` refuses through it; `legal_rels` derives the
+/// refusal's redirect from it, so the two can never disagree.
+fn edge_ok(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> bool {
+    match (rel, dst_ty) {
         ("about", None) => true,
         ("about", Some(d)) => d == "area",
         ("part-of", Some(d)) => (src_ty == "item" && d == "item") || (src_ty == "area" && d == "area"),
@@ -96,22 +98,62 @@ pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()
                 || (src_ty == "doc" && matches!(d, "claim" | "decision"))
         }
         _ => false,
-    };
-    if !ok {
-        let shapes = legal_shapes(rel);
-        bail!(
-            "edge not allowed: {} -[{}]-> {}{} — run `q guide` for the edge matrix",
-            src_ty,
-            rel,
-            dst_ty.unwrap_or("file"),
-            if shapes.is_empty() {
-                String::new()
-            } else {
-                format!(" ({} takes {})", rel, shapes)
-            }
-        );
     }
-    Ok(())
+}
+
+/// The legal rels for an exact src → dst pair, in RELS order — the teaching
+/// refusal's redirect (it-6349): a link refused for an illegal rel names
+/// what IS legal for the very pair the linker holds, turning the dead end
+/// into a one-step redirect instead of a silent downgrade to mention-only.
+pub fn legal_rels(src_ty: &str, dst_ty: Option<&str>) -> Vec<&'static str> {
+    RELS.iter().copied().filter(|r| edge_ok(src_ty, r, dst_ty)).collect()
+}
+
+/// The edge-type matrix. `dst_ty: None` means a `file:` target. A refusal
+/// teaches twice (C4, it-6349): the attempted rel's legal shapes, then the
+/// redirect — the legal rels for this exact pair, the reverse direction
+/// when the lean runs the other way, or the mention channel when no rel
+/// joins the types at all (mention-only is then correct, not a downgrade).
+pub fn validate_edge(src_ty: &str, rel: &str, dst_ty: Option<&str>) -> Result<()> {
+    if edge_ok(src_ty, rel, dst_ty) {
+        return Ok(());
+    }
+    let shapes = legal_shapes(rel);
+    let dst_name = dst_ty.unwrap_or("file");
+    let forward = legal_rels(src_ty, dst_ty);
+    let redirect = if !forward.is_empty() {
+        format!(" — legal rels for {} → {}: {}", src_ty, dst_name, forward.join(", "))
+    } else {
+        // A file is never an edge's source, so a file target has no reverse.
+        let reverse = dst_ty.map(|d| legal_rels(d, Some(src_ty))).unwrap_or_default();
+        if !reverse.is_empty() {
+            format!(
+                " — no rel points {} → {}; the lean runs the other way: {} -[{}]-> {}",
+                src_ty,
+                dst_name,
+                dst_name,
+                reverse.join("|"),
+                src_ty
+            )
+        } else {
+            format!(
+                " — no rel joins {} → {} in either direction: cite the id in the body instead (a mention references, an edge leans)",
+                src_ty, dst_name
+            )
+        }
+    };
+    bail!(
+        "edge not allowed: {} -[{}]-> {}{}{} — run `q guide` for the edge matrix",
+        src_ty,
+        rel,
+        dst_name,
+        if shapes.is_empty() {
+            String::new()
+        } else {
+            format!(" ({} takes {})", rel, shapes)
+        },
+        redirect
+    );
 }
 
 /// What an edge was written against: a node version or a file blob (12 hex chars).

@@ -546,6 +546,29 @@ fn print_mention_surfaces(all: &[Node], node: &Node) {
     }
 }
 
+/// The lean prompt at ready (dc-ez67, dc-grrb; it-6349): fires when an item
+/// reaches ready — the station where shaping completes and the design
+/// session still holds context. Enumerates body-cited decisions and claims
+/// with no edge from the item, each beside its ready-made link command,
+/// teaches the why (a mention references, an edge leans, leaned nodes pin
+/// the brief's READ-FIRST), and closes open-ended — the enumeration only
+/// knows body citations; the shaper may know leans the body never named.
+/// A presence prompt, never a gate: mention-only is often correct, and the
+/// judgment is the shaper's. Silence when nothing un-edged is cited.
+fn print_lean_prompt(store: &Store, item: &Node) {
+    let Ok(all) = store.load_all() else { return };
+    let unleaned = quarry::queries::unleaned_citations(&all, item);
+    if unleaned.is_empty() {
+        return;
+    }
+    println!("  {}", quarry::framings::LEAN_HEADER);
+    for (t, cmd) in &unleaned {
+        println!("    · {} — if this stands on it: {}", aref(&all, t), cmd);
+    }
+    println!("    {}", quarry::framings::LEAN_WHY);
+    println!("    {}", quarry::framings::LEAN_CLOSE);
+}
+
 /// The per-area watermark surface, run after a mutating verb touched a node.
 /// First touch of an unread area nudges once; foreign drift since the
 /// recorded read prints inline (the delta IS the delivery); own writes and
@@ -689,6 +712,11 @@ fn do_new(store: &Store, a: NewCliArgs) -> Result<()> {
         );
     }
     print_mint_surfaces(store, &node);
+    // Mint-to-ready is the other construction path to ready (dc-p6z4's
+    // inventory): the lean prompt fires wherever ready is reached (it-6349).
+    if node.front.ty == "item" && node.front.status == "ready" {
+        print_lean_prompt(store, &node);
+    }
     area_watermarks(store, &node.front.id);
     if let Ok(all) = store.load_all() {
         for (title, text) in quarry::protocol::inline_texts(
@@ -2300,6 +2328,12 @@ fn main() -> Result<()> {
                 .any(|f| f.starts_with("status=") || f.starts_with("kind="))
             {
                 sweep_readings(&store);
+            }
+            // The lean prompt at ready (it-6349): the flip is the station
+            // where shaping completes — enumerate the un-edged citations
+            // while the design session still holds context.
+            if fields.iter().any(|f| f == "status=ready") && n.front.ty == "item" {
+                print_lean_prompt(&store, &n);
             }
             // Solo-path advert: taking up an item without a lease is legal —
             // leaseless writes accrue and nudge, never deny — but a declared

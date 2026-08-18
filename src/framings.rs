@@ -84,6 +84,23 @@ pub const ASSAY_CLAIM_HELP: &str = "Claims mint asserted. Veins ratify when a la
 /// only pressure. No verify queue, no gates.
 pub const ASSAY_WARNING: &str = "load-bearing but never assayed - builds stand on these and no judge has: fool's gold risk rises with weight. Assay on next touch, or refute.";
 
+/// The lean prompt at ready (dc-ez67, dc-grrb; lands with it-6349, for
+/// ratification at its harvest): the flip enumerates body-cited decisions
+/// and claims with no edge from the item, each beside its ready-made link
+/// command — a presence prompt at the station where shaping completes and
+/// the design session still holds context; never a gate.
+pub const LEAN_HEADER: &str =
+    "the body cites these with no edge recorded — a mention references, an edge leans:";
+
+/// The why under the list (it-6349): what an edge does that a mention
+/// cannot — the doctrine, not just the enumeration.
+pub const LEAN_WHY: &str = "an edge is a load-bearing claim: leaned nodes pin the dispatch brief's READ-FIRST, so the working agent reads them before building. Mention-only is often correct — the judgment is yours, here, while the design context still holds.";
+
+/// The open-ended close (it-6349): the enumeration only knows body
+/// citations; the shaper may know leans the body never named — reflection
+/// reaches edges the recommendation cannot see.
+pub const LEAN_CLOSE: &str = "and past this list: what else does the item stand on that no line surfaced? The enumeration sees only body citations — leans the body never named are yours to record.";
+
 /// The claim species in shelf order (dc-yd9s, dc-6gn9): frontmatter kind,
 /// section label, ratified framing. The engine stays kindless-but-kind-aware
 /// — kinds outside this table still render, grouped under their own string,
