@@ -3947,6 +3947,229 @@ fn design_wake_counts_load_bearing_unassayed() {
     );
 }
 
+#[test]
+fn promotion_ranking_is_fully_derived() {
+    // The dry-feed ranking (dc-dty5): no stored priority anywhere —
+    // defects first (the standing ruling reaches into any list), then
+    // distance to the feed (shaped with acceptance authored, then shaped,
+    // then sketch), then the derived holds weight, age as tiebreak only.
+    let s = temp_store();
+    let set_created = |id: &str, ts: &str| {
+        let all = s.load_all().unwrap();
+        let mut n = s.find(&all, id).unwrap().clone();
+        n.front.created = ts.into();
+        s.save(&n).unwrap();
+    };
+    // a defect in sketch outranks everything nearer the feed
+    let mut bug = NewArgs::bare("item", "bitter defect");
+    bug.kind = Some("bug".into());
+    let bug = ops::new_node(&s, bug).unwrap();
+    // shaped with acceptance and a live thread standing on it: weight 1
+    let mut heavy = NewArgs::bare("item", "heavy shaped");
+    heavy.status = Some("shaped".into());
+    heavy.acceptance = vec!["it lands".into()];
+    let heavy = ops::new_node(&s, heavy).unwrap();
+    let th = ops::new_node(&s, NewArgs::bare("thread", "who waits")).unwrap();
+    ops::link(&s, &th.front.id, "depends-on", &heavy.front.id, false, None).unwrap();
+    // shaped with acceptance, nothing standing on it: weight 0
+    let mut light = NewArgs::bare("item", "light shaped");
+    light.status = Some("shaped".into());
+    light.acceptance = vec!["it lands".into()];
+    let light = ops::new_node(&s, light).unwrap();
+    // shaped without acceptance sits behind the stated pair
+    let mut bare = NewArgs::bare("item", "bare shaped");
+    bare.status = Some("shaped".into());
+    let bare = ops::new_node(&s, bare).unwrap();
+    // two sketches tie on every key but age: oldest first
+    let old = ops::new_node(&s, NewArgs::bare("item", "weathered sketch")).unwrap();
+    set_created(&old.front.id, "2026-08-01T00:00:00Z");
+    let fresh = ops::new_node(&s, NewArgs::bare("item", "fresh sketch")).unwrap();
+    set_created(&fresh.front.id, "2026-08-05T00:00:00Z");
+    // ready, done, and archived never join the pool
+    let mut rdy = NewArgs::bare("item", "already fed");
+    rdy.status = Some("ready".into());
+    rdy.acceptance = vec!["it lands".into()];
+    ops::new_node(&s, rdy).unwrap();
+    let mut done = NewArgs::bare("item", "landed long ago");
+    done.status = Some("done".into());
+    ops::new_node(&s, done).unwrap();
+    let arch = ops::new_node(&s, NewArgs::bare("item", "cold storage")).unwrap();
+    {
+        let all = s.load_all().unwrap();
+        let mut n = s.find(&all, &arch.front.id).unwrap().clone();
+        n.front.archived = true;
+        s.save(&n).unwrap();
+    }
+    let all = s.load_all().unwrap();
+    let got: Vec<&str> =
+        queries::promotion_candidates(&all).iter().map(|n| n.front.id.as_str()).collect();
+    assert_eq!(
+        got,
+        vec![
+            bug.front.id.as_str(),
+            heavy.front.id.as_str(),
+            light.front.id.as_str(),
+            bare.front.id.as_str(),
+            old.front.id.as_str(),
+            fresh.front.id.as_str(),
+        ],
+        "defects, feed distance, holds weight, age — in that order: {:?}",
+        got
+    );
+}
+
+#[test]
+fn design_wake_counts_defects_in_shaping() {
+    // The standing-ruling earner (dc-dty5, dc-ygzz): the design wake
+    // counts kind=bug items in shaping whenever nonzero, the query
+    // command in hand; ready and in-flight bugs are already fed or under
+    // repair and never count; zero renders nothing.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "smithy")).unwrap();
+    // a bug in shaping: the waitered set
+    let mut bug = NewArgs::bare("item", "the anvil cracks");
+    bug.kind = Some("bug".into());
+    bug.status = Some("shaped".into());
+    bug.about = vec![area.front.id.clone()];
+    let bug = ops::new_node(&s, bug).unwrap();
+    // a plain shaped item never counts as a defect
+    let mut plain = NewArgs::bare("item", "a new bellows");
+    plain.status = Some("shaped".into());
+    plain.about = vec![area.front.id.clone()];
+    ops::new_node(&s, plain).unwrap();
+    // a bug already in ready is fed — out of the counted stratum
+    let mut fed = NewArgs::bare("item", "the tongs slip");
+    fed.kind = Some("bug".into());
+    fed.status = Some("ready".into());
+    fed.acceptance = vec!["the grip holds".into()];
+    fed.about = vec![area.front.id.clone()];
+    ops::new_node(&s, fed).unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out.status.success(), "resume: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("defects in shaping: 1 bug(s)"),
+        "the wake counts the shaping stratum only — ready bugs are fed: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("q query defects"),
+        "the count carries the query command in hand: {}",
+        stdout
+    );
+    // the dispatch-kind wake omits the pressure (the owed-threads
+    // omission, dc-wngq)
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    let out2 = run(&[("QUARRY_SESSION", "disp")], &["session", "resume"]);
+    assert!(out2.status.success(), "resume: {}", String::from_utf8_lossy(&out2.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out2.stdout).contains("defects in shaping"),
+        "the dispatch shape carries no defect pressure"
+    );
+    // fixing the bug clears the count — zero renders nothing
+    ops::set(&s, &bug.front.id, &["status=done".to_string()], None).unwrap();
+    let out3 = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out3.status.success(), "resume: {}", String::from_utf8_lossy(&out3.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out3.stdout).contains("defects in shaping"),
+        "a fixed defect carries no wake pressure"
+    );
+}
+
+#[test]
+fn design_wake_states_the_dry_feed_and_any_ready_item_silences_it() {
+    // The hunger earner (dc-dty5): ready empty while shaping holds work
+    // draws the hunger line with the top candidates ranked derived; any
+    // item in ready and the line is absent entirely. The predicate is
+    // feed-based, never session-based.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "granary")).unwrap();
+    // shaped with acceptance: nearest the feed, first raised
+    let mut near = NewArgs::bare("item", "first to the trough");
+    near.status = Some("shaped".into());
+    near.acceptance = vec!["it lands".into()];
+    near.about = vec![area.front.id.clone()];
+    let near = ops::new_node(&s, near).unwrap();
+    // a sketch trails it
+    let mut far = NewArgs::bare("item", "still forming");
+    far.about = vec![area.front.id.clone()];
+    ops::new_node(&s, far).unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out.status.success(), "resume: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("the feed is dry"),
+        "ready empty while shaping holds work states the hunger: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("q query shaping --mine"),
+        "the hunger line carries the pool's query in hand: {}",
+        stdout
+    );
+    // ranked within the hunger section: feed distance orders the pair
+    let tail = &stdout[stdout.find("the feed is dry").unwrap()..];
+    let a = tail.find("first to the trough").expect("the shaped candidate is raised");
+    let b = tail.find("still forming").expect("the sketch candidate is raised");
+    assert!(a < b, "shaped-with-acceptance outranks the sketch: {}", tail);
+    // the dispatch-kind wake omits the pressure (the owed-threads
+    // omission, dc-wngq)
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    let out2 = run(&[("QUARRY_SESSION", "disp")], &["session", "resume"]);
+    assert!(out2.status.success(), "resume: {}", String::from_utf8_lossy(&out2.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out2.stdout).contains("the feed is dry"),
+        "the dispatch shape carries no hunger line"
+    );
+    // one item promoted to ready and the line is absent entirely — the
+    // sketch still shapes, but the feed is no longer dry
+    ops::set(&s, &near.front.id, &["status=ready".to_string()], None).unwrap();
+    let out3 = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out3.status.success(), "resume: {}", String::from_utf8_lossy(&out3.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out3.stdout).contains("the feed is dry"),
+        "anything in ready silences the hunger line"
+    );
+}
+
 // ── ready teaches the leans (dc-ez67, dc-grrb, it-6349): un-edged mentions
 // enumerate with the why; refused links name the legal rels ─────────────
 

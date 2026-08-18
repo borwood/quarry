@@ -1568,3 +1568,40 @@
 {"ts":"2026-08-18T08:55:19Z","node":"cl-p6aj","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T08:55:19Z","node":"cl-z6gc","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T08:55:19Z","node":"do-4364","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:19:31Z","node":"dc-dty5","v":1,"op":"create","type":"decision","title":"earned pressure: a waiter, a standing ruling, or hunger; silence is the default","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-dty5","ts":"2026-08-18T09:19:31Z","node":"th-jvwe","v":6,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-jvwe","at":6,"ts":"2026-08-18T09:19:31Z","node":"dc-dty5","v":2,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T09:19:49Z","node":"it-qmhm","v":1,"op":"create","type":"item","title":"the earned lines: defects in shaping and the dry feed on the design wake","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-dty5","at":2,"ts":"2026-08-18T09:19:55Z","node":"it-qmhm","v":2,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `defect-count`: the design wake counts kind=bug items in shaping whenever nonzero, query in hand; zero renders nothing","acceptance+=lands `dry-feed`: ready empty while shaping holds work draws the hunger line with top candidates ranked derived - defects, feed distance, holds weight, age tiebreak; any item in ready and the line is absent","acceptance+=holds the silence: no aging alarms, no wrap additions, no orientation reorder - the earned lines are the only new pressure","status=ready"],"from_status":"sketch","ts":"2026-08-18T09:19:55Z","node":"it-qmhm","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-qmhm","at":3,"ts":"2026-08-18T09:20:04Z","node":"cl-2sk9","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-qmhm","at":3,"ts":"2026-08-18T09:20:04Z","node":"cl-2zna","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-qmhm","at":3,"ts":"2026-08-18T09:20:05Z","node":"cl-br3p","v":5,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-18T09:20:37Z","node":"th-yzmj","v":7,"actor":"claude","note":"collision dogear: contract carries two semantics across the register; the species naming moment inherits the call","session":"quarry"}
+{"ts":"2026-08-18T09:32:27Z","node":"it-qmhm","v":3,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:32:27Z","node":"it-qmhm","v":3,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T09:32:28Z","node":"it-qmhm","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:32:28Z","node":"it-qmhm","v":3,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T09:32:41Z","node":"it-qmhm","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-qmhm","joined":"agent:a52e96152f0b5f3f1","session":"dispatcher"}
+{"ts":"2026-08-18T09:43:58Z","node":"cl-mdd7","v":1,"op":"create","type":"claim","title":"`defect-count`: kind=bug in shaping counts on the design wake whenever nonzero, query in hand; zero renders nothing","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"8cd8a8bfb167","ts":"2026-08-18T09:43:58Z","node":"cl-mdd7","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"ts":"2026-08-18T09:44:06Z","node":"cl-wz9z","v":1,"op":"create","type":"claim","title":"`dry-feed`: ready empty while shaping holds work draws the hunger line - candidates ranked derived: defects, feed distance, holds weight, age","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"8cd8a8bfb167","ts":"2026-08-18T09:44:06Z","node":"cl-wz9z","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"ts":"2026-08-18T09:44:12Z","node":"cl-mv8t","v":1,"op":"create","type":"claim","title":"`earned-lines`: the design wake carries the defect count and the dry-feed hunger line - silent by default, earned or absent","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"9fb3fb10fa05","ts":"2026-08-18T09:44:12Z","node":"cl-mv8t","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"supports","to":"cl-mv8t","at":2,"ts":"2026-08-18T09:44:23Z","node":"cl-mdd7","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"supports","to":"cl-mv8t","at":2,"ts":"2026-08-18T09:44:23Z","node":"cl-wz9z","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"9fb3fb10fa05","ts":"2026-08-18T09:44:24Z","node":"cl-mdd7","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"9fb3fb10fa05","ts":"2026-08-18T09:44:24Z","node":"cl-wz9z","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-qmhm"}
+{"ts":"2026-08-18T09:45:58Z","node":"it-qmhm","v":4,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:25Z","node":"do-6tjw","v":1,"op":"create","type":"doc","title":"dispatch report: the earned lines: defects in shaping and the dry feed on the design wake","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-qmhm","at":4,"ts":"2026-08-18T09:46:25Z","node":"do-6tjw","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T09:46:26Z","node":"it-qmhm","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:26Z","node":"cl-mdd7","v":4,"op":"ratify","from":"asserted","cause":"it-qmhm","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:26Z","node":"cl-wz9z","v":4,"op":"ratify","from":"asserted","cause":"it-qmhm","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:26Z","node":"cl-mv8t","v":2,"op":"ratify","from":"asserted","cause":"it-qmhm","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:28Z","node":"it-qmhm","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:40Z","node":"cl-2sk9","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:40Z","node":"cl-2zna","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:40Z","node":"cl-br3p","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T09:46:40Z","node":"do-6tjw","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

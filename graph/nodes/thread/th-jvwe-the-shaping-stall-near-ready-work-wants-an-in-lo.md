@@ -2,8 +2,8 @@
 id: th-jvwe
 type: thread
 title: 'the shaping stall: near-ready work wants an in-loop urge'
-v: 5
-status: queued
+v: 6
+status: resolved
 provenance: assistant
 created: 2026-08-11T06:06:59Z
 actor: claude

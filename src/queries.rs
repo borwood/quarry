@@ -84,6 +84,90 @@ pub fn awaiting_acceptance<'a>(all: &'a [Node]) -> Vec<&'a Node> {
     v
 }
 
+/// Whether an item sits in the shaping stratum — the defect count and the
+/// dry-feed pool both cut here (dc-dty5).
+pub fn in_shaping(n: &Node) -> bool {
+    n.front.ty == "item"
+        && !n.front.archived
+        && matches!(n.front.status.as_str(), "sketch" | "shaped")
+}
+
+/// The standing-ruling earner (dc-dty5, dc-ygzz): live kind=bug items —
+/// defects are bugs on sight and fix with urgency, which waiters every
+/// one by fiat. The shaping stratum leads: those are the bugs no feed
+/// carries yet, the set the design wake counts; ready and in-flight bugs
+/// trail for the pull surface — already fed or already under repair,
+/// listed so the query reaches every live defect. Oldest first within
+/// each stratum: age is how a stall shows itself.
+pub fn defects<'a>(all: &'a [Node]) -> Vec<&'a Node> {
+    let stratum = |s: &str| match s {
+        "sketch" | "shaped" => 0,
+        "ready" => 1,
+        _ => 2,
+    };
+    let mut v: Vec<&Node> = all
+        .iter()
+        .filter(|n| n.front.ty == "item" && !n.front.archived)
+        .filter(|n| !matches!(n.front.status.as_str(), "done" | "dropped"))
+        .filter(|n| n.front.kind.as_deref() == Some("bug"))
+        .collect();
+    v.sort_by(|a, b| {
+        stratum(&a.front.status)
+            .cmp(&stratum(&b.front.status))
+            .then_with(|| a.front.created.cmp(&b.front.created))
+            .then_with(|| a.front.id.cmp(&b.front.id))
+    });
+    v
+}
+
+/// An item's derived holds count (dc-dty5): how many live, unsettled
+/// nodes stand on it through depends-on — the load-is-display pattern
+/// (dc-drr6) read in reverse for items, where the legal lean points at
+/// the thing leaned on. Derived at render, never stored. Settled
+/// dependents never count: a landed or dropped node waits on nothing.
+pub fn item_weight(all: &[Node], item: &Node) -> usize {
+    all.iter()
+        .filter(|d| !d.front.archived)
+        .filter(|d| {
+            !matches!(
+                d.front.status.as_str(),
+                "done" | "dropped" | "resolved" | "refuted" | "superseded"
+            )
+        })
+        .filter(|d| d.front.edges.iter().any(|e| e.rel == "depends-on" && e.to == item.front.id))
+        .count()
+}
+
+/// The dry-feed ranking (dc-dty5): the whole shaping pool, ordered fully
+/// derived with no stored priority — defects first (the standing ruling
+/// reaches into any list), then distance to the feed (shaped with
+/// acceptance authored, then shaped, then sketch), then the derived holds
+/// weight, age as tiebreak only. The hunger predicate lives at the wake:
+/// ready empty while this pool holds work; anything in ready and the
+/// line never renders.
+pub fn promotion_candidates<'a>(all: &'a [Node]) -> Vec<&'a Node> {
+    let mut pool: Vec<(&Node, usize)> = all
+        .iter()
+        .filter(|n| in_shaping(n))
+        .map(|n| (n, item_weight(all, n)))
+        .collect();
+    let defect = |n: &Node| usize::from(n.front.kind.as_deref() != Some("bug"));
+    let distance = |n: &Node| match (n.front.status.as_str(), n.front.acceptance.is_empty()) {
+        ("shaped", false) => 0,
+        ("shaped", true) => 1,
+        _ => 2,
+    };
+    pool.sort_by(|(a, wa), (b, wb)| {
+        defect(a)
+            .cmp(&defect(b))
+            .then_with(|| distance(a).cmp(&distance(b)))
+            .then_with(|| wb.cmp(wa))
+            .then_with(|| a.front.created.cmp(&b.front.created))
+            .then_with(|| a.front.id.cmp(&b.front.id))
+    });
+    pool.into_iter().map(|(n, _)| n).collect()
+}
+
 /// The lean prompt's enumeration (dc-ez67, dc-grrb; it-6349): body-cited
 /// decisions and claims with no edge between them and the item in either
 /// direction, each paired with its ready-made link command — depends-on

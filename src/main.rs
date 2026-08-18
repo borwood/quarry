@@ -453,6 +453,11 @@ enum Query {
     /// status; the gate holds shaped ones from ready
     #[command(visible_alias = "awaiting")]
     AwaitingAcceptance,
+    /// Live kind=bug items, the shaping stratum leading — defects are
+    /// bugs on sight and fix with urgency (dc-ygzz); the design wake
+    /// counts the shaping stratum whenever nonzero
+    #[command(visible_alias = "bugs")]
+    Defects,
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
     /// Intent vs reality by name: backtick-named acceptance lines of live
@@ -1203,6 +1208,35 @@ fn main() -> Result<()> {
                                     unassayed
                                 );
                             }
+                            // The standing-ruling earner (dc-dty5, dc-ygzz):
+                            // defects are bugs on sight and fix with urgency
+                            // — every kind=bug in shaping is waitered by
+                            // fiat. Zero renders nothing.
+                            let defects = queries::defects(&all)
+                                .into_iter()
+                                .filter(|n| queries::in_shaping(n))
+                                .count();
+                            if defects > 0 {
+                                println!(
+                                    "  defects in shaping: {} bug(s) below ready — defects fix with urgency, the standing ruling waiters them (q query defects)",
+                                    defects
+                                );
+                            }
+                            // The hunger earner (dc-dty5): when ready is
+                            // empty while shaping holds work, the feed
+                            // itself is the waiter on the whole pool.
+                            // Anything in ready and the line is absent
+                            // entirely; ranking is fully derived.
+                            let pool = queries::promotion_candidates(&all);
+                            if ready.is_empty() && !pool.is_empty() {
+                                println!(
+                                    "  the feed is dry: nothing in ready while {} item(s) shape — the feed itself waiters the shaping pool; top promotion candidates, ranked derived (q query shaping):",
+                                    pool.len()
+                                );
+                                for n in pool.iter().take(3) {
+                                    println!("    {}", line(&all, n));
+                                }
+                            }
                         }
                         if let Some((sess, p)) = wake_reg {
                             let areas: Vec<&Node> = all
@@ -1535,6 +1569,42 @@ fn main() -> Result<()> {
                                 "  load-bearing unassayed: {} claim(s) in your purview builds stand on with no judge on record — fool's gold risk rises with weight (q query load)",
                                 unassayed
                             );
+                        }
+                        // The standing-ruling earner (dc-dty5, dc-ygzz),
+                        // scoped like its siblings: defects are bugs on
+                        // sight and fix with urgency — every kind=bug in
+                        // shaping is waitered by fiat. Zero renders
+                        // nothing.
+                        let defects = queries::defects(&all)
+                            .into_iter()
+                            .filter(|n| queries::in_shaping(n) && coord::in_purview(n, &ids))
+                            .count();
+                        if defects > 0 {
+                            println!(
+                                "  defects in shaping: {} bug(s) in your purview below ready — defects fix with urgency, the standing ruling waiters them (q query defects)",
+                                defects
+                            );
+                        }
+                        // The hunger earner (dc-dty5), scoped like its
+                        // siblings: ready empty while shaping holds work
+                        // — the feed itself is the waiter on the whole
+                        // pool. Anything in ready and the line is absent
+                        // entirely; ranking is fully derived.
+                        let fed = queries::ready(&all)
+                            .into_iter()
+                            .any(|n| coord::in_purview(n, &ids));
+                        let pool: Vec<&Node> = queries::promotion_candidates(&all)
+                            .into_iter()
+                            .filter(|n| coord::in_purview(n, &ids))
+                            .collect();
+                        if !fed && !pool.is_empty() {
+                            println!(
+                                "  the feed is dry: nothing in ready in your purview while {} item(s) shape — the feed itself waiters the shaping pool; top promotion candidates, ranked derived (q query shaping --mine):",
+                                pool.len()
+                            );
+                            for n in pool.iter().take(3) {
+                                println!("    {}", line(&all, n));
+                            }
                         }
                     }
                     println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
@@ -2800,6 +2870,20 @@ fn main() -> Result<()> {
                             println!("{}", line(&all, n));
                         }
                         println!("derived, never stored: authoring acceptance clears an item by construction — q set <id> acceptance+=\"<outcome>\" (the gate: ready refuses the flip and reserve un-readies without it, dc-p6z4)");
+                    }
+                }
+                Query::Defects => {
+                    // The standing ruling's pull surface (dc-ygzz, dc-dty5):
+                    // every live defect, the shaping stratum first — those
+                    // are the bugs no feed carries yet.
+                    let d = queries::defects(&all);
+                    if d.is_empty() {
+                        println!("no live defects — nothing kind=bug stands unfixed.");
+                    } else {
+                        for n in &d {
+                            println!("{}", line(&all, n));
+                        }
+                        println!("defects are bugs on sight and fix with urgency (dc-ygzz) — the shaping stratum leads: those are the bugs no feed carries yet");
                     }
                 }
                 Query::Dispatch { item } => {
