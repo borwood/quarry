@@ -18,7 +18,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/main.rs
-  at: a4910d6f7000
+  at: 4bfea30a6071
 ---
 
 find matches raw substrings across title, id, and body: the query cli matched the substring inside click, admitting dc-qhru — a deepcraft-salvage ruling — into a search for the cli area (2026-08-11; the confabulation instance motivating dc-nnf5). Wants word-boundary or token matching for short queries, or a match-quality marker on the hit line.

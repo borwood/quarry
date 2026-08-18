@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 82d257402a03
+  at: 5f2e8b4afc49
 - rel: supersedes
   to: cl-farc
   at: 6

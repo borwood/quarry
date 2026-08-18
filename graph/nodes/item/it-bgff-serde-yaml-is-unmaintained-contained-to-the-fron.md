@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/model.rs
-  at: 9579271ffbe6
+  at: f588d937ada9
 ---
 
 Unmaintained dependency, contained to model.rs and frontmatter parsing - swap candidate the day it bites. Migrated from CLAUDE.md known compromises 2026-08-11.

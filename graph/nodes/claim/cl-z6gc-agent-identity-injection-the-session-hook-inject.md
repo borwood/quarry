@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/teach.rs
-  at: 70f6bcb0f76f
+  at: 76fab39b5aad
 ---
 
 The session hook reads the agent id the harness provides to hooks run in a subagent (top-level agent_id, verified live 2026-08-13; read defensively across key spellings) and injects QUARRY_AGENT alongside QUARRY_CHAT, QUARRY_SESSION, and QUARRY_ACTOR. q resolves badges from the association map by agent, chat, then session key; the per-shell badge export died from the dispatch payload and QUARRY_DISPATCH env survives only as the out-of-hook-coverage override.

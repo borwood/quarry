@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 4779b0c27599
+  at: a9965eaee3fb
 - rel: supports
   to: cl-88ma
   at: 2

@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/main.rs
-  at: 41e8ebe2c745
+  at: 4bfea30a6071
 - rel: supports
   to: dc-6gn9
   at: 5

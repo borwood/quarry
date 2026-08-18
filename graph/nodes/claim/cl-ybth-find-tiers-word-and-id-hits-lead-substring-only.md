@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 254f54de795c
+  at: a9965eaee3fb
 ---
 
 q find tiers its hits: id substring plus title and body word-boundary matches lead (body-only hits keep the matched-in-body label); substring-only hits always trail as the loose tail, labeled '(loose: substring only)' - shown, never hidden, no flag. Every hit line rides atom_line (cl-89b5). The predicate find_word counts ASCII alphanumerics as the only word chars - everything else bounds, hyphens included - deliberately divergent from the lexicon join's contains_word, which keeps hyphen compounds whole for the naming register; each predicate states its rule and the divergence beside its definition in src/queries.rs. Unification considered and declined 2026-08-12 (it-hjed).

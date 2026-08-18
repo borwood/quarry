@@ -20,7 +20,7 @@ edges:
   at: 2
 - rel: source
   to: file:src/main.rs
-  at: 96d37bb38995
+  at: 4bfea30a6071
 ---
 
 registry entries carry an optional kind set at q session set --kind; coord::parse_kind is the only place the string is VALIDATED - it alone can refuse, and the open set means a new kind is one new arm there, never a sweep. Render and mapping sites (q session list, resume, the SessionStart orient, coord::wake_shape) consume whatever kind an entry carries and never judge it - a catch-all keeps unknown and absent kinds on the generic path. Kindless entries render exactly as before the field. (Clarified 2026-08-14 in the report-dormancy sweep: judged means validated; mapping what is found is not judgment - the wake_shape match added by it-wub5 does not breach the one-validation-point claim.)

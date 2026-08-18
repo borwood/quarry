@@ -2,8 +2,8 @@
 id: it-4p7m
 type: item
 title: 'the source-drift pass: re-read drifted claims against the code that moved'
-v: 2
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-18T01:02:42Z
 actor: claude-fable-5

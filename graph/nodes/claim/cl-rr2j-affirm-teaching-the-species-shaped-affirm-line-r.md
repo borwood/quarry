@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 6054c8a87fa5
+  at: a9965eaee3fb
 - rel: supports
   to: cl-9z95
   at: 3

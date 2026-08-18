@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/surface.rs
-  at: a7f6c9502a6c
+  at: df37f81d7d9d
 ---
 
 The literal front-title token outside src/surface.rs fails tests/surface_lint.rs at CI, and q wrap runs the same scan when the graph root carries quarry sources; matching and mutation ride title_raw and retitle, so the ban is total and needs no judgment about which reference is formatting.

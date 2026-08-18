@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/render.rs
-  at: 5762e22f59c0
+  at: 61c710d94b8e
 ---
 
 Render-once bookkeeping maps each node id to the section that rendered its body — READ-FIRST and THE MAP seed it, backdrop sections consume it: full > truncated > atom > count, and every later position renders the atom line with a body-in-section-above pointer. The dedup failure the payload spike measured (do-2g8m) closes by construction.

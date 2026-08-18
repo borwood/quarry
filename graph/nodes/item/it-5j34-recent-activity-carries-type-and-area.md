@@ -19,7 +19,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/view.rs
-  at: 63656ac7ea63
+  at: bcaae3cc11b7
 ---
 
 The map page's recent-activity strip names events without type or area columns; scanning it means opening rows (user, 2026-08-12, ui-cleanup session). Add both columns at least — type from the node, area from its about edges, in the register the page's uniform tables already use (type · title · status · v · updated).

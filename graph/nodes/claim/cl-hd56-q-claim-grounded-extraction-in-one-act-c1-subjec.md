@@ -16,7 +16,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/ops.rs
-  at: 94a486783d73
+  at: c4e91d7fe548
 ---
 
 `q-claim`: extraction-on-citation as one verb — C1 demands a subject (--about area or file: target), C2 demands grounding for non-user claims (--source doc or file:path, --method, or user provenance; no free-floating assertions), provenance derives (explicit flag, else method implies measured, else actor), the title derives from the first line at 72 chars unless --title carries the register-length vein name, and the source edge lands with the mint

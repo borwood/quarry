@@ -16,9 +16,8 @@ edges:
   at: 1
 - rel: about
   to: file:src/main.rs
-  at: 2d2daff8ff48
+  at: 4bfea30a6071
 ---
-
 
 file-size was a major infection deepcraft had; we instated hook warnings that didn't really work — agents always dismissed extraction mid-task as out of scope. file-size infects us here: an agent can never read the full file but must grep through it and possibly miss important context.
 

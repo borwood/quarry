@@ -2,7 +2,7 @@
 id: cl-3qwu
 type: claim
 title: '`surface-atom`: one struct in one module — `atom-line`, `atom-ref`, `atom-unpack` own every register'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-12T10:35:34Z
@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/surface.rs
-  at: a7f6c9502a6c
+  at: df37f81d7d9d
 ---
 
-One Atom struct resolved from the graph carries id, title, type, kind, status, v, areas as titles, provenance with grounding presence, and archived; atom_line, atom_ref, and atom_unpack are the only renderers, all owned by src/surface.rs.
+One Atom struct resolved from the graph carries id, title, type, kind, status, v, areas as titles, provenance with grounding presence, weight held (claims only — load is display, dc-drr6), and archived; atom_line, atom_ref, and atom_unpack are the only renderers, all owned by src/surface.rs.

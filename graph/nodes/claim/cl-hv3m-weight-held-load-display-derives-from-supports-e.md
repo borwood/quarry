@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 58164139476e
+  at: a9965eaee3fb
 - rel: supports
   to: cl-2cam
   at: 2

@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/main.rs
-  at: a534ba15bc67
+  at: 4bfea30a6071
 - rel: supports
   to: dc-ydvb
   at: 2

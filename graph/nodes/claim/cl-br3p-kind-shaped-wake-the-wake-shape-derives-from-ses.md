@@ -14,10 +14,10 @@ edges:
   at: 1
 - rel: source
   to: file:src/render.rs
-  at: 285165df59e9
+  at: 61c710d94b8e
 - rel: source
   to: file:src/coord.rs
-  at: 033580557c2c
+  at: 5f2e8b4afc49
 ---
 
 dispatch-kind sessions wake into what a dispatcher owes: coord::wake_shape is the one kind match point (catch-all keeps the generic brief for design, kindless, and unknown kinds); render::dispatch_wake is one renderer consumed by both wake surfaces (q session resume and the SessionStart orient) - ready in purview leads, each in-flight item carries its q harvest command, and homework residue closes (stale refs capped at five, unharvested dispatches the in-flight shelf no longer shows); the owed-threads block is omitted under the dispatch shape (threads are not a dispatch session's to settle, dc-wngq); design and kindless wakes render exactly as before.

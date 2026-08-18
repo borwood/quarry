@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/ops.rs
-  at: 01323571de4e
+  at: c4e91d7fe548
 ---
 
 q set supports acceptance+= only; a corrupted or stale acceptance line cannot be repaired or retired through any verb. Discovered 2026-08-11 when shell-mangled backtick names forced re-minting it-u7dp as it-ygw7. Wants acceptance removal or replacement as a logged act, in the spirit of q unlink.

@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: f3faffcbe1d7
+  at: a9965eaee3fb
 ---
 
 queries::Behind carries its source and node targets as Atoms; homework lines, wrap, and the brief behind-check print from those atoms, so no starved id-title pair survives in the carrier layer.
