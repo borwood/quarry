@@ -1536,3 +1536,35 @@
 {"op":"link","rel":"supports","to":"it-s789","at":5,"ts":"2026-08-18T08:17:06Z","node":"cl-z6gc","v":4,"actor":"claude","session":"quarry"}
 {"op":"link","rel":"supports","to":"it-s789","at":5,"ts":"2026-08-18T08:17:06Z","node":"cl-p6aj","v":7,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-18T08:22:37Z","node":"th-n7rc","v":1,"op":"create","type":"thread","title":"dispatcher-authored acceptance: when the witness may write the contract","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"ts":"2026-08-18T08:23:07Z","node":"it-s789","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:23:07Z","node":"it-s789","v":5,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T08:23:07Z","node":"it-s789","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:23:07Z","node":"it-s789","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T08:23:27Z","node":"it-s789","v":6,"op":"join","actor":"claude-fable-5","dispatch":"it-s789","joined":"agent:a45106b3a6a5edebb","session":"dispatcher"}
+{"ts":"2026-08-18T08:51:18Z","node":"cl-erm8","v":1,"op":"create","type":"claim","title":"`store-resolver`: one function owns the graph locale — pin first, discovery the fallback, the work root rides along","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"source","to":"file:src/store.rs","at":"e24261b0d016","ts":"2026-08-18T08:51:18Z","node":"cl-erm8","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:51:35Z","node":"cl-aujk","v":1,"op":"create","type":"claim","title":"`badge-pin`: dispatch stamps the root into the spawn line, join plants the identity pin, the session hook injects it, harvest clears it","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"6c2a9e182b4c","ts":"2026-08-18T08:51:35Z","node":"cl-aujk","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:51:53Z","node":"cl-nzjs","v":1,"op":"create","type":"claim","title":"`worktree-dispatch`: a worktree dispatch lands its whole arc at the canonical store while cwd sits in the fork","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"source","to":"file:tests/worktree_proof.rs","at":"d979327b9e86","ts":"2026-08-18T08:51:53Z","node":"cl-nzjs","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"supports","to":"cl-nzjs","at":2,"ts":"2026-08-18T08:52:30Z","node":"cl-erm8","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"supports","to":"cl-nzjs","at":2,"ts":"2026-08-18T08:52:30Z","node":"cl-aujk","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"supports","to":"cl-aujk","at":3,"ts":"2026-08-18T08:52:30Z","node":"cl-z6gc","v":5,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"supports","to":"cl-aujk","at":3,"ts":"2026-08-18T08:52:30Z","node":"cl-6ctr","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"op":"link","rel":"supports","to":"it-s789","at":6,"ts":"2026-08-18T08:52:31Z","node":"cl-nzjs","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:52:55Z","node":"cl-aujk","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:52:55Z","node":"cl-erm8","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:52:56Z","node":"cl-p6aj","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:52:56Z","node":"cl-z6gc","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-s789"}
+{"ts":"2026-08-18T08:54:25Z","node":"it-s789","v":6,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:03Z","node":"do-4364","v":1,"op":"create","type":"doc","title":"dispatch report: the store pin: dispatch stamps the graph locale; one resolver, discovery as fallback","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-s789","at":6,"ts":"2026-08-18T08:55:03Z","node":"do-4364","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T08:55:04Z","node":"it-s789","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:04Z","node":"cl-erm8","v":3,"op":"ratify","from":"asserted","cause":"it-s789","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:04Z","node":"cl-aujk","v":3,"op":"ratify","from":"asserted","cause":"it-s789","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:04Z","node":"cl-nzjs","v":3,"op":"ratify","from":"asserted","cause":"it-s789","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:06Z","node":"it-s789","v":7,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:18Z","node":"cl-nzjs","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:19Z","node":"cl-p6aj","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:19Z","node":"cl-z6gc","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T08:55:19Z","node":"do-4364","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

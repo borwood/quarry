@@ -622,10 +622,11 @@ pub fn note_acting(store: &Store) {
     }
 }
 
-/// Clear every trace of an item's badge — the held entry and acting
-/// associations alike (harvest, land, and the steal's take-over all clear).
-/// Exact under multi-held: item-keyed removal never touches the same chat's
-/// other live dispatches.
+/// Clear every trace of an item's badge — the held entry, acting
+/// associations, and the store pins the badge planted (dc-g5x5) alike
+/// (harvest, land, and the steal's take-over all clear). Exact under
+/// multi-held: item-keyed removal never touches the same chat's other live
+/// dispatches.
 pub fn clear_dispatch(store: &Store, item_id: &str) {
     let mut m = load_dispatches(store);
     let removed = m.held.remove(item_id).is_some();
@@ -634,6 +635,7 @@ pub fn clear_dispatch(store: &Store, item_id: &str) {
     if removed || m.acting.len() != a {
         let _ = save_dispatches(store, &m);
     }
+    crate::store::clear_pins(&store.root, item_id);
 }
 
 /// Resolve the badge that STAMPS this acting context's work — env identity

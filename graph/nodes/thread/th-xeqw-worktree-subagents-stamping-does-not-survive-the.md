@@ -2,8 +2,8 @@
 id: th-xeqw
 type: thread
 title: 'worktree subagents: stamping does not survive the worktree boundary'
-v: 2
-status: queued
+v: 4
+status: resolved
 provenance: user
 created: 2026-08-14T00:54:08Z
 actor: claude-fable-5
@@ -17,3 +17,5 @@ edges:
 ---
 
 Dogeared 2026-08-13 mid-session, deliberately not expanded in the filing session: the user notes the stamping system does not work with subagents running in git worktrees - this slipped through the cracks. The user's normal working pattern is subagents in worktrees, from the deepcraft repo whose postmortem quarry is founded on (do-aurk). Open for discussion when pulled: what exactly breaks (badge association, write-hook observation, blob stamps taken against a different working tree), and what the fix wants to be. Nothing here is settled; the thread exists so the gap is owned data rather than memory. Evidence 2026-08-17 (dispatcher session, inaugural runs): the in-tree baseline works end to end - three subagents dispatched in the MAIN working tree joined by token, and badge stamping, write-hook observation, q query dispatch replay, and ratify-at-harvest all resolved correctly off the joined identity. One observation gap surfaced even in-tree (it-bj3b: a badged tests write escaped the observed set, twice now) - so the worktree discussion should separate what the worktree boundary breaks from what observation misses regardless.
+
+Diagnosis settled 2026-08-18 (quarry session, user-accepted, code-read, no live run needed): the three suspected breakages share one root - the graph is repo content, and a worktree forks it. Store::discover walks up from cwd to the first graph/nodes directory, and a worktree checkout carries its own full graph/ copy, so every verb a worktree subagent runs (join, mints, the hooks' observe_write) resolves to the worktree's forked store and lands on the worktree branch. Nothing breaks locally; the machinery works end to end against a store the canonical graph never sees - provenance dies with the worktree or collides at merge. The fix is therefore one decision, not three repairs: where does a badged verb resolve its store when cwd and canonical graph disagree. it-bj3b is confirmed separate - it reproduces in-tree.

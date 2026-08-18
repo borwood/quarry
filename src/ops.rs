@@ -1010,10 +1010,14 @@ pub fn dispatch(
         "ts": Store::now(), "node": item.front.id, "v": item.front.v,
         "op": "dispatch", "actor": actor, "session": session, "globs": globs
     }))?;
+    // The spawn line stamps the canonical graph root beside the token
+    // (dc-g5x5): join consumes the pin explicitly, then plants it for the
+    // identity so every later verb and hook resolves the same locale — a
+    // worktree fork's cwd never decides where acts land.
     let spawn = format!(
-        "You are dispatched: in {}, run: q join {} — then follow what it prints.",
-        store.root.display(),
-        token
+        "You are dispatched: in {root}, run: q join {token} --store {root} — then follow what it prints.",
+        root = store.root.display(),
+        token = token
     );
     Ok(DispatchOutcome {
         item_id: item.front.id.clone(),
@@ -1057,6 +1061,12 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
         crate::coord::JoinBind::Bound(d) => (d, Some(id_key.clone()), false),
         crate::coord::JoinBind::Rejoined(d) => (d, None, true),
     };
+    // The store pin follows the bind (dc-g5x5): this identity's q acts and
+    // hook-observed writes resolve to THIS store from here on, wherever cwd
+    // sits — the session hook reads the pin to inject QUARRY_STORE into
+    // badged shells, and hook processes read it directly. Recorded on
+    // re-join too: an idempotent read that restores a lost pin.
+    crate::store::pin_identity(&id_key, &store.root, &d.item);
     if bound.is_some() {
         // Logged once, at the bind: the join is the arc's first badged act.
         let v = store

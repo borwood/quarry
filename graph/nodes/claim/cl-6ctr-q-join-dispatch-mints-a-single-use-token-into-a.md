@@ -2,7 +2,7 @@
 id: cl-6ctr
 type: claim
 title: '`q-join`: dispatch mints a single-use token into a one-line spawn prompt; q join consumes it, binds the acting identity to the badge, and renders the brief fresh'
-v: 3
+v: 4
 status: asserted
 provenance: assistant
 created: 2026-08-13T11:04:24Z
@@ -15,6 +15,9 @@ edges:
 - rel: source
   to: file:src/ops.rs
   at: c4e91d7fe548
+- rel: supports
+  to: cl-aujk
+  at: 3
 ---
 
 q dispatch mints a single-use join token into a one-line spawn prompt; q join consumes the token, binds the acting identity (agent, chat, or session key) to the badge in the association map, logs the join, and renders the brief fresh from the graph. Re-join by the same identity is idempotent; a second identity refuses; a re-dispatch mints a fresh token and kills the old one.

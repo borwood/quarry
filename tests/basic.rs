@@ -14,6 +14,20 @@ fn temp_store() -> Store {
     std::env::remove_var("QUARRY_DISPATCH");
     std::env::remove_var("QUARRY_CHAT");
     std::env::remove_var("QUARRY_AGENT");
+    std::env::remove_var("QUARRY_STORE");
+    // One per-process pin-file home (dc-g5x5): in-process ops::join calls
+    // write identity pins, and without this they land in the REAL user
+    // file, redirecting the next run's identically-keyed joins to dead
+    // temp stores. Stable across threads: every call sets the same value.
+    static HOME: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+    let home = HOME.get_or_init(|| {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("quarry-test-home-{}-{}", std::process::id(), nanos))
+    });
+    std::env::set_var("QUARRY_HOME", home);
     let n = COUNTER.fetch_add(1, Ordering::SeqCst);
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -1245,6 +1259,11 @@ fn log_events_stamp_the_badge_from_state() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            // Isolate the identity pin file (dc-g5x5): without this, a join
+            // in one run plants a REAL user-level pin that redirects the
+            // next run's identically-keyed identity to a dead temp store.
+            .env("QUARRY_HOME", &s.root)
             .args(args);
         for (k, v) in envs {
             c.env(k, v);
@@ -1690,6 +1709,11 @@ fn join_cli_env_identity_transport() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            // Isolate the identity pin file (dc-g5x5): without this, a join
+            // in one run plants a REAL user-level pin that redirects the
+            // next run's identically-keyed identity to a dead temp store.
+            .env("QUARRY_HOME", &s.root)
             .args(args);
         for (k, v) in envs {
             c.env(k, v);
@@ -2335,6 +2359,11 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            // Isolate the identity pin file (dc-g5x5): without this, a join
+            // in one run plants a REAL user-level pin that redirects the
+            // next run's identically-keyed identity to a dead temp store.
+            .env("QUARRY_HOME", &s.root)
             .args(args);
         for (k, v) in envs {
             c.env(k, v);
@@ -3777,6 +3806,11 @@ fn design_wake_counts_shaped_and_acceptance_less() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            // Isolate the identity pin file (dc-g5x5): without this, a join
+            // in one run plants a REAL user-level pin that redirects the
+            // next run's identically-keyed identity to a dead temp store.
+            .env("QUARRY_HOME", &s.root)
             .args(args);
         for (k, v) in envs {
             c.env(k, v);
@@ -3844,6 +3878,11 @@ fn design_wake_counts_load_bearing_unassayed() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            // Isolate the identity pin file (dc-g5x5): without this, a join
+            // in one run plants a REAL user-level pin that redirects the
+            // next run's identically-keyed identity to a dead temp store.
+            .env("QUARRY_HOME", &s.root)
             .args(args);
         for (k, v) in envs {
             c.env(k, v);
@@ -3980,6 +4019,8 @@ fn lean_prompt_fires_at_ready_teaches_why_and_closes_open() {
             .env_remove("QUARRY_DISPATCH")
             .env_remove("QUARRY_CHAT")
             .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
             .args(args)
             .output()
             .unwrap();

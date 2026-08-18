@@ -226,6 +226,14 @@ while a chat holds ANY live dispatch, enumerating each with its
 q harvest command; a chat with no badge keeps its boundary verbs while
 other chats' dispatches fly. Harvest and release clear badge, token,
 and associations per item.
+The badge pins the store (dc-g5x5): one resolver owns the graph locale
+for every verb and hook — the pin first (the spawn line's
+q join --store, then QUARRY_STORE injected per badged shell, launcher
+env winning), cwd discovery the fallback. A worktree dispatch works in
+its fork while every q act, stamp, and observed write lands at the
+canonical graph; blob stamps hash the file actually touched against
+the store-relative path, and the fork's own graph/ copy is never
+written. The pin lives and dies with the badge — harvest clears it.
 "#;
 
 const SKILL_FRONT: &str = "---\nname: quarry\ndescription: The work graph in this repo's graph/ directory — decisions, claims, threads, items, docs. Use at session start to get oriented (q query queue / ready / shaping), before design work (q open the relevant nodes), when recording a user ruling, extracting a claim, queueing a thread for the user, or closing a session (review behind, affirm what you re-read). All graph writes go through q verbs, never file edits.\n---\n\n";
@@ -277,11 +285,29 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     // reads it first. Env wins here too.
     let env_agent = std::env::var("QUARRY_AGENT").ok().filter(|s| !s.trim().is_empty());
     let inject_agent = if env_agent.is_none() { agent_id.clone() } else { None };
+    // The store pin rides the identity injection channel (dc-g5x5): a joined
+    // identity's shells carry QUARRY_STORE so every q act lands at the
+    // pinned graph, wherever cwd sits (a worktree fork). Launcher env wins,
+    // like its siblings; injected only from a recorded pin — never from
+    // discovery, which would pin every shell to its own cwd.
+    let inject_store = if crate::store::env_pin().is_none() {
+        let keys: Vec<String> = [
+            agent_id.as_ref().map(|a| format!("agent:{}", a)),
+            chat_id.map(|c| format!("chat:{}", c)),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+        crate::store::pinned_root(&keys).map(|r| r.display().to_string())
+    } else {
+        None
+    };
     let mut updated_input: Option<serde_json::Map<String, serde_json::Value>> = None;
     if matches!(tool, "Bash" | "PowerShell")
         && (inject_sess.is_some()
             || inject_chat.is_some()
             || inject_agent.is_some()
+            || inject_store.is_some()
             || (inject_actor.is_some() && chat_id.is_some()))
     {
         if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
@@ -309,6 +335,12 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
                     prefix += &match tool {
                         "Bash" => format!("export QUARRY_AGENT='{}'; ", qg),
                         _ => format!("$env:QUARRY_AGENT='{}'; ", qg),
+                    };
+                }
+                if let Some(qr) = &inject_store {
+                    prefix += &match tool {
+                        "Bash" => format!("export QUARRY_STORE='{}'; ", qr),
+                        _ => format!("$env:QUARRY_STORE='{}'; ", qr),
                     };
                 }
                 let mut u = ti.clone();

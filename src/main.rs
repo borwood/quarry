@@ -310,11 +310,22 @@ gate: --solo fires from anywhere, no reason demanded.")]
     /// Join a dispatch: consume the spawn-prompt token, bind this agent's
     /// identity to the badge, and render the brief fresh from the graph
     #[command(after_help = "The fetch half of the hand-off (dc-zbxj): the spawn prompt is one line —
-q join <token> — and everything else derives here. The token is single-use
-(re-join by the same identity re-prints the brief; a second identity
-refuses). Identity is hook-injected (QUARRY_AGENT/QUARRY_CHAT) — outside
-hook coverage, export QUARRY_DISPATCH=<item> instead and skip join.")]
-    Join { token: String },
+q join <token> --store <root> — and everything else derives here. The token
+is single-use (re-join by the same identity re-prints the brief; a second
+identity refuses). Identity is hook-injected (QUARRY_AGENT/QUARRY_CHAT) —
+outside hook coverage, export QUARRY_DISPATCH=<item> instead and skip join.
+--store is the store pin (dc-g5x5): the canonical graph root, stamped into
+the spawn line at dispatch. Join consumes it and plants it for your
+identity, so every later q act and observed write lands at that graph
+wherever your cwd sits — a worktree fork's own graph/ copy is never
+written. Omitted, the store resolves as usual (env pin, then discovery).")]
+    Join {
+        token: String,
+        /// The canonical graph root (the store pin, stamped into the spawn
+        /// line at dispatch — dc-g5x5)
+        #[arg(long)]
+        store: Option<String>,
+    },
     /// Harvest a dispatch: observed-vs-leased, badge-stamped acts, report
     /// homework — the dispatcher judges acceptance and lands by hand
     #[command(after_help = "An agent's \"done\" is a stop signal, never a transition: the item stays
@@ -910,7 +921,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::View { open } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let path = quarry::view::write(&store)?;
             println!("✔ rendered {}", path.display());
             if open {
@@ -938,7 +949,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Serve { port } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let port = port.unwrap_or(quarry::view::DEFAULT_PORT);
             let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
             println!(
@@ -958,29 +969,50 @@ fn main() -> Result<()> {
                     std::process::exit(2);
                 }
                 // The lease layer (dispatch chain): best-effort, never fails
-                // a session over a missing graph.
-                if let (Some(path), Ok(store)) =
-                    (quarry::teach::write_target(&input), Store::discover())
-                {
+                // a session over a missing graph. Identity is parsed FIRST:
+                // the store resolves through the one resolver (dc-g5x5) with
+                // the hook input's identity and cwd in hand — a hook process
+                // never sees the shell injection's env, so the identity pin
+                // is its road to a pinned store.
+                let parsed = serde_json::from_str::<serde_json::Value>(&input).ok();
+                let chat = parsed.as_ref().and_then(|v| {
+                    v.get("session_id").and_then(|x| x.as_str()).map(String::from)
+                });
+                // The agent id rides the hook input in subagents — the
+                // subagent's only distinguishing identity (its session_id
+                // matches the parent chat's).
+                let agent = parsed.as_ref().and_then(quarry::teach::hook_agent_id);
+                let hook_keys: Vec<String> = [
+                    agent.as_ref().map(|a| format!("agent:{}", a)),
+                    chat.as_ref().map(|c| format!("chat:{}", c)),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                let hook_cwd = parsed.as_ref().and_then(|v| {
+                    v.get("cwd").and_then(|x| x.as_str()).map(std::path::PathBuf::from)
+                });
+                if let (Some(path), Ok(store)) = (
+                    quarry::teach::write_target(&input),
+                    quarry::store::resolve_store(None, &hook_keys, hook_cwd.as_deref()),
+                ) {
                     let root = store.root.to_string_lossy().replace('\\', "/").to_lowercase();
+                    let wroot =
+                        store.work_root.to_string_lossy().replace('\\', "/").to_lowercase();
                     let p = path.replace('\\', "/").to_lowercase();
                     // The lease layer judges REPO-RELATIVE paths only: a
                     // write outside the host repo (scratchpads, temp files)
                     // is never scope creep, never accrual, never contract
                     // material. Component-boundary strip: root + '/' + rel.
+                    // Under a store pin the WORK root strips first (dc-g5x5):
+                    // a worktree fork mirrors the repo's layout, so the
+                    // fork-relative path IS the store-relative path.
                     let rel = p
-                        .strip_prefix(&root)
+                        .strip_prefix(&wroot)
+                        .or_else(|| p.strip_prefix(&root))
                         .and_then(|r| r.strip_prefix('/'))
                         .map(String::from);
                     if let Some(rel) = rel {
-                        let parsed = serde_json::from_str::<serde_json::Value>(&input).ok();
-                        let chat = parsed.as_ref().and_then(|v| {
-                            v.get("session_id").and_then(|x| x.as_str()).map(String::from)
-                        });
-                        // The agent id rides the hook input in subagents —
-                        // the subagent's only distinguishing identity (its
-                        // session_id matches the parent chat's).
-                        let agent = parsed.as_ref().and_then(quarry::teach::hook_agent_id);
                         let session = coord::current_session().or_else(|| {
                             chat.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
                         });
@@ -1039,7 +1071,30 @@ fn main() -> Result<()> {
                 use std::io::Read as _;
                 let mut input = String::new();
                 std::io::stdin().read_to_string(&mut input)?;
-                if let Ok(store) = Store::discover() {
+                // The one resolver, hook identity in hand (dc-g5x5): a
+                // joined agent's session hook must consult the PINNED store
+                // for bindings and alerts even when its cwd sits in a
+                // worktree fork.
+                let parsed = serde_json::from_str::<serde_json::Value>(&input).ok();
+                let hook_keys: Vec<String> = [
+                    parsed
+                        .as_ref()
+                        .and_then(quarry::teach::hook_agent_id)
+                        .map(|a| format!("agent:{}", a)),
+                    parsed
+                        .as_ref()
+                        .and_then(|v| v.get("session_id").and_then(|x| x.as_str()))
+                        .map(|c| format!("chat:{}", c)),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                let hook_cwd = parsed.as_ref().and_then(|v| {
+                    v.get("cwd").and_then(|x| x.as_str()).map(std::path::PathBuf::from)
+                });
+                if let Ok(store) =
+                    quarry::store::resolve_store(None, &hook_keys, hook_cwd.as_deref())
+                {
                     if let Some(out) = quarry::teach::session_hook_output(&store, &input) {
                         println!("{}", serde_json::to_string(&out)?);
                     }
@@ -1047,7 +1102,7 @@ fn main() -> Result<()> {
             }
             HookCmd::Orient => {
                 // Best-effort: a hook must never fail a session over a missing graph.
-                let (chat_id, model) = {
+                let (chat_id, model, agent_id, hook_cwd) = {
                     use std::io::{IsTerminal, Read as _};
                     let mut s = String::new();
                     if !std::io::stdin().is_terminal() {
@@ -1059,9 +1114,25 @@ fn main() -> Result<()> {
                             .and_then(|v| v.get("session_id").and_then(|x| x.as_str()).map(String::from)),
                         v.as_ref()
                             .and_then(|v| v.get("model").and_then(|x| x.as_str()).map(String::from)),
+                        v.as_ref().and_then(quarry::teach::hook_agent_id),
+                        v.as_ref().and_then(|v| {
+                            v.get("cwd").and_then(|x| x.as_str()).map(std::path::PathBuf::from)
+                        }),
                     )
                 };
-                if let Ok(store) = Store::discover() {
+                // The one resolver with the wake's identity in hand
+                // (dc-g5x5): a pinned identity orients over the pinned
+                // graph, wherever this session's cwd sits.
+                let hook_keys: Vec<String> = [
+                    agent_id.as_ref().map(|a| format!("agent:{}", a)),
+                    chat_id.as_ref().map(|c| format!("chat:{}", c)),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                if let Ok(store) =
+                    quarry::store::resolve_store(None, &hook_keys, hook_cwd.as_deref())
+                {
                     if let (Some(cid), Some(m)) = (&chat_id, &model) {
                         coord::record_chat_actor(&store, cid, m);
                     }
@@ -1214,7 +1285,7 @@ fn main() -> Result<()> {
             }
         },
         Cmd::Find { text } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let all = store.load_all()?;
             let q = text.to_lowercase();
             // Tiered output (it-hjed): word-boundary and id hits first,
@@ -1237,7 +1308,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Session { which } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             match which {
                 SessionCmd::Set { name, areas, kind, charter, launcher, ephemeral } => {
                     let all = store.load_all()?;
@@ -1520,7 +1591,7 @@ fn main() -> Result<()> {
             steal,
             reason,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let sess = coord::current_session().ok_or_else(|| {
                 anyhow::anyhow!("no QUARRY_SESSION set — leases need a session identity (q session set <name> --areas ..., then export QUARRY_SESSION=<name>)")
             })?;
@@ -1585,7 +1656,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Release { item } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let sess = coord::current_session()
                 .ok_or_else(|| anyhow::anyhow!("no QUARRY_SESSION set"))?;
             let all = store.load_all()?;
@@ -1607,7 +1678,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Dispatch { item, files, shared, steal, reason, solo } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let sess = coord::current_session().ok_or_else(|| {
                 anyhow::anyhow!(
                     "q dispatch is a session act — the lease it takes needs a holder, and an unbound chat has none. Bind this chat first: q session adopt <name> (or register one: q session set <name> --areas <area>...), then re-run."
@@ -1733,8 +1804,11 @@ fn main() -> Result<()> {
             println!("\nSPAWN PROMPT (one line — the agent fetches its own brief at join):");
             println!("{}", out.spawn);
         }
-        Cmd::Join { token } => {
-            let store = Store::discover()?;
+        Cmd::Join { token, store: pin } => {
+            // The explicit pin (the spawn line's stamp) enters the one
+            // resolver here — join is the only verb carrying it, because
+            // join is where the badge and its locale bind (dc-g5x5).
+            let store = quarry::store::resolve_store(pin.as_deref(), &[], None)?;
             let identity = coord::acting_key(
                 coord::current_agent().as_deref(),
                 coord::current_chat().as_deref(),
@@ -1752,10 +1826,17 @@ fn main() -> Result<()> {
                 ),
                 _ => {}
             }
+            if store.work_root != store.root {
+                println!(
+                    "store pinned: {} — every q act and stamped write under this badge lands there; your working copy at {} keeps its graph/ checkout inert (dc-g5x5).\n",
+                    store.root.display(),
+                    store.work_root.display()
+                );
+            }
             print!("{}", out.brief);
         }
         Cmd::Harvest { item } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             print!("{}", render::harvest(&store, &item)?);
             let all = store.load_all()?;
             let n = store.find(&all, &item)?;
@@ -1774,7 +1855,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Queue { which } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let all = store.load_all()?;
             let (mut q, pruned) = coord::topic_queue_pruned(&store, &all);
             for id in &pruned {
@@ -1858,7 +1939,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Wrap => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             // Boundary guard (it-ymsj): wrap under an active dispatch badge
             // is the dispatcher's boundary run by the dispatched — refuse
             // before any cursor moves.
@@ -2183,6 +2264,20 @@ fn main() -> Result<()> {
                         }
                     }
                 }
+                // The locale lint (dc-g5x5), wrap half — same fence, same
+                // scope guard as the atom lint above.
+                if src.join("store.rs").exists() {
+                    let offenders = quarry::store::lint_locale_sources(&src);
+                    if !offenders.is_empty() {
+                        println!(
+                            "  ⚠ locale lint: store resolution outside src/store.rs ({}) — one resolver owns the graph locale:",
+                            offenders.len()
+                        );
+                        for (f, l) in offenders {
+                            println!("    src/{}:{}", f, l);
+                        }
+                    }
+                }
             }
             if let Ok(out) = std::process::Command::new("git")
                 .current_dir(&store.root)
@@ -2222,7 +2317,7 @@ fn main() -> Result<()> {
             supports,
             note,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let a = NewCliArgs {
                 ty,
                 title,
@@ -2255,7 +2350,7 @@ fn main() -> Result<()> {
             do_new(&store, a)?;
         }
         Cmd::Resume { token } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let intent = quarry::protocol::take_intent(&store, &token)?;
             match intent.verb.as_str() {
                 "new" => {
@@ -2272,7 +2367,7 @@ fn main() -> Result<()> {
             acknowledge,
             note,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let edge = ops::link(&store, &src, &rel, &dst, acknowledge, note)?;
             println!("✔ {} -[{}]-> {} (at {})", src, edge.rel, edge.to, edge.at);
             let all = store.load_all()?;
@@ -2307,7 +2402,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Unlink { src, rel, dst, note } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let (n, edge) = ops::unlink(&store, &src, &rel, &dst, note)?;
             println!(
                 "✔ retired: {} -[{}]-> {} (was at {})",
@@ -2318,7 +2413,7 @@ fn main() -> Result<()> {
             );
         }
         Cmd::Set { node, fields, note } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let n = ops::set(&store, &node, &fields, note)?;
             println!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
             presence_note(&store, &n.front.id);
@@ -2396,7 +2491,7 @@ fn main() -> Result<()> {
             body_file,
             note,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let body = read_body(body, body_file)?;
             if body.is_empty() {
                 anyhow::bail!("provide --body or --body-file");
@@ -2416,7 +2511,7 @@ fn main() -> Result<()> {
             by,
             title,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let d = ops::rule(&store, &thread, &text, by, title)?;
             println!("✔ {}", line(&store.load_all().unwrap_or_default(), &d));
             println!("  thread resolved.");
@@ -2440,14 +2535,14 @@ fn main() -> Result<()> {
             provenance,
             status,
         } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let n = ops::claim(&store, &text, title, kind, about, source, method, provenance, status)?;
             println!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
             print_mint_surfaces(&store, &n);
             area_watermarks(&store, &n.front.id);
         }
         Cmd::Refute { claim, by, note } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let (c, blast) = ops::refute(&store, &claim, &by, note)?;
             let all = store.load_all().unwrap_or_default();
             println!("✔ {} is now refuted", aref(&all, &c));
@@ -2465,7 +2560,7 @@ fn main() -> Result<()> {
             sweep_readings(&store);
         }
         Cmd::Affirm { node, to } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             // Affirm is species-shaped by method (dc-6gn9): the ratified
             // teaching frames what this affirm records — re-read for
             // instrument-backed measurements, re-run for manual methods,
@@ -2487,7 +2582,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Archive { node, undo } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let n = ops::archive(&store, &node, undo)?;
             let all = store.load_all().unwrap_or_default();
             if undo {
@@ -2501,7 +2596,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Open { node, all } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             print!("{}", render::open(&store, &node, all)?);
             // An area open is the canonical read-first act: record it so the
             // first-touch gate passes silently on the diligent path.
@@ -2514,7 +2609,7 @@ fn main() -> Result<()> {
             }
         }
         Cmd::Brief { item } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let text = render::brief(&store, &item)?;
             print!("{}", text);
             let all = store.load_all()?;
@@ -2525,11 +2620,11 @@ fn main() -> Result<()> {
             }))?;
         }
         Cmd::Log { node } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             print!("{}", render::log(&store, &node)?);
         }
         Cmd::Query { which } => {
-            let store = Store::discover()?;
+            let store = Store::resolve()?;
             let all = store.load_all()?;
             match which {
                 Query::Ready { mine } => {
