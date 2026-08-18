@@ -42,6 +42,21 @@ pub const YOUR_WRITES_CLOSE: &str = "And if your questing found two truths with 
 /// question asked at the choke point, a prompt, never a gate.
 pub const SPECIES_PROMPT: &str = "this claim carries a method - taken once to inform a decision (--kind reading, settles as sediment), or relied on to stay true (--kind measured, lives by its instrument)?";
 
+/// The vein species prompt (dc-grrb shape; composed on it-pgn9, for
+/// ratification at its harvest): fires when a claim leading with a
+/// registered name mints kindless — species is what the assay ladder
+/// rides, so a kindless vein never ratifies. A prompt, never a gate.
+pub const VEIN_PROMPT: &str = "this claim leads with a registered name - a mechanism or mandate read off landed code (--kind vein), or the receipt of a landed capability (--kind feature)? Kindless claims never ride the assay ladder.";
+
+/// The harvest ask (composed on it-pgn9, for ratification at its harvest):
+/// kindless backtick-titled badge mints enumerate at the judgment seat with
+/// the settle command in hand — the silent-repair path dies loud, before
+/// ratification passes them by asserted. A prompt, never a gate: landing
+/// proceeds regardless (dc-grrb).
+pub fn vein_ask_line(n: usize) -> String {
+    format!("{} kindless mint(s) under this badge lead with a registered name - the assay ladder rides species, so landing now passes these by asserted. Settle each, then land:", n)
+}
+
 /// Species-shaped affirm, instrument-backed (dc-6gn9; ratified 2026-08-17
 /// on it-nmzn): a measured claim whose source is a test file — the living
 /// method is the instrument; affirm on drift means re-read it.

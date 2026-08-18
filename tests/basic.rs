@@ -4103,3 +4103,96 @@ fn link_refusal_names_legal_rels_for_the_pair() {
         msg
     );
 }
+
+// ── the vein prompt at land time (it-pgn9, dc-grrb shape): kindless
+// backtick-titled mints draw the species question; harvest asks before
+// ratification passes them by ───────────────────────────────────────────
+
+#[test]
+fn backtick_titled_reads_the_leading_name_under_the_deliberate_floor() {
+    use quarry::queries::backtick_titled;
+    assert!(backtick_titled("`find-tiers`: word and id hits lead"), "a registered name leads");
+    assert!(backtick_titled("`cli`: the two-char floor admits deliberate short names"));
+    assert!(!backtick_titled("plain prose title"), "no mark, no prompt");
+    assert!(!backtick_titled("word hits lead in `find-tiers` mid-title"), "the name must lead");
+    assert!(!backtick_titled("`x`: below the deliberate-name floor"), "the dc-qvtz floor holds");
+    assert!(!backtick_titled("`unclosed name runs off"), "an unclosed span is prose");
+}
+
+#[test]
+fn harvest_asks_the_kindless_backtick_mints_before_ratification_passes_them_by() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "vein prompt pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the ask lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+        .unwrap();
+    let mk = |title: &str, kind: Option<&str>| {
+        ops::claim(
+            &s,
+            title,
+            None,
+            kind.map(String::from),
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    let unkinded = mk("`geo-tiers`: word hits lead, loose trails", None);
+    let plain = mk("strata scans read bottom-up", None);
+    let kinded = mk("`geo-pass`: emits layered strata", Some("vein"));
+    let unstamped = mk("`geo-cache`: caches strata", None);
+    for c in [&unkinded, &plain, &kinded] {
+        s.log_event(serde_json::json!({
+            "ts": Store::now(), "node": c.front.id, "v": 1, "op": "create", "type": "claim",
+            "actor": "t", "dispatch": it.front.id
+        }))
+        .unwrap();
+    }
+    // the ask teaches verbatim (dc-dsdm channel), settle command in hand,
+    // before the landing lines — never a gate
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains("1 kindless mint(s) under this badge lead with a registered name - the assay ladder rides species, so landing now passes these by asserted. Settle each, then land:"),
+        "the ask teaches verbatim: {}", h
+    );
+    assert!(
+        h.contains(&format!("settle: q set {} kind=vein (or kind=feature)", unkinded.front.id)),
+        "the settle command is in hand: {}", h
+    );
+    assert!(
+        !h.contains(&format!("settle: q set {}", plain.front.id))
+            && !h.contains(&format!("settle: q set {}", unstamped.front.id))
+            && !h.contains(&format!("settle: q set {}", kinded.front.id)),
+        "plain-titled, unstamped, and kinded mints draw no ask: {}", h
+    );
+    assert!(
+        h.find("kindless mint(s)").unwrap() < h.find("LANDING").unwrap(),
+        "the ask lands before the landing lines: {}", h
+    );
+    // the ladder alone never reaches a kindless mint — the ask is the channel
+    let assay = ops::ratify_landing(&s, &it.front.id, Some("geo")).unwrap().unwrap();
+    assert!(assay.ratified.iter().all(|n| n.front.id != unkinded.front.id));
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &unkinded.front.id).unwrap().front.status, "asserted");
+    // settle the species as the ask teaches; the re-harvest routes the mint
+    // onto the assay ladder and the ask falls silent
+    ops::set(&s, &unkinded.front.id, &["kind=vein".to_string()], None).unwrap();
+    let h2 = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(!h2.contains("kindless mint(s)"), "settled: the ask is gone: {}", h2);
+    assert!(
+        h2.contains(&quarry::framings::assay_harvest_line(1)),
+        "the settled mint is now the assay's to name: {}", h2
+    );
+    // the mint prompt's verbiage ships pinned (dc-dsdm: never invented silently)
+    assert_eq!(
+        quarry::framings::VEIN_PROMPT,
+        "this claim leads with a registered name - a mechanism or mandate read off landed code (--kind vein), or the receipt of a landed capability (--kind feature)? Kindless claims never ride the assay ladder."
+    );
+}

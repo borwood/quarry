@@ -497,6 +497,17 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
     if node.front.ty == "claim" && node.front.kind.is_none() && node.front.method.is_some() {
         println!("  species: {}", quarry::framings::SPECIES_PROMPT);
         println!("    settle it: q set {} kind=reading (or kind=measured)", node.front.id);
+    } else if node.front.ty == "claim"
+        && node.front.kind.is_none()
+        && quarry::queries::backtick_titled(quarry::surface::title_raw(node))
+    {
+        // The vein prompt (it-pgn9, dc-grrb shape): a kindless mint leading
+        // with a registered name is vein-shaped — the species question at the
+        // same choke point, a prompt, never a gate. The method prompt above
+        // keeps its lane: a method-carrying claim is measurement-shaped, and
+        // the two questions never stack.
+        println!("  species: {}", quarry::framings::VEIN_PROMPT);
+        println!("    settle it: q set {} kind=vein (or kind=feature)", node.front.id);
     }
     let Ok(all) = store.load_all() else { return };
     let touches = quarry::queries::relatedness(&all, node);

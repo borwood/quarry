@@ -1495,3 +1495,31 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T02:53:03Z","node":"it-4p7m","v":5,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:53:05Z","node":"it-4p7m","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:53:15Z","node":"do-cs8n","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:53:49Z","node":"it-pgn9","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:53:49Z","node":"it-pgn9","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T02:53:49Z","node":"it-pgn9","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:53:49Z","node":"it-pgn9","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T02:54:05Z","node":"it-pgn9","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-pgn9","joined":"agent:a6a3cc79972022aae","session":"dispatcher"}
+{"ts":"2026-08-18T03:03:43Z","node":"cl-sv7z","v":1,"op":"create","type":"claim","title":"`vein-prompt`: a kindless backtick-titled claim draws the vein species question at every mint surface, settle command in hand","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-pgn9"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"c279753e3a25","ts":"2026-08-18T03:03:43Z","node":"cl-sv7z","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:03:58Z","node":"cl-vuda","v":1,"op":"create","type":"claim","title":"`land-time-ask`: harvest lists kindless backtick-titled badge mints with settle commands before ratification passes them by","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-pgn9"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"b340964d6a9e","ts":"2026-08-18T03:03:58Z","node":"cl-vuda","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"op":"link","rel":"supports","to":"it-pgn9","at":5,"ts":"2026-08-18T03:04:17Z","node":"cl-sv7z","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"op":"link","rel":"supports","to":"it-pgn9","at":5,"ts":"2026-08-18T03:04:17Z","node":"cl-vuda","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:04:17Z","node":"cl-9z95","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:04:17Z","node":"cl-enu7","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:05:14Z","node":"cl-baxa","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:05:14Z","node":"cl-h3r8","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:05:15Z","node":"cl-c34g","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:05:15Z","node":"cl-en99","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:05:15Z","node":"cl-qm6t","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-pgn9"}
+{"ts":"2026-08-18T03:06:34Z","node":"it-pgn9","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:14Z","node":"do-h3z4","v":1,"op":"create","type":"doc","title":"dispatch report: vein claims mint kindless: the vein prompt is missing at land time","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-pgn9","at":5,"ts":"2026-08-18T03:07:14Z","node":"do-h3z4","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T03:07:14Z","node":"it-pgn9","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:14Z","node":"cl-sv7z","v":3,"op":"ratify","from":"asserted","cause":"it-pgn9","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:14Z","node":"cl-vuda","v":3,"op":"ratify","from":"asserted","cause":"it-pgn9","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:16Z","node":"it-pgn9","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:28Z","node":"cl-sv7z","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:28Z","node":"cl-vuda","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T03:07:28Z","node":"do-h3z4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

@@ -1010,11 +1010,25 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     // The assay office (dc-drr6): the landing act will ratify the badge's
     // vein and feature mints — named here, at the judgment seat, before the
     // dispatcher's hand moves.
-    let assay = crate::queries::assayable(&all, &crate::queries::badge_claim_mints(&log, id));
+    let mints = crate::queries::badge_claim_mints(&log, id);
+    let assay = crate::queries::assayable(&all, &mints);
     if !assay.is_empty() {
         writeln!(s, "\n  {}", crate::framings::assay_harvest_line(assay.len()))?;
         for c in &assay {
             writeln!(s, "    · {}", crate::surface::atom_line(&crate::surface::atom(&all, c)))?;
+        }
+    }
+
+    // The land-time ask (it-pgn9): kindless backtick-titled badge mints
+    // enumerate with the settle command before ratification passes them by
+    // asserted — the silent-repair path is dead. A prompt, never a gate
+    // (dc-grrb): landing proceeds regardless.
+    let unkinded = crate::queries::kindless_backtick_mints(&all, &mints);
+    if !unkinded.is_empty() {
+        writeln!(s, "\n  {}", crate::framings::vein_ask_line(unkinded.len()))?;
+        for c in &unkinded {
+            writeln!(s, "    · {}", crate::surface::atom_line(&crate::surface::atom(&all, c)))?;
+            writeln!(s, "      settle: q set {} kind=vein (or kind=feature)", c.front.id)?;
         }
     }
 

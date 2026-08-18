@@ -469,6 +469,29 @@ pub fn assayable<'a>(all: &'a [Node], mint_ids: &[String]) -> Vec<&'a Node> {
     out
 }
 
+/// The kindless backtick-titled mints of an arc (it-pgn9): claims still on
+/// the asserted rung, no species recorded, a registered name leading the
+/// title — the shape that minted cl-ybth kindless and was silently repaired
+/// at harvest. The assay ladder never reaches these (`assayable` is
+/// species-shaped), so the harvest ask lists them with the settle command
+/// before ratification passes them by — a prompt, never a gate (dc-grrb).
+pub fn kindless_backtick_mints<'a>(all: &'a [Node], mint_ids: &[String]) -> Vec<&'a Node> {
+    let mut out: Vec<&Node> = Vec::new();
+    for id in mint_ids {
+        let Some(n) = all.iter().find(|n| &n.front.id == id) else { continue };
+        if n.front.ty == "claim"
+            && !n.front.archived
+            && n.front.status == "asserted"
+            && n.front.kind.is_none()
+            && backtick_titled(crate::surface::title_raw(n))
+            && !out.iter().any(|m| m.front.id == n.front.id)
+        {
+            out.push(n);
+        }
+    }
+    out
+}
+
 /// Graph-generic vocabulary excluded from relatedness matching: on any
 /// quarry graph these words appear everywhere and carry no subject signal.
 const GENERIC_TOKENS: &[&str] = &[
@@ -519,6 +542,22 @@ pub fn backticked_spans(text: &str) -> Vec<String> {
         .map(|s| s.trim().to_lowercase())
         .filter(|s| s.len() >= 2 && s.len() <= 60)
         .collect()
+}
+
+/// A backtick-name-first title: a registered name leads (`name`: ...) —
+/// the register vein and receipt claims are titled in (dc-wrnc, dc-yd9s).
+/// The leading span honors the deliberate-name floor above (dc-qvtz: two
+/// characters, sixty the cap). One predicate point shared by the mint
+/// prompt and the harvest ask (it-pgn9): a kindless claim in this shape
+/// draws the vein species question — a prompt, never a gate (dc-grrb).
+pub fn backtick_titled(title: &str) -> bool {
+    let Some(rest) = title.trim_start().strip_prefix('`') else {
+        return false;
+    };
+    match rest.find('`') {
+        Some(i) => (2..=60).contains(&rest[..i].trim().len()),
+        None => false,
+    }
 }
 
 /// The lexicon join's word predicate (relatedness): `word` occurs in
