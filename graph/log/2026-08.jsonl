@@ -1400,3 +1400,23 @@
 {"ts":"2026-08-18T02:29:55Z","node":"it-fwn3","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:30:09Z","node":"cl-2zna","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:30:09Z","node":"do-afx9","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:30:30Z","node":"it-ez2y","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:30:30Z","node":"it-ez2y","v":4,"op":"reserve","globs":["graph/nodes/claim/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T02:30:30Z","node":"it-ez2y","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:30:30Z","node":"it-ez2y","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["graph/nodes/claim/**"]}
+{"ts":"2026-08-18T02:30:45Z","node":"it-ez2y","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-ez2y","joined":"agent:a88bcc8bddab33378","session":"dispatcher"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"67dde7205950","ts":"2026-08-18T02:32:21Z","node":"cl-c34g","v":5,"actor":"claude-fable-5","note":"instrument re-sourcing per dc-6gn9: the living method is area_watermark_lifecycle in the integration suite","session":"dispatcher","dispatch":"it-ez2y"}
+{"ts":"2026-08-18T02:32:21Z","node":"cl-c34g","v":5,"op":"unlink","rel":"source","to":"file:src/coord.rs","at":"5f2e8b4afc49","actor":"claude-fable-5","note":"mechanism file retired as source; the instrument is tests/basic.rs (dc-6gn9 applied retroactively, it-ez2y)","session":"dispatcher","dispatch":"it-ez2y"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"67dde7205950","ts":"2026-08-18T02:32:28Z","node":"cl-en99","v":5,"actor":"claude-fable-5","note":"instrument re-sourcing per dc-6gn9: the living method is relatedness_forward_and_reverse in the integration suite","session":"dispatcher","dispatch":"it-ez2y"}
+{"ts":"2026-08-18T02:32:28Z","node":"cl-en99","v":5,"op":"unlink","rel":"source","to":"file:src/queries.rs","at":"6054c8a87fa5","actor":"claude-fable-5","note":"mechanism file retired as source; the instrument is tests/basic.rs (dc-6gn9 applied retroactively, it-ez2y) — the drift on this edge was mechanism-file churn, not instrument change","session":"dispatcher","dispatch":"it-ez2y"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"67dde7205950","ts":"2026-08-18T02:32:35Z","node":"cl-qm6t","v":6,"actor":"claude-fable-5","note":"instrument re-sourcing per dc-6gn9: the living method is c8_briefed_gate_and_lease_check in the integration suite","session":"dispatcher","dispatch":"it-ez2y"}
+{"ts":"2026-08-18T02:32:35Z","node":"cl-qm6t","v":6,"op":"unlink","rel":"source","to":"file:src/teach.rs","at":"76fab39b5aad","actor":"claude-fable-5","note":"mechanism file retired as source; the instrument is tests/basic.rs (dc-6gn9 applied retroactively, it-ez2y)","session":"dispatcher","dispatch":"it-ez2y"}
+{"ts":"2026-08-18T02:35:58Z","node":"it-ez2y","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:36:39Z","node":"do-42rb","v":1,"op":"create","type":"doc","title":"dispatch report: re-source the standing measured claims to their instruments","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-ez2y","at":5,"ts":"2026-08-18T02:36:39Z","node":"do-42rb","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:36:39Z","node":"it-kjgz","v":1,"op":"create","type":"item","title":"research dispatch: graph-only work should not demand a fictitious file lease","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T02:36:39Z","node":"it-ez2y","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:36:41Z","node":"it-ez2y","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:37:02Z","node":"it-4p7m","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:37:02Z","node":"cl-rr2j","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:37:02Z","node":"do-42rb","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

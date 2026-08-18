@@ -2,8 +2,8 @@
 id: it-ez2y
 type: item
 title: re-source the standing measured claims to their instruments
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-17T09:04:11Z
 actor: claude-fable-5

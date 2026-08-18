@@ -2,7 +2,7 @@
 id: cl-en99
 type: claim
 title: mint-time relatedness matches the title lexicon forward and nodehood re…
-v: 4
+v: 5
 status: measured
 provenance: measured
 created: 2026-08-09T16:57:37Z
@@ -14,8 +14,8 @@ edges:
   to: ar-c7f5
   at: 1
 - rel: source
-  to: file:src/queries.rs
-  at: 6054c8a87fa5
+  to: file:tests/basic.rs
+  at: 67dde7205950
 ---
 
 mint-time relatedness matches the title lexicon forward and nodehood reverse, for judgment

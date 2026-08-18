@@ -20,7 +20,7 @@ edges:
   at: 3
 - rel: supports
   to: it-ez2y
-  at: 4
+  at: 6
 ---
 
 queries::affirm_teaching returns the ratified line for the node under affirm (dc-6gn9): a measured claim with a file:tests source teaches AFFIRM_INSTRUMENT (re-read the instrument - does the claim still describe what it asserts?), any other measured claim teaches AFFIRM_MANUAL (re-run, then affirm what you saw), and a reading teaches the READINGS first sentence - an affirm on sediment was never owed. Prompts, never gates: the verb proceeds regardless. Extend at this one point when contract affirm semantics land.
