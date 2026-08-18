@@ -1523,3 +1523,16 @@
 {"ts":"2026-08-18T03:07:28Z","node":"cl-sv7z","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T03:07:28Z","node":"cl-vuda","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T03:07:28Z","node":"do-h3z4","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-18T08:08:44Z","node":"th-xeqw","v":3,"actor":"claude","note":"diagnosis settled: one root - cwd-anchored store discovery vs the worktree's forked graph copy","session":"quarry"}
+{"ts":"2026-08-18T08:16:31Z","node":"dc-g5x5","v":1,"op":"create","type":"decision","title":"the badge pins the store: one resolver owns the graph locale, discovery is the fallback","actor":"claude","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-g5x5","ts":"2026-08-18T08:16:31Z","node":"th-xeqw","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-xeqw","at":4,"ts":"2026-08-18T08:16:31Z","node":"dc-g5x5","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"builds-on","to":"dc-zbxj","at":1,"ts":"2026-08-18T08:16:43Z","node":"dc-g5x5","v":3,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T08:16:43Z","node":"it-s789","v":1,"op":"create","type":"item","title":"the store pin: dispatch stamps the graph locale; one resolver, discovery as fallback","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-g5x5","at":3,"ts":"2026-08-18T08:16:50Z","node":"it-s789","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-nnf5","at":2,"ts":"2026-08-18T08:16:50Z","node":"it-s789","v":3,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-zbxj","at":1,"ts":"2026-08-18T08:16:50Z","node":"it-s789","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `store-resolver`: one function owns graph-locale resolution for every verb and hook - pin first, cwd discovery fallback - and a lint holds the floor: no call site resolves a store any other way","acceptance+=lands `badge-pin`: dispatch stamps the canonical root into the spawn line and the pin rides the identity injection channel, launcher env wins - every badged shell carries where acts land","acceptance+=lands `worktree-proof`: a worktree dispatch runs join, badged mints, observed writes, and harvest end to end into the canonical store while cwd sits in the fork; the run or its test is the instrument","status=ready"],"from_status":"sketch","ts":"2026-08-18T08:16:50Z","node":"it-s789","v":5,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-s789","at":5,"ts":"2026-08-18T08:17:06Z","node":"cl-z6gc","v":4,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"supports","to":"it-s789","at":5,"ts":"2026-08-18T08:17:06Z","node":"cl-p6aj","v":7,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T08:22:37Z","node":"th-n7rc","v":1,"op":"create","type":"thread","title":"dispatcher-authored acceptance: when the witness may write the contract","actor":"claude-fable-5","note":null,"session":"dispatcher"}
