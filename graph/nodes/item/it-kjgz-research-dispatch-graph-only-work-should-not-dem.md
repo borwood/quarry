@@ -10,6 +10,12 @@ actor: claude-fable-5
 kind: debt
 acceptance:
 - 'lands nothing new: q dispatch admits a graph-only arc without --files, the brief says research dispatch, and observed-vs-leased renders the zero-file case without the dead-weight question'
+witness:
+- line: 'lands nothing new: q dispatch admits a graph-only arc without --files, the brief says research dispatch, and observed-vs-leased renders the zero-file case without the dead-weight question'
+  by: session:dispatcher
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-18
 edges:
 - rel: about
   to: ar-c7f5

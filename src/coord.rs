@@ -85,6 +85,43 @@ pub fn wake_shape(kind: Option<&str>) -> WakeShape {
     }
 }
 
+/// The witness seat (dc-mpg8): an acceptance-authoring context whose
+/// session carries a registered kind other than design holds the witness
+/// pen — transcription only, held by construction (the pen checks in
+/// ops). THE one predicate point, the parse_kind pattern: a new kind is
+/// witness-or-not by falling in or out of the design arm here.
+///
+/// The kindless middle is deliberately NOT a witness: dc-mpg8 says "any
+/// session whose kind is not design", but dc-p6z4 teaches the solo
+/// station — kindless sessions included — the authoring command directly,
+/// and the two rulings contest that middle. Least-committal until ruled
+/// (C3): only a session that REGISTERED a non-design kind sits in the
+/// witness seat; kindless, unregistered, and unbound contexts keep the
+/// design-capable default dc-p6z4 built on. The open call is queued as a
+/// thread; widening the seat is one arm change here.
+pub struct WitnessSeat {
+    pub session: String,
+    pub kind: String,
+    /// The acting identity key (agent → chat → session precedence) — what
+    /// the mark records as author and the executor refusals compare.
+    pub key: String,
+}
+
+pub fn witness_seat(store: &Store) -> Option<WitnessSeat> {
+    let session = current_session()?;
+    let kind = load_sessions(store).get(&session)?.kind.clone()?;
+    if kind == "design" {
+        return None;
+    }
+    let key = acting_key(
+        current_agent().as_deref(),
+        current_chat().as_deref(),
+        Some(&session),
+    )
+    .unwrap_or_else(|| format!("session:{}", session));
+    Some(WitnessSeat { session, kind, key })
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Lease {
     pub item: String,
@@ -529,6 +566,17 @@ pub fn held_dispatches(store: &Store, holder: &str) -> Vec<DispatchState> {
 /// contract echo use. Exact: held entries key by item.
 pub fn dispatch_for_item(store: &Store, item_id: &str) -> Option<DispatchState> {
     load_dispatches(store).held.get(item_id).cloned()
+}
+
+/// The held dispatch a live token belongs to — a PEEK, never a consume:
+/// the witness executor check (dc-mpg8) must refuse the authoring badge
+/// BEFORE the single-use token is spent, so a refused join leaves the
+/// token live for the right agent.
+pub fn dispatch_for_token(store: &Store, token: &str) -> Option<DispatchState> {
+    load_dispatches(store)
+        .held
+        .into_values()
+        .find(|d| d.token.as_deref() == Some(token))
 }
 
 /// The outcome of presenting a join token (dc-zbxj).

@@ -622,11 +622,18 @@ fn dispatch_wake_leads_with_ready_inflight_and_homework() {
         out
     );
 
-    // a purview with nothing owed says so once, and only about ready
+    // a purview with nothing owed says so once about ready, and the plea
+    // channel closes every dispatch wake (dc-mpg8) — a standing teach,
+    // never a pressure count
     let quiet = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
     let out = quarry::render::dispatch_wake(&s, &all, &[quiet.front.id.as_str()]);
-    assert_eq!(out.len(), 1, "quiet purview, one line: {:?}", out);
+    assert_eq!(out.len(), 2, "quiet purview: ready line plus the plea channel: {:?}", out);
     assert!(out[0].starts_with("ready to dispatch: none in purview"));
+    assert!(
+        out[1].contains("the plea channel (dc-mpg8)") && out[1].contains("q new thread"),
+        "the dispatch wake names the plea channel: {:?}",
+        out
+    );
 }
 
 #[test]
@@ -4460,3 +4467,329 @@ fn harvest_asks_the_kindless_backtick_mints_before_ratification_passes_them_by()
         "this claim leads with a registered name - a mechanism or mandate read off landed code (--kind vein), or the receipt of a landed capability (--kind feature)? Kindless claims never ride the assay ladder."
     );
 }
+
+// ── the witness pen (dc-mpg8) ──────────────────────────────────────────────
+
+/// The line check: from a witness seat (a session whose REGISTERED kind is
+/// not design) acceptance is transcription — a backticked register name in
+/// the line refuses and teaches the plea channel; a plain negation passes
+/// and is MARKED at authoring. Design seats and the contested kindless
+/// middle keep the free pen (dc-p6z4's design-capable default; the
+/// kindless call is queued for ruling).
+#[test]
+fn witness_pen_refuses_register_names_and_marks_the_rest() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    // a backticked register name refuses from the witness seat, at mint
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["new", "item", "seen gap", "--acceptance", "lands `shiny-name`: the gap closes"],
+    );
+    assert!(!out.status.success(), "register name from a witness seat must refuse");
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(err.contains("witness pen (dc-mpg8)"), "names the pen: {}", err);
+    assert!(err.contains("q new thread"), "teaches the plea channel: {}", err);
+    // a plain transcription passes and is marked at authoring
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["new", "item", "seen gap", "--acceptance", "the witnessed defect no longer reproduces"],
+    );
+    assert!(out.status.success(), "plain negation passes: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, "seen-gap").unwrap();
+    assert_eq!(it.front.witness.len(), 1, "marked at authoring");
+    let m = &it.front.witness[0];
+    assert_eq!(m.by, "session:disp");
+    assert_eq!(m.session.as_deref(), Some("disp"));
+    assert_eq!(m.kind.as_deref(), Some("dispatch"));
+    assert!(m.ratified.is_none(), "under review until the user's word");
+    // the same refusal holds at acceptance+= on an existing item
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["set", &it.front.id, "acceptance+=also lands `another-name` here"],
+    );
+    assert!(!out.status.success(), "register name refuses at set too");
+    // a design seat authors freely, register names included, unmarked
+    let out = run(
+        &[("QUARRY_SESSION", "design")],
+        &["new", "item", "designed work", "--acceptance", "lands `real-name`: the capability"],
+    );
+    assert!(out.status.success(), "design pen is free: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    let d = s.find(&all, "designed-work").unwrap();
+    assert!(d.front.witness.is_empty(), "design authoring is never witness-marked");
+    // the contested kindless middle keeps the design-capable default:
+    // an unregistered session authors unmarked (queued for ruling)
+    let out = run(
+        &[("QUARRY_SESSION", "loose")],
+        &["new", "item", "kindless work", "--acceptance", "lands `free`: kindless authoring"],
+    );
+    assert!(out.status.success(), "kindless keeps the free pen: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    assert!(s.find(&all, "kindless-work").unwrap().front.witness.is_empty());
+}
+
+/// The sequence check: a witness seat that met the acceptance gate's
+/// refusal on an item may not then author that item's contract — the
+/// it-hapc self-authorization class refuses by construction, while the
+/// design seat's author-after-refusal flow (the gate's own teaching)
+/// stays free.
+#[test]
+fn witness_pen_refuses_the_self_authorization_sequence() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let mut it = NewArgs::bare("item", "contract-less");
+    it.status = Some("shaped".into());
+    it.about = vec![area.front.id.clone()];
+    let it = ops::new_node(&s, it).unwrap();
+    // the dispatcher fires it and meets the gate — the refusal is logged
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["dispatch", &it.front.id, "--files", "src/**"],
+    );
+    assert!(!out.status.success(), "the gate refuses the contract-less fire");
+    let log = s.read_log().unwrap();
+    assert!(
+        log.iter().any(|ev| ev.get("op").and_then(|v| v.as_str()) == Some("gate-refusal")
+            && ev.get("node").and_then(|v| v.as_str()) == Some(it.front.id.as_str())),
+        "the gate refusal is the pen's memory"
+    );
+    // the same seat may not now author the contract — refused by sequence
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["set", &it.front.id, "acceptance+=the gap closes"],
+    );
+    assert!(!out.status.success(), "author-after-refusal is the sequence the pen stops");
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(err.contains("witness pen (dc-mpg8)") && err.contains("sequence"), "names the sequence: {}", err);
+    assert!(err.contains("thread"), "teaches the plea channel: {}", err);
+    // the design seat authors after the same refusal — the taught flow
+    let out = run(
+        &[("QUARRY_SESSION", "design")],
+        &["set", &it.front.id, "acceptance+=the gap closes"],
+    );
+    assert!(out.status.success(), "design authors after the refusal: {}", String::from_utf8_lossy(&out.stderr));
+}
+
+/// The executor check: the authoring badge cannot join or solo-build the
+/// item it authored — author is never executor, mechanically. The refused
+/// join spends nothing: the single-use token stays live for a fresh agent.
+#[test]
+fn witness_author_never_executes_by_join_or_solo() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    // the area first-touch gate is not under test — record the read
+    quarry::coord::record_area_read(&s, "disp", &area.front.id);
+    // the witness seat files the item with its transcribed contract
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["new", "item", "witnessed defect", "--about", &area.front.id, "--acceptance", "the witnessed defect no longer reproduces", "--status", "ready"],
+    );
+    assert!(out.status.success(), "filing: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, "witnessed-defect").unwrap().clone();
+    // solo-build refuses: brief lands, the reserve refusal is the pen's
+    let out = run(&[("QUARRY_SESSION", "disp")], &["brief", &it.front.id]);
+    assert!(out.status.success(), "brief: {}", String::from_utf8_lossy(&out.stderr));
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["reserve", &it.front.id, "--files", "src/**"],
+    );
+    assert!(!out.status.success(), "the authoring seat cannot solo-build");
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(err.contains("author is never executor"), "names the ban: {}", err);
+    // dispatching it stays legal — author fires, a fresh mind executes
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["dispatch", &it.front.id, "--files", "src/**"],
+    );
+    assert!(out.status.success(), "the author may fire: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let token = stdout
+        .lines()
+        .find_map(|l| l.split("q join ").nth(1).map(|t| t.split_whitespace().next().unwrap().to_string()))
+        .expect("spawn line carries the token");
+    // the authoring identity's join refuses WITHOUT spending the token
+    let out = run(&[("QUARRY_SESSION", "disp")], &["join", &token]);
+    assert!(!out.status.success(), "the authoring badge cannot join");
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("author is never executor"),
+        "join refusal names the ban: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    // a fresh agent joins on the same token — the refusal consumed nothing
+    let out = run(
+        &[("QUARRY_SESSION", "disp"), ("QUARRY_AGENT", "ag-9")],
+        &["join", &token],
+    );
+    assert!(out.status.success(), "a fresh mind joins: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("agent:ag-9"),
+        "bound to the fresh identity: {}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+}
+
+/// The review channel: witness marks count on the design wake beside owed
+/// threads (the dispatch wake omits them), the q witness surfaces list and
+/// show them, and ONLY the user's word clears a flag — ratified marks stay
+/// as record. The manual mark road transcribes a pre-pen line's true seat
+/// and can only add review, never clear it.
+#[test]
+fn witness_flags_ride_the_design_wake_until_user_ratified() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    // the area first-touch gate is not under test — record the read
+    quarry::coord::record_area_read(&s, "disp", &area.front.id);
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["new", "item", "witnessed defect", "--about", &area.front.id, "--acceptance", "the witnessed defect no longer reproduces"],
+    );
+    assert!(out.status.success(), "filing: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, "witnessed-defect").unwrap().clone();
+    // the design wake counts the channel beside owed threads
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("witness-authored acceptance under review: 1 line(s)"),
+        "the design wake carries the review channel: {}",
+        stdout
+    );
+    assert!(stdout.contains("(q witness)"), "the count teaches the pull surface: {}", stdout);
+    // the dispatch wake omits it — the authoring seat is never the review
+    // surface (dc-mpg8: the user attends one liaison)
+    let out = run(&[("QUARRY_SESSION", "disp")], &["session", "resume"]);
+    assert!(
+        !String::from_utf8_lossy(&out.stdout).contains("witness-authored acceptance under review"),
+        "the authoring seat's wake never reviews its own pen"
+    );
+    // the channel lists the line; ratification demands the user's word
+    let out = run(&[], &["witness"]);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("the witnessed defect no longer reproduces") && stdout.contains(&it.front.id));
+    let out = run(&[], &["witness", &it.front.id, "--ratify"]);
+    assert!(!out.status.success(), "no --by user, no clear");
+    let out = run(&[], &["witness", &it.front.id, "--ratify", "--by", "assistant"]);
+    assert!(!out.status.success(), "only the user's word clears the flag");
+    let out = run(&[], &["witness", &it.front.id, "--ratify", "--by", "user"]);
+    assert!(out.status.success(), "the user's word lands: {}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    let m = &s.find(&all, &it.front.id).unwrap().front.witness[0];
+    assert_eq!(m.ratified.as_ref().map(|r| r.by.as_str()), Some("user"), "the mark stays as record, stamped");
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(
+        !String::from_utf8_lossy(&out.stdout).contains("witness-authored acceptance under review"),
+        "ratified lines leave the wake"
+    );
+    let out = run(&[], &["witness"]);
+    assert!(String::from_utf8_lossy(&out.stdout).contains("the witness channel is clear"));
+    // the manual mark road: a pre-pen line marks with its true seat
+    let mut pre = NewArgs::bare("item", "pre-pen filing");
+    pre.about = vec![area.front.id.clone()];
+    pre.acceptance = vec!["an old transcribed negation".into()];
+    let pre = ops::new_node(&s, pre).unwrap();
+    let out = run(
+        &[],
+        &["witness", &pre.front.id, "--mark", "an old transcribed negation", "--author-session", "disp"],
+    );
+    assert!(out.status.success(), "the seed road marks: {}", String::from_utf8_lossy(&out.stderr));
+    let out = run(
+        &[],
+        &["witness", &pre.front.id, "--mark", "an old transcribed negation", "--author-session", "disp"],
+    );
+    assert!(!out.status.success(), "double-mark refuses");
+    let out = run(
+        &[],
+        &["witness", &pre.front.id, "--mark", "no such line", "--author-session", "disp"],
+    );
+    assert!(!out.status.success(), "the mark rides the exact line");
+    let all = s.load_all().unwrap();
+    let m = &s.find(&all, &pre.front.id).unwrap().front.witness[0];
+    assert_eq!(m.by, "session:disp");
+    assert_eq!(m.kind.as_deref(), Some("dispatch"), "the seat's kind transcribed from the registry");
+    let out = run(&[], &["witness"]);
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("an old transcribed negation"),
+        "the seeded line enters the channel"
+    );
+}
+

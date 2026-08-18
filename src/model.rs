@@ -186,6 +186,36 @@ pub struct Ratified {
     pub date: String,
 }
 
+/// A witness mark (dc-mpg8): the record that an acceptance line was
+/// authored from a witness seat — a session whose registered kind is not
+/// design — where the pen is transcription only. Marked at authoring by
+/// construction; the line surfaces on the design wake's review channel
+/// until the user ratifies (or a future acceptance-change verb amends) it.
+/// The mark itself is a stamp and never leaves: ratification records the
+/// user's act on it (the archive-is-a-flag pattern).
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WitnessMark {
+    /// The acceptance line, verbatim — marks ride the text because
+    /// acceptance lines are append-only (dc-p6z4/it-ds6b); a line no longer
+    /// present in `acceptance` (amended by a future verb) carries no flag.
+    pub line: String,
+    /// The acting identity key at filing (agent:/chat:/session:) — the
+    /// executor refusals compare against it: author is never executor.
+    pub by: String,
+    /// The authoring q session, when bound — the solo-build refusal's key.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub session: Option<String>,
+    /// The session's registered kind at filing — recorded because the
+    /// registry mutates and the witness predicate is a filing-time fact.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub kind: Option<String>,
+    pub date: String,
+    /// The user's ratification (dc-mpg8: only the user's word clears the
+    /// review flag). Absent while the line awaits ratify-or-amend.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub ratified: Option<Ratified>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Front {
     pub id: String,
@@ -209,6 +239,9 @@ pub struct Front {
     pub ratified: Option<Ratified>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub acceptance: Vec<String>,
+    /// Witness marks (dc-mpg8), one per witness-authored acceptance line.
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub witness: Vec<WitnessMark>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub write_set: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]

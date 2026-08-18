@@ -333,6 +333,33 @@ in-flight and the lease held until YOU land it (q set <item> status=done ·
 q release <item>). Harvest prints the judgment surface and clears the
 machine-local badge; a partial or stop report harvests the same way.")]
     Harvest { item: String },
+    /// The witness review channel (dc-mpg8): witness-authored acceptance
+    /// lines awaiting the user's ratify-or-amend
+    #[command(after_help = "A session whose registered kind is not design holds the witness pen:
+acceptance it authors is transcription — marked at authoring by
+construction and carried on the design wake's review channel until the
+user ratifies or amends it. Bare `q witness` lists the channel;
+`q witness <item>` shows one item's marks, ratified stamps included.
+--ratify records the USER'S word only (--by user — the q rule --by user
+channel). --mark is the transcription road for lines that predate the pen:
+it marks an existing acceptance line with its true authoring seat
+(--author-session), adds review pressure, and can clear nothing.")]
+    Witness {
+        /// Item to inspect or act on; omitted lists the whole channel
+        item: Option<String>,
+        /// Mark an existing acceptance line (verbatim) as witness-authored
+        #[arg(long)]
+        mark: Option<String>,
+        /// The session whose seat authored the line (with --mark)
+        #[arg(long)]
+        author_session: Option<String>,
+        /// Ratify the item's witness-authored lines — the user's word only
+        #[arg(long)]
+        ratify: bool,
+        /// Who ratifies (must be user; the agent transcribes, never decides)
+        #[arg(long)]
+        by: Option<String>,
+    },
     /// Render the whole graph as one self-contained HTML page (graph/view/index.html)
     View {
         /// Open the rendered page in the default browser
@@ -1222,6 +1249,18 @@ fn main() -> Result<()> {
                                     defects
                                 );
                             }
+                            // The witness review channel (dc-mpg8), beside
+                            // owed threads: witness-authored acceptance
+                            // waits on the user's ratify-or-amend, and the
+                            // design session is the one liaison the user
+                            // attends. Zero renders nothing.
+                            let witness = queries::witness_flags(&all).len();
+                            if witness > 0 {
+                                println!(
+                                    "  witness-authored acceptance under review: {} line(s) authored from a non-design seat await the user's ratify-or-amend (q witness)",
+                                    witness
+                                );
+                            }
                             // The hunger earner (dc-dty5): when ready is
                             // empty while shaping holds work, the feed
                             // itself is the waiter on the whole pool.
@@ -1585,6 +1624,21 @@ fn main() -> Result<()> {
                                 defects
                             );
                         }
+                        // The witness review channel (dc-mpg8), beside
+                        // owed threads and scoped like them: witness-
+                        // authored acceptance waits on the user's
+                        // ratify-or-amend at the design liaison. Zero
+                        // renders nothing.
+                        let witness = queries::witness_flags(&all)
+                            .into_iter()
+                            .filter(|(n, _)| coord::in_purview(n, &ids))
+                            .count();
+                        if witness > 0 {
+                            println!(
+                                "  witness-authored acceptance under review: {} line(s) in your purview authored from a non-design seat await the user's ratify-or-amend (q witness)",
+                                witness
+                            );
+                        }
                         // The hunger earner (dc-dty5), scoped like its
                         // siblings: ready empty while shaping holds work
                         // — the feed itself is the waiter on the whole
@@ -1672,6 +1726,17 @@ fn main() -> Result<()> {
             // authoring command directly — and it must speak before the
             // brief teach, because the tripwired brief refuses too.
             ops::acceptance_backstop(&store, &node, true)?;
+            // The witness executor check (dc-mpg8): the authoring badge
+            // cannot solo-build the item it authored — author is never
+            // executor. The solo station compares both the acting key and
+            // the session (unlike join, where session env is inherited).
+            let solo_key = coord::acting_key(
+                coord::current_agent().as_deref(),
+                coord::current_chat().as_deref(),
+                Some(&sess),
+            )
+            .unwrap_or_else(|| format!("session:{}", sess));
+            ops::witness_execution_check(&store, &node.front.id, &solo_key, Some(&sess))?;
             // C8: a lease follows a brief — no lease on unbriefed work.
             if !coord::briefed_this_session(&store, &node.front.id, &sess) {
                 anyhow::bail!(
@@ -1922,6 +1987,72 @@ fn main() -> Result<()> {
             // rides along for free (it-n3fu), best-effort.
             if let Ok(p) = quarry::view::write(&store) {
                 println!("  view regenerated: {}", p.display());
+            }
+        }
+        Cmd::Witness { item, mark, author_session, ratify, by } => {
+            let store = Store::resolve()?;
+            match (item, mark) {
+                (Some(key), Some(line)) => {
+                    let author = author_session.ok_or_else(|| anyhow::anyhow!(
+                        "--mark transcribes the seat that authored the line — name it: --author-session <name>"
+                    ))?;
+                    let n = ops::witness_mark(&store, &key, &line, &author)?;
+                    let all = store.load_all()?;
+                    println!(
+                        "✔ witness mark: {} — the line rides the design wake's review channel until the user ratifies or amends it (dc-mpg8).",
+                        aref(&all, &n)
+                    );
+                }
+                (Some(key), None) if ratify => {
+                    let (n, count) = ops::witness_ratify(&store, &key, by.as_deref())?;
+                    let all = store.load_all()?;
+                    println!(
+                        "✔ user-ratified: {} witness line(s) on {} — the marks stay as record; the review channel lets them go (dc-mpg8).",
+                        count,
+                        aref(&all, &n)
+                    );
+                }
+                (Some(key), None) => {
+                    let all = store.load_all()?;
+                    let n = store.find(&all, &key)?;
+                    if n.front.witness.is_empty() {
+                        println!(
+                            "{} carries no witness marks — its acceptance was authored from a design seat (or none exists).",
+                            aref(&all, n)
+                        );
+                    } else {
+                        println!("{}", aref(&all, n));
+                        for m in &n.front.witness {
+                            let state = match &m.ratified {
+                                Some(r) => format!("user-ratified {}", r.date),
+                                None if n.front.acceptance.iter().any(|a| a == &m.line) => {
+                                    "under review — awaiting the user's ratify-or-amend".to_string()
+                                }
+                                None => "line no longer in acceptance — mark stands as record".to_string(),
+                            };
+                            println!("  · \"{}\"\n    authored by {} ({}) {} — {}", m.line, m.by, m.kind.as_deref().unwrap_or("kindless"), m.date, state);
+                        }
+                    }
+                }
+                (None, Some(_)) => {
+                    anyhow::bail!("--mark acts on one item — name it: q witness <item> --mark \"<line>\" --author-session <name>")
+                }
+                (None, None) if ratify => {
+                    anyhow::bail!("--ratify acts on one item — name it: q witness <item> --ratify --by user")
+                }
+                (None, None) => {
+                    let all = store.load_all()?;
+                    let flags = queries::witness_flags(&all);
+                    if flags.is_empty() {
+                        println!("the witness channel is clear — no witness-authored acceptance line awaits the user (dc-mpg8).");
+                    } else {
+                        println!("witness-authored acceptance under review (dc-mpg8) — the pen from a non-design seat is transcription; each line awaits the user's ratify-or-amend:");
+                        for (n, m) in &flags {
+                            println!("  · \"{}\"\n      {} — authored by {} {}", m.line, aref(&all, n), m.by, m.date);
+                        }
+                        println!("the user's word clears a line: q witness <item> --ratify --by user (their word transcribed — the q rule --by user channel)");
+                    }
+                }
             }
         }
         Cmd::Queue { which } => {

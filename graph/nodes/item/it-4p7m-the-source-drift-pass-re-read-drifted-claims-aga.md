@@ -10,6 +10,12 @@ actor: claude-fable-5
 kind: process
 acceptance:
 - behind carries zero file-drift wants-action entries at pass close; every drifted claim shows a recorded affirm, edit, or refute in its log
+witness:
+- line: behind carries zero file-drift wants-action entries at pass close; every drifted claim shows a recorded affirm, edit, or refute in its log
+  by: session:dispatcher
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-18
 edges:
 - rel: about
   to: ar-c7f5

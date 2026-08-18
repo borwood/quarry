@@ -2,8 +2,8 @@
 id: th-n7rc
 type: thread
 title: 'dispatcher-authored acceptance: when the witness may write the contract'
-v: 1
-status: queued
+v: 2
+status: resolved
 provenance: assistant
 created: 2026-08-18T08:22:37Z
 actor: claude-fable-5

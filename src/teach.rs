@@ -86,6 +86,24 @@ them. PRDs and tech specs are ordinary doc nodes (kind=prd, kind=spec)
 registered whole; alternatives live in the body until something depends on
 one (extraction-on-citation).
 
+THE WITNESS PEN — PLEAS ARE THREADS
+Acceptance authoring belongs to design (dc-p6z4); a session whose
+registered kind is not design holds the WITNESS PEN (dc-mpg8):
+transcription only — an item filed from that seat carries a witnessed
+defect's negation as its contract, at filing, never at fire. Construction
+holds the shape: a backticked register name in the line refuses (naming is
+design's), authoring after the gate refused the same item refuses by
+sequence, and the authoring badge can neither join nor solo-build the item
+it authored — author is never executor. Every witness-authored line is
+marked at authoring and rides the design wake's review channel until the
+user ratifies or amends it (q witness; the user's word lands as
+q witness <item> --ratify --by user). For anything with creative wiggle
+room — work subsumable in planned systems, lines implying design intent,
+repairs whose right shape is arguable — the channel is the PLEA: put the
+evidence on the thread it informs, or open one (q new thread "<the plea>"
+--about <area>). Unique context from your seat is leveraged there, never
+self-authorized.
+
 REFS AND STALENESS
 Cite nodes and files with edges; stamps are automatic. behind is
 information, not noise: severity 1 means something you cite was refuted or

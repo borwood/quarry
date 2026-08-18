@@ -79,6 +79,103 @@ fn parse_project_field(f: &str) -> Result<(String, serde_yaml::Value)> {
     Ok((k.to_string(), serde_yaml::Value::String(v.to_string())))
 }
 
+/// The witness pen's line check (dc-mpg8): from a witness seat an
+/// acceptance line is a transcription — a witnessed defect's negation —
+/// and no name enters the register from that seat. A backticked span in
+/// the line refuses by construction; naming is design's. One check point
+/// for both authoring stations (q new --acceptance and q set acceptance+=).
+fn witness_line_check(seat: &crate::coord::WitnessSeat, lines: &[String]) -> Result<()> {
+    for line in lines {
+        let names = crate::queries::backticked_spans(line);
+        if let Some(name) = names.first() {
+            bail!(
+                "witness pen (dc-mpg8): the acceptance line carries a backticked register name (`{}`) and this seat (session {}, kind {}) holds the witness pen — transcription only: a witnessed defect's negation, never invented intent, and no new names enter the register from this seat. Naming is design's. If the plea is real, it is a thread: put the evidence on the thread it informs, or open one — q new thread \"<the plea>\" --about <area>.",
+                name, seat.session, seat.kind
+            );
+        }
+    }
+    Ok(())
+}
+
+/// The witness pen's sequence check (dc-mpg8): a seat that met the
+/// acceptance gate's refusal on an item may not then author that item's
+/// contract — the self-authorization sequence (the it-hapc class) refuses
+/// by construction. The memory is the gate-refusal event
+/// acceptance_backstop logs; the match is the seat's session or its
+/// acting identity key.
+fn witness_sequence_check(store: &Store, item: &Node, seat: &crate::coord::WitnessSeat) -> Result<()> {
+    let log = store.read_log()?;
+    let met = log.iter().any(|ev| {
+        ev.get("op").and_then(|v| v.as_str()) == Some("gate-refusal")
+            && ev.get("node").and_then(|v| v.as_str()) == Some(item.front.id.as_str())
+            && (ev.get("session").and_then(|v| v.as_str()) == Some(seat.session.as_str())
+                || ev.get("refused_key").and_then(|v| v.as_str()) == Some(seat.key.as_str()))
+    });
+    if met {
+        bail!(
+            "witness pen (dc-mpg8): this seat (session {}) met the acceptance gate's refusal on {} — authoring the contract after the gate refused it is the self-authorization sequence the pen refuses by construction (the it-hapc class). The pen stays with design: acceptance authored there re-readies the item, or the plea rides a thread — evidence onto the thread it informs, or q new thread \"<the plea>\" --about <area>.",
+            seat.session,
+            crate::surface::atom_ref(&crate::surface::atom(&[], item))
+        );
+    }
+    Ok(())
+}
+
+/// The marks a witness seat's authoring stamps (dc-mpg8): one per line,
+/// author and seat transcribed, unratified — the design wake's review
+/// channel surfaces them until the user's word lands.
+fn witness_marks(seat: &crate::coord::WitnessSeat, lines: &[String]) -> Vec<WitnessMark> {
+    lines
+        .iter()
+        .map(|l| WitnessMark {
+            line: l.clone(),
+            by: seat.key.clone(),
+            session: Some(seat.session.clone()),
+            kind: Some(seat.kind.clone()),
+            date: Store::today(),
+            ratified: None,
+        })
+        .collect()
+}
+
+/// The witness pen's executor check (dc-mpg8): the authoring badge cannot
+/// join or solo-build the item it authored — author is never executor,
+/// mechanically. Compared: the acting identity key against each mark's
+/// author, and (on the solo station only) the session against the mark's
+/// authoring session — a joined subagent legitimately inherits the
+/// dispatcher's session env, so the join road compares keys alone.
+/// Authorship does not wash off with ratification: a user-ratified line
+/// still bars its author from executing.
+pub fn witness_execution_check(
+    store: &Store,
+    item_key: &str,
+    key: &str,
+    session: Option<&str>,
+) -> Result<()> {
+    let all = store.load_all()?;
+    let Ok(item) = store.find(&all, item_key) else {
+        return Ok(());
+    };
+    for m in &item.front.witness {
+        let by_key = m.by == key;
+        let by_session = session.is_some() && m.session.as_deref() == session;
+        if by_key || by_session {
+            let who = if by_key {
+                format!("this identity ({})", key)
+            } else {
+                format!("this session ({})", session.unwrap_or("?"))
+            };
+            bail!(
+                "witness pen (dc-mpg8): {} authored acceptance on {} from a witness seat — author is never executor, by construction. The work belongs to another mind: the dispatcher re-dispatches it to a fresh agent (q dispatch {}), and this seat's further evidence rides the thread it informs, never the contract.",
+                who,
+                crate::surface::atom_ref(&crate::surface::atom(&all, item)),
+                item.front.id
+            );
+        }
+    }
+    Ok(())
+}
+
 pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
     let all = store.load_all()?;
     prefix_of(&a.ty)?;
@@ -107,6 +204,21 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
             "acceptance gate (dc-p6z4): an item cannot mint straight to ready with no acceptance lines — ready is stored intent, and intent without acceptance names is unmeasurable. State what done means: --acceptance \"<outcome>\" (repeatable, one line per outcome), or mint it shaped and author acceptance before the flip."
         );
     }
+    // The witness pen at filing (dc-mpg8): acceptance authored at mint from
+    // a witness seat passes the line check (no register names) and is
+    // marked. No sequence check here — a gate refusal presupposes an
+    // existing item, and this one is being born.
+    let witness = if a.ty == "item" && !a.acceptance.is_empty() {
+        match crate::coord::witness_seat(store) {
+            Some(seat) => {
+                witness_line_check(&seat, &a.acceptance)?;
+                witness_marks(&seat, &a.acceptance)
+            }
+            None => vec![],
+        }
+    } else {
+        vec![]
+    };
     let id = store.mint_id(&a.ty, &all)?;
     let mut edges = Vec::new();
     for t in &a.about {
@@ -140,6 +252,7 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
         method: a.method,
         ratified,
         acceptance: a.acceptance,
+        witness,
         write_set: vec![],
         aliases: vec![],
         archived: false,
@@ -355,6 +468,7 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
     let all = store.load_all()?;
     let mut node = store.find(&all, key)?.clone();
     let mut from_status: Option<String> = None;
+    let mut new_acceptance: Vec<String> = Vec::new();
     for f in fields {
         let (k, v) = f
             .split_once('=')
@@ -383,7 +497,10 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
             "kind" => node.front.kind = Some(v.into()),
             "method" => node.front.method = Some(v.into()),
             "path" => node.front.path = Some(v.into()),
-            "acceptance+" => node.front.acceptance.push(v.into()),
+            "acceptance+" => {
+                node.front.acceptance.push(v.into());
+                new_acceptance.push(v.into());
+            }
             "write-set+" | "write_set+" => node.front.write_set.push(v.into()),
             "ratified" => {
                 node.front.ratified = Some(Ratified {
@@ -397,6 +514,19 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                 let (key, val) = parse_project_field(f)?;
                 node.front.extra.insert(key, val);
             }
+        }
+    }
+    // The witness pen at authoring (dc-mpg8): acceptance authored from a
+    // witness seat passes the line check (no register names) and the
+    // sequence check (never after this seat met the gate's refusal on the
+    // item), then the lines are marked — the design wake's review channel
+    // carries them until the user's ratify-or-amend. A bail here discards
+    // the in-memory clone; nothing has been saved.
+    if !new_acceptance.is_empty() && node.front.ty == "item" {
+        if let Some(seat) = crate::coord::witness_seat(store) {
+            witness_line_check(&seat, &new_acceptance)?;
+            witness_sequence_check(store, &node, &seat)?;
+            node.front.witness.extend(witness_marks(&seat, &new_acceptance));
         }
     }
     // The acceptance gate's construction point (dc-p6z4): ready is stored
@@ -860,14 +990,36 @@ pub fn acceptance_backstop(store: &Store, item: &Node, solo: bool) -> Result<()>
     } else {
         String::new()
     };
+    // The gate refusal is the witness pen's memory (dc-mpg8): the sequence
+    // check refuses this seat's later authoring on this item against this
+    // event. Logged before either bail; log_event stamps session and badge.
+    store.log_event(json!({
+        "ts": Store::now(), "node": item.front.id, "v": item.front.v,
+        "op": "gate-refusal", "solo": solo, "actor": Store::actor(),
+        "refused_key": crate::coord::acting_key(
+            crate::coord::current_agent().as_deref(),
+            crate::coord::current_chat().as_deref(),
+            crate::coord::current_session().as_deref(),
+        ),
+    }))?;
     if solo {
+        // The solo station is design-capable by default (dc-p6z4) and is
+        // taught the authoring command — unless this seat holds the witness
+        // pen (dc-mpg8), where that teach would be a trap: the sequence
+        // check now bars this seat's authoring on this item.
+        if let Some(seat) = crate::coord::witness_seat(store) {
+            bail!(
+                "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to fire against.{} This seat (session {}, kind {}) holds the witness pen (dc-mpg8), and the gate has now refused it here: the contract comes from design (authored there, it re-readies), or the plea rides a thread — evidence onto the thread it informs, or q new thread \"<the plea>\" --about <area>.",
+                aref, demote_line, seat.session, seat.kind
+            );
+        }
         bail!(
             "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to fire against.{} Authoring acceptance is a shaping act: q set {} acceptance+=\"<outcome>\" (repeatable, one line per outcome), then q set {} status=ready and fire again.",
             aref, demote_line, item.front.id, item.front.id
         );
     }
     bail!(
-        "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to dispatch against.{} The pen stays with design: a dispatcher never authors acceptance. Return it to the design session that shapes this work; acceptance authored there re-readies it.",
+        "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to dispatch against.{} The pen stays with design: a dispatcher never authors acceptance, and after this refusal the witness pen (dc-mpg8) refuses this seat's authoring on this item by sequence. Return it to the design session that shapes this work; acceptance authored there re-readies it. A gap this seat witnessed is a plea: evidence onto the thread it informs, or q new thread \"<the plea>\" --about <area>.",
         aref, demote_line
     );
 }
@@ -1056,6 +1208,14 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
             "no identity reached this q process — the session hook injects QUARRY_AGENT/QUARRY_CHAT for shells in this repo, so run q join from such a shell. Outside hook coverage, skip join and export the badge by hand (QUARRY_DISPATCH=<item id>, from your dispatcher) — the env override survives exactly for that case."
         );
     };
+    // The witness executor check (dc-mpg8), BEFORE consumption: the
+    // authoring badge cannot join the item it authored, and the refusal
+    // must leave the single-use token live for the right agent. Keys only —
+    // a joined subagent legitimately inherits the dispatcher's session env,
+    // so the session never bars the join road.
+    if let Some(d) = crate::coord::dispatch_for_token(store, token) {
+        witness_execution_check(store, &d.item, &id_key, None)?;
+    }
     let bind = crate::coord::consume_join_token(store, token, &id_key)?;
     let (d, bound, rejoined) = match bind {
         crate::coord::JoinBind::Bound(d) => (d, Some(id_key.clone()), false),
@@ -1149,4 +1309,96 @@ pub fn affirm(store: &Store, key: &str, only_to: Option<String>) -> Result<usize
         }))?;
     }
     Ok(count)
+}
+
+/// `q witness <item> --mark`: mark an EXISTING acceptance line as
+/// witness-authored, transcribing the seat that authored it — the road for
+/// lines that predate the pen (the three inaugural instances seed the
+/// channel through it, dc-mpg8). Safe by direction: a mark only ADDS
+/// review pressure; clearing is the user's act alone. The normal mark is
+/// automatic at authoring; this road refuses a line the item does not
+/// carry verbatim, and a line already marked. No version bump: a mark is
+/// bookkeeping (the affirm rationale), loud in the log instead.
+pub fn witness_mark(
+    store: &Store,
+    item_key: &str,
+    line: &str,
+    author_session: &str,
+) -> Result<Node> {
+    let all = store.load_all()?;
+    let mut node = store.find(&all, item_key)?.clone();
+    if node.front.ty != "item" {
+        bail!(
+            "{} is a {}, not an item — witness marks ride item acceptance lines",
+            node.front.id, node.front.ty
+        );
+    }
+    if !node.front.acceptance.iter().any(|a| a == line) {
+        bail!(
+            "no acceptance line on {} matches that text verbatim — the mark rides the exact line. What stands:\n  {}",
+            crate::surface::atom_ref(&crate::surface::atom(&all, &node)),
+            node.front.acceptance.join("\n  ")
+        );
+    }
+    if node.front.witness.iter().any(|m| m.line == line) {
+        bail!(
+            "that line already carries a witness mark on {} — q witness {} shows the channel",
+            node.front.id, node.front.id
+        );
+    }
+    let kind = crate::coord::load_sessions(store)
+        .get(author_session)
+        .and_then(|p| p.kind.clone());
+    node.front.witness.push(WitnessMark {
+        line: line.to_string(),
+        by: format!("session:{}", author_session),
+        session: Some(author_session.to_string()),
+        kind,
+        date: Store::today(),
+        ratified: None,
+    });
+    store.save(&node)?;
+    store.log_event(json!({
+        "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+        "op": "witness-mark", "line": line, "author_session": author_session,
+        "actor": Store::actor()
+    }))?;
+    Ok(node)
+}
+
+/// `q witness <item> --ratify --by user`: the user's ratification of the
+/// item's witness-authored acceptance lines (dc-mpg8: review rides the
+/// design wake UNTIL user-ratified or amended). Only the user's word
+/// clears the flag — the q rule --by user channel: the agent transcribes,
+/// never decides. Stamps every unratified mark; the mark stays as record.
+/// No version bump: ratification is bookkeeping, never content (dc-2wes),
+/// so citers never go behind over good news.
+pub fn witness_ratify(store: &Store, item_key: &str, by: Option<&str>) -> Result<(Node, usize)> {
+    if by != Some("user") {
+        bail!(
+            "witness pen (dc-mpg8): only the user's word clears a witness flag — re-run with --by user when the user has ratified the line(s), their word transcribed (the q rule --by user channel). Amendment awaits the acceptance change verbs; until then an unratified line stays on the design wake's review channel."
+        );
+    }
+    let all = store.load_all()?;
+    let mut node = store.find(&all, item_key)?.clone();
+    let mut count = 0usize;
+    for m in &mut node.front.witness {
+        if m.ratified.is_none() {
+            m.ratified = Some(Ratified { by: "user".into(), date: Store::today() });
+            count += 1;
+        }
+    }
+    if count == 0 {
+        bail!(
+            "{} carries no unratified witness marks — nothing to ratify (q witness {} shows the record)",
+            crate::surface::atom_ref(&crate::surface::atom(&all, &node)),
+            node.front.id
+        );
+    }
+    store.save(&node)?;
+    store.log_event(json!({
+        "ts": Store::now(), "node": node.front.id, "v": node.front.v,
+        "op": "witness-ratify", "restamped": count, "actor": Store::actor()
+    }))?;
+    Ok((node, count))
 }

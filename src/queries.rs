@@ -3,7 +3,7 @@ use std::collections::{HashSet, VecDeque};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use crate::model::{At, Node};
+use crate::model::{At, Node, WitnessMark};
 use crate::store::Store;
 
 /// A live blocker of an item or thread: a depends-on target not yet landed/resolved.
@@ -82,6 +82,33 @@ pub fn awaiting_acceptance<'a>(all: &'a [Node]) -> Vec<&'a Node> {
             .then_with(|| a.front.id.cmp(&b.front.id))
     });
     v
+}
+
+/// The witness review channel (dc-mpg8), derived at read: every
+/// witness-authored acceptance line still awaiting the user's
+/// ratify-or-amend, on any non-archived item at any status — review
+/// outlives the landing (the inaugural lines seed the channel already
+/// done). A mark whose line no longer sits in `acceptance` (amended by a
+/// future change verb) carries no flag; ratified marks are the record and
+/// stay off this surface. Order: item creation, then id — the channel
+/// reads oldest debt first.
+pub fn witness_flags<'a>(all: &'a [Node]) -> Vec<(&'a Node, &'a WitnessMark)> {
+    let mut items: Vec<&Node> = all
+        .iter()
+        .filter(|n| n.front.ty == "item" && !n.front.archived && !n.front.witness.is_empty())
+        .collect();
+    items.sort_by(|a, b| {
+        a.front.created.cmp(&b.front.created).then_with(|| a.front.id.cmp(&b.front.id))
+    });
+    let mut out = Vec::new();
+    for n in items {
+        for m in &n.front.witness {
+            if m.ratified.is_none() && n.front.acceptance.iter().any(|a| a == &m.line) {
+                out.push((n, m));
+            }
+        }
+    }
+    out
 }
 
 /// Whether an item sits in the shaping stratum — the defect count and the

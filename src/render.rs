@@ -72,7 +72,16 @@ pub fn open(store: &Store, key: &str, show_all: bool) -> Result<String> {
     if !n.front.acceptance.is_empty() {
         writeln!(s, "\n  acceptance:")?;
         for a in &n.front.acceptance {
-            writeln!(s, "    · {}", a)?;
+            // The witness mark rides its line at the reading register
+            // (dc-mpg8): authored from a non-design seat — under the
+            // user's review until ratified; the ratified stamp is record.
+            let tag = n.front.witness.iter().find(|m| &m.line == a).map(|m| {
+                match &m.ratified {
+                    Some(r) => format!("  [witness-authored by {} {}, user-ratified {}]", m.by, m.date, r.date),
+                    None => format!("  [witness-authored by {} {} — under review, q witness]", m.by, m.date),
+                }
+            });
+            writeln!(s, "    · {}{}", a, tag.unwrap_or_default())?;
         }
     }
 
@@ -937,6 +946,15 @@ pub fn dispatch_wake(store: &Store, all: &[Node], area_ids: &[&str]) -> Vec<Stri
             out.push(format!("  {}", l));
         }
     }
+    // The plea channel, named where the witness sits (dc-mpg8): a
+    // dispatch-kind session's unique context is leveraged as evidence and
+    // pleas, never self-authorized into contracts. A standing teach, not a
+    // pressure line — the earned-line discipline (dc-dty5) governs counts,
+    // and this counts nothing.
+    out.push(
+        "the plea channel (dc-mpg8): what this seat witnesses that design cannot goes to a thread — evidence onto the thread it informs, or q new thread \"<the plea>\" --about <area>; the pen stays with design, and acceptance authored from this seat is transcription only, flagged for the user's review."
+            .into(),
+    );
     out
 }
 

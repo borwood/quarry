@@ -10,6 +10,12 @@ actor: claude-fable-5
 kind: debt
 acceptance:
 - 'lands nothing new: the three standing measured claims source their instrument blobs (file:tests), species-affirm classifies them instrumented, and their old mechanism-file source edges retire via q unlink'
+witness:
+- line: 'lands nothing new: the three standing measured claims source their instrument blobs (file:tests), species-affirm classifies them instrumented, and their old mechanism-file source edges retire via q unlink'
+  by: session:dispatcher
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-18
 edges:
 - rel: about
   to: ar-c7f5
