@@ -2,8 +2,8 @@
 id: th-wxr9
 type: thread
 title: 'acceptance-less dispatch: ready and fire must demand the contract'
-v: 3
-status: queued
+v: 4
+status: resolved
 provenance: user
 created: 2026-08-14T07:21:38Z
 actor: claude-fable-5

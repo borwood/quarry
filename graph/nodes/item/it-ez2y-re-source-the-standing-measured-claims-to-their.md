@@ -2,12 +2,14 @@
 id: it-ez2y
 type: item
 title: re-source the standing measured claims to their instruments
-v: 1
+v: 2
 status: sketch
 provenance: assistant
 created: 2026-08-17T09:04:11Z
 actor: claude-fable-5
 kind: debt
+acceptance:
+- 'lands nothing new: the three standing measured claims source their instrument blobs (file:tests), species-affirm classifies them instrumented, and their old mechanism-file source edges retire via q unlink'
 edges:
 - rel: about
   to: ar-c7f5
