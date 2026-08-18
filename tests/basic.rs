@@ -3828,6 +3828,86 @@ fn design_wake_counts_shaped_and_acceptance_less() {
     );
 }
 
+#[test]
+fn design_wake_counts_load_bearing_unassayed() {
+    // The assay's pressure surface (dc-drr6, it-fwn3): the design-kind
+    // wake counts load-bearing unassayed claims beside owed threads, the
+    // query command in hand. The set is waiter-earned (the dc-p6z4 waiter
+    // test): zero-holds unassayed never counts — it stays reachable
+    // through q query load alone.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut b1 = NewArgs::bare("item", "built thing");
+    b1.status = Some("done".into());
+    let b1 = ops::new_node(&s, b1).unwrap();
+    let mk = |title: &str| {
+        ops::claim(
+            &s,
+            title,
+            None,
+            Some("vein".into()),
+            vec![area.front.id.clone()],
+            None,
+            None,
+            Some("user".into()),
+            None,
+        )
+        .unwrap()
+    };
+    // a load-bearing unassayed claim: a build stands on it — a real waiter
+    let heavy = mk("`heavy-lode`: a build stands on it");
+    ops::link(&s, &heavy.front.id, "supports", &b1.front.id, false, None).unwrap();
+    // zero-holds unassayed: no waiter, no wake line — the boundary
+    mk("`light-lode`: nothing stands on it");
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out.status.success(), "resume: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("load-bearing unassayed: 1 claim(s)"),
+        "the design wake counts the waiter-earned set only — zero-holds stays quiet: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("q query load"),
+        "the count carries the query command in hand: {}",
+        stdout
+    );
+    // the dispatch-kind wake omits the pressure — judging a claim is a
+    // design-session act (the owed-threads omission, dc-wngq)
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    let out2 = run(&[("QUARRY_SESSION", "disp")], &["session", "resume"]);
+    assert!(out2.status.success(), "resume: {}", String::from_utf8_lossy(&out2.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out2.stdout).contains("load-bearing unassayed"),
+        "the dispatch shape carries no assay pressure"
+    );
+    // the assay clears the count by construction — ratified leaves the set
+    ops::set(&s, &heavy.front.id, &["status=ratified".to_string()], None).unwrap();
+    let out3 = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out3.status.success(), "resume: {}", String::from_utf8_lossy(&out3.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out3.stdout).contains("load-bearing unassayed"),
+        "an assayed claim carries no wake pressure"
+    );
+}
+
 // ── ready teaches the leans (dc-ez67, dc-grrb, it-6349): un-edged mentions
 // enumerate with the why; refused links name the legal rels ─────────────
 

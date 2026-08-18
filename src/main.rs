@@ -1107,6 +1107,20 @@ fn main() -> Result<()> {
                                     awaiting
                                 );
                             }
+                            // The assay's pressure surface (dc-drr6,
+                            // it-fwn3), beside owed threads: judging a
+                            // claim is a design-session act, and load-
+                            // bearing is the waiter test (dc-p6z4) —
+                            // builds stand on the claim. Zero-holds
+                            // unassayed stays off the wake by
+                            // construction: the query is weight-filtered.
+                            let unassayed = queries::load_bearing_unassayed(&all).len();
+                            if unassayed > 0 {
+                                println!(
+                                    "  load-bearing unassayed: {} claim(s) builds stand on with no judge on record — fool's gold risk rises with weight (q query load)",
+                                    unassayed
+                                );
+                            }
                         }
                         if let Some((sess, p)) = wake_reg {
                             let areas: Vec<&Node> = all
@@ -1421,6 +1435,23 @@ fn main() -> Result<()> {
                             println!(
                                 "  awaiting acceptance: {} shaped item(s) in your purview with no acceptance lines — the gate holds them from ready (q query awaiting-acceptance)",
                                 awaiting
+                            );
+                        }
+                        // The assay's pressure surface (dc-drr6, it-fwn3),
+                        // beside owed threads and scoped like them: judging
+                        // a claim is a design-session act, and load-bearing
+                        // is the waiter test (dc-p6z4) — builds stand on
+                        // the claim. Zero-holds unassayed stays off the
+                        // wake by construction: the query is
+                        // weight-filtered.
+                        let unassayed = queries::load_bearing_unassayed(&all)
+                            .into_iter()
+                            .filter(|(n, _)| coord::in_purview(n, &ids))
+                            .count();
+                        if unassayed > 0 {
+                            println!(
+                                "  load-bearing unassayed: {} claim(s) in your purview builds stand on with no judge on record — fool's gold risk rises with weight (q query load)",
+                                unassayed
                             );
                         }
                     }

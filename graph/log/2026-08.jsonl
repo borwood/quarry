@@ -1380,3 +1380,23 @@
 {"ts":"2026-08-18T02:21:54Z","node":"cl-5ggz","v":2,"op":"ratify","from":"asserted","cause":"it-6349","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:21:56Z","node":"it-6349","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T02:22:09Z","node":"do-5945","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:22:16Z","node":"it-fwn3","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:22:16Z","node":"it-fwn3","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T02:22:16Z","node":"it-fwn3","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:22:16Z","node":"it-fwn3","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T02:22:32Z","node":"it-fwn3","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-fwn3","joined":"agent:a2bc02c733ca5ffad","session":"dispatcher"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-18T02:22:41Z","node":"it-ez2y","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"depends-on","to":"dc-6gn9","at":5,"ts":"2026-08-18T02:23:02Z","node":"it-ez2y","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-ez2y","at":4,"ts":"2026-08-18T02:23:02Z","node":"cl-rr2j","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:23:02Z","node":"it-4p7m","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:27:07Z","node":"cl-2zna","v":1,"op":"create","type":"claim","title":"`unassayed-wake`: both design wake surfaces count load-bearing unassayed claims beside owed threads, query in hand; zero-holds stays pull-only","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-fwn3"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"4bfea30a6071","ts":"2026-08-18T02:27:07Z","node":"cl-2zna","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-fwn3"}
+{"op":"link","rel":"supports","to":"it-fwn3","at":5,"ts":"2026-08-18T02:27:18Z","node":"cl-2zna","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-fwn3"}
+{"ts":"2026-08-18T02:29:24Z","node":"it-fwn3","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:29:53Z","node":"do-afx9","v":1,"op":"create","type":"doc","title":"dispatch report: load-bearing unassayed claims surface on the design wake","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-fwn3","at":5,"ts":"2026-08-18T02:29:53Z","node":"do-afx9","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T02:29:54Z","node":"it-fwn3","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:29:54Z","node":"cl-2zna","v":3,"op":"ratify","from":"asserted","cause":"it-fwn3","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:29:55Z","node":"it-fwn3","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:30:09Z","node":"cl-2zna","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T02:30:09Z","node":"do-afx9","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
