@@ -1312,3 +1312,38 @@
 {"op":"link","rel":"depends-on","to":"dc-p6z4","at":2,"ts":"2026-08-18T01:03:38Z","node":"it-33bb","v":4,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=lands nothing new: the three standing measured claims source their instrument blobs (file:tests), species-affirm classifies them instrumented, and their old mechanism-file source edges retire via q unlink"],"ts":"2026-08-18T01:03:38Z","node":"it-ez2y","v":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T01:03:47Z","node":"it-4p7m","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-18T01:04:15Z","node":"it-4q6t","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:04:23Z","node":"it-33bb","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:04:23Z","node":"it-33bb","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-18T01:04:23Z","node":"it-33bb","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:04:23Z","node":"it-33bb","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-18T01:04:38Z","node":"it-33bb","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-33bb","joined":"agent:a49a1e9ee1cb3a1a2","session":"dispatcher"}
+{"ts":"2026-08-18T01:22:32Z","node":"it-6349","v":1,"op":"create","type":"item","title":"ready teaches the leans: un-edged mentions enumerate with the why; refused links name the legal rels","actor":"claude","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ez67","at":3,"ts":"2026-08-18T01:22:50Z","node":"it-6349","v":2,"actor":"claude","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-grrb","at":4,"ts":"2026-08-18T01:22:51Z","node":"it-6349","v":3,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `ready-lean-prompt`: q ready enumerates body-cited decisions and claims with no edge from the item, each line carrying its q link command; never a gate","acceptance+=lands `lean-why`: the prompt teaches the doctrine - a mention references, an edge leans, leaned nodes pin the brief READ-FIRST - and closes by asking what else the item stands on that no line surfaced","acceptance+=lands `link-refusal-teaches`: a link refused for an illegal rel names the legal rels for that exact src-to-dst pair","status=ready"],"from_status":"sketch","ts":"2026-08-18T01:22:51Z","node":"it-6349","v":4,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-18T01:24:13Z","node":"cl-psau","v":1,"op":"create","type":"claim","title":"`ready-gate`: no construction path reaches ready acceptance-less — the flip and the mint refuse, teaching the authoring command","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"c4e91d7fe548","ts":"2026-08-18T01:24:13Z","node":"cl-psau","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"ts":"2026-08-18T01:24:30Z","node":"cl-t7nx","v":1,"op":"create","type":"claim","title":"`reserve-backstop`: fire hard-refuses an acceptance-less item on both stations and loudly un-readies it to shaped","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"c4e91d7fe548","ts":"2026-08-18T01:24:30Z","node":"cl-t7nx","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"ts":"2026-08-18T01:24:43Z","node":"cl-p7mv","v":1,"op":"create","type":"claim","title":"`brief-tripwire`: an acceptance-less item reaching the renderer is a named breach — the brief refuses, the self-author branch is gone","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"61c710d94b8e","ts":"2026-08-18T01:24:43Z","node":"cl-p7mv","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"ts":"2026-08-18T01:24:57Z","node":"cl-2sk9","v":1,"op":"create","type":"claim","title":"`awaiting-acceptance`: the derived filter — never stored, any live status; the design wake counts the shaped stratum beside owed threads","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"4779b0c27599","ts":"2026-08-18T01:24:57Z","node":"cl-2sk9","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"ts":"2026-08-18T01:25:12Z","node":"cl-88ma","v":1,"op":"create","type":"claim","title":"`acceptance-gate`: ready refuses, reserve un-readies, the brief trips, the wake counts — no item fires without a stated contract","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"c4e91d7fe548","ts":"2026-08-18T01:25:12Z","node":"cl-88ma","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"supports","to":"cl-88ma","at":2,"ts":"2026-08-18T01:25:23Z","node":"cl-psau","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"supports","to":"cl-88ma","at":2,"ts":"2026-08-18T01:25:24Z","node":"cl-t7nx","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"supports","to":"cl-88ma","at":2,"ts":"2026-08-18T01:25:24Z","node":"cl-p7mv","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"op":"link","rel":"supports","to":"cl-88ma","at":2,"ts":"2026-08-18T01:25:24Z","node":"cl-2sk9","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-33bb"}
+{"ts":"2026-08-18T01:27:18Z","node":"it-33bb","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"do-4hbt","v":1,"op":"create","type":"doc","title":"dispatch report: the acceptance gate: ready refuses, reserve un-readies, the brief trips, the wake counts","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-33bb","at":5,"ts":"2026-08-18T01:27:56Z","node":"do-4hbt","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-18T01:27:56Z","node":"it-33bb","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"cl-psau","v":3,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"cl-t7nx","v":3,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"cl-p7mv","v":3,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"cl-2sk9","v":3,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:56Z","node":"cl-88ma","v":2,"op":"ratify","from":"asserted","cause":"it-33bb","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:27:58Z","node":"it-33bb","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-18T01:28:14Z","node":"do-4hbt","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

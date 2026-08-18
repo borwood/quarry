@@ -99,6 +99,14 @@ pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
             allowed_statuses(&a.ty).join(", ")
         );
     }
+    // The acceptance gate at mint (dc-p6z4): the ready flip refuses without
+    // acceptance lines, so minting straight to ready must refuse the same —
+    // ready-implies-acceptance holds by construction on every path to ready.
+    if a.ty == "item" && status == "ready" && a.acceptance.is_empty() {
+        bail!(
+            "acceptance gate (dc-p6z4): an item cannot mint straight to ready with no acceptance lines — ready is stored intent, and intent without acceptance names is unmeasurable. State what done means: --acceptance \"<outcome>\" (repeatable, one line per outcome), or mint it shaped and author acceptance before the flip."
+        );
+    }
     let id = store.mint_id(&a.ty, &all)?;
     let mut edges = Vec::new();
     for t in &a.about {
@@ -390,6 +398,26 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                 node.front.extra.insert(key, val);
             }
         }
+    }
+    // The acceptance gate's construction point (dc-p6z4): ready is stored
+    // intent, and intent without acceptance names is unmeasurable — the
+    // flip hard-refuses until the contract is stated. Checked after every
+    // field lands, so authoring acceptance and flipping ready in one act
+    // passes in either order. The refusal faces the shaper and teaches the
+    // authoring command; demotions stay free.
+    if from_status.is_some()
+        && node.front.ty == "item"
+        && node.front.status == "ready"
+        && node.front.acceptance.is_empty()
+    {
+        if let Some(fs) = from_status {
+            node.front.status = fs;
+        }
+        bail!(
+            "acceptance gate (dc-p6z4): {} has no acceptance lines — ready is stored intent, and intent without acceptance names is unmeasurable. State what done means first: q set {} acceptance+=\"<outcome>\" (repeatable, one line per outcome), then flip ready.",
+            crate::surface::atom_ref(&crate::surface::atom(&[], &node)),
+            node.front.id
+        );
     }
     let mut ev = json!({"op": "set", "fields": fields});
     if let Some(fs) = from_status {
@@ -797,6 +825,53 @@ pub struct DispatchOutcome {
     pub spawn: String,
 }
 
+/// The acceptance gate's fire-time backstop (dc-p6z4): reserve and dispatch
+/// hard-refuse an acceptance-less item, and the refusal loudly un-readies
+/// it back to shaped so the ready feed stays true — catching pre-gate items
+/// and any future strip. Teaching is station-appropriate: the dispatcher is
+/// not a design station and never authors acceptance, so its refusal
+/// teaches the return-to-design move; the solo path is design-capable and
+/// is taught the authoring command directly. No inline authoring flags on
+/// either station — authoring acceptance is always a shaping act, never a
+/// firing act.
+pub fn acceptance_backstop(store: &Store, item: &Node, solo: bool) -> Result<()> {
+    if item.front.ty != "item" || !item.front.acceptance.is_empty() {
+        return Ok(());
+    }
+    let demoted = matches!(item.front.status.as_str(), "ready" | "in-flight");
+    if demoted {
+        set(
+            store,
+            &item.front.id,
+            &["status=shaped".to_string()],
+            Some("acceptance gate (dc-p6z4): un-readied at fire — no acceptance lines".into()),
+        )?;
+    }
+    let mut named = item.clone();
+    if demoted {
+        named.front.status = "shaped".into();
+    }
+    let aref = crate::surface::atom_ref(&crate::surface::atom(&[], &named));
+    let demote_line = if demoted {
+        format!(
+            " UN-READIED: {} → [shaped], loudly (logged) — the ready feed carries only items whose contract is stated.",
+            item.front.id
+        )
+    } else {
+        String::new()
+    };
+    if solo {
+        bail!(
+            "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to fire against.{} Authoring acceptance is a shaping act: q set {} acceptance+=\"<outcome>\" (repeatable, one line per outcome), then q set {} status=ready and fire again.",
+            aref, demote_line, item.front.id, item.front.id
+        );
+    }
+    bail!(
+        "acceptance gate (dc-p6z4): {} has no acceptance lines — nothing states what done means, so there is nothing to dispatch against.{} The pen stays with design: a dispatcher never authors acceptance. Return it to the design session that shapes this work; acceptance authored there re-readies it.",
+        aref, demote_line
+    );
+}
+
 /// `q dispatch <item>`: one act — brief logged (C8's substance; the TEXT
 /// renders at q join, fresh), lease, in-flight, machine-local badge with a
 /// single-use join token, one-line spawn prompt. Never a landing: the item
@@ -824,6 +899,11 @@ pub fn dispatch(
             item.front.status, item.front.id
         );
     }
+    // The fire-time backstop (dc-p6z4), ahead of ownership and lease logic:
+    // no brief event, no lease, no in-flight flip on a contract-less item —
+    // and the re-dispatch path (lease kept) is covered by sitting here, not
+    // inside reserve.
+    acceptance_backstop(store, &item, false)?;
     // Per-item ownership (dc-qyr5): a chat holds ANY number of live
     // dispatches — the same-chat second-dispatch refusal is deleted;
     // fire-them-all-off from one chat is literal. What refuses is

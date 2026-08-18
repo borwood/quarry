@@ -55,6 +55,35 @@ pub fn queue<'a>(all: &'a [Node]) -> Vec<&'a Node> {
     q
 }
 
+/// The acceptance-gate filter (dc-p6z4): live items with no acceptance
+/// lines — DERIVED at read, never stored (the load-is-display pattern).
+/// Nothing writes this state, authoring acceptance clears it by
+/// construction, and coverage is total from mint whether or not an item
+/// ever approached the gate. Queryable at any live status — a ready or
+/// in-flight hit is a gate breach showing itself; settled items await
+/// nothing. Pressure cuts at shaped: the design wake counts only the
+/// shaped stratum, and sketches stay quiet (early absence is legitimate).
+pub fn awaiting_acceptance<'a>(all: &'a [Node]) -> Vec<&'a Node> {
+    let rank = |s: &str| match s {
+        "in-flight" => 0,
+        "ready" => 1,
+        "shaped" => 2,
+        _ => 3,
+    };
+    let mut v: Vec<&Node> = all
+        .iter()
+        .filter(|n| n.front.ty == "item" && !n.front.archived)
+        .filter(|n| !matches!(n.front.status.as_str(), "done" | "dropped"))
+        .filter(|n| n.front.acceptance.is_empty())
+        .collect();
+    v.sort_by(|a, b| {
+        rank(&a.front.status)
+            .cmp(&rank(&b.front.status))
+            .then_with(|| a.front.id.cmp(&b.front.id))
+    });
+    v
+}
+
 /// A stale citation, carried as ATOMS (carrier-replumb, dc-nnf5): the print
 /// layer can render any register from this without a starved (id, title)
 /// pair baking the missing fields into the data layer.

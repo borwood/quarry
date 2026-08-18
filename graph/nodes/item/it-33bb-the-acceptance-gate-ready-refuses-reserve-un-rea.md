@@ -2,8 +2,8 @@
 id: it-33bb
 type: item
 title: 'the acceptance gate: ready refuses, reserve un-readies, the brief trips, the wake counts'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-18T00:58:16Z
 actor: claude

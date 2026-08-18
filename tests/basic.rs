@@ -130,6 +130,7 @@ fn refute_blast_and_c5() {
 
     let mut it = NewArgs::bare("item", "water body graph");
     it.status = Some("ready".into());
+    it.acceptance = vec!["bodies persist".into()];
     let it = ops::new_node(&s, it).unwrap();
     ops::link(&s, &it.front.id, "depends-on", &d.front.id, false, None).unwrap();
 
@@ -150,6 +151,7 @@ fn ready_respects_thread_blockers() {
     let s = temp_store();
     let mut it = NewArgs::bare("item", "attitude recording");
     it.status = Some("ready".into());
+    it.acceptance = vec!["attitudes recorded".into()];
     let it = ops::new_node(&s, it).unwrap();
 
     let all = s.load_all().unwrap();
@@ -262,6 +264,7 @@ fn homework_helpers() {
     let th = ops::new_node(&s, th).unwrap();
     let mut it = NewArgs::bare("item", "build the layout");
     it.status = Some("ready".into());
+    it.acceptance = vec!["the layout stands".into()];
     let it = ops::new_node(&s, it).unwrap();
     ops::link(&s, &it.front.id, "depends-on", &th.front.id, false, None).unwrap();
 
@@ -352,10 +355,12 @@ fn purview_scoping() {
     let mut i1 = NewArgs::bare("item", "erosion pass");
     i1.about = vec![geo.front.id.clone()];
     i1.status = Some("ready".into());
+    i1.acceptance = vec!["the pass lands".into()];
     ops::new_node(&s, i1).unwrap();
     let mut i2 = NewArgs::bare("item", "gait clip");
     i2.about = vec![bod.front.id.clone()];
     i2.status = Some("ready".into());
+    i2.acceptance = vec!["the clip lands".into()];
     ops::new_node(&s, i2).unwrap();
 
     quarry::coord::save_session(&s, "geo", vec![geo.front.id.clone()], None, None, false).unwrap();
@@ -696,6 +701,7 @@ fn alert_computation_closed_list() {
     let mut mine = NewArgs::bare("item", "gait bake");
     mine.about = vec![area.front.id.clone()];
     mine.status = Some("ready".into());
+    mine.acceptance = vec!["the bake lands".into()];
     let mine = ops::new_node(&s, mine).unwrap();
     ops::link(&s, &mine.front.id, "depends-on", &dep.front.id, false, None).unwrap();
     // the landing actually happens (event stream and node state agree in production)
@@ -1435,7 +1441,9 @@ fn dispatch_one_act_then_harvest() {
     // FLIP (dc-qyr5, was: "a second dispatch refuses from the chat already
     // holding one"): MULTI-HELD — the same chat dispatches a second item
     // freely; fire-them-all-off from one chat is literal
-    let other = ops::new_node(&s, NewArgs::bare("item", "other work")).unwrap();
+    let mut other = NewArgs::bare("item", "other work");
+    other.acceptance = vec!["the docs land".into()];
+    let other = ops::new_node(&s, other).unwrap();
     let par = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, false, None, "geo", "t").unwrap();
     assert!(!par.reused_lease);
     let held = quarry::coord::held_dispatches(&s, "session:geo");
@@ -1521,12 +1529,16 @@ fn dispatch_refuses_settled_and_foreign_lease() {
     assert!(err.to_string().contains("[done]"), "got: {}", err);
     // a foreign SOLO lease (no live dispatch) still blocks dispatch with the
     // holder named — the dispatch steal takes dispatches, not solo leases
-    let it = ops::new_node(&s, NewArgs::bare("item", "contested work")).unwrap();
+    let mut it = NewArgs::bare("item", "contested work");
+    it.acceptance = vec!["the work lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
     quarry::coord::reserve(&s, &it, "bodies", "t", vec!["src/x/**".into()], false, false, None).unwrap();
     let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, false, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("bodies"), "got: {}", err);
     // no globs anywhere refuses with the teaching line
-    let bare = ops::new_node(&s, NewArgs::bare("item", "bare work")).unwrap();
+    let mut bare = NewArgs::bare("item", "bare work");
+    bare.acceptance = vec!["the work lands".into()];
+    let bare = ops::new_node(&s, bare).unwrap();
     let err = ops::dispatch(&s, &bare.front.id, vec![], false, false, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("--files"), "got: {}", err);
 }
@@ -1710,6 +1722,7 @@ fn join_cli_env_identity_transport() {
     let mut it2 = NewArgs::bare("item", "second work");
     it2.status = Some("ready".into());
     it2.about = vec![area.front.id.clone()];
+    it2.acceptance = vec!["the second lands".into()];
     let it2 = ops::new_node(&s, it2).unwrap();
     let out4 = ops::dispatch(&s, &it2.front.id, vec!["docs/**".into()], false, false, None, "geo2", "t").unwrap();
     let out5 = run(&[("QUARRY_CHAT", "chat-f")], &["join", &out4.token]);
@@ -2496,6 +2509,7 @@ fn fire_time_routing_offers_leave_and_wake() {
     let mut args = NewArgs::bare("item", "geo pass");
     args.status = Some("ready".into());
     args.about = vec![area.front.id.clone()];
+    args.acceptance = vec!["the pass lands".into()];
     let made = ops::new_node(&s, args).unwrap();
     let all = s.load_all().unwrap();
     let it = s.find(&all, &made.front.id).unwrap();
@@ -2906,6 +2920,7 @@ fn adjacency_multiplies_the_match() {
     let mut it = NewArgs::bare("item", "canyon erosion survey");
     it.about = vec![area.front.id.clone()];
     it.body = "map the walls".into();
+    it.acceptance = vec!["the report registers".into()];
     let it = ops::new_node(&s, it).unwrap();
     ops::link(&s, &it.front.id, "depends-on", &x1.front.id, false, None).unwrap();
     ops::link(&s, &it.front.id, "depends-on", &x2.front.id, false, None).unwrap();
@@ -2943,6 +2958,7 @@ fn claim_shelf_renders_per_species_and_area_open_carries_it() {
     let mut it = NewArgs::bare("item", "weir survey");
     it.about = vec![area.front.id.clone()];
     it.body = "study the flume and the weir".into();
+    it.acceptance = vec!["the study registers".into()];
     let it = ops::new_node(&s, it).unwrap();
     let brief = quarry::render::brief(&s, &it.front.id).unwrap();
     assert!(brief.contains("VEINS:"), "brief claim shelf groups per species: {}", brief);
@@ -2960,6 +2976,7 @@ fn brief_map_renders_file_geography_claims_and_mentions() {
     let mut it = NewArgs::bare("item", "weir survey");
     it.about = vec![area.front.id.clone()];
     it.body = "study the weir".into();
+    it.acceptance = vec!["the study registers".into()];
     let it = ops::new_node(&s, it).unwrap();
     ops::link(&s, &it.front.id, "about", "file:src/hydro.rs", false, None).unwrap();
     // a claim over the same file — deliberately zero lexical overlap
@@ -3004,6 +3021,7 @@ fn render_once_a_read_first_body_refs_in_backdrop() {
     let mut it = NewArgs::bare("item", "canyon erosion survey");
     it.about = vec![area.front.id.clone()];
     it.body = "map sediment walls of the canyon".into();
+    it.acceptance = vec!["the report registers".into()];
     let it = ops::new_node(&s, it).unwrap();
     ops::link(&s, &it.front.id, "depends-on", &d.front.id, false, None).unwrap();
     let text = quarry::render::brief(&s, &it.front.id).unwrap();
@@ -3024,6 +3042,7 @@ fn your_writes_states_expected_acts_by_kind() {
     it.kind = Some("slice".into());
     it.about = vec![area.front.id.clone()];
     it.body = "study the weir".into();
+    it.acceptance = vec!["the study registers".into()];
     let it = ops::new_node(&s, it).unwrap();
     let text = quarry::render::brief(&s, &it.front.id).unwrap();
     assert!(text.contains("YOUR-WRITES"), "the your-writes section renders: {}", text);
@@ -3565,5 +3584,246 @@ fn weight_held_is_display_and_the_load_query_warns() {
     assert!(
         quarry::framings::VEINS.contains("Each vein carries its assay: ratified means a landing's judge verified it against the diff; asserted means one mind wrote it down and no one has stood behind it since"),
         "the veins framing carries the assay sentence"
+    );
+}
+
+// ── the acceptance gate (dc-p6z4, it-33bb): ready refuses, reserve
+// un-readies, the brief trips, the state is derived ─────────────────────
+
+#[test]
+fn ready_gate_refuses_acceptance_less_flip_and_mint() {
+    let s = temp_store();
+    // the flip refuses, facing the shaper with the authoring command
+    let it = ops::new_node(&s, NewArgs::bare("item", "unstated work")).unwrap();
+    let err = ops::set(&s, &it.front.id, &["status=ready".to_string()], None).unwrap_err();
+    assert!(err.to_string().contains("acceptance gate"), "got: {}", err);
+    assert!(err.to_string().contains("dc-p6z4"), "the ruling is named: {}", err);
+    assert!(
+        err.to_string().contains("acceptance+="),
+        "the refusal teaches the authoring command: {}",
+        err
+    );
+    let all = s.load_all().unwrap();
+    assert_eq!(
+        s.find(&all, &it.front.id).unwrap().front.status,
+        "sketch",
+        "a refused flip mutates nothing"
+    );
+    // authoring acceptance and flipping ready in ONE act passes, either order
+    ops::set(
+        &s,
+        &it.front.id,
+        &["status=ready".to_string(), "acceptance+=the work lands".to_string()],
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &it.front.id).unwrap().front.status, "ready");
+    // demotions stay free: shaped accepts an acceptance-less item
+    let bare = ops::new_node(&s, NewArgs::bare("item", "quiet sketch")).unwrap();
+    ops::set(&s, &bare.front.id, &["status=shaped".to_string()], None).unwrap();
+    // the mint path holds the same invariant: no construction reaches ready
+    let mut m = NewArgs::bare("item", "minted hot");
+    m.status = Some("ready".into());
+    let err = ops::new_node(&s, m).unwrap_err();
+    assert!(err.to_string().contains("acceptance gate"), "got: {}", err);
+    assert!(err.to_string().contains("--acceptance"), "the mint refusal teaches the flag: {}", err);
+    // with the contract stated, the mint stands
+    let mut ok = NewArgs::bare("item", "minted stated");
+    ok.status = Some("ready".into());
+    ok.acceptance = vec!["it lands".into()];
+    ops::new_node(&s, ok).unwrap();
+}
+
+#[test]
+fn reserve_backstop_refuses_at_fire_and_unreadies() {
+    let s = temp_store();
+    // a pre-gate ready item with no acceptance (built shaped, forced by
+    // hand to simulate legacy state the gate never saw)
+    let it = ops::new_node(&s, NewArgs::bare("item", "legacy ready work")).unwrap();
+    {
+        let all = s.load_all().unwrap();
+        let mut n = s.find(&all, &it.front.id).unwrap().clone();
+        n.front.status = "ready".into();
+        s.save(&n).unwrap();
+    }
+    // the dispatch station refuses, un-readies, and teaches return-to-design
+    let err =
+        ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+            .unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("acceptance gate"), "got: {}", msg);
+    assert!(msg.contains("UN-READIED"), "the demotion is loud: {}", msg);
+    assert!(msg.contains("design"), "the dispatcher is taught return-to-design: {}", msg);
+    assert!(
+        !msg.contains("acceptance+="),
+        "the dispatcher is never taught to author — the pen stays with design: {}",
+        msg
+    );
+    let all = s.load_all().unwrap();
+    assert_eq!(
+        s.find(&all, &it.front.id).unwrap().front.status,
+        "shaped",
+        "the refusal un-readies the item so the ready feed stays true"
+    );
+    // the demotion is logged with the gate named
+    let log = s.read_log().unwrap();
+    let ev = log
+        .iter()
+        .rev()
+        .find(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("set")
+                && e.get("node").and_then(|v| v.as_str()) == Some(it.front.id.as_str())
+        })
+        .expect("the demotion is logged");
+    assert_eq!(ev.get("from_status").and_then(|v| v.as_str()), Some("ready"));
+    assert!(
+        ev.get("note").and_then(|v| v.as_str()).unwrap_or("").contains("acceptance gate"),
+        "the logged demotion names the gate: {}",
+        ev
+    );
+    // nothing else mutated: no lease, no brief event, no in-flight
+    assert!(quarry::coord::load_leases(&s).is_empty(), "no lease on a refused fire");
+    assert!(
+        !log.iter().any(|e| e.get("op").and_then(|v| v.as_str()) == Some("brief")),
+        "no brief event on a refused fire"
+    );
+    // the solo station refuses too, teaching the authoring command directly
+    let all = s.load_all().unwrap();
+    let node = s.find(&all, &it.front.id).unwrap().clone();
+    let err = ops::acceptance_backstop(&s, &node, true).unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("acceptance gate"), "got: {}", msg);
+    assert!(msg.contains("acceptance+="), "the solo path is design-capable and taught: {}", msg);
+    // a sketch never demotes — there is nothing to un-ready
+    let sk = ops::new_node(&s, NewArgs::bare("item", "quiet sketch")).unwrap();
+    let err =
+        ops::dispatch(&s, &sk.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+            .unwrap_err();
+    assert!(!err.to_string().contains("UN-READIED"), "got: {}", err);
+    let all = s.load_all().unwrap();
+    assert_eq!(s.find(&all, &sk.front.id).unwrap().front.status, "sketch");
+    // an acceptance-carrying item passes the backstop untouched
+    let mut ok = NewArgs::bare("item", "stated work");
+    ok.acceptance = vec!["it lands".into()];
+    let ok = ops::new_node(&s, ok).unwrap();
+    ops::acceptance_backstop(&s, &ok, false).unwrap();
+    ops::acceptance_backstop(&s, &ok, true).unwrap();
+}
+
+#[test]
+fn brief_tripwire_refuses_and_names_the_breach() {
+    let s = temp_store();
+    let it = ops::new_node(&s, NewArgs::bare("item", "contract-less work")).unwrap();
+    let err = quarry::render::brief(&s, &it.front.id).unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("acceptance gate breach"), "the breached invariant is named: {}", msg);
+    assert!(msg.contains("dc-p6z4"), "the ruling is named: {}", msg);
+    assert!(
+        !msg.contains("acceptance+="),
+        "the agent is never prompted to self-author — the old branch is gone: {}",
+        msg
+    );
+}
+
+#[test]
+fn awaiting_acceptance_derives_at_any_status_and_clears_by_authoring() {
+    let s = temp_store();
+    let sketch = ops::new_node(&s, NewArgs::bare("item", "quiet sketch")).unwrap();
+    let shaped = ops::new_node(&s, NewArgs::bare("item", "shaped and unstated")).unwrap();
+    ops::set(&s, &shaped.front.id, &["status=shaped".to_string()], None).unwrap();
+    // a breach specimen forced by hand: ready with no acceptance
+    let breach = ops::new_node(&s, NewArgs::bare("item", "breach specimen")).unwrap();
+    {
+        let all = s.load_all().unwrap();
+        let mut n = s.find(&all, &breach.front.id).unwrap().clone();
+        n.front.status = "ready".into();
+        s.save(&n).unwrap();
+    }
+    // settled and stated items stay out; threads are not items
+    let mut stated = NewArgs::bare("item", "stated work");
+    stated.acceptance = vec!["it lands".into()];
+    ops::new_node(&s, stated).unwrap();
+    let mut done = NewArgs::bare("item", "landed long ago");
+    done.status = Some("done".into());
+    ops::new_node(&s, done).unwrap();
+    let all = s.load_all().unwrap();
+    let aw = queries::awaiting_acceptance(&all);
+    let ids: Vec<&str> = aw.iter().map(|n| n.front.id.as_str()).collect();
+    assert_eq!(
+        ids,
+        vec![breach.front.id.as_str(), shaped.front.id.as_str(), sketch.front.id.as_str()],
+        "any live status, breach first, nothing stored: {:?}",
+        ids
+    );
+    // authoring acceptance clears it by construction — no flag to unset
+    ops::set(&s, &shaped.front.id, &["acceptance+=the shape lands".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let aw = queries::awaiting_acceptance(&all);
+    assert!(
+        !aw.iter().any(|n| n.front.id == shaped.front.id),
+        "authoring acceptance clears the derived state"
+    );
+}
+
+#[test]
+fn design_wake_counts_shaped_and_acceptance_less() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    // a shaped-and-acceptance-less item in purview: the gate's real waiter
+    let mut it = NewArgs::bare("item", "held at the gate");
+    it.status = Some("shaped".into());
+    it.about = vec![area.front.id.clone()];
+    let it = ops::new_node(&s, it).unwrap();
+    // a sketch stays unpressured — early absence is legitimate
+    let mut sk = NewArgs::bare("item", "early absence");
+    sk.about = vec![area.front.id.clone()];
+    ops::new_node(&s, sk).unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let out = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out.status.success(), "resume: {}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("awaiting acceptance: 1 shaped item(s)"),
+        "the design wake counts shaped-and-acceptance-less, sketches quiet: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("q query awaiting-acceptance"),
+        "the count teaches the derived query: {}",
+        stdout
+    );
+    // the dispatch-kind wake omits the pressure — shaping is not a
+    // dispatcher's to settle (the owed-threads omission, dc-wngq)
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    let out2 = run(&[("QUARRY_SESSION", "disp")], &["session", "resume"]);
+    assert!(out2.status.success(), "resume: {}", String::from_utf8_lossy(&out2.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out2.stdout).contains("awaiting acceptance"),
+        "the dispatch shape carries no shaping pressure"
+    );
+    // authoring acceptance clears the count by construction
+    ops::set(&s, &it.front.id, &["acceptance+=it lands".to_string()], None).unwrap();
+    let out3 = run(&[("QUARRY_SESSION", "design")], &["session", "resume"]);
+    assert!(out3.status.success(), "resume: {}", String::from_utf8_lossy(&out3.stderr));
+    assert!(
+        !String::from_utf8_lossy(&out3.stdout).contains("awaiting acceptance"),
+        "authoring acceptance clears the wake count"
     );
 }

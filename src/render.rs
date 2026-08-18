@@ -489,6 +489,18 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
             crate::surface::atom_ref(&crate::surface::atom(&all, item))
         );
     }
+    // The acceptance-gate tripwire (dc-p6z4): post-gate, an acceptance-less
+    // item reaching this renderer is impossible by construction — ready
+    // refuses the flip, reserve un-readies at fire — so one arriving here
+    // is a breach of the gate invariant, named as such. The refusal never
+    // teaches self-authoring: the working agent may be the reader, and the
+    // pen stays with design.
+    if item.front.acceptance.is_empty() {
+        anyhow::bail!(
+            "acceptance gate breach (dc-p6z4): {} reached the brief renderer with no acceptance lines — impossible by construction once the gate holds (ready refuses the flip; reserve un-readies at fire), so this item was never legitimately fired. The brief will not render it, and the working agent never authors its own contract: acceptance is a shaping act, and the pen stays with design.",
+            crate::surface::atom_ref(&crate::surface::atom(&all, item))
+        );
+    }
     let first_line = |body: &str| body.lines().next().unwrap_or("").trim().to_string();
     let mut s = String::new();
     writeln!(
@@ -535,15 +547,14 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     // CONTRACT first (dc-casn hierarchy): the work above, then the RETURN
     // spec, the write-set, and any protocol riders — what is owed and
     // where it may land — before any context renders.
+    // Acceptance is present by construction here — the tripwire above
+    // refused any acceptance-less item before a line rendered (dc-p6z4);
+    // the old teach-the-agent-to-self-author branch is gone with it.
     writeln!(s, "\nRETURN SPEC (accept by outcome):")?;
-    if item.front.acceptance.is_empty() {
-        writeln!(s, "  ⚠ no acceptance recorded — outcomes cannot be judged. Fix the graph first: q set {} acceptance+=\"...\"", item.front.id)?;
-    } else {
-        for a in &item.front.acceptance {
-            writeln!(s, "  · {}", a)?;
-        }
-        writeln!(s, "  Report against these outcomes — not effort, not process. A number needs its method; a mechanism is a hypothesis until measured.")?;
+    for a in &item.front.acceptance {
+        writeln!(s, "  · {}", a)?;
     }
+    writeln!(s, "  Report against these outcomes — not effort, not process. A number needs its method; a mechanism is a hypothesis until measured.")?;
     writeln!(s, "  REFLECTIONS (always): close the report with doubts, surprises, and design friction in your own words — candor beats polish; reflections are mined afterward.")?;
     writeln!(s, "  STOP-REPORTS: stopping before acceptance is met is a valid outcome — say so explicitly (why, where you stopped, what remains) and the dispatcher re-dispatches from your report. A partial report registers like any other.")?;
 

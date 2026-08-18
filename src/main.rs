@@ -437,6 +437,11 @@ enum Query {
     /// has — the prospector's warning (dc-drr6), heaviest first
     #[command(visible_alias = "unassayed")]
     Load,
+    /// Items with no acceptance lines — derived at read, never stored
+    /// (dc-p6z4): authoring acceptance clears it by construction. Any live
+    /// status; the gate holds shaped ones from ready
+    #[command(visible_alias = "awaiting")]
+    AwaitingAcceptance,
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
     /// Intent vs reality by name: backtick-named acceptance lines of live
@@ -1060,6 +1065,20 @@ fn main() -> Result<()> {
                             for n in &queue {
                                 println!("  owed: {}", line(&all, n));
                             }
+                            // The gate's pressure surface (dc-p6z4), beside
+                            // owed threads: a gate-demoted item has a real
+                            // waiter — a dispatcher tried to fire it.
+                            // Pressure cuts at shaped; sketches stay quiet.
+                            let awaiting = queries::awaiting_acceptance(&all)
+                                .iter()
+                                .filter(|n| n.front.status == "shaped")
+                                .count();
+                            if awaiting > 0 {
+                                println!(
+                                    "  awaiting acceptance: {} shaped item(s) with no acceptance lines — the gate holds them from ready (q query awaiting-acceptance)",
+                                    awaiting
+                                );
+                            }
                         }
                         if let Some((sess, p)) = wake_reg {
                             let areas: Vec<&Node> = all
@@ -1362,6 +1381,20 @@ fn main() -> Result<()> {
                                 println!("    {}", line(&all, n));
                             }
                         }
+                        // The gate's pressure surface (dc-p6z4), beside owed
+                        // threads and scoped like them: a gate-demoted item
+                        // has a real waiter — a dispatcher tried to fire it.
+                        // Pressure cuts at shaped; sketches stay quiet.
+                        let awaiting = queries::awaiting_acceptance(&all)
+                            .into_iter()
+                            .filter(|n| n.front.status == "shaped" && coord::in_purview(n, &ids))
+                            .count();
+                        if awaiting > 0 {
+                            println!(
+                                "  awaiting acceptance: {} shaped item(s) in your purview with no acceptance lines — the gate holds them from ready (q query awaiting-acceptance)",
+                                awaiting
+                            );
+                        }
                     }
                     println!("  next: q query ready --mine · q query shaping --mine · q wrap before stopping");
                 }
@@ -1423,6 +1456,11 @@ fn main() -> Result<()> {
             })?;
             let all = store.load_all()?;
             let node = store.find(&all, &item)?.clone();
+            // The fire-time backstop (dc-p6z4), ahead of C8: the solo
+            // station is design-capable, so the refusal teaches the
+            // authoring command directly — and it must speak before the
+            // brief teach, because the tripwired brief refuses too.
+            ops::acceptance_backstop(&store, &node, true)?;
             // C8: a lease follows a brief — no lease on unbriefed work.
             if !coord::briefed_this_session(&store, &node.front.id, &sess) {
                 anyhow::bail!(
@@ -2578,6 +2616,19 @@ fn main() -> Result<()> {
                         for (n, _) in u {
                             println!("  {}", line(&all, n));
                         }
+                    }
+                }
+                Query::AwaitingAcceptance => {
+                    // The gate's derived filter (dc-p6z4): never stored —
+                    // authoring acceptance clears an item by construction.
+                    let aw = queries::awaiting_acceptance(&all);
+                    if aw.is_empty() {
+                        println!("nothing awaiting acceptance — every live item states what done means.");
+                    } else {
+                        for n in &aw {
+                            println!("{}", line(&all, n));
+                        }
+                        println!("derived, never stored: authoring acceptance clears an item by construction — q set <id> acceptance+=\"<outcome>\" (the gate: ready refuses the flip and reserve un-readies without it, dc-p6z4)");
                     }
                 }
                 Query::Dispatch { item } => {
