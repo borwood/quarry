@@ -1661,3 +1661,13 @@
 {"ts":"2026-08-19T08:58:12Z","node":"it-ez2y","v":6,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-19T08:58:12Z","node":"it-4p7m","v":5,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}
 {"ts":"2026-08-19T08:58:12Z","node":"it-kjgz","v":1,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}
+{"op":"body","ts":"2026-08-19T10:15:19Z","node":"it-f6c2","v":3,"actor":"claude","note":"settled fix shape in conversation with the user (sweep of the 13 defects)","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-kpqg","at":4,"ts":"2026-08-19T10:15:32Z","node":"it-f6c2","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands nothing new: the dispatch RETURN spec carries a user-owned-calls slot, harvest homework reconciles declared calls against threads filed under the badge, and the first-interception echo names thread-filing as the only landing"],"ts":"2026-08-19T10:15:33Z","node":"it-f6c2","v":5,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-19T10:15:33Z","node":"it-f6c2","v":6,"actor":"claude","note":"shape settled with the user; acceptance authored from the design seat","session":"quarry"}
+{"op":"link","rel":"about","to":"ar-c7f5","at":1,"ts":"2026-08-19T10:15:46Z","node":"it-f6c2","v":7,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-19T10:17:30Z","node":"it-rmqy","v":1,"op":"create","type":"item","title":"the spawn line misdirects the fork: in-root phrasing sends a worktree agent out of its isolation","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"depends-on","to":"dc-g5x5","at":3,"ts":"2026-08-19T10:17:48Z","node":"it-rmqy","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"link","rel":"depends-on","to":"dc-zbxj","at":1,"ts":"2026-08-19T10:17:48Z","node":"it-rmqy","v":3,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-19T10:17:48Z","node":"it-rmqy","v":4,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:17:52Z","node":"th-mbbb","v":1,"op":"create","type":"thread","title":"worktree dispatch, the dispatcher's side: when to isolate, and how the code comes home","actor":"claude","note":null,"session":"dispatcher"}
