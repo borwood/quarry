@@ -1215,6 +1215,68 @@ pub fn session_touched(
     touched
 }
 
+/// Per-op touch depth for the wrap spend-down sweep (dc-hzrm): how much
+/// dying context a session's act on a node implies. A presentation
+/// heuristic, fully derived — authoring deepest (create, body), judgment
+/// and lifecycle acts middling (harvest, set, dispatch), edge work above
+/// the floor, anything unrecognized counts one. Weights sum per node
+/// across the session's acts, so repeat engagement deepens the rank.
+fn touch_depth(op: &str) -> u32 {
+    match op {
+        "create" => 5,
+        "body" | "harvest" => 4,
+        "set" | "dispatch" => 3,
+        "link" | "unlink" | "ratify" | "witness-mark" | "witness-ratify" => 2,
+        "wrap" => 0,
+        _ => 1,
+    }
+}
+
+/// The wrap sweep's deep-touch list (dc-hzrm): the session's acts since its
+/// last wrap, folded per node and ranked by touch depth — the nodes whose
+/// context most likely dies with this session lead, ties broken by recency.
+/// Same cursor as session_touched (the wrap event plants it), so a second
+/// wrap in the same boundary derives an empty list and the sweep stays
+/// silent: once per boundary by construction, never stored state.
+pub fn deep_touches(log: &[serde_json::Value], sess: Option<&str>) -> Vec<(String, u32)> {
+    let matches_key = |ev: &serde_json::Value| -> bool {
+        match (sess, ev.get("session").and_then(|v| v.as_str())) {
+            (Some(s), Some(es)) => s == es,
+            (None, None) => true,
+            _ => false,
+        }
+    };
+    let cursor = log
+        .iter()
+        .rev()
+        .find(|ev| ev.get("op").and_then(|v| v.as_str()) == Some("wrap") && matches_key(ev))
+        .and_then(|ev| ev.get("ts").and_then(|v| v.as_str()))
+        .unwrap_or("");
+    let mut scores: Vec<(String, u32, usize)> = Vec::new();
+    for (i, ev) in log.iter().enumerate() {
+        let ts = ev.get("ts").and_then(|v| v.as_str()).unwrap_or("");
+        if ts <= cursor || !matches_key(ev) {
+            continue;
+        }
+        let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("?");
+        let depth = touch_depth(op);
+        if depth == 0 {
+            continue;
+        }
+        if let Some(id) = ev.get("node").and_then(|v| v.as_str()) {
+            match scores.iter_mut().find(|(sid, _, _)| sid == id) {
+                Some(e) => {
+                    e.1 += depth;
+                    e.2 = i;
+                }
+                None => scores.push((id.to_string(), depth, i)),
+            }
+        }
+    }
+    scores.sort_by(|a, b| b.1.cmp(&a.1).then(b.2.cmp(&a.2)));
+    scores.into_iter().map(|(id, s, _)| (id, s)).collect()
+}
+
 /// Events for one node, oldest first.
 pub fn node_log(store: &Store, id: &str) -> Result<Vec<serde_json::Value>> {
     Ok(store

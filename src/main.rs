@@ -2189,6 +2189,29 @@ fn main() -> Result<()> {
                         println!("    …and {} more", touched.len() - 15);
                     }
                 }
+                // The spend-down sweep (dc-hzrm): the boundary itself is the
+                // waiter — the deep-touch list ranks where this session's
+                // dying context concentrates, and the prompt asks what the
+                // graph lacks. Direct authorship is the vehicle; the same
+                // wrap-event cursor as the list above makes a second wrap in
+                // this boundary render silence: once per boundary by
+                // construction. A prompt, never a gate.
+                let deep: Vec<(&Node, u32)> = queries::deep_touches(&log, sess_key.as_deref())
+                    .into_iter()
+                    .filter_map(|(id, score)| {
+                        all.iter().find(|n| n.front.id == id).map(|n| (n, score))
+                    })
+                    .collect();
+                if !deep.is_empty() {
+                    println!("  {}", quarry::framings::spend_down_header(deep.len()));
+                    for (n, score) in deep.iter().take(10) {
+                        println!("    [depth {}] {}", score, line(&all, n));
+                    }
+                    if deep.len() > 10 {
+                        println!("    …and {} more", deep.len() - 10);
+                    }
+                    println!("  {}", quarry::framings::SPEND_DOWN);
+                }
                 store.log_event(serde_json::json!({
                     "ts": Store::now(),
                     "node": format!("session:{}", sess_key.as_deref().unwrap_or("unbound")),

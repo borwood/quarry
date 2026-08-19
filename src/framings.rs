@@ -116,6 +116,39 @@ pub const LEAN_WHY: &str = "an edge is a load-bearing claim: leaned nodes pin th
 /// reaches edges the recommendation cannot see.
 pub const LEAN_CLOSE: &str = "and past this list: what else does the item stand on that no line surfaced? The enumeration sees only body citations — leans the body never named are yours to record.";
 
+/// The spend-down header at wrap (dc-hzrm; composed on it-gwj7, for
+/// ratification at its harvest): opens the sweep over the session's
+/// deep-touch list — derived from the event log's per-session acts,
+/// ranked by touch depth. The wrap-event cursor makes it once per
+/// boundary by construction; an actless session renders nothing.
+pub fn spend_down_header(n: usize) -> String {
+    format!(
+        "spend-down — {} node(s) this session touched deepest, ranked; the boundary is the last reader of what this context holds:",
+        n
+    )
+}
+
+/// The spend-down prompt at wrap (dc-hzrm; composed on it-gwj7, for
+/// ratification at its harvest): the boundary itself is the waiter
+/// (dc-dty5) — a prompt, never a gate. Direct authorship is the vehicle
+/// (the dying context is the best-positioned judge of what it holds);
+/// the enrichment attitude compresses the do-dspv 2026-08-18 entry; the
+/// Goodhart phrase names volume as the temptation (dc-dsdm).
+pub const SPEND_DOWN: &str = "this context dies at the boundary; the graph is what survives it. Over the nodes above, ask: what does this session uniquely hold that the graph lacks? Author it directly, by your own hand, while the context is warm — append the state paragraph, the evidence note, the dogear (q edit <id> --body-file <the full body plus your paragraph>); link what leans. Think stigmergically: what would the next cold session have to re-derive, at what cost and consequence? Hold your enrichments lightly — honest about scope and gaps, skeptical of this session's own perspective as one active slice of experience of the graph — and write for the future cold reader: user reasoning and intent, warnings, the connections that make disparate nodes a constellation, patterns that will return for a repo searching priors rather than inventing. Volume is the temptation (Goodhart): a spend-down is measured by what the next session no longer re-derives, never by how much was written.";
+
+/// The counter-voice, first encounter (dc-hzrm; composed on it-gwj7, for
+/// ratification at its harvest): the one ambient line that speaks for the
+/// prose channel — every other surface speaks the graph's frame. Fired on
+/// graph silence, never the clock; any graph act resets it; a filing
+/// session never sees it. Dense once per session (machine-local encounter
+/// state), a light phrase after.
+pub const COUNTER_VOICE_DENSE: &str = "every other line quarry speaks is the graph's frame; this one speaks for the conversation. Anything floated here — a proposal, a concern, a half-formed concept — that has no node yet? Conversation dies with the session; the graph is what the next mind finds. File it while it is cheap (q new thread \"<it>\" --about <area>; a claim; a dogear on the node it belongs to), or let it go deliberately. This line fires on graph silence, never the clock; any graph act quiets it.";
+
+/// The counter-voice, later encounters (dc-hzrm): the light phrase — the
+/// teaching already landed once; repetition at density is habituation fuel.
+pub const COUNTER_VOICE_LIGHT: &str =
+    "graph silence — anything floated in conversation with no node yet?";
+
 /// The claim species in shelf order (dc-yd9s, dc-6gn9): frontmatter kind,
 /// section label, ratified framing. The engine stays kindless-but-kind-aware
 /// — kinds outside this table still render, grouped under their own string,

@@ -368,7 +368,22 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
         }
     }
     let alert = session.as_deref().and_then(|s| alerts(store, s));
-    if updated_input.is_none() && alert.is_none() {
+    // The counter-voice (dc-hzrm): a subagent's shells carry the parent
+    // chat's session, but its context is not the conversation the reminder
+    // speaks for — an agent-marked hook input neither counts a turn nor
+    // receives the line. Subagent q acts still stamp the session and reset
+    // the counter through the log: acts always speak, turns are the
+    // parent's own.
+    let voice = if agent_id.is_none() {
+        session.as_deref().and_then(|s| counter_voice(store, s))
+    } else {
+        None
+    };
+    let context = match (alert, voice) {
+        (Some(a), Some(v)) => Some(format!("{}\n{}", a, v)),
+        (a, v) => a.or(v),
+    };
+    if updated_input.is_none() && context.is_none() {
         return None;
     }
     let mut hso = serde_json::Map::new();
@@ -376,7 +391,7 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     if let Some(u) = updated_input {
         hso.insert("updatedInput".into(), serde_json::Value::Object(u));
     }
-    if let Some(a) = alert {
+    if let Some(a) = context {
         hso.insert("additionalContext".into(), serde_json::json!(a));
     }
     Some(serde_json::json!({ "hookSpecificOutput": serde_json::Value::Object(hso) }))
@@ -543,6 +558,90 @@ pub fn alerts_between(
         let extra = out.len() - 6;
         out.truncate(6);
         out.push(format!("…and {} more (q session resume)", extra));
+    }
+    out
+}
+
+// ── the counter-voice (dc-hzrm) ────────────────────────────────────────────
+//
+// Every ambient surface speaks the graph's frame; this is the one line that
+// speaks for the prose channel — anything floated in conversation that has
+// no node. Fired on graph silence, never the clock: N hook-observed turns
+// since the acting session's last graph act draw one reminder line into
+// injected context; any graph act resets the counter; a session that is
+// filing never sees it. First encounter renders the dense teaching,
+// subsequent encounters a light phrase — the encounter state is
+// machine-local working state (the topic-queue species), never graph data.
+
+/// The silence threshold, in turns. A turn is operationally a session-hook
+/// firing (a Bash/PowerShell tool call by the acting session's own chat) —
+/// the only turn signal quarry can observe; conversation without tool calls
+/// is invisible to the hook by construction. Deliberately a first setting:
+/// habituation is the mechanism class's known failure mode (dc-hzrm queues
+/// its defense separately), so the threshold leans quiet.
+pub const COUNTER_VOICE_TURNS: u64 = 10;
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct VoiceState {
+    /// Hook-observed turns since the session's last graph act.
+    turns: u64,
+    /// Log length at last check — events past it are the unseen tail.
+    seen: u64,
+    /// The reminder already fired for this silence stretch: one line per
+    /// stretch, never a nag per turn — the next graph act re-arms it.
+    fired: bool,
+    /// This session has met the dense teaching (machine-local encounter
+    /// state): later encounters render the light phrase.
+    encountered: bool,
+}
+
+fn voice_path(store: &crate::store::Store) -> PathBuf {
+    store.root.join("graph").join(".counter-voice.json")
+}
+
+/// One counter-voice check for the acting session: counts the turn, resets
+/// on any logged graph act from the session since the last check, and
+/// returns the reminder line exactly when the silence threshold is crossed.
+/// First sight of a session plants the cursor at the log's end — history
+/// never counts as silence. A graph act is any logged event stamped with
+/// the session (writes, briefs, wraps); pure reads log nothing and reset
+/// nothing — reading is not filing.
+pub fn counter_voice(store: &crate::store::Store, session: &str) -> Option<String> {
+    use std::collections::BTreeMap;
+    let log = store.read_log().ok()?;
+    let mut map: BTreeMap<String, VoiceState> = fs::read_to_string(voice_path(store))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    let mut st = map.get(session).cloned().unwrap_or_else(|| VoiceState {
+        seen: log.len() as u64,
+        ..VoiceState::default()
+    });
+    let seen = (st.seen as usize).min(log.len());
+    let acted = log[seen..]
+        .iter()
+        .any(|ev| ev.get("session").and_then(|v| v.as_str()) == Some(session));
+    if acted {
+        st.turns = 0;
+        st.fired = false;
+    } else {
+        st.turns += 1;
+    }
+    st.seen = log.len() as u64;
+    let mut out = None;
+    if st.turns >= COUNTER_VOICE_TURNS && !st.fired {
+        st.fired = true;
+        let text = if st.encountered {
+            crate::framings::COUNTER_VOICE_LIGHT
+        } else {
+            crate::framings::COUNTER_VOICE_DENSE
+        };
+        st.encountered = true;
+        out = Some(format!("quarry [counter-voice] — {}", text));
+    }
+    map.insert(session.into(), st);
+    if let Ok(s) = serde_json::to_string_pretty(&map) {
+        let _ = fs::write(voice_path(store), s + "\n");
     }
     out
 }

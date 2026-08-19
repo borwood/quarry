@@ -4793,3 +4793,161 @@ fn witness_flags_ride_the_design_wake_until_user_ratified() {
     );
 }
 
+/// The wrap sweep's deep-touch list (dc-hzrm): per-session acts fold per
+/// node and rank by touch depth — authoring outranks lifecycle outranks a
+/// bare affirm; foreign sessions' acts never enter; the wrap event plants
+/// the cursor, so a second wrap in the same boundary derives an empty list
+/// and the sweep goes silent — once per boundary by construction. The
+/// prompt itself carries the ruled requirements: direct authorship taught,
+/// the Goodhart phrase naming volume.
+#[test]
+fn wrap_sweep_ranks_deep_touches_and_goes_silent_at_the_boundary() {
+    let log = vec![
+        serde_json::json!({"ts":"2099-01-01T00:00:00Z","op":"create","node":"it-aaaa","session":"geo"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:01Z","op":"body","node":"it-aaaa","session":"geo"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:02Z","op":"affirm","node":"cl-bbbb","session":"geo"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:03Z","op":"set","node":"it-cccc","session":"geo"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:04Z","op":"create","node":"it-zzzz","session":"bodies"}),
+        serde_json::json!({"ts":"2099-01-01T00:00:05Z","op":"link","node":"it-cccc","session":"geo"}),
+    ];
+    let deep = queries::deep_touches(&log, Some("geo"));
+    let ids: Vec<&str> = deep.iter().map(|(id, _)| id.as_str()).collect();
+    assert_eq!(
+        ids,
+        vec!["it-aaaa", "it-cccc", "cl-bbbb"],
+        "authoring depth leads, the bare affirm trails: {:?}",
+        deep
+    );
+    assert!(
+        deep[0].1 > deep[1].1 && deep[1].1 > deep[2].1,
+        "depth strictly ranks the fold: {:?}",
+        deep
+    );
+    assert!(
+        !ids.contains(&"it-zzzz"),
+        "a foreign session's acts never enter the list"
+    );
+    // geo's wrap plants the cursor: geo goes silent, bodies is untouched
+    let mut log2 = log.clone();
+    log2.push(serde_json::json!({"ts":"2099-01-01T00:00:06Z","op":"wrap","node":"session:geo","session":"geo"}));
+    assert!(
+        queries::deep_touches(&log2, Some("geo")).is_empty(),
+        "the boundary replants: a second wrap sweeps nothing"
+    );
+    assert_eq!(
+        queries::deep_touches(&log2, Some("bodies")).len(),
+        1,
+        "the cursor is per-session"
+    );
+    // the ruled prompt content: direct authorship taught, volume named
+    assert!(
+        quarry::framings::SPEND_DOWN.contains("q edit"),
+        "the prompt teaches direct authorship"
+    );
+    assert!(
+        quarry::framings::SPEND_DOWN.contains("Goodhart"),
+        "the prompt carries the Goodhart phrase"
+    );
+}
+
+/// The counter-voice (dc-hzrm): N hook-observed turns of graph silence fire
+/// one reminder — dense at first encounter, a light phrase after — and any
+/// graph act from the acting session resets the counter while a foreign
+/// session's act does not. One line per silence stretch: continued silence
+/// past the fire stays quiet until an act re-arms it. A filing session
+/// never sees it by construction — its own acts keep resetting the count.
+#[test]
+fn counter_voice_fires_on_silence_resets_on_acts_and_teaches_dense_then_light() {
+    let s = temp_store();
+    let n = quarry::teach::COUNTER_VOICE_TURNS;
+    // silence accumulates turn by turn; the threshold fires exactly once
+    for i in 1..n {
+        assert!(
+            quarry::teach::counter_voice(&s, "geo").is_none(),
+            "turn {} is below the threshold",
+            i
+        );
+    }
+    let fired = quarry::teach::counter_voice(&s, "geo").expect("the Nth silent turn fires");
+    assert!(
+        fired.contains("counter-voice") && fired.contains("speaks for the conversation"),
+        "first encounter renders the dense teaching: {}",
+        fired
+    );
+    assert!(
+        quarry::teach::counter_voice(&s, "geo").is_none(),
+        "one line per silence stretch — no nag on the next turn"
+    );
+    // a graph act from the acting session re-arms the counter
+    s.log_event(serde_json::json!({"ts": Store::now(), "node": "it-fake", "v": 1, "op": "create", "actor": "t", "session": "geo"}))
+        .unwrap();
+    assert!(
+        quarry::teach::counter_voice(&s, "geo").is_none(),
+        "the act resets: the filing session never sees the line"
+    );
+    // a foreign session's act does not reset geo's silence
+    s.log_event(serde_json::json!({"ts": Store::now(), "node": "it-fake", "v": 2, "op": "set", "actor": "t", "session": "bodies"}))
+        .unwrap();
+    for i in 1..n {
+        assert!(
+            quarry::teach::counter_voice(&s, "geo").is_none(),
+            "turn {} after the reset stays quiet",
+            i
+        );
+    }
+    let again = quarry::teach::counter_voice(&s, "geo").expect("silence re-earns the line");
+    assert!(
+        again.contains(quarry::framings::COUNTER_VOICE_LIGHT),
+        "later encounters render the light phrase: {}",
+        again
+    );
+    assert!(
+        !again.contains("speaks for the conversation"),
+        "the dense teaching renders once: {}",
+        again
+    );
+}
+
+/// The counter-voice rides the session hook's injected-context channel for
+/// the bound acting session, and a subagent-marked hook input (agent_id
+/// present) neither counts a turn nor receives the line — the reminder
+/// speaks to the conversation, and a subagent's context is not it.
+#[test]
+fn counter_voice_rides_the_session_hook_and_skips_subagent_contexts() {
+    let s = temp_store();
+    quarry::coord::write_adopt_request(&s, "cv-geo").unwrap();
+    let parent = r#"{"session_id":"chat-cv","tool_name":"Bash","tool_input":{"command":"ls"}}"#;
+    let sub = r#"{"session_id":"chat-cv","agent_id":"ag-cv","tool_name":"Bash","tool_input":{"command":"ls"}}"#;
+    let context_of = |out: Option<serde_json::Value>| -> String {
+        out.and_then(|v| {
+            v["hookSpecificOutput"]["additionalContext"]
+                .as_str()
+                .map(String::from)
+        })
+        .unwrap_or_default()
+    };
+    let n = quarry::teach::COUNTER_VOICE_TURNS;
+    for i in 1..n {
+        let ctx = context_of(quarry::teach::session_hook_output(&s, parent));
+        assert!(
+            !ctx.contains("counter-voice"),
+            "turn {} carries no reminder: {}",
+            i,
+            ctx
+        );
+        // a subagent call between turns neither counts nor receives
+        let sctx = context_of(quarry::teach::session_hook_output(&s, sub));
+        assert!(
+            !sctx.contains("counter-voice"),
+            "the subagent context never carries the line: {}",
+            sctx
+        );
+    }
+    let ctx = context_of(quarry::teach::session_hook_output(&s, parent));
+    assert!(
+        ctx.contains("counter-voice"),
+        "the Nth parent turn draws the reminder into injected context: {}",
+        ctx
+    );
+}
+
