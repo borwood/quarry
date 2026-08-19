@@ -1,7 +1,7 @@
 # quarry — operational notes
 
 The knowledge layer of this project lives in `graph/` and is reached through
-the `q` binary (`target/release/q.exe`) — orient with `q query queue`,
+the `q` binary (on the user PATH) — orient with `q query queue`,
 `q query ready`, `q query shaping`; judgment layer via `q guide`. This file
 holds only what the graph can't: how to build and work on this repo, on this
 machine.
@@ -12,6 +12,11 @@ machine.
   durably in `~/.cargo/config.toml` (2026-08-10) — no per-invocation env
   needed. cargo is on the user PATH from the same date; sessions started
   before then still need `& "$env:USERPROFILE\.cargo\bin\cargo.exe"`.
+- `q` is on the user PATH via `B:\repos\borwood\quarry\target\release`
+  (2026-08-19) — rebuilds are live immediately, and it resolves from any
+  cwd, worktree forks included (a fork checks out no `target/`). Sessions
+  started before then still need `.\target\release\q.exe`, or the absolute
+  path when working from a fork.
 - **One build at a time** — this machine has hung under parallel heavy
   builds.
 - **Verify test results by reading the `test result:` line and its count** —
