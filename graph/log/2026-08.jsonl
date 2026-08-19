@@ -1671,3 +1671,32 @@
 {"op":"link","rel":"depends-on","to":"dc-zbxj","at":1,"ts":"2026-08-19T10:17:48Z","node":"it-rmqy","v":3,"actor":"claude","session":"dispatcher"}
 {"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-19T10:17:48Z","node":"it-rmqy","v":4,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-19T10:17:52Z","node":"th-mbbb","v":1,"op":"create","type":"thread","title":"worktree dispatch, the dispatcher's side: when to isolate, and how the code comes home","actor":"claude","note":null,"session":"dispatcher"}
+{"ts":"2026-08-19T10:18:06Z","node":"it-gwj7","v":4,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:18:06Z","node":"it-gwj7","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-19T10:18:06Z","node":"it-gwj7","v":5,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:18:06Z","node":"it-gwj7","v":4,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-19T10:19:07Z","node":"it-gwj7","v":5,"op":"join","actor":"claude","dispatch":"it-gwj7","joined":"agent:a6d21fe349c232de8"}
+{"ts":"2026-08-19T10:32:54Z","node":"cl-znh4","v":1,"op":"create","type":"claim","title":"`counter-voice`: graph silence draws one hook-injected reminder - session acts reset, dense once then light, subagents neither count nor hear","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"2dc8f9f0b349","ts":"2026-08-19T10:32:54Z","node":"cl-znh4","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:33:01Z","node":"cl-amgy","v":1,"op":"create","type":"claim","title":"`spend-down-sweep`: wrap ranks the session deep touches and asks what the dying context holds - once per boundary via the wrap cursor","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"b0aed047a94f","ts":"2026-08-19T10:33:01Z","node":"cl-amgy","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:33:08Z","node":"cl-xrrx","v":1,"op":"create","type":"claim","title":"`counter-voice-and-sweep`: the dc-hzrm surfaces live - silence-earned reminder mid-session, spend-down prompt at wrap","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"source","to":"file:src/framings.rs","at":"4c67ceee2b68","ts":"2026-08-19T10:33:08Z","node":"cl-xrrx","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"supports","to":"cl-xrrx","at":2,"ts":"2026-08-19T10:33:14Z","node":"cl-znh4","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"supports","to":"cl-xrrx","at":2,"ts":"2026-08-19T10:33:14Z","node":"cl-amgy","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"op":"link","rel":"supports","to":"it-gwj7","at":5,"ts":"2026-08-19T10:33:14Z","node":"cl-xrrx","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:33:29Z","node":"cl-amgy","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:33:29Z","node":"cl-znh4","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:33:29Z","node":"it-yxx8","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:34:35Z","node":"th-tm6f","v":1,"op":"create","type":"thread","title":"direct authorship wants an append: q edit replaces the body whole","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-gwj7"}
+{"ts":"2026-08-19T10:36:39Z","node":"it-gwj7","v":5,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:01Z","node":"do-kfru","v":1,"op":"create","type":"doc","title":"dispatch report: the counter-voice and the sweep built: silence-earned reminder, spend-down prompt at wrap","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-gwj7","at":5,"ts":"2026-08-19T10:39:01Z","node":"do-kfru","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-19T10:39:04Z","node":"it-gwj7","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:04Z","node":"cl-znh4","v":3,"op":"ratify","from":"asserted","cause":"it-gwj7","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:04Z","node":"cl-amgy","v":3,"op":"ratify","from":"asserted","cause":"it-gwj7","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:04Z","node":"cl-xrrx","v":3,"op":"ratify","from":"asserted","cause":"it-gwj7","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:06Z","node":"it-gwj7","v":6,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:27Z","node":"it-yxx8","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:28Z","node":"cl-xrrx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-19T10:39:28Z","node":"do-kfru","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

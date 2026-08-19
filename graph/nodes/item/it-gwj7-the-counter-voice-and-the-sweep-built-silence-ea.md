@@ -2,8 +2,8 @@
 id: it-gwj7
 type: item
 title: 'the counter-voice and the sweep built: silence-earned reminder, spend-down prompt at wrap'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-19T08:38:27Z
 actor: claude-fable-5

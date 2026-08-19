@@ -12,3 +12,5 @@ graph/.area-reads.json
 graph/.topic-queue.json
 graph/.touched.jsonl
 graph/.dispatch.json
+graph/.counter-voice.json
+.claude/worktrees/
