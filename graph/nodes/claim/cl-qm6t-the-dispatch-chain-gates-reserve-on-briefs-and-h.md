@@ -18,7 +18,7 @@ edges:
   at: 4
 - rel: source
   to: file:tests/basic.rs
-  at: 67dde7205950
+  at: 95fb1fff7b7b
 ---
 
 the dispatch chain gates reserve on briefs and holds code writes to leases

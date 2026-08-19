@@ -1644,3 +1644,17 @@
 {"ts":"2026-08-18T10:34:12Z","node":"cl-xfkw","v":3,"op":"ratify","from":"asserted","cause":"it-4uag","assay":"harvest","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T10:34:14Z","node":"it-4uag","v":7,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-18T10:34:27Z","node":"do-jxzw","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-19T08:10:21Z","node":"do-dspv","v":1,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-19T08:10:59Z","node":"th-bjk2","v":4,"actor":"claude-fable-5","note":"call one solidified: direct authorship at the wrap sweep, the enrichment attitude recorded verbatim in the corpus","session":"quarry"}
+{"ts":"2026-08-19T08:38:14Z","node":"dc-hzrm","v":1,"op":"create","type":"decision","title":"the counter-voice and the sweep: graph-silence reminder mid-session, spend-down at wrap","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-hzrm","ts":"2026-08-19T08:38:14Z","node":"th-bjk2","v":5,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-bjk2","at":5,"ts":"2026-08-19T08:38:14Z","node":"dc-hzrm","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-19T08:38:27Z","node":"it-gwj7","v":1,"op":"create","type":"item","title":"the counter-voice and the sweep built: silence-earned reminder, spend-down prompt at wrap","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-hzrm","at":2,"ts":"2026-08-19T08:38:44Z","node":"it-gwj7","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-dsdm","at":2,"ts":"2026-08-19T08:38:44Z","node":"it-gwj7","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands `wrap-sweep`: wrap enumerates the session deep-touch list and asks the spend-down question - direct authorship taught, the attitude and a Goodhart phrase in the prompt, once per boundary","acceptance+=lands `counter-voice`: N turns of graph silence from the acting session draws one reminder line into injected context; any graph act resets; first encounter dense, later a phrase","acceptance+=holds the frame: prompt never gate, no clock-based firing, no pressure surface beyond these two","status=ready"],"from_status":"sketch","ts":"2026-08-19T08:38:44Z","node":"it-gwj7","v":4,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-19T08:38:44Z","node":"it-yxx8","v":1,"op":"create","type":"item","title":"the counter-voice habituation defense: detection that never routes through user attention","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-hzrm","at":2,"ts":"2026-08-19T08:39:04Z","node":"it-yxx8","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"it-gwj7","at":4,"ts":"2026-08-19T08:39:04Z","node":"it-yxx8","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-19T08:39:51Z","node":"th-qv27","v":6,"actor":"claude-fable-5","note":"spend-down dogear: the liaison is init-time config; silent-by-absence routing failure named","session":"quarry"}
+{"ts":"2026-08-19T08:39:52Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude-fable-5","session":"quarry"}

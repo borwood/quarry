@@ -2,7 +2,7 @@
 id: th-yzmj
 type: thread
 title: 'the file-size infection: mid-task warnings fail; what defense actually works'
-v: 6
+v: 7
 status: queued
 provenance: user
 created: 2026-08-11T06:28:36Z
@@ -28,3 +28,5 @@ State 2026-08-13, from the contracts conversation (th-nc7d): the contract specie
 User note 2026-08-14, from the shelf ruling (dc-xfgz): the summarizer MAY take veins and contracts out of the brief entirely — surfaced instead during the agent's planning phase while it reads files, rather than shown multiple times across surfaces. This requires consideration and has forks: what about when the work is on filetypes the summarizer doesn't work on yet? Until weighed here, the brief carries them per dc-xfgz.
 
 State 2026-08-17: the trust rulings bear directly (dc-6gn9, dc-drr6). The instrument-and-registration resolution - the test is the instrument, the node the citable registration - is the summarizer's frame too: a contract's symbol likely has tests as its instrument, and a summary presenting a contract can present its instrument beside it. Derived context also inherits assay state: veins now carry ratified-or-asserted, so the summarizer can weigh assayed material above fool's-gold risk. Contract ratification authority stays dogeared on th-qv27.
+
+Dogear 2026-08-18 (user-flagged at the earned-pressure settlement, dc-dty5): the word CONTRACT is colliding before the species is born. This thread's claim species is the term's home, but the dispatch-side register has been using contract for acceptance lines - th-wxr9's resolved title (must demand the contract), cl-88ma's ratified title (no item fires without a stated contract), and the dispatcher's fresh th-n7rc (when the witness may write the contract). Relevance runs on titles, so working either side will cross-surface the other's semantics. The user's boundary: register terms must not carry two semantics that helpfully surface into each other. dc-dty5 polices itself (says acceptance, never contract); the species naming moment here inherits the call - either the species claims the word and the dispatch-side titles sweep to acceptance vocabulary, or the species takes another name. And the cold-encounter test (dc-bzdj) gains a sibling practice: at term-minting time, the mint's touches list is already a collision surface - read it for semantic squatters, not just relatedness.

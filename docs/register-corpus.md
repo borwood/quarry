@@ -123,3 +123,80 @@ hit):
 - Defect-class findings file as bugs regardless of size; watch stays
   reserved for accepted compromises with a named trigger (reaffirmed:
   "file as bugs").
+
+## 2026-08-18 — the earned-pressure and witness-pen session
+
+**Verbatim, founding the enrichment attitude** (the wrap spend-down design,
+th-bjk2 — instructed to be recorded and exercised immediately):
+
+> [the prompt should refer to] the stigmergic ai native codebase predicament
+> and prompt the philosophy of thinking about what the next cold session
+> will have to re-derive that isn't cheap to do so and could have potential
+> consequences, while also being honest about its own scope of knowledge,
+> where there may be potential gaps, not being unduly authoritative because
+> it should be skeptical of its own opinion and perspective as just one
+> active slice of experience of the graph - in other words, it should hold
+> its enrichments lightly and put them forward as honestly as possible for
+> the efficacy and context-awareness (user's reasoning and intent, warnings,
+> connections have made apparently disparate items into a related
+> constellation, work areas and concerns and processes and patterns that may
+> return again for the repo that will be searching for priors rather than
+> inventing) of future cold readers of the graph, particularly where the
+> enrichment (an edge, a body edit, mention, etc) depends on the unique
+> context the session holds
+
+**Verbatim, dismissing the deferral concern with a mechanism observation:**
+
+> the designated boundary does not teach deferral if the session does not
+> know the end is the designated time until the wrap verb tells it that.
+
+**Verbatim, dismissing the ripple concern the same way:**
+
+> anything it adds that does not honestly impact anything downstream is
+> just an "affirm"
+
+**Verbatim, bounding the witness carve-out:**
+
+> the list of things a dispatcher could author and dispatch without a human
+> in the loop is genuinely small and should be by construction
+
+**Verbatim, the one-liaison attention model:**
+
+> my attention is limited and sessions can have a lot of activity while i'm
+> not looking, i'd rather concentrate on one liaison.
+
+**Verbatim, founding collision-wariness for the register:**
+
+> i don't want to introduce multiple conflicting "contract" semantics to
+> the lexicon that both "helpfully" surface when working on the other
+
+**Register notes observed this session:**
+
+- Rebuts agent-raised concerns point-by-point with mechanism observations,
+  not preference: deferral, ripple, and Goodhart each answered by an
+  existing structure rather than a new rule.
+- Centers the future cold reader as the design customer; frames the
+  AI-native codebase as stigmergic — sessions coordinate through traces
+  left in the graph, so enrichment is judged by what the next session
+  would otherwise re-derive, at what cost and consequence.
+- Demands epistemic humility as an operating requirement, not a courtesy:
+  a session is one active slice of experience of the graph; its
+  enrichments are held lightly, honest about scope and gaps, especially
+  where only the author's context supports them.
+- Probes a live ruling with its instances before settling ("what items did
+  it file and build, this session?") — evidence pulled before carve-outs
+  granted.
+- Rules amendments in compact per-point packages ("agreed, **mostly**"),
+  each amendment carrying its reason; asks the agent to exercise a
+  recorded attitude in the same thread, not merely file it.
+- Checks the graph's coverage before trusting conversation ("X is already
+  a filed thread, right? as long as it's not dropped").
+
+**Decision heuristics, candidate until confirmed by recurrence:**
+
+- A buffer is honest when its drain is guaranteed; a designated moment
+  cannot teach deferral while it stays invisible until it arrives.
+- Review routes to where the user actually attends (one liaison), never
+  to where the event happened.
+- New register terms are checked for semantic squatters at mint;
+  cross-surfacing two meanings of one word is a defect, not a convenience.
