@@ -1658,3 +1658,6 @@
 {"op":"link","rel":"depends-on","to":"it-gwj7","at":4,"ts":"2026-08-19T08:39:04Z","node":"it-yxx8","v":3,"actor":"claude-fable-5","session":"quarry"}
 {"op":"body","ts":"2026-08-19T08:39:51Z","node":"th-qv27","v":6,"actor":"claude-fable-5","note":"spend-down dogear: the liaison is init-time config; silent-by-absence routing failure named","session":"quarry"}
 {"ts":"2026-08-19T08:39:52Z","node":"session:quarry","v":0,"op":"wrap","actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-19T08:58:12Z","node":"it-ez2y","v":6,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-19T08:58:12Z","node":"it-4p7m","v":5,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-19T08:58:12Z","node":"it-kjgz","v":1,"op":"witness-ratify","restamped":1,"actor":"claude","session":"quarry"}

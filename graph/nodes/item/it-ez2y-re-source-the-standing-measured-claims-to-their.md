@@ -16,6 +16,9 @@ witness:
   session: dispatcher
   kind: dispatch
   date: 2026-08-18
+  ratified:
+    by: user
+    date: 2026-08-19
 edges:
 - rel: about
   to: ar-c7f5
