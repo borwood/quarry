@@ -2,8 +2,8 @@
 id: it-wa6e
 type: item
 title: 'the reverse floor blinds one fold direction: five-char pairs join forward only'
-v: 5
-status: ready
+v: 7
+status: done
 provenance: assistant
 created: 2026-08-16T03:41:54Z
 actor: claude

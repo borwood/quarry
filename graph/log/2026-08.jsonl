@@ -1938,3 +1938,24 @@
 {"ts":"2026-08-20T11:04:34Z","node":"it-tanf","v":6,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T11:04:42Z","node":"do-4y49","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T11:04:43Z","node":"do-uxp2","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:51Z","node":"it-wa6e","v":5,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:51Z","node":"it-wa6e","v":5,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T11:04:51Z","node":"it-wa6e","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:51Z","node":"it-wa6e","v":5,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T11:05:19Z","node":"it-wa6e","v":6,"op":"join","actor":"claude","dispatch":"it-wa6e","joined":"agent:a790da9e3a97c7ff3"}
+{"ts":"2026-08-20T11:20:04Z","node":"cl-rs2r","v":1,"op":"create","type":"claim","title":"`raw-form-floor`: the six-char floor measures the written form on either side of the fold; five-char pairs join through their inflected member","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-wa6e"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"beee011cfc44","ts":"2026-08-20T11:20:04Z","node":"cl-rs2r","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"op":"link","rel":"supports","to":"it-wa6e","at":6,"ts":"2026-08-20T11:20:09Z","node":"cl-rs2r","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:20:13Z","node":"cl-rbp9","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:20:14Z","node":"cl-xxkw","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:20:14Z","node":"cl-2dj3","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:20:14Z","node":"cl-baxa","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:20:14Z","node":"cl-en99","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-wa6e"}
+{"ts":"2026-08-20T11:21:26Z","node":"it-wa6e","v":6,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:22:19Z","node":"do-j6r5","v":1,"op":"create","type":"doc","title":"dispatch report: the reverse floor blinds one fold direction: five-char pairs join forward only","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-wa6e","at":6,"ts":"2026-08-20T11:22:19Z","node":"do-j6r5","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T11:22:20Z","node":"it-wa6e","v":7,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:22:20Z","node":"cl-rs2r","v":3,"op":"ratify","from":"asserted","cause":"it-wa6e","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:22:22Z","node":"it-wa6e","v":7,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:22:25Z","node":"cl-rs2r","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:22:29Z","node":"do-j6r5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

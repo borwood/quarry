@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: 506f0e12b921
+  at: beee011cfc44
 - rel: supports
   to: it-rddg
   at: 6
