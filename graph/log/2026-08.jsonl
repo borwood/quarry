@@ -1700,3 +1700,11 @@
 {"ts":"2026-08-19T10:39:27Z","node":"it-yxx8","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-19T10:39:28Z","node":"cl-xrrx","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-19T10:39:28Z","node":"do-kfru","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"op":"body","ts":"2026-08-20T01:20:18Z","node":"it-e6wq","v":3,"actor":"claude","note":"settled fix shape in conversation with the user (defect sweep)","session":"quarry"}
+{"op":"set","fields":["acceptance+=lands nothing new: q session retire refuses only when the retiree is implicated - the chat's own session under a live badge, or a retiree with a dispatch in flight - and a third session with no live dispatch retires clean while unrelated badges fly"],"ts":"2026-08-20T01:20:18Z","node":"it-e6wq","v":4,"actor":"claude","session":"quarry"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-20T01:20:18Z","node":"it-e6wq","v":5,"actor":"claude","note":"shape settled with the user; acceptance authored from the design seat","session":"quarry"}
+{"op":"link","rel":"about","to":"ar-c7f5","at":1,"ts":"2026-08-20T01:20:18Z","node":"it-e6wq","v":6,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-20T02:08:25Z","node":"th-9hc4","v":1,"op":"create","type":"thread","title":"claims from acceptance lines: the by-construction path","actor":"claude","note":"user ruling during the defect sweep: discipline is load-bearing where construction is possible - a violation","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"th-9hc4","at":1,"ts":"2026-08-20T02:08:37Z","node":"it-kkde","v":5,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-20T03:29:44Z","node":"th-78uc","v":1,"op":"create","type":"thread","title":"one verb set for solo and dispatched work: the seat coincidence is the special case","actor":"claude","note":"user direction during the defect sweep; scouting found self-join already latent in the construction","session":"quarry"}
+{"op":"link","rel":"depends-on","to":"th-78uc","at":1,"ts":"2026-08-20T03:30:00Z","node":"it-z2sy","v":3,"actor":"claude","session":"quarry"}
