@@ -75,6 +75,14 @@ pub fn sediment_line(n: usize) -> String {
     format!("sediment: {} dated reading(s) drifted with their sources - expected stratification, not rot", n)
 }
 
+/// The sight boundary (it-bj3b; composed at the fix, for ratification at
+/// its harvest per dc-vzvf): stated wherever an observed set renders beside
+/// a lease, so a partial set can never read as complete. Three strata of
+/// sight, named in falling certainty: tool writes the guard saw exactly,
+/// shell targets parsed from command text best-effort, and the residue no
+/// parse reaches.
+pub const SIGHT_BOUNDARY: &str = "sight boundary: tool writes (Write/Edit) are observed exactly; shell writes are parsed from command text, best-effort; whatever ran beyond both - opaque scripts, git apply, generated files - left no mark here. This set is a floor, never the diff: judge from the diff.";
+
 /// The harvest assay line (dc-drr6; ratified 2026-08-17 on it-swsy): the
 /// dispatcher's landing judgment already verifies badge-minted claims
 /// against the diff — ratification records that act. Shown at the harvest

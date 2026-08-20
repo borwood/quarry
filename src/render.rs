@@ -1029,7 +1029,9 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     )?;
     writeln!(s, "the agent's \"done\" was a stop signal, never a transition — judge by outcome, land by your own hand.")?;
 
-    let observed = crate::coord::touched_for(store, &format!("item:{}", id));
+    let touches = crate::coord::touches_for(store, &format!("item:{}", id));
+    let observed: Vec<&crate::coord::Touch> = touches.iter().filter(|t| !t.unresolved).collect();
+    let unresolved: Vec<&crate::coord::Touch> = touches.iter().filter(|t| t.unresolved).collect();
     let globs = crate::coord::load_leases(store)
         .iter()
         .find(|l| &l.item == id)
@@ -1041,18 +1043,38 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
         writeln!(s, "  no code writes observed under this badge — a research dispatch, or the agent's shells ran outside the guard's sight.")?;
     } else {
         writeln!(s, "  files touched under the badge ({}):", observed.len())?;
-        for f in &observed {
-            let inside = globs.iter().any(|g| crate::coord::globs_overlap(g, f));
-            writeln!(s, "    {}{}", f, if inside { "" } else { "  ⚠ outside the lease" })?;
+        for t in &observed {
+            let inside = globs.iter().any(|g| crate::coord::globs_overlap(g, &t.path));
+            writeln!(
+                s,
+                "    {}{}{}",
+                t.path,
+                if t.via.as_deref() == Some("shell") { "  (shell-parsed, best-effort)" } else { "" },
+                if inside { "" } else { "  ⚠ outside the lease" }
+            )?;
+        }
+    }
+    // NO SILENT DISCARD (it-bj3b): badged tool writes whose paths never
+    // resolved store-relative render here, raw — a resolution failure is
+    // accounting, and the judge decides what it was.
+    if !unresolved.is_empty() {
+        writeln!(
+            s,
+            "  unresolved under the badge ({}) — tool writes whose paths never resolved store-relative (outside the store, or a resolution defect); recorded raw, never dropped:",
+            unresolved.len()
+        )?;
+        for t in &unresolved {
+            writeln!(s, "    {}", t.path)?;
         }
     }
     let untouched: Vec<&String> = globs
         .iter()
-        .filter(|g| !observed.iter().any(|f| crate::coord::globs_overlap(g, f)))
+        .filter(|g| !observed.iter().any(|t| crate::coord::globs_overlap(g, &t.path)))
         .collect();
     for g in untouched {
         writeln!(s, "  leased but untouched: {} — dead weight in the lease, or unfinished work?", g)?;
     }
+    writeln!(s, "  {}", crate::framings::SIGHT_BOUNDARY)?;
 
     let acts: Vec<&serde_json::Value> = log
         .iter()
@@ -1152,12 +1174,18 @@ pub fn dispatch_trace(store: &Store, key: &str) -> Result<String> {
         writeln!(s, "  {} {} {}", ts, op, what)?;
         any = true;
     }
-    let touched = crate::coord::touched_for(store, &format!("item:{}", id));
+    let touched = crate::coord::touches_for(store, &format!("item:{}", id));
     if !touched.is_empty() {
         writeln!(s, "  files touched (accrued by the write guard):")?;
-        for f in &touched {
-            writeln!(s, "    {}", f)?;
+        for t in &touched {
+            let mark = match (t.unresolved, t.via.as_deref()) {
+                (true, _) => "  (unresolved — raw path, never resolved store-relative)",
+                (false, Some("shell")) => "  (shell-parsed, best-effort)",
+                _ => "",
+            };
+            writeln!(s, "    {}{}", t.path, mark)?;
         }
+        writeln!(s, "  {}", crate::framings::SIGHT_BOUNDARY)?;
         any = true;
     }
     if !any {

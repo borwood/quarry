@@ -489,6 +489,41 @@ impl Store {
     }
 }
 
+/// Store-relative resolution for observation and lease judgment — ONE point
+/// (it-bj3b: two hook arms each carried their own strip, and a divergence
+/// would silently discard accounting). Both sides normalize separators and
+/// case-fold before the strip: Windows tool hands deliver absolute paths in
+/// mixed case and mixed separators, and a byte-compare would drop them. The
+/// WORK root strips first (dc-g5x5): a worktree fork mirrors the store's
+/// layout, so the fork-relative path IS the store-relative path. The strip
+/// holds a component boundary (root + '/' + rel — "quarry2" never resolves
+/// under "quarry"). None = the path lives outside both roots; under a badge
+/// the CALLER must record that outcome, never drop it.
+pub fn store_relative(work_root: &str, root: &str, path: &str) -> Option<String> {
+    let norm = |s: &str| s.replace('\\', "/").to_lowercase();
+    let p = norm(path);
+    let strip = |base: &str| -> Option<String> {
+        let b = norm(base);
+        let b = b.trim_end_matches('/');
+        p.strip_prefix(b)
+            .and_then(|r| r.strip_prefix('/'))
+            .filter(|r| !r.is_empty())
+            .map(String::from)
+    };
+    strip(work_root).or_else(|| strip(root))
+}
+
+impl Store {
+    /// `store_relative` with this store's own roots in hand.
+    pub fn relative(&self, path: &str) -> Option<String> {
+        store_relative(
+            &self.work_root.to_string_lossy(),
+            &self.root.to_string_lossy(),
+            path,
+        )
+    }
+}
+
 /// "src/x.rs:42" -> "src/x.rs"; leaves paths without a numeric suffix alone.
 pub fn strip_line(fileref: &str) -> String {
     if let Some((path, tail)) = fileref.rsplit_once(':') {

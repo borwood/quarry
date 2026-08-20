@@ -5206,3 +5206,198 @@ fn staging_guard_denies_the_sweep_with_the_askers_line_and_offers_adoption_when_
 }
 
 
+
+// ── the observed set holds its accounting (it-bj3b) ────────────────────────
+
+#[test]
+fn store_relative_survives_windows_case_and_separator_mixing() {
+    use quarry::store::store_relative;
+    // Windows tool hands: mixed drive case, mixed separators, mixed
+    // component case — all resolve to the same store-relative path.
+    let root = "B:\\Repos\\Quarry";
+    assert_eq!(
+        store_relative(root, root, "b:/repos/quarry/SRC/Main.rs").as_deref(),
+        Some("src/main.rs")
+    );
+    assert_eq!(
+        store_relative(root, root, "B:\\repos\\QUARRY\\tests/Basic.rs").as_deref(),
+        Some("tests/basic.rs")
+    );
+    // The component boundary holds: a sibling repo sharing the prefix
+    // never resolves under this store.
+    assert!(store_relative(root, root, "b:/repos/quarry2/src/x.rs").is_none());
+    // The WORK root strips first (dc-g5x5): a fork path resolves through
+    // the fork root even though the store root shares no prefix with it.
+    let fork = "B:\\Repos\\Quarry\\.claude\\worktrees\\fork-1";
+    assert_eq!(
+        store_relative(fork, root, "b:\\repos\\quarry\\.claude\\worktrees\\FORK-1\\src\\teach.rs")
+            .as_deref(),
+        Some("src/teach.rs")
+    );
+    // Outside both roots, or relative-shaped: no resolution — the CALLER
+    // records the badged case, never drops it (pinned below).
+    assert!(store_relative(root, root, "c:/users/x/appdata/local/temp/scratch.md").is_none());
+    assert!(store_relative(root, root, "src/main.rs").is_none());
+    // The bare root itself is not a file write.
+    assert!(store_relative(root, root, "b:/repos/quarry").is_none());
+}
+
+#[test]
+fn write_shapes_parses_the_common_write_shapes() {
+    use quarry::teach::write_shapes;
+    // Redirects: bare, appending, glued, fd-prefixed, quoted target.
+    assert_eq!(write_shapes("cat > tests/basic.rs <<'EOF'"), vec!["tests/basic.rs"]);
+    assert_eq!(write_shapes("echo hi >> src/lib.rs"), vec!["src/lib.rs"]);
+    assert_eq!(write_shapes("cargo build 2>build.log"), vec!["build.log"]);
+    assert_eq!(write_shapes("echo x > 'docs/a file.md'"), vec!["docs/a file.md"]);
+    // 2>&1 has no file target; /dev/null and variables never accrue.
+    assert!(write_shapes("cargo test 2>&1").is_empty());
+    assert!(write_shapes("cmd > /dev/null").is_empty());
+    assert!(write_shapes("echo x > $OUT").is_empty());
+    // tee, appending or not, through a pipe.
+    assert_eq!(write_shapes("cargo test | tee -a logs/test.txt"), vec!["logs/test.txt"]);
+    // cp/mv: the destination is the write.
+    assert_eq!(write_shapes("cp fixtures/a.rs src/a.rs"), vec!["src/a.rs"]);
+    assert_eq!(write_shapes("mv old.rs archive/old.rs && cargo check"), vec!["archive/old.rs"]);
+    assert_eq!(write_shapes("cp -t src a.rs b.rs"), vec!["src"]);
+    // touch names its targets outright.
+    assert_eq!(write_shapes("touch src/new.rs tests/new.rs"), vec!["src/new.rs", "tests/new.rs"]);
+    // git working-tree writers: checkout -- and restore; a plain branch
+    // checkout is not a file write, and git apply is beyond the parse
+    // (the sight boundary covers it).
+    assert_eq!(write_shapes("git checkout -- src/main.rs"), vec!["src/main.rs"]);
+    assert_eq!(write_shapes("git restore --source HEAD~1 src/ops.rs"), vec!["src/ops.rs"]);
+    assert!(write_shapes("git checkout feature-branch").is_empty());
+    assert!(write_shapes("git apply fix.patch").is_empty());
+    // PowerShell content writers: flagged and positional paths, and the
+    // here-string shape the incident class rode.
+    assert_eq!(
+        write_shapes("Set-Content -Path tests\\basic.rs -Value $body"),
+        vec!["tests\\basic.rs"]
+    );
+    assert_eq!(write_shapes("$x | Out-File -FilePath out/report.md"), vec!["out/report.md"]);
+    assert_eq!(write_shapes("Add-Content notes.md 'line'"), vec!["notes.md"]);
+    assert_eq!(write_shapes("Copy-Item a.rs -Destination src/b.rs"), vec!["src/b.rs"]);
+    assert_eq!(write_shapes("Move-Item a.tmp b.tmp"), vec!["b.tmp"]);
+    // Compound commands: every simple command scans; duplicates fold.
+    assert_eq!(
+        write_shapes("touch src/a.rs; echo x > src/a.rs && cat > src/b.rs <<EOF"),
+        vec!["src/a.rs", "src/b.rs"]
+    );
+}
+
+#[test]
+fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
+    let s = temp_store();
+    let cwd = s.root.clone();
+    // A heredoc write inside the repo accrues store-relative, marked shell;
+    // an absolute out-of-repo target and a graph/ target accrue nothing —
+    // a parse is a guess, only resolvable targets count (it-bj3b #4).
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        "cat > tests/basic.rs <<'EOF' && cp x.rs c:/tmp/x.rs && echo y > graph/.probe",
+        Some(&cwd),
+    );
+    let touches = quarry::coord::touches_for(&s, "item:it-shell");
+    assert_eq!(touches.len(), 1, "one resolvable target");
+    assert_eq!(touches[0].path, "tests/basic.rs");
+    assert_eq!(touches[0].via.as_deref(), Some("shell"));
+    assert!(!touches[0].unresolved);
+    // Absolute in-repo targets resolve too, whatever their case or
+    // separators (the store_relative point carries this channel as well).
+    let abs = format!("{}\\SRC\\Lib.rs", s.root.display().to_string().to_uppercase());
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        &format!("echo x > \"{}\"", abs),
+        Some(&cwd),
+    );
+    let touches = quarry::coord::touches_for(&s, "item:it-shell");
+    assert_eq!(touches.len(), 2);
+    assert_eq!(touches[1].path, "src/lib.rs");
+    // Re-parsing the same command accrues nothing new; leaseless shells
+    // accrue under the session key like any observed write.
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        "cat > tests/basic.rs",
+        Some(&cwd),
+    );
+    assert_eq!(quarry::coord::touches_for(&s, "item:it-shell").len(), 2, "dedup holds");
+    quarry::teach::observe_shell(&s, None, Some("solo-sh"), "touch src/solo.rs", Some(&cwd));
+    let solo = quarry::coord::touches_for(&s, "session:solo-sh");
+    assert_eq!(solo.len(), 1);
+    assert_eq!(solo[0].path, "src/solo.rs");
+}
+
+#[test]
+fn a_badged_write_failing_resolution_is_recorded_and_harvest_states_the_boundary() {
+    use quarry::teach::observe_write;
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "sight accounting pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the accounting lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, "geo", "t").unwrap();
+    let badge = it.front.id.clone();
+    let key = format!("item:{}", badge);
+    // A badged tool write whose path never resolved store-relative is
+    // RECORDED with its raw path, marked unresolved — never dropped
+    // (it-bj3b #2); repeats fold; the resolved reader never shows it.
+    observe_write(&s, &[], Some("geo"), Some(&badge), "d:/elsewhere/checkout/src/teach.rs");
+    observe_write(&s, &[], Some("geo"), Some(&badge), "d:/elsewhere/checkout/src/teach.rs");
+    let touches = quarry::coord::touches_for(&s, &key);
+    assert_eq!(touches.len(), 1, "the unresolved write recorded once");
+    assert!(touches[0].unresolved);
+    assert_eq!(touches[0].path, "d:/elsewhere/checkout/src/teach.rs");
+    assert!(quarry::coord::touched_for(&s, &key).is_empty(), "resolved reader stays clean");
+    // Leaseless, the same path stays unrecorded — outside the repo is not
+    // this graph's arc; only a badge makes it accounting.
+    observe_write(&s, &[], Some("loose"), None, "d:/elsewhere/notes.md");
+    assert!(quarry::coord::touches_for(&s, "session:loose").is_empty());
+    // An ordinary badged write and a shell-parsed one land beside it.
+    observe_write(&s, &[], Some("geo"), Some(&badge), "src/main.rs");
+    quarry::coord::accrue_touch_ext(&s, &key, "tests/basic.rs", Some("shell"), false);
+    // Harvest renders all three channels and states the sight boundary
+    // (it-bj3b #5): a partial observed set can never read as complete.
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(h.contains("files touched under the badge (2)"), "resolved set counted: {}", h);
+    assert!(
+        h.contains("tests/basic.rs  (shell-parsed, best-effort)"),
+        "the shell channel is named per file: {}", h
+    );
+    assert!(
+        h.contains("unresolved under the badge (1)")
+            && h.contains("d:/elsewhere/checkout/src/teach.rs"),
+        "the unresolved write renders raw at the judgment seat: {}", h
+    );
+    assert!(
+        h.contains(quarry::framings::SIGHT_BOUNDARY),
+        "the sight boundary is stated: {}", h
+    );
+    // The boundary line rides the empty set too — and the dispatch trace.
+    let bare = {
+        let mut b = NewArgs::bare("item", "bare arc");
+        b.status = Some("ready".into());
+        b.about = vec![area.front.id.clone()];
+        b.acceptance = vec!["lands".into()];
+        ops::new_node(&s, b).unwrap()
+    };
+    ops::dispatch(&s, &bare.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+        .unwrap();
+    let h2 = quarry::render::harvest(&s, &bare.front.id).unwrap();
+    assert!(h2.contains("no code writes observed under this badge"));
+    assert!(h2.contains(quarry::framings::SIGHT_BOUNDARY), "boundary on the empty set: {}", h2);
+    let tr = quarry::render::dispatch_trace(&s, &it.front.id).unwrap();
+    assert!(
+        tr.contains("(unresolved — raw path, never resolved store-relative)"),
+        "the trace marks the unresolved channel: {}", tr
+    );
+    assert!(tr.contains(quarry::framings::SIGHT_BOUNDARY), "boundary on the trace: {}", tr);
+}

@@ -796,7 +796,19 @@ pub fn observe_write(
         return vec![]; // graph state is not code; verbs carry their own record
     }
     if rel_path.starts_with('/') || rel_path.contains(':') {
-        return vec![]; // an absolute path escaped the repo root — not this graph's arc
+        // A path that never resolved store-relative. Leaseless it is simply
+        // outside this graph's arc (scratchpads, temp files) and stays
+        // unrecorded. Under a badge it is ACCOUNTING (it-bj3b): the raw path
+        // is recorded, marked unresolved, and harvest renders it — a badged
+        // write's resolution failure is visible bookkeeping, never a
+        // silently dropped fact.
+        if badge.is_some() {
+            let key = coord::touch_key(badge, session);
+            if !coord::touches_for(store, &key).iter().any(|t| t.path == rel_path) {
+                coord::accrue_touch_ext(store, &key, rel_path, None, true);
+            }
+        }
+        return vec![];
     }
     let mut out: Vec<String> = Vec::new();
     let key = coord::touch_key(badge, session);
@@ -892,6 +904,298 @@ pub fn observe_write(
         ));
     }
     out
+}
+
+/// Quote-aware shell tokenization for the write-shape parser: whitespace
+/// splits words outside quotes; command separators (`;`, `|`, `&`, newlines,
+/// parens) and input redirects (`<`, heredocs) push None — a boundary; runs
+/// of `>` split into their own token even glued to a neighbor (`2>file`),
+/// so the scan can pair each redirect with the token that follows it.
+fn shell_tokens(command: &str) -> Vec<Option<String>> {
+    let mut out: Vec<Option<String>> = Vec::new();
+    let mut cur = String::new();
+    let mut quote: Option<char> = None;
+    let flush = |cur: &mut String, out: &mut Vec<Option<String>>| {
+        if !cur.is_empty() {
+            out.push(Some(std::mem::take(cur)));
+        }
+    };
+    let mut chars = command.chars().peekable();
+    while let Some(c) = chars.next() {
+        if let Some(q) = quote {
+            if c == q {
+                quote = None;
+            } else {
+                cur.push(c);
+            }
+            continue;
+        }
+        match c {
+            '\'' | '"' => quote = Some(c),
+            c if c.is_whitespace() => flush(&mut cur, &mut out),
+            ';' | '|' | '&' | '(' | ')' | '<' => {
+                flush(&mut cur, &mut out);
+                if out.last() != Some(&None) {
+                    out.push(None);
+                }
+            }
+            '>' => {
+                flush(&mut cur, &mut out);
+                let mut r = String::from(">");
+                while chars.peek() == Some(&'>') {
+                    chars.next();
+                    r.push('>');
+                }
+                out.push(Some(r));
+            }
+            c => cur.push(c),
+        }
+    }
+    flush(&mut cur, &mut out);
+    out
+}
+
+/// The command word, normalized: path and .exe stripped, lowercased —
+/// `/usr/bin/tee`, `TEE.EXE`, and `tee` all read as "tee".
+fn cmd_word(tok: &str) -> String {
+    let t = tok.replace('\\', "/").to_lowercase();
+    let base = t.rsplit('/').next().unwrap_or(&t);
+    base.trim_end_matches(".exe").to_string()
+}
+
+/// A parsed target the accrual should never chase: streams, devices,
+/// variables and substitutions the parse cannot resolve.
+fn opaque_target(t: &str) -> bool {
+    t.is_empty()
+        || t == "-"
+        || t.contains('$')
+        || t.contains('%')
+        || t.contains('`')
+        || t.contains('*')
+        || t.contains('?')
+        || matches!(t.to_lowercase().as_str(), "/dev/null" | "nul" | "null")
+}
+
+/// Best-effort write-target extraction from a shell command (it-bj3b #4):
+/// the common write shapes — redirects (`>`/`>>`, glued forms included),
+/// `tee`, `cp`/`mv` targets, `touch`, `git checkout -- <paths>` and
+/// `git restore <paths>`, and the PowerShell content writers (Set-Content,
+/// Add-Content, Out-File, Copy-Item/Move-Item destinations). String-matching
+/// in the commit-sweep guard's posture: parsing narrows the blind zone, the
+/// sight-boundary statement covers what it cannot see (opaque scripts,
+/// `git apply`, generated files). Returns raw targets in order, deduped.
+pub fn write_shapes(command: &str) -> Vec<String> {
+    let tokens = shell_tokens(command);
+    let mut out: Vec<String> = Vec::new();
+    let push = |t: &str, out: &mut Vec<String>| {
+        let t = t.trim_start_matches("./");
+        if !opaque_target(t) && !out.iter().any(|x| x == t) {
+            out.push(t.to_string());
+        }
+    };
+    let mut i = 0;
+    while i < tokens.len() {
+        let Some(tok) = tokens[i].as_deref() else {
+            i += 1;
+            continue;
+        };
+        // A redirect anywhere: the next token (if any, and not a boundary)
+        // is its target.
+        if tok == ">" || tok == ">>" {
+            if let Some(Some(t)) = tokens.get(i + 1) {
+                push(t, &mut out);
+            }
+            i += 2;
+            continue;
+        }
+        // A command word: scan its own args — stopping at the first
+        // redirect (whose target belongs to the redirect, re-scanned below)
+        // or boundary.
+        let word = cmd_word(tok);
+        let args: Vec<&str> = {
+            let mut a = Vec::new();
+            let mut j = i + 1;
+            while let Some(Some(t)) = tokens.get(j) {
+                if t == ">" || t == ">>" {
+                    break;
+                }
+                a.push(t.as_str());
+                j += 1;
+            }
+            a
+        };
+        let non_flag = |xs: &[&str]| -> Vec<String> {
+            xs.iter()
+                .filter(|x| !x.starts_with('-') && **x != ">" && **x != ">>")
+                .map(|x| x.to_string())
+                .collect()
+        };
+        match word.as_str() {
+            "tee" => {
+                for t in non_flag(&args) {
+                    push(&t, &mut out);
+                }
+            }
+            "cp" | "mv" => {
+                // `-t <dir>` names the target ahead; otherwise the last
+                // non-flag arg is the destination.
+                if let Some(p) = args.iter().position(|x| *x == "-t" || *x == "--target-directory")
+                {
+                    if let Some(t) = args.get(p + 1) {
+                        push(t, &mut out);
+                    }
+                } else {
+                    let plain = non_flag(&args);
+                    if plain.len() >= 2 {
+                        push(plain.last().unwrap(), &mut out);
+                    }
+                }
+            }
+            "touch" => {
+                for t in non_flag(&args) {
+                    push(&t, &mut out);
+                }
+            }
+            "git" => {
+                let sub = args.first().map(|s| s.to_lowercase()).unwrap_or_default();
+                if sub == "checkout" {
+                    if let Some(p) = args.iter().position(|x| *x == "--") {
+                        for t in &args[p + 1..] {
+                            if *t != ">" && *t != ">>" {
+                                push(t, &mut out);
+                            }
+                        }
+                    }
+                } else if sub == "restore" {
+                    let mut k = 1;
+                    while k < args.len() {
+                        let a = args[k];
+                        if a == "--source" {
+                            k += 2;
+                            continue;
+                        }
+                        if !a.starts_with('-') && a != ">" && a != ">>" {
+                            push(a, &mut out);
+                        }
+                        k += 1;
+                    }
+                }
+            }
+            "set-content" | "add-content" | "out-file" | "copy-item" | "move-item" => {
+                let path_flag = |f: &str| {
+                    matches!(f, "-path" | "-filepath" | "-literalpath")
+                        || (matches!(word.as_str(), "copy-item" | "move-item")
+                            && f == "-destination")
+                };
+                // Flags whose VALUE is not a path — skip it so it never
+                // reads as the positional target.
+                let value_flag = |f: &str| {
+                    matches!(f, "-value" | "-encoding" | "-inputobject" | "-stream" | "-filter")
+                };
+                let mut positional: Vec<String> = Vec::new();
+                let mut flagged: Option<String> = None;
+                let mut k = 0;
+                while k < args.len() {
+                    let a = args[k];
+                    let f = a.to_lowercase();
+                    if path_flag(&f) {
+                        if let Some(t) = args.get(k + 1) {
+                            if flagged.is_none() || f == "-destination" {
+                                flagged = Some(t.to_string());
+                            }
+                        }
+                        k += 2;
+                        continue;
+                    }
+                    if value_flag(&f) {
+                        k += 2;
+                        continue;
+                    }
+                    if a.starts_with('-') || a == ">" || a == ">>" {
+                        k += 1;
+                        continue;
+                    }
+                    positional.push(a.to_string());
+                    k += 1;
+                }
+                match word.as_str() {
+                    // Copy-Item/Move-Item: the DESTINATION is the write —
+                    // second positional when no flag named it.
+                    "copy-item" | "move-item" => {
+                        if let Some(t) =
+                            flagged.or_else(|| positional.get(1).cloned())
+                        {
+                            push(&t, &mut out);
+                        }
+                    }
+                    // The content writers: first positional is the path.
+                    _ => {
+                        if let Some(t) = flagged.or_else(|| positional.first().cloned()) {
+                            push(&t, &mut out);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+        // Jump to the boundary this command's args ran to; redirects inside
+        // the args were NOT consumed here — re-scan them individually.
+        let mut j = i + 1;
+        while let Some(Some(t)) = tokens.get(j) {
+            if t == ">" || t == ">>" {
+                if let Some(Some(target)) = tokens.get(j + 1) {
+                    push(target, &mut out);
+                }
+            }
+            j += 1;
+        }
+        i = j;
+    }
+    out
+}
+
+/// The shell half of the observation layer (it-bj3b #4), riding the
+/// Bash|PowerShell PreToolUse hook: parse the command for common write
+/// shapes and accrue every target that RESOLVES store-relative, marked
+/// `via: shell` so harvest renders the channel honestly. Observation only —
+/// never a denial, never a context line: parsing is best-effort, and a
+/// false-positive parse must cost nothing. Targets that resolve nowhere are
+/// dropped here (a parse is a guess; only the tool-write channel records
+/// unresolved paths, because there the write is a certainty).
+pub fn observe_shell(
+    store: &crate::store::Store,
+    badge: Option<&str>,
+    session: Option<&str>,
+    command: &str,
+    cwd: Option<&Path>,
+) {
+    use crate::coord;
+    let targets = write_shapes(command);
+    if targets.is_empty() {
+        return;
+    }
+    let key = coord::touch_key(badge, session);
+    let mut prior: Vec<String> =
+        coord::touches_for(store, &key).into_iter().map(|t| t.path).collect();
+    let base = cwd.map(Path::to_path_buf).unwrap_or_else(|| store.work_root.clone());
+    for t in targets {
+        let abs_shaped =
+            t.starts_with('/') || t.starts_with('\\') || t.get(1..2) == Some(":");
+        let abs = if abs_shaped {
+            t.clone()
+        } else {
+            base.join(&t).to_string_lossy().to_string()
+        };
+        let Some(rel) = store.relative(&abs) else { continue };
+        if rel.starts_with("graph/") || rel.split('/').any(|c| c == "." || c == "..") {
+            continue;
+        }
+        if prior.iter().any(|p| *p == rel) {
+            continue;
+        }
+        coord::accrue_touch_ext(store, &key, &rel, Some("shell"), false);
+        prior.push(rel);
+    }
 }
 
 /// C6, as a PreToolUse hook. Returns Some(denial) if the tool call should be

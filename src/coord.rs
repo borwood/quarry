@@ -814,12 +814,42 @@ pub fn touch_key(badge: Option<&str>, session: Option<&str>) -> String {
     }
 }
 
+/// One observed touch: the store-relative path when resolution held, the raw
+/// path marked `unresolved` when it did not (it-bj3b: a badged write whose
+/// path escapes store-relative resolution is RECORDED — resolution failure
+/// is visible accounting, never a dropped fact). `via` names the sight
+/// channel: None = a tool write the guard saw exactly; "shell" = a target
+/// parsed from a command string, best-effort by nature.
+#[derive(Clone, PartialEq)]
+pub struct Touch {
+    pub path: String,
+    pub via: Option<String>,
+    pub unresolved: bool,
+}
+
 /// Append one touched path (call only for paths not already accrued —
-/// `touched_for` gives the prior set). Best-effort: observation never fails
+/// `touches_for` gives the prior set). Best-effort: observation never fails
 /// a write.
 pub fn accrue_touch(store: &Store, key: &str, rel_path: &str) {
+    accrue_touch_ext(store, key, rel_path, None, false);
+}
+
+/// The full-channel accrual: tool or shell-parsed, resolved or not.
+pub fn accrue_touch_ext(
+    store: &Store,
+    key: &str,
+    path: &str,
+    via: Option<&str>,
+    unresolved: bool,
+) {
     use std::io::Write as _;
-    let line = serde_json::json!({"ts": Store::now(), "key": key, "path": rel_path});
+    let mut line = serde_json::json!({"ts": Store::now(), "key": key, "path": path});
+    if let Some(v) = via {
+        line["via"] = serde_json::json!(v);
+    }
+    if unresolved {
+        line["unresolved"] = serde_json::json!(true);
+    }
     if let Ok(mut f) = fs::OpenOptions::new()
         .create(true)
         .append(true)
@@ -829,23 +859,41 @@ pub fn accrue_touch(store: &Store, key: &str, rel_path: &str) {
     }
 }
 
-/// Distinct touched paths for one key, in first-touch order.
-pub fn touched_for(store: &Store, key: &str) -> Vec<String> {
+/// Every distinct touch for one key, in first-touch order — resolved and
+/// unresolved alike, each carrying its sight channel. Distinctness is by
+/// path: the first channel that saw a path keeps it.
+pub fn touches_for(store: &Store, key: &str) -> Vec<Touch> {
     let Ok(s) = fs::read_to_string(touched_path(store)) else {
         return vec![];
     };
-    let mut out: Vec<String> = Vec::new();
+    let mut out: Vec<Touch> = Vec::new();
     for line in s.lines() {
         let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else { continue };
-        if v.get("key").and_then(|x| x.as_str()) == Some(key) {
-            if let Some(p) = v.get("path").and_then(|x| x.as_str()) {
-                if !out.iter().any(|x| x == p) {
-                    out.push(p.to_string());
-                }
-            }
+        if v.get("key").and_then(|x| x.as_str()) != Some(key) {
+            continue;
         }
+        let Some(p) = v.get("path").and_then(|x| x.as_str()) else { continue };
+        if out.iter().any(|t| t.path == p) {
+            continue;
+        }
+        out.push(Touch {
+            path: p.to_string(),
+            via: v.get("via").and_then(|x| x.as_str()).map(String::from),
+            unresolved: v.get("unresolved").and_then(|x| x.as_bool()).unwrap_or(false),
+        });
     }
     out
+}
+
+/// Distinct RESOLVED touched paths for one key, in first-touch order — the
+/// store-relative set consumers match against globs and citations. Unresolved
+/// raw paths never appear here; they render at harvest from `touches_for`.
+pub fn touched_for(store: &Store, key: &str) -> Vec<String> {
+    touches_for(store, key)
+        .into_iter()
+        .filter(|t| !t.unresolved)
+        .map(|t| t.path)
+        .collect()
 }
 
 /// Drop a key's entries once delivered (wrap pickup) or landed (release).

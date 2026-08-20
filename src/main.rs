@@ -1014,34 +1014,25 @@ fn main() -> Result<()> {
                     quarry::teach::write_target(&input),
                     quarry::store::resolve_store(None, &hook_keys, hook_cwd.as_deref()),
                 ) {
-                    let root = store.root.to_string_lossy().replace('\\', "/").to_lowercase();
-                    let wroot =
-                        store.work_root.to_string_lossy().replace('\\', "/").to_lowercase();
-                    let p = path.replace('\\', "/").to_lowercase();
                     // The lease layer judges REPO-RELATIVE paths only: a
                     // write outside the host repo (scratchpads, temp files)
-                    // is never scope creep, never accrual, never contract
-                    // material. Component-boundary strip: root + '/' + rel.
-                    // Under a store pin the WORK root strips first (dc-g5x5):
-                    // a worktree fork mirrors the repo's layout, so the
-                    // fork-relative path IS the store-relative path.
-                    let rel = p
-                        .strip_prefix(&wroot)
-                        .or_else(|| p.strip_prefix(&root))
-                        .and_then(|r| r.strip_prefix('/'))
-                        .map(String::from);
+                    // is never scope creep, never contract material.
+                    // Resolution rides the ONE point (store::store_relative,
+                    // it-bj3b): case-folded, separator-normalized, work root
+                    // stripped first (dc-g5x5 — a fork mirrors the layout).
+                    let rel = store.relative(&path);
+                    let session = coord::current_session().or_else(|| {
+                        chat.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
+                    });
+                    // The badge resolves for the ACTING identity, never
+                    // the machine and never the held entry: env, then the
+                    // association q join bound (agent, chat, session
+                    // keyed) — stamping and the guard follow the WORK
+                    // (dc-zbxj); another chat's dispatch is not this
+                    // chat's badge.
+                    let dispatch =
+                        coord::badge_for(&store, agent.as_deref(), chat.as_deref(), session.as_deref());
                     if let Some(rel) = rel {
-                        let session = coord::current_session().or_else(|| {
-                            chat.as_deref().and_then(|cid| coord::chat_binding(&store, cid))
-                        });
-                        // The badge resolves for the ACTING identity, never
-                        // the machine and never the held entry: env, then the
-                        // association q join bound (agent, chat, session
-                        // keyed) — stamping and the guard follow the WORK
-                        // (dc-zbxj); another chat's dispatch is not this
-                        // chat's badge.
-                        let dispatch =
-                            coord::badge_for(&store, agent.as_deref(), chat.as_deref(), session.as_deref());
                         let dispatched: Vec<String> = coord::load_dispatches(&store)
                             .held
                             .values()
@@ -1082,6 +1073,25 @@ fn main() -> Result<()> {
                                 }})
                             );
                         }
+                    } else if dispatch.is_some() {
+                        // NO SILENT DISCARD UNDER A BADGE (it-bj3b): a tool
+                        // write whose absolute path failed store-relative
+                        // resolution is still a certain write under this
+                        // badge — observe_write records the raw path marked
+                        // unresolved, and harvest renders it. The lease
+                        // layer stays out (out-of-repo paths were never
+                        // contract material); relative-shaped strays skip,
+                        // exactly as before.
+                        let p = path.replace('\\', "/");
+                        if p.starts_with('/') || p.contains(':') {
+                            quarry::teach::observe_write(
+                                &store,
+                                &[],
+                                session.as_deref(),
+                                dispatch.as_deref(),
+                                &p,
+                            );
+                        }
                     }
                 }
             }
@@ -1094,11 +1104,9 @@ fn main() -> Result<()> {
                 // for bindings and alerts even when its cwd sits in a
                 // worktree fork.
                 let parsed = serde_json::from_str::<serde_json::Value>(&input).ok();
+                let agent = parsed.as_ref().and_then(quarry::teach::hook_agent_id);
                 let hook_keys: Vec<String> = [
-                    parsed
-                        .as_ref()
-                        .and_then(quarry::teach::hook_agent_id)
-                        .map(|a| format!("agent:{}", a)),
+                    agent.as_ref().map(|a| format!("agent:{}", a)),
                     parsed
                         .as_ref()
                         .and_then(|v| v.get("session_id").and_then(|x| x.as_str()))
@@ -1144,6 +1152,26 @@ fn main() -> Result<()> {
                         ) {
                             errln!("{}", msg);
                             std::process::exit(2);
+                        }
+                        // The shell half of the sight boundary (it-bj3b):
+                        // parse the command for common write shapes and
+                        // accrue targets that resolve store-relative,
+                        // marked shell-parsed. Observation only — a parse
+                        // is best-effort and never denies, never speaks.
+                        if matches!(tool, "Bash" | "PowerShell") {
+                            let dispatch = coord::badge_for(
+                                &store,
+                                agent.as_deref(),
+                                chat,
+                                session.as_deref(),
+                            );
+                            quarry::teach::observe_shell(
+                                &store,
+                                dispatch.as_deref(),
+                                session.as_deref(),
+                                cmd,
+                                hook_cwd.as_deref(),
+                            );
                         }
                     }
                     if let Some(out) = quarry::teach::session_hook_output(&store, &input) {
@@ -2383,6 +2411,7 @@ fn main() -> Result<()> {
                             outln!("    resembles: {}", line(&all, m));
                         }
                     }
+                    outln!("    {}", quarry::framings::SIGHT_BOUNDARY);
                     outln!("    a recurring arc wants declaring next time: q brief <item>, then q reserve <item> --files <globs>");
                     coord::clear_touched(&store, &key);
                 }
