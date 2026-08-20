@@ -913,6 +913,267 @@ pub fn guard(input: &str) -> Option<String> {
     }
 }
 
+/// What a sweep-shaped staging command would capture: repo-relative prefix
+/// coverage ("" = the whole tree), each cover flagged tracked-only when the
+/// shape stages tracked files only (`git commit -a` cannot capture an
+/// untracked node file).
+pub struct SweepShape {
+    /// The offending token, for the refusal to name.
+    pub shape: String,
+    pub covers: Vec<(String, bool)>,
+}
+
+impl SweepShape {
+    pub fn captures(&self, path: &str, tracked: bool) -> bool {
+        let p = path.to_lowercase();
+        self.covers.iter().any(|(prefix, tracked_only)| {
+            (!tracked_only || tracked)
+                && (prefix.is_empty() || p == *prefix || p.starts_with(&format!("{}/", prefix)))
+        })
+    }
+}
+
+/// Bulk-staging detection for the commit-sweep guard (it-4q6t): string-
+/// matching the shell command, best-effort by design — wrap backstops, and
+/// evasion is self-inflicted (the write-guard posture). `cwd_rel` is the
+/// command's cwd relative to the repo root ("" = the root); it scopes `.`
+/// and bare relative dirs. Explicit file paths never match: adoption and
+/// the taught own-line pass by construction.
+pub fn sweep_shape(command: &str, cwd_rel: &str) -> Option<SweepShape> {
+    let cwd_rel = cwd_rel.trim_matches('/').to_lowercase();
+    let scoped = |p: &str| -> String {
+        if cwd_rel.is_empty() {
+            p.to_string()
+        } else if p.is_empty() {
+            cwd_rel.clone()
+        } else {
+            format!("{}/{}", cwd_rel, p)
+        }
+    };
+    // A graph DIRECTORY is bulk; a named file is explicit. The six type
+    // dirs live under graph/nodes; a glob into graph is bulk too.
+    let bulk_graph_dir = |p: &str| -> bool {
+        p == "graph"
+            || p == "graph/nodes"
+            || p == "graph/log"
+            || (p.starts_with("graph/nodes/") && !p[12..].contains('.') && !p[12..].contains('/'))
+            || (p.starts_with("graph/") && p.contains('*'))
+    };
+    // Tokenize: whitespace splits words; shell separators (even glued to a
+    // token, `graph;git`) reset the command boundary.
+    let seps: &[char] = &['\n', ';', '|', '&', '(', ')'];
+    let cleaned: String =
+        command.chars().map(|c| if seps.contains(&c) { '\u{1}' } else { c }).collect();
+    let mut tokens: Vec<Option<String>> = Vec::new(); // None = a separator
+    for raw in cleaned.split_whitespace() {
+        for (i, piece) in raw.split('\u{1}').enumerate() {
+            if i > 0 {
+                tokens.push(None);
+            }
+            let t = piece.trim_matches(|c| c == '"' || c == '\'');
+            if !t.is_empty() {
+                tokens.push(Some(t.to_string()));
+            }
+        }
+    }
+    #[derive(PartialEq)]
+    enum St {
+        Idle,
+        Git,
+        Add,
+        Commit,
+    }
+    let mut st = St::Idle;
+    let mut covers: Vec<(String, bool)> = Vec::new();
+    let mut shape: Option<String> = None;
+    for tok in &tokens {
+        let Some(tok) = tok.as_deref() else {
+            st = St::Idle;
+            continue;
+        };
+        match st {
+            St::Idle => {
+                if tok == "git" || tok.to_lowercase().ends_with("git.exe") {
+                    st = St::Git;
+                }
+            }
+            St::Git => {
+                if tok.starts_with('-') {
+                    // global flags (-C/-c consume a value we cannot see
+                    // apart — best-effort: rare in agent hands)
+                } else if tok == "add" || tok == "stage" {
+                    st = St::Add;
+                } else if tok == "commit" {
+                    st = St::Commit;
+                } else {
+                    st = St::Idle;
+                }
+            }
+            St::Add => match tok {
+                "--" => {}
+                "-A" | "--all" | "-u" | "--update" | "--no-ignore-removal" | ":/" | ":/."
+                | ":(top)" => {
+                    shape.get_or_insert_with(|| format!("git add {}", tok));
+                    covers.push((String::new(), false));
+                }
+                t if t.starts_with('-') => {}
+                "." | "./" | "*" => {
+                    shape.get_or_insert_with(|| format!("git add {}", tok));
+                    covers.push((scoped(""), false));
+                }
+                t => {
+                    let p = t
+                        .replace('\\', "/")
+                        .trim_start_matches("./")
+                        .trim_end_matches('/')
+                        .to_lowercase();
+                    let p = if p.starts_with("graph") { p } else { scoped(&p) };
+                    if bulk_graph_dir(&p) {
+                        shape.get_or_insert_with(|| format!("git add {}", t));
+                        covers.push((p, false));
+                    }
+                }
+            },
+            St::Commit => {
+                if tok == "--all"
+                    || (tok.starts_with('-')
+                        && !tok.starts_with("--")
+                        && tok[1..].chars().all(|c| c.is_ascii_alphabetic())
+                        && tok.contains('a'))
+                {
+                    shape.get_or_insert_with(|| format!("git commit {}", tok));
+                    covers.push((String::new(), true));
+                }
+            }
+        }
+    }
+    if covers.is_empty() {
+        None
+    } else {
+        Some(SweepShape { shape: shape.unwrap_or_default(), covers })
+    }
+}
+
+/// The commit-sweep guard (it-4q6t), riding the Bash|PowerShell PreToolUse
+/// hook on the C6 channel: a sweep-shaped staging command that would capture
+/// another session's uncommitted node files refuses, handing the asking
+/// session its own git add line. Nothing foreign pending: silence — the
+/// sweep is harmless. The guard blocks the bulk SHAPE, never deliberate
+/// adoption: foreign files list with the owner's last-seen age, and a stale
+/// owner's line flips to an explicit-path adoption offer that passes by
+/// construction. Fires only where the command works the store's own
+/// checkout — a worktree fork stages its own inert graph copy, not this one.
+pub fn staging_guard(
+    store: &crate::store::Store,
+    tool: &str,
+    command: &str,
+    cwd: Option<&Path>,
+    session: Option<&str>,
+) -> Option<String> {
+    if !matches!(tool, "Bash" | "PowerShell") {
+        return None;
+    }
+    let norm = |p: &Path| p.to_string_lossy().replace('\\', "/").to_lowercase();
+    let root = norm(&store.root);
+    if norm(&store.work_root) != root {
+        return None; // a fork's git acts on the fork's tree, not this graph
+    }
+    let cwd_rel = match cwd {
+        Some(c) => {
+            let c = norm(c);
+            if c == root {
+                String::new()
+            } else if let Some(rel) = c.strip_prefix(&format!("{}/", root)) {
+                rel.to_string()
+            } else {
+                return None; // the command works some other tree
+            }
+        }
+        None => String::new(),
+    };
+    let sweep = sweep_shape(command, &cwd_rel)?;
+    let pending = crate::queries::pending_graph(store)?;
+    let captured_foreign: Vec<(&crate::queries::CommitSet, Vec<&crate::queries::CommitFile>)> =
+        pending
+            .foreign(session)
+            .into_iter()
+            .filter_map(|set| {
+                let files: Vec<&crate::queries::CommitFile> = set
+                    .files
+                    .iter()
+                    .filter(|f| sweep.captures(&f.path, f.tracked))
+                    .collect();
+                if files.is_empty() {
+                    None
+                } else {
+                    Some((set, files))
+                }
+            })
+            .collect();
+    if captured_foreign.is_empty() {
+        return None;
+    }
+    let mut msg = format!(
+        "C6: this staging sweep ({}) would capture other sessions' uncommitted graph nodes — the graph log attributes every write, but a sweep buries their work under your commit message. Stage your own commit-set instead:",
+        sweep.shape
+    );
+    match pending.own(session) {
+        Some(own) => {
+            msg.push_str(&format!("\n  {}", own.add_command()));
+            for f in own.files.iter().filter(|f| !f.carries.is_empty()) {
+                msg.push_str(&format!(
+                    "\n    ({} carries {}'s earlier edits — worth naming in your commit message)",
+                    f.node,
+                    f.carries.join(", ")
+                ));
+            }
+        }
+        None => {
+            msg.push_str(
+                "\n  (nothing of yours is pending under graph/ — this sweep would only capture others' work)",
+            );
+        }
+    }
+    if !pending.ledger.is_empty() {
+        msg.push_str(&format!(
+            "\n  the shared log shard rides along with any commit (exempt ledger, internally attributed, never split): git add {}",
+            pending.ledger.join(" ")
+        ));
+    }
+    msg.push_str("\ntheirs — leave for the owner, or adopt by explicit paths:");
+    for (set, files) in &captured_foreign {
+        let owner = set.owner.as_deref().unwrap_or("?");
+        if crate::queries::owner_stale(set.age_secs) {
+            msg.push_str(&format!(
+                "\n  · {} ({} — stale; adopt if the work should land):",
+                owner,
+                crate::queries::age_phrase(set.age_secs)
+            ));
+            for l in set.adoption_offer() {
+                msg.push_str(&format!("\n      {}", l));
+            }
+        } else {
+            msg.push_str(&format!(
+                "\n  · {} ({}):",
+                owner,
+                crate::queries::age_phrase(set.age_secs)
+            ));
+            for f in files {
+                let carries = if f.carries.is_empty() {
+                    String::new()
+                } else {
+                    format!(" (carries {}'s earlier edits)", f.carries.join(", "))
+                };
+                msg.push_str(&format!("\n      {}{}", f.path, carries));
+            }
+        }
+    }
+    msg.push_str(
+        "\nexplicit-path staging always passes this guard; the full map: q query commit-set",
+    );
+    Some(msg)
+}
+
 /// Write the generated skill and wire the guard hook into the host repo's
 /// .claude/settings.json. Returns a human summary of what happened.
 pub fn install_claude(root: &Path) -> Result<Vec<String>> {

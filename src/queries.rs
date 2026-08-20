@@ -1285,3 +1285,270 @@ pub fn node_log(store: &Store, id: &str) -> Result<Vec<serde_json::Value>> {
         .filter(|e| e.get("node").and_then(|v| v.as_str()) == Some(id))
         .collect())
 }
+
+// ── the commit-set (it-4q6t): the log is the ownership oracle ──────────────
+//
+// Two-plus sessions share one working tree; leases guard file writes, not
+// commit staging — so a bulk `git add` sweeps other sessions' uncommitted
+// node files under an unrelated commit message. The graph log attributes
+// every write correctly; git history under a sweep does not. The commit-set
+// derives the split: a node file's OWNER is the session with the LAST event
+// on the node since the file's prior commit — deterministic, no deferral
+// deadlock. Mixed-authorship files land in exactly one commit-set, annotated
+// as carrying the other sessions' earlier edits. The shared monthly log
+// shard is exempt ledger: internally attributed, it rides along with any
+// commit and is never split. `q query commit-set` is the pull handle; the
+// staging guard (teach::staging_guard), wrap, and retire all render from
+// this one derivation.
+
+/// An owner's heartbeat this old (or never seen on this machine) reads as
+/// gone for the ADOPTION surface: the foreign-files line flips from
+/// leave-for-the-owner to an explicit-path adoption offer. Advisory only —
+/// explicit-path staging always passes, whoever the owner; the flip changes
+/// the teaching, never the rule. More forgiving than DISPATCH_LIVE_SECS:
+/// a design session mid-conversation can go quiet on the log for a while
+/// without its uncommitted work being offered to others.
+pub const OWNER_STALE_SECS: i64 = 60 * 60;
+
+/// Stale for the adoption flip: never seen counts as stale — a session with
+/// no heartbeat on this machine is not coming back to commit its leftovers.
+pub fn owner_stale(age_secs: Option<i64>) -> bool {
+    age_secs.map_or(true, |a| a >= OWNER_STALE_SECS)
+}
+
+/// The owner's last-seen age as a phrase every commit-set surface shares.
+pub fn age_phrase(age_secs: Option<i64>) -> String {
+    match age_secs {
+        None => "never seen on this machine".into(),
+        Some(s) if s < 3600 => format!("last seen {}m ago", s.max(0) / 60),
+        Some(s) if s < 86400 => format!("last seen {}h ago", s / 3600),
+        Some(s) => format!("last seen {}d ago", s / 86400),
+    }
+}
+
+/// One uncommitted node file, pre-derivation: what git knows about it.
+pub struct PendingNodeFile {
+    /// Repo-relative, forward slashes.
+    pub path: String,
+    /// The node id read off the filename.
+    pub node: String,
+    /// RFC3339 committer date of the file's last commit; None = never
+    /// committed (a freshly minted node).
+    pub prior_commit: Option<String>,
+    /// False for untracked files — `git commit -a` cannot capture those.
+    pub tracked: bool,
+}
+
+/// One file inside a commit-set.
+pub struct CommitFile {
+    pub path: String,
+    pub node: String,
+    pub tracked: bool,
+    /// Other sessions with earlier events on the node since the prior
+    /// commit — the file lands in ONE commit-set, annotated as carrying
+    /// their edits; the other side sees theirs-to-carry.
+    pub carries: Vec<String>,
+}
+
+/// One session's commit-set: the uncommitted node files the log says it
+/// owns. `owner: None` collects the unstamped remainder — files whose
+/// pending window shows no session-stamped event; they block no sweep.
+pub struct CommitSet {
+    pub owner: Option<String>,
+    /// Seconds since the owner's heartbeat; None = never seen (or unowned).
+    pub age_secs: Option<i64>,
+    pub files: Vec<CommitFile>,
+}
+
+impl CommitSet {
+    /// The exact staging line for this set — explicit paths, so it passes
+    /// the sweep guard by construction.
+    pub fn add_command(&self) -> String {
+        let mut paths: Vec<&str> = self.files.iter().map(|f| f.path.as_str()).collect();
+        paths.sort();
+        format!("git add {}", paths.join(" "))
+    }
+
+    /// The adoption offer: explicit-path staging plus a commit message
+    /// naming the origin — the move a stale owner's leftovers are taken by.
+    pub fn adoption_offer(&self) -> Vec<String> {
+        let owner = self.owner.as_deref().unwrap_or("an unstamped session");
+        let ids: Vec<&str> = self.files.iter().map(|f| f.node.as_str()).collect();
+        vec![
+            self.add_command(),
+            format!(
+                "git commit -m \"adopt {}'s uncommitted graph nodes: {} (owner {})\"",
+                owner,
+                ids.join(", "),
+                age_phrase(self.age_secs)
+            ),
+        ]
+    }
+}
+
+/// Everything uncommitted under graph/, split for the surfaces.
+pub struct PendingGraph {
+    /// Named owners alphabetical, the unstamped set (owner None) last.
+    pub sets: Vec<CommitSet>,
+    /// Log shards — the exempt ledger: internally attributed, rides along
+    /// with any commit, never split.
+    pub ledger: Vec<String>,
+    /// Other graph files (registry, readme) — shared, never owned, never
+    /// blocking; staged explicitly with the work they belong to.
+    pub shared: Vec<String>,
+}
+
+impl PendingGraph {
+    pub fn is_empty(&self) -> bool {
+        self.sets.is_empty() && self.ledger.is_empty() && self.shared.is_empty()
+    }
+
+    /// The asking session's own set, if it owns anything.
+    pub fn own(&self, session: Option<&str>) -> Option<&CommitSet> {
+        let s = session?;
+        self.sets.iter().find(|c| c.owner.as_deref() == Some(s))
+    }
+
+    /// Sets owned by OTHER sessions — what a sweep would capture. The
+    /// unstamped set never counts: no attribution is at stake there.
+    pub fn foreign(&self, session: Option<&str>) -> Vec<&CommitSet> {
+        self.sets
+            .iter()
+            .filter(|c| c.owner.is_some() && c.owner.as_deref() != session)
+            .collect()
+    }
+}
+
+/// The node id a graph/nodes file carries in its name ("it-4q6t-slug.md"),
+/// validated against the minted shape; None sends the path to `shared`.
+pub fn node_id_of_path(path: &str) -> Option<String> {
+    let base = path.rsplit('/').next()?;
+    let mut parts = base.splitn(3, '-');
+    let prefix = parts.next()?;
+    let chars = parts.next()?;
+    if !crate::model::NODE_TYPES.iter().any(|(_, p)| *p == prefix) {
+        return None;
+    }
+    let chars = chars.strip_suffix(".md").unwrap_or(chars);
+    if chars.len() != 4 || !chars.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return None;
+    }
+    Some(format!("{}-{}", prefix, chars))
+}
+
+fn parse_ts(ts: &str) -> Option<OffsetDateTime> {
+    OffsetDateTime::parse(ts, &Rfc3339).ok()
+}
+
+/// The pure ownership derivation: last writer on the log since the prior
+/// commit owns the file; earlier distinct sessions in the same window are
+/// carried. An event whose timestamp cannot be read counts into the window
+/// (best-effort leans toward attribution over silence); a file whose window
+/// shows no session-stamped event lands in the unstamped set.
+pub fn commit_sets(log: &[serde_json::Value], files: Vec<PendingNodeFile>) -> Vec<CommitSet> {
+    let mut sets: Vec<CommitSet> = Vec::new();
+    for f in files {
+        let boundary = f.prior_commit.as_deref().and_then(parse_ts);
+        let mut sessions: Vec<Option<String>> = Vec::new();
+        for ev in log {
+            if ev.get("node").and_then(|v| v.as_str()) != Some(f.node.as_str()) {
+                continue;
+            }
+            let after = match (&boundary, ev.get("ts").and_then(|v| v.as_str()).and_then(parse_ts))
+            {
+                (Some(b), Some(t)) => t > *b,
+                (Some(_), None) => true,
+                (None, _) => true,
+            };
+            if after {
+                sessions.push(ev.get("session").and_then(|v| v.as_str()).map(String::from));
+            }
+        }
+        let owner = sessions.iter().rev().find_map(|s| s.clone());
+        let carries: Vec<String> = {
+            let mut c: Vec<String> = sessions
+                .into_iter()
+                .flatten()
+                .filter(|s| Some(s.as_str()) != owner.as_deref())
+                .collect();
+            c.sort();
+            c.dedup();
+            c
+        };
+        let file = CommitFile { path: f.path, node: f.node, tracked: f.tracked, carries };
+        match sets.iter_mut().find(|s| s.owner == owner) {
+            Some(s) => s.files.push(file),
+            None => sets.push(CommitSet { owner, age_secs: None, files: vec![file] }),
+        }
+    }
+    sets.sort_by(|a, b| match (&a.owner, &b.owner) {
+        (Some(x), Some(y)) => x.cmp(y),
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+    });
+    for s in &mut sets {
+        s.files.sort_by(|a, b| a.path.cmp(&b.path));
+    }
+    sets
+}
+
+/// Interrogate git for the uncommitted graph and derive the commit-sets.
+/// None when git is unavailable or the store root is not a checkout —
+/// every calling surface stays silent then (best-effort, never a wedge).
+pub fn pending_graph(store: &Store) -> Option<PendingGraph> {
+    let out = std::process::Command::new("git")
+        .current_dir(&store.root)
+        // -uall: an untracked directory otherwise collapses to one line
+        // and its node files would evade ownership.
+        .args(["status", "--porcelain", "-uall", "--", "graph"])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let mut files: Vec<PendingNodeFile> = Vec::new();
+    let mut ledger: Vec<String> = Vec::new();
+    let mut shared: Vec<String> = Vec::new();
+    for line in String::from_utf8_lossy(&out.stdout).lines() {
+        if line.len() < 4 {
+            continue;
+        }
+        let (code, rest) = line.split_at(3);
+        let tracked = !code.starts_with("??");
+        // Renames render "old -> new"; the new path is the pending one.
+        let path = rest.split(" -> ").last().unwrap_or(rest).trim().trim_matches('"');
+        let path = path.replace('\\', "/");
+        if path.starts_with("graph/log/") {
+            ledger.push(path);
+        } else if path.starts_with("graph/nodes/") {
+            match node_id_of_path(&path) {
+                Some(node) => {
+                    let prior = std::process::Command::new("git")
+                        .current_dir(&store.root)
+                        .args(["log", "-1", "--format=%cI", "--"])
+                        .arg(&path)
+                        .output()
+                        .ok()
+                        .filter(|o| o.status.success())
+                        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                        .filter(|s| !s.is_empty());
+                    files.push(PendingNodeFile { path, node, prior_commit: prior, tracked });
+                }
+                None => shared.push(path),
+            }
+        } else {
+            shared.push(path);
+        }
+    }
+    ledger.sort();
+    shared.sort();
+    let log = store.read_log().ok()?;
+    let mut sets = commit_sets(&log, files);
+    for s in &mut sets {
+        if let Some(owner) = &s.owner {
+            s.age_secs = crate::coord::last_seen_age_secs(store, owner);
+        }
+    }
+    Some(PendingGraph { sets, ledger, shared })
+}

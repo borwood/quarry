@@ -4951,3 +4951,209 @@ fn counter_voice_rides_the_session_hook_and_skips_subagent_contexts() {
     );
 }
 
+// ── the commit-sweep guard (it-4q6t) ───────────────────────────────────────
+
+#[test]
+fn sweep_shapes_match_bulk_staging_and_explicit_paths_pass() {
+    use quarry::teach::sweep_shape;
+    // Bulk shapes: the whole tree, cwd, graph directories, commit -a.
+    let s = sweep_shape("git add -A", "").expect("-A is a sweep");
+    assert_eq!(s.covers, vec![(String::new(), false)]);
+    assert!(s.captures("graph/nodes/item/it-ab2c-x.md", false));
+    let s = sweep_shape("git add .", "").expect(". at the root is a sweep");
+    assert!(s.captures("graph/nodes/item/it-ab2c-x.md", false));
+    // . in a subdirectory covers only that subtree — no graph capture.
+    let s = sweep_shape("git add .", "src").expect(". is still sweep-shaped");
+    assert!(!s.captures("graph/nodes/item/it-ab2c-x.md", false));
+    let s = sweep_shape("git add graph", "").expect("the graph dir is a sweep");
+    assert!(s.captures("graph/nodes/claim/cl-zz2z-y.md", true));
+    assert!(sweep_shape("git add graph/nodes/item", "").is_some());
+    // graph/log is bulk-shaped but covers only the exempt ledger.
+    let s = sweep_shape("git add graph/log", "").expect("a dir is bulk");
+    assert!(!s.captures("graph/nodes/item/it-ab2c-x.md", true));
+    assert!(s.captures("graph/log/2026-08.jsonl", true));
+    // commit -a captures tracked files only.
+    let s = sweep_shape("git commit -am \"x\"", "").expect("commit -a is a sweep");
+    assert!(s.captures("graph/nodes/item/it-ab2c-x.md", true));
+    assert!(!s.captures("graph/nodes/item/it-ab2c-x.md", false));
+    // A compound command still matches past the first command.
+    assert!(sweep_shape("cargo build && git add -A", "").is_some());
+    // Explicit paths and non-staging commands never match.
+    assert!(sweep_shape("git add graph/nodes/item/it-ab2c-x.md", "").is_none());
+    assert!(sweep_shape("git add graph/sessions.json", "").is_none());
+    assert!(sweep_shape("git add src/main.rs; git commit -m msg", "").is_none());
+    assert!(sweep_shape("git commit --amend", "").is_none());
+    assert!(sweep_shape("git status", "").is_none());
+    assert!(sweep_shape("git commit -m \"add graph\"", "").is_none());
+}
+
+#[test]
+fn commit_set_ownership_derives_last_writer_and_annotates_carried_edits() {
+    use quarry::queries::{commit_sets, node_id_of_path, PendingNodeFile};
+    let log = vec![
+        serde_json::json!({"ts": "2026-08-19T10:00:00Z", "node": "it-aaaa", "op": "create", "session": "quarry"}),
+        serde_json::json!({"ts": "2026-08-19T11:00:00Z", "node": "it-aaaa", "op": "set", "session": "dispatcher"}),
+        serde_json::json!({"ts": "2026-08-19T09:00:00Z", "node": "it-bbbb", "op": "create", "session": "quarry"}),
+        serde_json::json!({"ts": "2026-08-19T12:00:00Z", "node": "it-cccc", "op": "set"}),
+    ];
+    let files = vec![
+        PendingNodeFile {
+            path: "graph/nodes/item/it-aaaa-x.md".into(),
+            node: "it-aaaa".into(),
+            prior_commit: None,
+            tracked: false,
+        },
+        PendingNodeFile {
+            path: "graph/nodes/item/it-bbbb-y.md".into(),
+            node: "it-bbbb".into(),
+            // The prior commit bounds the window: quarry's 09:00 edit is
+            // already committed, so the pending delta has no stamped owner.
+            prior_commit: Some("2026-08-19T09:30:00Z".into()),
+            tracked: true,
+        },
+        PendingNodeFile {
+            path: "graph/nodes/item/it-cccc-z.md".into(),
+            node: "it-cccc".into(),
+            prior_commit: None,
+            tracked: true,
+        },
+    ];
+    let sets = commit_sets(&log, files);
+    assert_eq!(sets.len(), 2, "one owned set, one unstamped remainder");
+    // Last writer since the prior commit owns the file; the earlier editor
+    // is carried, annotated — the file lands in exactly one commit-set.
+    assert_eq!(sets[0].owner.as_deref(), Some("dispatcher"));
+    assert_eq!(sets[0].files.len(), 1);
+    assert_eq!(sets[0].files[0].node, "it-aaaa");
+    assert_eq!(sets[0].files[0].carries, vec!["quarry".to_string()]);
+    assert_eq!(sets[0].add_command(), "git add graph/nodes/item/it-aaaa-x.md");
+    // The unstamped set trails and blocks nothing.
+    assert_eq!(sets[1].owner, None);
+    let paths: Vec<&str> = sets[1].files.iter().map(|f| f.path.as_str()).collect();
+    assert_eq!(paths, vec!["graph/nodes/item/it-bbbb-y.md", "graph/nodes/item/it-cccc-z.md"]);
+    // The id reads off the filename; non-node graph files stay out.
+    assert_eq!(node_id_of_path("graph/nodes/item/it-4q6t-commit-sweep.md").as_deref(), Some("it-4q6t"));
+    assert_eq!(node_id_of_path("graph/GRAPH.md"), None);
+    assert_eq!(node_id_of_path("graph/nodes/item/README.md"), None);
+}
+
+#[test]
+fn staging_guard_denies_the_sweep_with_the_askers_line_and_offers_adoption_when_stale() {
+    use time::format_description::well_known::Rfc3339;
+    let s = temp_store();
+    let git = |args: &[&str]| {
+        let out = std::process::Command::new("git")
+            .current_dir(&s.root)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            out.status.success(),
+            "git {:?}: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    git(&["init", "-q"]);
+    git(&["-c", "user.name=t", "-c", "user.email=t@t", "commit", "--allow-empty", "-q", "-m", "root"]);
+    // A node whose file is pending and whose last logged writer is quarry.
+    let n = ops::new_node(&s, NewArgs::bare("item", "swept work")).unwrap();
+    let future = (time::OffsetDateTime::now_utc() + time::Duration::seconds(5))
+        .format(&Rfc3339)
+        .unwrap();
+    s.log_event(serde_json::json!({
+        "ts": future, "node": n.front.id, "v": 1, "op": "set", "actor": "t", "session": "quarry"
+    }))
+    .unwrap();
+    let rel = n
+        .file
+        .strip_prefix(&s.root)
+        .unwrap()
+        .to_string_lossy()
+        .replace('\\', "/");
+    // Backdate the owner's heartbeat: a stale owner flips the foreign line
+    // to an explicit-path adoption offer.
+    std::fs::write(
+        s.root.join("graph").join(".sessions-live.json"),
+        "{\"quarry\": \"2020-01-01T00:00:00Z\"}\n",
+    )
+    .unwrap();
+    let cwd = s.root.clone();
+    let deny = quarry::teach::staging_guard(&s, "Bash", "git add -A", Some(&cwd), Some("dispatcher"))
+        .expect("the sweep denies while another session's node files are pending");
+    assert!(deny.contains(&rel), "the foreign file is named: {}", deny);
+    assert!(
+        deny.contains("nothing of yours is pending"),
+        "the asker's own line states its empty commit-set: {}",
+        deny
+    );
+    assert!(
+        deny.contains("adopt quarry's uncommitted graph nodes"),
+        "a stale owner's set flips to the adoption offer: {}",
+        deny
+    );
+    assert!(
+        deny.contains(&format!("git add {}", rel)),
+        "the adoption offer stages by explicit paths: {}",
+        deny
+    );
+    assert!(deny.contains("q query commit-set"), "the pull handle is advertised: {}", deny);
+    // A fresh owner keeps the leave-for-the-owner line — no adoption offer.
+    quarry::coord::touch_session(&s, "quarry");
+    let deny =
+        quarry::teach::staging_guard(&s, "Bash", "git add graph", Some(&cwd), Some("dispatcher"))
+            .expect("still denies");
+    assert!(deny.contains("last seen 0m ago"), "the owner's age renders: {}", deny);
+    assert!(!deny.contains("adopt quarry"), "a live owner's work is left, not offered: {}", deny);
+    // The owner's own sweep captures nothing foreign — silence.
+    assert!(
+        quarry::teach::staging_guard(&s, "Bash", "git add -A", Some(&cwd), Some("quarry")).is_none()
+    );
+    // Explicit-path staging always passes, whoever asks.
+    assert!(quarry::teach::staging_guard(
+        &s,
+        "Bash",
+        &format!("git add {}", rel),
+        Some(&cwd),
+        Some("dispatcher")
+    )
+    .is_none());
+    // Non-staging commands never engage the guard.
+    assert!(
+        quarry::teach::staging_guard(&s, "Bash", "git status", Some(&cwd), Some("dispatcher"))
+            .is_none()
+    );
+    // commit -a stages tracked files only — an untracked (freshly minted)
+    // node file is not captured, so the shape passes here.
+    assert!(quarry::teach::staging_guard(
+        &s,
+        "PowerShell",
+        "git commit -am \"work\"",
+        Some(&cwd),
+        Some("dispatcher")
+    )
+    .is_none());
+    // Once the file is tracked and modified again under quarry's hand,
+    // commit -a is a capture and denies.
+    git(&["add", &rel]);
+    git(&["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "land it"]);
+    ops::set(&s, &n.front.id, &["title=swept work, renamed".to_string()], None).unwrap();
+    let future = (time::OffsetDateTime::now_utc() + time::Duration::seconds(5))
+        .format(&Rfc3339)
+        .unwrap();
+    s.log_event(serde_json::json!({
+        "ts": future, "node": n.front.id, "v": 2, "op": "set", "actor": "t", "session": "quarry"
+    }))
+    .unwrap();
+    let deny = quarry::teach::staging_guard(
+        &s,
+        "PowerShell",
+        "git commit -am \"work\"",
+        Some(&cwd),
+        Some("dispatcher"),
+    )
+    .expect("commit -a captures the tracked modification");
+    assert!(deny.contains(&rel), "the captured file is named: {}", deny);
+}
+
+

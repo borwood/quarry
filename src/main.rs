@@ -485,6 +485,13 @@ enum Query {
     /// counts the shaping stratum whenever nonzero
     #[command(visible_alias = "bugs")]
     Defects,
+    /// The uncommitted graph split by owner — the log is the ownership
+    /// oracle: a node file belongs to the session with the last event on
+    /// it since the prior commit. Foreign sets carry the owner's last-seen
+    /// age; a stale owner's set flips to an explicit-path adoption offer.
+    /// The log shard is exempt ledger and rides along with any commit
+    #[command(name = "commit-set")]
+    CommitSet,
     /// What a dispatch wrote: badge-stamped events and guard-observed files
     Dispatch { item: String },
     /// Intent vs reality by name: backtick-named acceptance lines of live
@@ -1127,6 +1134,39 @@ fn main() -> Result<()> {
                 if let Ok(store) =
                     quarry::store::resolve_store(None, &hook_keys, hook_cwd.as_deref())
                 {
+                    // The commit-sweep guard (it-4q6t), ahead of injection:
+                    // bulk staging that would capture another session's
+                    // uncommitted node files denies with the asker's own
+                    // git add line in hand. The asking session resolves
+                    // like the write guard's: launcher env, then the chat
+                    // binding — the hook process never sees the shell
+                    // injection's env.
+                    let tool = parsed
+                        .as_ref()
+                        .and_then(|v| v.get("tool_name").and_then(|x| x.as_str()))
+                        .unwrap_or("");
+                    let cmd = parsed
+                        .as_ref()
+                        .and_then(|v| v.get("tool_input"))
+                        .and_then(|ti| ti.get("command"))
+                        .and_then(|c| c.as_str());
+                    if let Some(cmd) = cmd {
+                        let chat = parsed
+                            .as_ref()
+                            .and_then(|v| v.get("session_id").and_then(|x| x.as_str()));
+                        let session = coord::current_session()
+                            .or_else(|| chat.and_then(|cid| coord::chat_binding(&store, cid)));
+                        if let Some(msg) = quarry::teach::staging_guard(
+                            &store,
+                            tool,
+                            cmd,
+                            hook_cwd.as_deref(),
+                            session.as_deref(),
+                        ) {
+                            eprintln!("{}", msg);
+                            std::process::exit(2);
+                        }
+                    }
                     if let Some(out) = quarry::teach::session_hook_output(&store, &input) {
                         println!("{}", serde_json::to_string(&out)?);
                     }
@@ -1679,8 +1719,37 @@ fn main() -> Result<()> {
                     if let Some(msg) = coord::boundary_refusal(&store, "q session retire") {
                         anyhow::bail!("{}", msg);
                     }
+                    // The retiree's commit-set, read before the heartbeat
+                    // clears (it-4q6t): the moment the session provably
+                    // ends is the moment its leftovers are offered a
+                    // labeled commit of their own.
+                    let leftovers = queries::pending_graph(&store).and_then(|pg| {
+                        pg.sets.into_iter().find(|s| s.owner.as_deref() == Some(name.as_str()))
+                    });
                     coord::retire_session(&store, &name, &Store::actor())?;
                     println!("✔ session {} retired — registry entry removed, leases released, last rites logged.", name);
+                    if let Some(set) = leftovers {
+                        println!(
+                            "  {} uncommitted node file(s) the log says {} still owns — commit them as their own labeled commit:",
+                            set.files.len(),
+                            name
+                        );
+                        for f in &set.files {
+                            let carries = if f.carries.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" (carries {}'s earlier edits)", f.carries.join(", "))
+                            };
+                            println!("    {}{}", f.path, carries);
+                        }
+                        println!("    {}", set.add_command());
+                        println!(
+                            "    git commit -m \"{}'s graph nodes, committed at retirement: {}\"",
+                            name,
+                            set.files.iter().map(|f| f.node.as_str()).collect::<Vec<_>>().join(", ")
+                        );
+                        println!("    (the full map, any time: q query commit-set)");
+                    }
                 }
                 SessionCmd::List => {
                     let all = store.load_all()?;
@@ -2503,17 +2572,40 @@ fn main() -> Result<()> {
                     }
                 }
             }
-            if let Ok(out) = std::process::Command::new("git")
-                .current_dir(&store.root)
-                .args(["status", "--porcelain", "--", "graph"])
-                .output()
-            {
-                let dirty = String::from_utf8_lossy(&out.stdout).lines().count();
-                if dirty > 0 {
-                    println!(
-                        "  graph/ has {} uncommitted change(s) — commit them with the work they belong to",
-                        dirty
-                    );
+            // The commit-set echo (it-4q6t): whenever uncommitted graph
+            // changes exist, wrap renders the ownership split — the log is
+            // the oracle, last writer since the prior commit owns the file.
+            if let Some(pg) = queries::pending_graph(&store) {
+                if !pg.is_empty() {
+                    let sess = coord::current_session();
+                    println!("  uncommitted graph changes — the commit-set (the log's last writer owns each file):");
+                    for set in &pg.sets {
+                        let who = match (&set.owner, sess.as_deref()) {
+                            (Some(o), Some(s)) if o == s => format!("yours ({})", o),
+                            (Some(o), _) => {
+                                format!("{} ({})", o, queries::age_phrase(set.age_secs))
+                            }
+                            (None, _) => "unstamped (no session on the log's record)".into(),
+                        };
+                        println!("    {} — {}", who, set.add_command());
+                        for f in set.files.iter().filter(|f| !f.carries.is_empty()) {
+                            println!(
+                                "      ({} carries {}'s earlier edits — worth naming in the commit message)",
+                                f.node,
+                                f.carries.join(", ")
+                            );
+                        }
+                    }
+                    if !pg.ledger.is_empty() {
+                        println!(
+                            "    the log shard rides along with any commit (exempt ledger, internally attributed, never split): git add {}",
+                            pg.ledger.join(" ")
+                        );
+                    }
+                    if !pg.shared.is_empty() {
+                        println!("    shared graph files, staged with the work they belong to: {}", pg.shared.join(" "));
+                    }
+                    println!("    commit yours with the work it belongs to — explicit paths pass; a bulk sweep denies while others' work is pending. Full map: q query commit-set");
                 }
             }
             // The view is derived; the boundary regenerates it (it-n3fu) so
@@ -3038,6 +3130,80 @@ fn main() -> Result<()> {
                             println!("{}", line(&all, n));
                         }
                         println!("defects are bugs on sight and fix with urgency (dc-ygzz) — the shaping stratum leads: those are the bugs no feed carries yet");
+                    }
+                }
+                Query::CommitSet => {
+                    // The commit-set pull handle (it-4q6t): the deny and the
+                    // wrap echo both advertise this surface.
+                    match queries::pending_graph(&store) {
+                        None => println!("git is unavailable or the store root is not a checkout — no commit-set to derive."),
+                        Some(pg) if pg.is_empty() => {
+                            println!("nothing uncommitted under graph/ — the tree is clean.")
+                        }
+                        Some(pg) => {
+                            let sess = coord::current_session();
+                            println!("the uncommitted graph, split by the log's ownership (last writer since the prior commit owns the file):");
+                            for set in &pg.sets {
+                                match (&set.owner, sess.as_deref()) {
+                                    (Some(o), Some(s)) if o == s => {
+                                        println!("  yours ({}):", o)
+                                    }
+                                    (Some(o), _) => println!(
+                                        "  {} ({}){}:",
+                                        o,
+                                        queries::age_phrase(set.age_secs),
+                                        if queries::owner_stale(set.age_secs) {
+                                            " — stale"
+                                        } else {
+                                            ""
+                                        }
+                                    ),
+                                    (None, _) => println!(
+                                        "  unstamped (no session on the log's record) — blocks no sweep; stage explicitly with the work it belongs to:"
+                                    ),
+                                }
+                                for f in &set.files {
+                                    let node = all
+                                        .iter()
+                                        .find(|n| n.front.id == f.node)
+                                        .map(|n| aref(&all, n))
+                                        .unwrap_or_else(|| f.node.clone());
+                                    let carries = if f.carries.is_empty() {
+                                        String::new()
+                                    } else {
+                                        format!(
+                                            " (carries {}'s earlier edits)",
+                                            f.carries.join(", ")
+                                        )
+                                    };
+                                    println!("    {} — {}{}", f.path, node, carries);
+                                }
+                                let foreign_stale = set.owner.is_some()
+                                    && set.owner.as_deref() != sess.as_deref()
+                                    && queries::owner_stale(set.age_secs);
+                                if foreign_stale {
+                                    println!("    adoption offer (explicit paths pass the guard by construction):");
+                                    for l in set.adoption_offer() {
+                                        println!("      {}", l);
+                                    }
+                                } else {
+                                    println!("    stage: {}", set.add_command());
+                                }
+                            }
+                            if !pg.ledger.is_empty() {
+                                println!(
+                                    "  exempt ledger — rides along with any commit, internally attributed, never split: git add {}",
+                                    pg.ledger.join(" ")
+                                );
+                            }
+                            if !pg.shared.is_empty() {
+                                println!(
+                                    "  shared graph files, staged with the work they belong to: {}",
+                                    pg.shared.join(" ")
+                                );
+                            }
+                            println!("explicit-path staging always passes; a bulk sweep (git add graph / -A / . / git commit -a) denies at the hook while another session's node files are pending.");
+                        }
                     }
                 }
                 Query::Dispatch { item } => {
