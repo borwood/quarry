@@ -1917,3 +1917,24 @@
 {"ts":"2026-08-20T10:50:48Z","node":"it-rddg","v":6,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:50:50Z","node":"cl-xxkw","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:50:54Z","node":"do-6va5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:51:03Z","node":"it-tanf","v":4,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:51:03Z","node":"it-tanf","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T10:51:03Z","node":"it-tanf","v":5,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:51:03Z","node":"it-tanf","v":4,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T10:51:34Z","node":"it-tanf","v":5,"op":"join","actor":"claude","dispatch":"it-tanf","joined":"agent:a7f7bcc5c46a61d02"}
+{"ts":"2026-08-20T11:01:18Z","node":"cl-kggw","v":1,"op":"create","type":"claim","title":"`one-badge-per-identity`: bind_acting is the acting map sole writer - a live binding never re-points; join refuses loud, the env road declines quiet","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-tanf"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"43831a2620af","ts":"2026-08-20T11:01:18Z","node":"cl-kggw","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-tanf"}
+{"ts":"2026-08-20T11:01:34Z","node":"cl-6ctr","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-tanf"}
+{"ts":"2026-08-20T11:01:35Z","node":"cl-b2z2","v":3,"op":"affirm","restamped":2,"actor":"claude","session":"dispatcher","dispatch":"it-tanf"}
+{"ts":"2026-08-20T11:01:54Z","node":"it-jsu5","v":1,"op":"create","type":"item","title":"stale acting row survives a same-chat re-dispatch: the replaced agent keeps stamping","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-tanf"}
+{"ts":"2026-08-20T11:03:09Z","node":"it-tanf","v":5,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:00Z","node":"it-p8rp","v":1,"op":"create","type":"item","title":"the reconcile parses a carried report: a prior supports-linked doc stands in as the arc's return before registration","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-20T11:04:05Z","node":"it-p8rp","v":2,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:29Z","node":"do-uxp2","v":1,"op":"create","type":"doc","title":"dispatch report: multi-join stamping: one agent, many badges - acts stamp the last join, not the item served","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-tanf","at":5,"ts":"2026-08-20T11:04:29Z","node":"do-uxp2","v":2,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:29Z","node":"it-tanf","v":5,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T11:04:32Z","node":"it-tanf","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:32Z","node":"cl-kggw","v":2,"op":"ratify","from":"asserted","cause":"it-tanf","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:34Z","node":"it-tanf","v":6,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:42Z","node":"do-4y49","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T11:04:43Z","node":"do-uxp2","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

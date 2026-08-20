@@ -2,8 +2,8 @@
 id: it-tanf
 type: item
 title: 'multi-join stamping: one agent, many badges - acts stamp the last join, not the item served'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-16T03:36:35Z
 actor: claude
