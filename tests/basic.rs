@@ -3258,6 +3258,96 @@ fn lexicon_derivational_fold_compare_time() {
 }
 
 #[test]
+fn lexicon_floors_measure_the_raw_token_before_folding() {
+    // it-wa6e: the six-char floor measures the RAW written form on either
+    // side of the fold, never the folded stem — so a five-char folded pair
+    // (lease/leases) joins forward and reverse alike through its six-char
+    // member, whichever side carries the inflection, while the bare floors
+    // of dc-qvtz stand unchanged: an exact five-char pair stays below.
+
+    // The predicate: a five-char word clears the floor only through a
+    // floor-length raw form written in the text.
+    assert!(
+        queries::contains_word_floored("three leases signed early", "lease", 6),
+        "the raw form leases (six chars) clears the floor, then folds"
+    );
+    assert!(
+        queries::contains_word_floored("the leaseless zone", "lease", 6),
+        "a derivational raw form clears the floor the same way"
+    );
+    assert!(
+        !queries::contains_word_floored("the lease stands alone", "lease", 6),
+        "an exact five-char pair stays below the floor — no floor lowered"
+    );
+    assert!(
+        queries::contains_word_floored("the lease stands alone", "leases", 6),
+        "a six-char word joins as contains_word, folding down for the compare"
+    );
+
+    // Reverse, the filed blind spot: an old body wrote the plural; the
+    // concept earns its node under the five-char singular — the raw form
+    // in the body passes the reverse floor, then folds for the compare.
+    let s = temp_store();
+    let mut old = NewArgs::bare("doc", "field diary");
+    old.body = "three leases signed early".into();
+    let old = ops::new_node(&s, old).unwrap();
+    let item = ops::new_node(&s, NewArgs::bare("item", "lease term policy")).unwrap();
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, &item.front.id).unwrap();
+    let rel = queries::relatedness(&all, it);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == old.front.id),
+        "a five-char title token meets its plural in an old body: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // Forward, alike: the five-char member on the candidate title side,
+    // the inflection written in the new node's text.
+    let s = temp_store();
+    let item = ops::new_node(&s, NewArgs::bare("item", "lease term policy")).unwrap();
+    let mut d = NewArgs::bare("doc", "field diary");
+    d.body = "three leases signed early".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == item.front.id),
+        "a lone five-char title hit carries forward through the written plural: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    // The floor stands, reverse: both sides written at five chars joins
+    // nothing — no raw form clears six anywhere.
+    let s = temp_store();
+    let mut old = NewArgs::bare("doc", "field ledger");
+    old.body = "the lease stands alone".into();
+    let old = ops::new_node(&s, old).unwrap();
+    let item = ops::new_node(&s, NewArgs::bare("item", "lease term policy")).unwrap();
+    let all = s.load_all().unwrap();
+    let it = s.find(&all, &item.front.id).unwrap();
+    let rel = queries::relatedness(&all, it);
+    assert!(
+        rel.iter().all(|(n, _)| n.front.id != old.front.id),
+        "an exact five-char pair stays below the reverse floor"
+    );
+
+    // The floor stands, forward: the same exact pair carries no lone hit.
+    let s = temp_store();
+    let item = ops::new_node(&s, NewArgs::bare("item", "lease term policy")).unwrap();
+    let mut d = NewArgs::bare("doc", "field ledger");
+    d.body = "the lease stands alone".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().all(|(n, _)| n.front.id != item.front.id),
+        "an exact five-char lone hit stays below the forward gate"
+    );
+}
+
+#[test]
 fn lexicon_compound_halves_join_and_outrank() {
     // it-sc2u: sig_tokens emits hyphen compounds whole plus halves of
     // five-plus chars; contains_word adopts hyphen-as-boundary; compound

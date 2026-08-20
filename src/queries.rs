@@ -778,6 +778,14 @@ pub fn contains_word(text: &str, word: &str) -> bool {
     if find_word(text, word) {
         return true;
     }
+    fold_variants(word).iter().any(|v| v != word && find_word(text, v))
+}
+
+/// Every raw written form the fold family gives a word — the one
+/// generation point shared by `contains_word` above and
+/// `contains_word_floored` below, so the join and the floor can never
+/// disagree about what folds.
+fn fold_variants(word: &str) -> Vec<String> {
     // Stems: the word itself, its plural-stripped forms (s/es), and each
     // stem's family-stripped form — so leases and leaseless both reduce
     // to lease, watchers to watch.
@@ -816,7 +824,30 @@ pub fn contains_word(text: &str, word: &str) -> bool {
         }
         variants.push(stem);
     }
-    variants.iter().any(|v| v != word && find_word(text, v))
+    variants
+}
+
+/// The lexicon join with a floor measured where floors belong (it-wa6e):
+/// on the RAW written form, never the folded stem. A word at or above the
+/// floor joins exactly as `contains_word`; a shorter word joins only
+/// through a fold variant of floor length actually written in the text —
+/// lease (five chars) meets "leases" or "leaseless" in a body because the
+/// raw form on the text side clears the floor before the fold runs, while
+/// an exact five-char pair (lease/lease) stays below it. Both relatedness
+/// passes ask this predicate at six, so a five-char folded pair joins
+/// forward and reverse alike through its six-char member, whichever side
+/// carries the inflection — the bare floors of dc-qvtz stand unchanged.
+pub fn contains_word_floored(text: &str, word: &str, floor: usize) -> bool {
+    if word.is_empty() {
+        return false;
+    }
+    if word.len() >= floor {
+        return contains_word(text, word);
+    }
+    // Below the floor on the word's side, only a floor-length raw form
+    // written in the text carries the join (v == word is impossible here:
+    // every candidate is at least floor long and the word is not).
+    fold_variants(word).iter().any(|v| v.len() >= floor && find_word(text, v))
 }
 
 /// Find's word predicate. Its rule: word chars are ASCII alphanumerics
@@ -884,15 +915,16 @@ pub fn find_hits<'a>(all: &'a [Node], q: &str) -> FindHits<'a> {
 /// title lexicon matched against the new node's title+body (backticked spans
 /// strengthen). Reverse: the new title's distinctive tokens matched against
 /// existing bodies — prior mentions of a concept that just earned its node.
-/// Archived nodes, areas, and already-linked neighbors are excluded; the
-/// strongest few qualify (silence is the default).
+/// Both passes keep a six-char floor, measured on the RAW written form
+/// before folding (it-wa6e): a five-char token clears it through a six-plus
+/// fold variant actually written on the other side — lease meets leases
+/// whichever side carries the inflection — while an exact five-char pair
+/// stays below it. Archived nodes, areas, and already-linked neighbors are
+/// excluded; the strongest few qualify (silence is the default).
 pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> {
     let new_text =
         format!("{} {}", crate::surface::title_raw(node), node.body).to_lowercase();
-    let new_title_toks: Vec<String> = sig_tokens(crate::surface::title_raw(node))
-        .into_iter()
-        .filter(|t| t.len() >= 6)
-        .collect();
+    let new_title_toks: Vec<String> = sig_tokens(crate::surface::title_raw(node));
     let backticked: Vec<String> = backticked_spans(&node.body);
     let mut scored: Vec<(i32, &Node, String)> = Vec::new();
     for cand in all {
@@ -914,7 +946,14 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
         let tick = backticked
             .iter()
             .any(|b| find_word(&title_lower, b) || toks.iter().any(|t| t == b));
-        if full_title || hits.len() >= 2 || hits.iter().any(|t| t.len() >= 6) || tick {
+        // The lone-hit arm asks the floored join (it-wa6e): the six chars
+        // may sit on either side of the fold, so a five-char title token
+        // carries a candidate in when its inflected form is written here.
+        if full_title
+            || hits.len() >= 2
+            || hits.iter().any(|t| contains_word_floored(&new_text, t, 6))
+            || tick
+        {
             // Compound hits outrank fragment hits (it-sc2u): a hit on the
             // whole hyphenated name weighs double a hit on a bare half.
             let weight: i32 = hits.iter().map(|t| if t.contains('-') { 2 } else { 1 }).sum();
@@ -933,7 +972,7 @@ pub fn relatedness<'a>(all: &'a [Node], node: &Node) -> Vec<(&'a Node, String)> 
             let cbody = cand.body.to_lowercase();
             let rhits: Vec<&String> = new_title_toks
                 .iter()
-                .filter(|t| contains_word(&cbody, t))
+                .filter(|t| contains_word_floored(&cbody, t, 6))
                 .collect();
             if !rhits.is_empty() {
                 let weight: i32 =
