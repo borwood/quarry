@@ -2579,8 +2579,10 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
         }
         c.output().unwrap()
     };
-    // env badge: wrap and session resume/retire all refuse, teaching
-    for args in [&["wrap"][..], &["session", "resume"][..], &["session", "retire", "x"][..]] {
+    // env badge: wrap and session resume refuse, teaching. Retire left
+    // this loop with it-e6wq — its guard is scoped to the retiree and
+    // pinned by session_retire_refuses_only_when_the_retiree_is_implicated.
+    for args in [&["wrap"][..], &["session", "resume"][..]] {
         let out = run(&[("QUARRY_DISPATCH", "it-t3st")], args);
         assert!(!out.status.success(), "{:?} must refuse under a badge", args);
         let err = String::from_utf8_lossy(&out.stderr);
@@ -2660,6 +2662,117 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
         s.root.join("graph").join("view").join("index.html").exists(),
         "the view page exists after wrap — the stale-view class dies"
     );
+}
+
+#[test]
+fn session_retire_refuses_only_when_the_retiree_is_implicated() {
+    // The it-e6wq scoping: every retire was treated as the chat closing its
+    // own arc; the guard now reads the RETIREE. Env transport needs a child
+    // process in the threaded suite.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    // Three registered sessions: the dispatching chat's own, a worker with
+    // a dispatch of its own in flight, and idle third sessions.
+    quarry::coord::save_session(&s, "disp", vec![], None, None, false).unwrap();
+    quarry::coord::save_session(&s, "worker", vec![], None, None, false).unwrap();
+    quarry::coord::save_session(&s, "eph", vec![], None, None, true).unwrap();
+    quarry::coord::save_session(&s, "eph2", vec![], None, None, true).unwrap();
+    // The chat's own live dispatch (held by chat-disp, session disp) …
+    let d = quarry::coord::DispatchState {
+        item: "it-own".into(),
+        item_title: "the chat's own arc".into(),
+        session: "disp".into(),
+        holder: "chat:chat-disp".into(),
+        globs: vec!["src/**".into()],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+        token: None,
+        joined: None,
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    // … and the worker's dispatch in flight, fired from another chat.
+    let mut d2 = d.clone();
+    d2.item = "it-wrk".into();
+    d2.item_title = "the worker's arc".into();
+    d2.session = "worker".into();
+    d2.holder = "chat:chat-w".into();
+    quarry::coord::save_dispatch(&s, &d2).unwrap();
+    // (1) The chat's own session under a live badge refuses, as today —
+    // the full boundary capture with its harvest enumeration.
+    let out = run(
+        &[("QUARRY_SESSION", "disp"), ("QUARRY_CHAT", "chat-disp")],
+        &["session", "retire", "disp"],
+    );
+    assert!(!out.status.success(), "own-session retire refuses under a live badge");
+    let err = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(err.contains("boundary-verb capture"), "the own-arc refusal names the incident class: {}", err);
+    assert!(err.contains("q harvest it-own"), "the own-arc refusal teaches the exit: {}", err);
+    // (2) A retiree with a dispatch of its own in flight refuses toward
+    // THAT dispatch's q harvest — retire would rip the lease out from
+    // under a working agent.
+    let out = run(
+        &[("QUARRY_SESSION", "disp"), ("QUARRY_CHAT", "chat-disp")],
+        &["session", "retire", "worker"],
+    );
+    assert!(!out.status.success(), "retiring a mid-dispatch session refuses");
+    let err = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(err.contains("retire refused"), "the refusal is the retiree's, not the asker's: {}", err);
+    assert!(err.contains("q harvest it-wrk"), "the refusal points at the retiree's dispatch: {}", err);
+    assert!(
+        !err.contains("it-own"),
+        "the asker's own unrelated dispatch stays out of the retiree's refusal: {}",
+        err
+    );
+    // … and an unbadged, unbound chat meets the same refusal — the guard
+    // reads the retiree, never the asker.
+    let out = run(&[], &["session", "retire", "worker"]);
+    assert!(!out.status.success(), "the retiree's dispatch refuses whoever asks");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("q harvest it-wrk"));
+    // (3) A third session with no live dispatch retires clean while
+    // unrelated badges fly — from the badge-holding chat itself …
+    let out = run(
+        &[("QUARRY_SESSION", "disp"), ("QUARRY_CHAT", "chat-disp")],
+        &["session", "retire", "eph"],
+    );
+    assert!(
+        out.status.success(),
+        "a third session with no live dispatch retires while this chat's badge flies: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(String::from_utf8_lossy(&out.stdout).contains("session eph retired"));
+    // … and from an env-badged context: the active badge belongs to an
+    // unrelated arc and the retiree is a third session — the do-jn4s doubt
+    // scenario, now proceeding.
+    let out = run(&[("QUARRY_DISPATCH", "it-own")], &["session", "retire", "eph2"]);
+    assert!(
+        out.status.success(),
+        "an unrelated badge no longer captures a third session's retire: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let reg = quarry::coord::load_sessions(&s);
+    assert!(!reg.contains_key("eph") && !reg.contains_key("eph2"), "registry entries removed");
+    // Both dispatches still fly, untouched by the third-session retires.
+    let m = quarry::coord::load_dispatches(&s);
+    assert!(m.held.contains_key("it-own") && m.held.contains_key("it-wrk"), "live dispatches untouched");
+    quarry::coord::clear_dispatch(&s, "it-own");
+    quarry::coord::clear_dispatch(&s, "it-wrk");
 }
 
 #[test]

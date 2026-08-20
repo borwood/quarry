@@ -1750,9 +1750,13 @@ fn main() -> Result<()> {
                     outln!("  prefer launcher-owned identity for new chats: the {}-session launcher.", name);
                 }
                 SessionCmd::Retire { name } => {
-                    // Boundary guard (it-ymsj): last rites are the
-                    // dispatcher's act, never a badged agent's.
-                    if let Some(msg) = coord::boundary_refusal(&store, "q session retire") {
+                    // The retire guard, scoped to the retiree (it-e6wq):
+                    // refuse only when the retiree is implicated — the
+                    // chat's own session under a live badge, or a retiree
+                    // with a dispatch of its own in flight. A third
+                    // session with no live dispatch retires clean while
+                    // unrelated badges fly.
+                    if let Some(msg) = coord::retire_refusal(&store, &name) {
                         anyhow::bail!("{}", msg);
                     }
                     // The retiree's commit-set, read before the heartbeat

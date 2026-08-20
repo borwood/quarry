@@ -763,17 +763,19 @@ pub fn boundary_badges(store: &Store) -> Vec<String> {
     out
 }
 
-/// C8's logic applied to boundary acts (it-ymsj): wrap and session
-/// resume/retire are the DISPATCHER'S verbs. Under any active badge of this
-/// context — shell env, an acting association (a joined agent), or a held
-/// entry of this chat, any alone suffices — they refuse with a teaching
-/// error that enumerates EVERY live held dispatch with its q harvest
-/// command (dc-qyr5: the boundary harvests all; no parking a dispatch
-/// across a boundary). The incident this guard exists for: a dispatched
-/// agent ran q wrap wearing the dispatcher's injected session identity and
-/// consumed its session cursors. A chat with no badge of its own is free to
-/// wrap while other chats' dispatches fly — the decisions session keeps its
-/// boundary while a steward has work in flight.
+/// C8's logic applied to boundary acts (it-ymsj): wrap and session resume
+/// are the DISPATCHER'S verbs. Under any active badge of this context —
+/// shell env, an acting association (a joined agent), or a held entry of
+/// this chat, any alone suffices — they refuse with a teaching error that
+/// enumerates EVERY live held dispatch with its q harvest command
+/// (dc-qyr5: the boundary harvests all; no parking a dispatch across a
+/// boundary). The incident this guard exists for: a dispatched agent ran
+/// q wrap wearing the dispatcher's injected session identity and consumed
+/// its session cursors. A chat with no badge of its own is free to wrap
+/// while other chats' dispatches fly — the decisions session keeps its
+/// boundary while a steward has work in flight. Retire routes through
+/// retire_refusal below (it-e6wq): this capture applies there only when
+/// the retiree is the chat's own session.
 pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
     let badges = boundary_badges(store);
     if badges.is_empty() {
@@ -790,6 +792,52 @@ pub fn boundary_refusal(store: &Store, verb: &str) -> Option<String> {
     Some(format!(
         "boundary-verb capture: {verb} is a session-boundary act, and this chat is mid-dispatch — {n} live dispatch(es) held:\n{list}\nA badged boundary verb runs wearing the dispatching session's identity and consumes its cursors — the incident class this guard exists for. A dispatched agent reports against the RETURN spec and stops; the boundary belongs to the dispatcher, who harvests every arc first — no parking a dispatch across a boundary (dc-qyr5).",
         n = badges.len(),
+        list = lines.join("\n")
+    ))
+}
+
+/// The retire guard, scoped to the RETIREE (it-e6wq): the blanket boundary
+/// capture treated every retire as the chat closing its own arc, which is
+/// overbroad once sessions and dispatches multiply — retiring an ephemeral
+/// third session touches nothing about a flying dispatch. Refusal fires
+/// only when the retiree is implicated: (1) the chat's own session while
+/// this context is mid-dispatch — that IS closing out with harvest owed,
+/// so the standing boundary refusal speaks verbatim; (2) a retiree with a
+/// dispatch of its own in flight — retire releases its leases, ripping the
+/// zone out from under a working agent, so the refusal points at that
+/// dispatch's q harvest. A third session with no live dispatch retires
+/// clean while unrelated badges fly; its idle leases release with last
+/// rites (retire's standing semantics).
+pub fn retire_refusal(store: &Store, name: &str) -> Option<String> {
+    // (1) The chat's own session: the retire IS this chat's boundary act,
+    // so the whole boundary capture applies — every held dispatch of this
+    // context enumerates with its q harvest command, exactly as before.
+    if current_session().as_deref() == Some(name) {
+        if let Some(msg) = boundary_refusal(store, "q session retire") {
+            return Some(msg);
+        }
+    }
+    // (2) The retiree itself mid-dispatch: any held entry whose dispatching
+    // session is the retiree — matched by the entry's session field, or by
+    // a holder recorded as the session key where no chat id reached the
+    // dispatching shell.
+    let m = load_dispatches(store);
+    let holder_key = format!("session:{}", name);
+    let theirs: Vec<&DispatchState> = m
+        .held
+        .values()
+        .filter(|d| d.session == name || d.holder == holder_key)
+        .collect();
+    if theirs.is_empty() {
+        return None;
+    }
+    let lines: Vec<String> = theirs
+        .iter()
+        .map(|d| format!("  · \"{}\" ({}) — q harvest {}", d.item_title, d.item, d.item))
+        .collect();
+    Some(format!(
+        "retire refused: session {name} is mid-dispatch — {n} live dispatch(es) in flight:\n{list}\nRetiring the session would release its leases out from under a working agent. Harvest each arc first — no parking a dispatch across a boundary (dc-qyr5) — then retire.",
+        n = theirs.len(),
         list = lines.join("\n")
     ))
 }
