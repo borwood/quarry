@@ -1778,3 +1778,34 @@
 {"ts":"2026-08-20T09:11:30Z","node":"cl-8h6r","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T09:11:30Z","node":"cl-ugqu","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T09:11:30Z","node":"do-kcn7","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:38Z","node":"it-bj3b","v":7,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:38Z","node":"it-bj3b","v":7,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T09:11:38Z","node":"it-bj3b","v":8,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:38Z","node":"it-bj3b","v":7,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T09:12:03Z","node":"it-bj3b","v":8,"op":"join","actor":"claude","dispatch":"it-bj3b","joined":"agent:a465241ed10ed0450"}
+{"ts":"2026-08-20T09:31:57Z","node":"cl-qat8","v":1,"op":"create","type":"claim","title":"`observed-set-miss`: the three in-tree misses were shell-made writes -…","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:docs/reports/2026-08-17-vein-prompt-it-pgn9.md","at":"ebdbbc678e8b","ts":"2026-08-20T09:31:57Z","node":"cl-qat8","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"body","ts":"2026-08-20T09:32:02Z","node":"cl-qat8","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:docs/reports/2026-08-14-fire-time-liveness-it-hapc.md","at":"29c99936f51b","ts":"2026-08-20T09:32:02Z","node":"cl-qat8","v":4,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:docs/reports/2026-08-17-assay-office-it-swsy.md","at":"e1e018f2a946","ts":"2026-08-20T09:32:02Z","node":"cl-qat8","v":5,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"supports","to":"it-bj3b","at":8,"ts":"2026-08-20T09:32:02Z","node":"cl-qat8","v":6,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"ts":"2026-08-20T09:32:21Z","node":"cl-up6s","v":1,"op":"create","type":"claim","title":"`sight-accounting`: one store-relative point; badged resolution failure…","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"138dc0955504","ts":"2026-08-20T09:32:21Z","node":"cl-up6s","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"body","ts":"2026-08-20T09:32:26Z","node":"cl-up6s","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:src/store.rs","at":"bcd701ef3890","ts":"2026-08-20T09:32:26Z","node":"cl-up6s","v":4,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"ceb6cf060a06","ts":"2026-08-20T09:32:26Z","node":"cl-up6s","v":5,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"bfb7e65a2a57","ts":"2026-08-20T09:32:27Z","node":"cl-up6s","v":6,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"source","to":"file:tests/observed_set.rs","at":"845c755fae73","ts":"2026-08-20T09:32:27Z","node":"cl-up6s","v":7,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"op":"link","rel":"supports","to":"it-bj3b","at":8,"ts":"2026-08-20T09:32:27Z","node":"cl-up6s","v":8,"actor":"claude","session":"dispatcher","dispatch":"it-bj3b"}
+{"ts":"2026-08-20T09:34:35Z","node":"it-bj3b","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"op":"link","rel":"supersedes","to":"cl-h2gx","at":4,"ts":"2026-08-20T09:35:21Z","node":"cl-up6s","v":9,"actor":"claude","session":"dispatcher"}
+{"op":"set","field":"status","from":"asserted","to":"superseded","cause":"cl-up6s","ts":"2026-08-20T09:35:21Z","node":"cl-h2gx","v":5,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:35:51Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:35:52Z","node":"do-r4mu","v":1,"op":"create","type":"doc","title":"dispatch report: observed-set miss: a badged tests write escaped observation","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-bj3b","at":8,"ts":"2026-08-20T09:35:52Z","node":"do-r4mu","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T09:35:52Z","node":"it-bj3b","v":9,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:35:52Z","node":"cl-up6s","v":9,"op":"ratify","from":"asserted","cause":"it-bj3b","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:35:54Z","node":"cl-qat8","v":6,"op":"archive","cause":"consumption","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:35:54Z","node":"it-bj3b","v":9,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:36:00Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:36:00Z","node":"do-r4mu","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

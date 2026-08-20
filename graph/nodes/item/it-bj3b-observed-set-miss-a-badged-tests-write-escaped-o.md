@@ -2,8 +2,8 @@
 id: it-bj3b
 type: item
 title: 'observed-set miss: a badged tests write escaped observation'
-v: 7
-status: ready
+v: 9
+status: done
 provenance: assistant
 created: 2026-08-14T06:42:48Z
 actor: claude-fable-5

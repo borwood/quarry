@@ -2,8 +2,8 @@
 id: cl-h2gx
 type: claim
 title: '`touched-set-accrual`: the guard observes every in-repo write into mach…'
-v: 4
-status: asserted
+v: 5
+status: superseded
 provenance: assistant
 created: 2026-08-10T06:59:29Z
 actor: claude
