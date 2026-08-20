@@ -684,6 +684,9 @@ pub fn clear_dispatch(store: &Store, item_id: &str) {
         let _ = save_dispatches(store, &m);
     }
     crate::store::clear_pins(&store.root, item_id);
+    // Badge-scoped attention dies with the badge (dc-pwyd): a re-dispatch's
+    // next agent reads with its own eyes, not a dead arc's cursors.
+    clear_area_reads(store, &badge_attention_key(item_id));
 }
 
 /// Resolve the badge that STAMPS this acting context's work — env identity
@@ -916,11 +919,47 @@ fn area_reads_path(store: &Store) -> std::path::PathBuf {
     store.root.join("graph").join(".area-reads.json")
 }
 
-/// The session key for machine-local attention state: the bound session, or
-/// "unbound" for a chat with no identity (imprecise across parallel unbound
-/// chats — an accepted, machine-local blur).
+/// The session half of the attention key: the bound session, or "unbound"
+/// for a chat with no identity (imprecise across parallel unbound chats —
+/// an accepted, machine-local blur). Attention consumers key on
+/// attention_key, which falls back here for unbadged contexts.
 pub fn session_key() -> String {
     current_session().unwrap_or_else(|| "unbound".into())
+}
+
+/// The attention key for the ACTING identity (dc-pwyd: attention rides the
+/// actor — watermarks and drift-delivery consumption answer
+/// has-this-READER-seen-it). A context resolving a live dispatch badge
+/// spends badge-scoped attention: a joined agent's reads advance its own
+/// watermarks and consume its own deliveries, never the holding session's,
+/// whose env identity the agent merely inherits (it-csm3). Everything else
+/// keys by session, exactly as before.
+pub fn attention_key(store: &Store) -> String {
+    current_dispatch_badge(store)
+        .map(|b| badge_attention_key(&b))
+        .unwrap_or_else(session_key)
+}
+
+/// The badge-scoped attention key. Prefixed so a badge row can never
+/// collide with a session name in the same map.
+pub fn badge_attention_key(badge: &str) -> String {
+    format!("badge:{}", badge)
+}
+
+/// The attention key an EVENT spent when it was logged: the badge it
+/// stamped (a joined agent's act carries the dispatch stamp), else its
+/// session. touch_area's own/foreign test compares reader to author on
+/// this key, so a badged act reads as foreign to the holding session whose
+/// env it inherited — the session's eyes never saw the write (it-csm3).
+fn event_attention_key(ev: &serde_json::Value) -> String {
+    match ev.get("dispatch").and_then(|v| v.as_str()) {
+        Some(b) => badge_attention_key(b),
+        None => ev
+            .get("session")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unbound")
+            .to_string(),
+    }
 }
 
 /// A machine-local cursor over the event log. Log-INDEX based (user-ruled
@@ -960,16 +999,17 @@ fn load_area_reads(store: &Store) -> AreaReads {
         .unwrap_or_default()
 }
 
-/// Has this session read (or been delivered) this area at all?
-pub fn has_area_read(store: &Store, sess: &str, area_id: &str) -> bool {
+/// Has this reader (an attention key: badge-scoped or session) read — or
+/// been delivered — this area at all?
+pub fn has_area_read(store: &Store, reader: &str, area_id: &str) -> bool {
     load_area_reads(store)
-        .get(sess)
+        .get(reader)
         .map_or(false, |m| m.contains_key(area_id))
 }
 
-fn record_area_read_at(store: &Store, sess: &str, area_id: &str, index: usize) {
+fn record_area_read_at(store: &Store, reader: &str, area_id: &str, index: usize) {
     let mut m = load_area_reads(store);
-    m.entry(sess.to_string())
+    m.entry(reader.to_string())
         .or_default()
         .insert(area_id.to_string(), Cursor::Index(index as u64));
     if let Ok(s) = serde_json::to_string_pretty(&m) {
@@ -977,14 +1017,27 @@ fn record_area_read_at(store: &Store, sess: &str, area_id: &str, index: usize) {
     }
 }
 
-/// Record that this session has read (or been delivered) this area's
+/// Record that this reader has read (or been delivered) this area's
 /// neighborhood — machine-local; the committed log stays mutations-only.
-pub fn record_area_read(store: &Store, sess: &str, area_id: &str) {
+pub fn record_area_read(store: &Store, reader: &str, area_id: &str) {
     let idx = store.read_log().map(|l| l.len()).unwrap_or(0);
-    record_area_read_at(store, sess, area_id, idx);
+    record_area_read_at(store, reader, area_id, idx);
 }
 
-/// The per-(session, area) watermark surface (user-ruled 2026-08-09).
+/// Drop every area-read row a reader holds — a badge's attention dies with
+/// its dispatch (clear_dispatch), so a re-dispatched item's next agent
+/// starts with its own eyes, not a dead arc's cursors.
+pub fn clear_area_reads(store: &Store, reader: &str) {
+    let mut m = load_area_reads(store);
+    if m.remove(reader).is_some() {
+        if let Ok(s) = serde_json::to_string_pretty(&m) {
+            let _ = fs::write(area_reads_path(store), s + "\n");
+        }
+    }
+}
+
+/// The per-(reader, area) watermark surface (user-ruled 2026-08-09; reader
+/// keying per dc-pwyd — attention rides the actor).
 pub enum AreaTouch {
     /// No recorded read this session — the caller gates (q new) or nudges
     /// (other verbs), then records the delivery.
@@ -996,13 +1049,16 @@ pub enum AreaTouch {
     Current,
 }
 
-/// Check (and advance) a session's watermark over one area. Own-session
-/// events advance silently; foreign create/set/link/body events on nodes in
-/// the area come back as delta lines, capped, each said once. Exact by
-/// construction: the cursor is a log position, not a timestamp.
-pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> AreaTouch {
+/// Check (and advance) a reader's watermark over one area. The reader is
+/// an attention key (badge-scoped for a joined agent, session otherwise —
+/// dc-pwyd). Own events — same attention key — advance silently; foreign
+/// create/set/link/body events on nodes in the area come back as delta
+/// lines, capped, each said once. A badged act is foreign to the holding
+/// session it inherited env from: those eyes never saw it (it-csm3). Exact
+/// by construction: the cursor is a log position, not a timestamp.
+pub fn touch_area(store: &Store, all: &[Node], reader: &str, area_id: &str) -> AreaTouch {
     let Some(cur) = load_area_reads(store)
-        .get(sess)
+        .get(reader)
         .and_then(|m| m.get(area_id))
         .cloned()
     else {
@@ -1014,11 +1070,7 @@ pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> Are
     let from = cursor_index(&cur, &log);
     let mut lines: Vec<(String, String)> = Vec::new(); // node id → line
     for ev in log.iter().skip(from) {
-        let ev_key = ev
-            .get("session")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unbound");
-        if ev_key == sess {
+        if event_attention_key(ev) == reader {
             continue;
         }
         let op = ev.get("op").and_then(|v| v.as_str()).unwrap_or("");
@@ -1039,14 +1091,23 @@ pub fn touch_area(store: &Store, all: &[Node], sess: &str, area_id: &str) -> Are
             .find(|n| n.front.id == id)
             .map(|n| crate::surface::atom_line(&crate::surface::atom(all, n)))
             .unwrap_or_else(|| format!("({})", id));
-        let line = format!("[{}] {} by session {}", op, what, ev_key);
+        // Attribute to the hands that wrote: a badged act names its
+        // dispatch, not the session identity it inherited (it-csm3).
+        let by = match ev.get("dispatch").and_then(|v| v.as_str()) {
+            Some(b) => format!("dispatch {}", b),
+            None => format!(
+                "session {}",
+                ev.get("session").and_then(|v| v.as_str()).unwrap_or("unbound")
+            ),
+        };
+        let line = format!("[{}] {} by {}", op, what, by);
         if let Some(pos) = lines.iter().position(|(i, _)| i == id) {
             lines[pos].1 = line;
         } else {
             lines.push((id.to_string(), line));
         }
     }
-    record_area_read_at(store, sess, area_id, log.len());
+    record_area_read_at(store, reader, area_id, log.len());
     if lines.is_empty() {
         AreaTouch::Current
     } else {

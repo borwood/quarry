@@ -640,12 +640,20 @@ fn print_lean_prompt(store: &Store, item: &Node) {
     outln!("    {}", quarry::framings::LEAN_CLOSE);
 }
 
+/// The reader scope phrase for attention surfaces: badge-scoped attention
+/// belongs to the dispatch arc, session attention to the session (dc-pwyd).
+fn attention_scope(reader: &str) -> &'static str {
+    if reader.starts_with("badge:") { "this dispatch arc" } else { "this session" }
+}
+
 /// The per-area watermark surface, run after a mutating verb touched a node.
-/// First touch of an unread area nudges once; foreign drift since the
-/// recorded read prints inline (the delta IS the delivery); own writes and
-/// quiet checks advance the cursor silently.
+/// Keyed on the acting identity's attention key (dc-pwyd: a joined agent
+/// spends badge-scoped attention, never the holding session's). First touch
+/// of an unread area nudges once; foreign drift since the recorded read
+/// prints inline (the delta IS the delivery); own writes and quiet checks
+/// advance the cursor silently.
 fn area_watermarks(store: &Store, node_id: &str) {
-    let sess = coord::session_key();
+    let reader = coord::attention_key(store);
     let Ok(all) = store.load_all() else { return };
     let Ok(node) = store.find(&all, node_id) else { return };
     let areas: Vec<(String, String)> = node
@@ -660,16 +668,18 @@ fn area_watermarks(store: &Store, node_id: &str) {
         })
         .collect();
     for (aid, area_ref) in areas {
-        match coord::touch_area(store, &all, &sess, &aid) {
+        match coord::touch_area(store, &all, &reader, &aid) {
             coord::AreaTouch::FirstTouch => {
                 outln!(
-                    "  note: first touch of area {} this session without a read — the read-first: q open {}",
-                    area_ref, aid
+                    "  note: first touch of area {} {} without a read — the read-first: q open {}",
+                    area_ref,
+                    attention_scope(&reader),
+                    aid
                 );
-                coord::record_area_read(store, &sess, &aid);
+                coord::record_area_read(store, &reader, &aid);
             }
             coord::AreaTouch::Drift(lines) => {
-                outln!("  since your last read of {} (other sessions):", area_ref);
+                outln!("  since your last read of {} (other hands):", area_ref);
                 for l in lines {
                     outln!("    · {}", l);
                 }
@@ -714,11 +724,15 @@ fn vein_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
 }
 
 /// The area-first-touch gate (user-agreed 2026-08-09): minting into an area
-/// this session has never read intercepts once, delivers the area's derived
-/// read-first, and saves the intent for q resume. A prior same-session
-/// `q open <area>` passes silently — the gate is the backstop, not the path.
+/// this reader has never read intercepts once, delivers the area's derived
+/// read-first, and saves the intent for q resume. A prior same-reader
+/// `q open <area>` passes silently — the gate is the backstop, not the
+/// path. The reader is the acting identity's attention key (dc-pwyd): a
+/// joined agent gates on its own eyes — the brief already recorded its
+/// item's areas at join — and a session gates on its own, however many
+/// arcs it dispatched into the area meanwhile.
 fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
-    let sess = coord::session_key();
+    let reader = coord::attention_key(store);
     let all = store.load_all()?;
     let mut unread: Vec<(String, String)> = Vec::new();
     for key in &a.about {
@@ -726,7 +740,7 @@ fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
             continue;
         }
         let Ok(n) = store.find(&all, key) else { continue };
-        if n.front.ty == "area" && !coord::has_area_read(store, &sess, &n.front.id) {
+        if n.front.ty == "area" && !coord::has_area_read(store, &reader, &n.front.id) {
             unread.push((n.front.id.clone(), aref(&all, n)));
         }
     }
@@ -734,14 +748,20 @@ fn area_gate_if_needed(store: &Store, a: &NewCliArgs) -> Result<bool> {
         return Ok(false);
     }
     let token = quarry::protocol::save_intent(store, "new", serde_json::to_value(a)?)?;
-    outln!("⏸ gated: first write into unread area(s) this session — the read-first arrives now.");
+    outln!(
+        "⏸ gated: first write into area(s) unread {} — the read-first arrives now.",
+        attention_scope(&reader)
+    );
     for (aid, area_ref) in &unread {
         outln!("\n── area {} ──", area_ref);
         out!("{}", render::open(store, aid, false)?);
-        coord::record_area_read(store, &coord::session_key(), aid);
+        coord::record_area_read(store, &reader, aid);
     }
     outln!("\nYour intent is saved. Read the above, then run: q resume {}", token);
-    outln!("(args are remembered; delivery is recorded — this session will not be gated on these areas again)");
+    outln!(
+        "(args are remembered; delivery is recorded — {} will not be gated on these areas again)",
+        attention_scope(&reader)
+    );
     Ok(true)
 }
 
@@ -2922,12 +2942,14 @@ fn main() -> Result<()> {
         Cmd::Open { node, all } => {
             let store = Store::resolve()?;
             out!("{}", render::open(&store, &node, all)?);
-            // An area open is the canonical read-first act: record it so the
-            // first-touch gate passes silently on the diligent path.
+            // An area open is the canonical read-first act: record it for
+            // the ACTING identity's attention (dc-pwyd — a joined agent's
+            // read spends its badge, never the holding session's watermark)
+            // so the first-touch gate passes silently on the diligent path.
             if let Ok(loaded) = store.load_all() {
                 if let Ok(n) = store.find(&loaded, &node) {
                     if n.front.ty == "area" {
-                        coord::record_area_read(&store, &coord::session_key(), &n.front.id);
+                        coord::record_area_read(&store, &coord::attention_key(&store), &n.front.id);
                     }
                 }
             }

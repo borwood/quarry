@@ -944,6 +944,159 @@ fn area_watermark_lifecycle() {
 }
 
 #[test]
+fn attention_rides_the_actor_watermarks_and_deliveries_are_badge_scoped() {
+    // it-csm3 under dc-pwyd: attention state keys on the ACTING identity.
+    // A joined agent's reads spend badge-scoped watermarks and deliveries;
+    // the holding session's rows survive its arcs untouched.
+    use quarry::coord::{
+        badge_attention_key, clear_dispatch, has_area_read, record_area_read, touch_area,
+        AreaTouch,
+    };
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let aid = area.front.id.clone();
+    let mut it = NewArgs::bare("item", "geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![aid.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out =
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+            .unwrap();
+    // the holding session read the area with its own eyes before dispatching
+    record_area_read(&s, "design", &aid);
+    ops::join(&s, &out.token, Some("agent:ag-att".into())).unwrap();
+    let badge = badge_attention_key(&it.front.id);
+    // join-as-delivery: the brief rendered the item's areas' record, so the
+    // BADGE holds the read — recorded badge-scoped, not on the session
+    assert!(has_area_read(&s, &badge, &aid), "the join delivered the area to the badge");
+    // a foreign session's write lands in the area
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": aid, "v": 1, "op": "set", "session": "bodies"
+    }))
+    .unwrap();
+    let all = s.load_all().unwrap();
+    // the joined agent's read consumes ITS OWN delivery...
+    match touch_area(&s, &all, &badge, &aid) {
+        AreaTouch::Drift(lines) => assert!(
+            lines.iter().any(|l| l.contains("session bodies")),
+            "foreign drift delivers to the badge: {:?}",
+            lines
+        ),
+        _ => panic!("foreign drift must deliver to the badge"),
+    }
+    assert!(matches!(touch_area(&s, &all, &badge, &aid), AreaTouch::Current));
+    // ...and the holding session's delivery SURVIVES the agent's consumption
+    // (the it-hjed incident: a delivery spent on the agent's screen was owed
+    // to a chat that never saw it)
+    match touch_area(&s, &all, "design", &aid) {
+        AreaTouch::Drift(lines) => assert!(
+            lines.iter().any(|l| l.contains("session bodies")),
+            "got {:?}",
+            lines
+        ),
+        _ => panic!("the session's own delivery survives the agent's arc"),
+    }
+    // the agent's badged act — session env inherited, dispatch stamped —
+    // is FOREIGN to the holding session's eyes, attributed to the dispatch
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": aid, "v": 1, "op": "set",
+        "session": "design", "dispatch": it.front.id
+    }))
+    .unwrap();
+    match touch_area(&s, &all, "design", &aid) {
+        AreaTouch::Drift(lines) => assert!(
+            lines.iter().any(|l| l.contains(&format!("dispatch {}", it.front.id))),
+            "a badged act delivers to the session under the dispatch's name: {:?}",
+            lines
+        ),
+        _ => panic!("a badged act is foreign to the holding session"),
+    }
+    // ...and OWN to the badge: silent cursor advance, no self-drift
+    assert!(matches!(touch_area(&s, &all, &badge, &aid), AreaTouch::Current));
+    // the badge's attention dies with the dispatch; the session's stands
+    clear_dispatch(&s, &it.front.id);
+    assert!(!has_area_read(&s, &badge, &aid), "badge attention cleared with the badge");
+    assert!(has_area_read(&s, "design", &aid), "the session's rows outlive the arc");
+}
+
+#[test]
+fn joined_agent_spares_the_holding_sessions_watermarks_end_to_end() {
+    // The CLI chain of it-csm3: a joined agent's verbs pass the area gate on
+    // the join's own delivery, the holding session's first write into the
+    // area still gates (its eyes never read), and the agent's badged writes
+    // come back to the session as drift named by the dispatch.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let aid = area.front.id.clone();
+    let mut it = NewArgs::bare("item", "geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![aid.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out =
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+            .unwrap();
+    // the agent joins from a shell wearing the holding session's env plus
+    // its own agent id — the real dispatched shape
+    let agent = [("QUARRY_SESSION", "design"), ("QUARRY_AGENT", "ag-cli")];
+    let j = run(&agent, &["join", &out.token]);
+    assert!(j.status.success(), "join: {}", String::from_utf8_lossy(&j.stderr));
+    // the agent's first mint into the item's area does NOT gate: the join
+    // delivered the area record badge-scoped
+    let t = run(&agent, &["new", "thread", "agent finding", "--about", &aid]);
+    assert!(t.status.success(), "agent mint: {}", String::from_utf8_lossy(&t.stderr));
+    assert!(
+        !String::from_utf8_lossy(&t.stdout).contains("gated"),
+        "the join's delivery covers the badge: {}",
+        String::from_utf8_lossy(&t.stdout)
+    );
+    // the holding session's watermark survived the agent's whole arc: its
+    // OWN first write into the area still gates
+    let g = run(&[("QUARRY_SESSION", "design")], &["new", "thread", "design question", "--about", &aid]);
+    assert_eq!(
+        g.status.code(),
+        Some(2),
+        "the session's own first write gates: {}",
+        String::from_utf8_lossy(&g.stdout)
+    );
+    assert!(
+        String::from_utf8_lossy(&g.stdout).contains("gated"),
+        "got: {}",
+        String::from_utf8_lossy(&g.stdout)
+    );
+    // the gate delivered the session's read; the agent writes again; the
+    // session's next mint sees the badged act as drift, named truthfully
+    let t2 = run(&agent, &["new", "thread", "second finding", "--about", &aid]);
+    assert!(t2.status.success(), "agent mint 2: {}", String::from_utf8_lossy(&t2.stderr));
+    let m = run(&[("QUARRY_SESSION", "design")], &["new", "thread", "design question", "--about", &aid]);
+    assert!(m.status.success(), "session mint: {}", String::from_utf8_lossy(&m.stderr));
+    let out_s = String::from_utf8_lossy(&m.stdout);
+    assert!(out_s.contains("since your last read"), "drift delivers to the session: {}", out_s);
+    assert!(
+        out_s.contains(&format!("dispatch {}", it.front.id)),
+        "badged drift names the dispatch, not the inherited session: {}",
+        out_s
+    );
+}
+
+#[test]
 fn wrap_session_touched_review() {
     use quarry::queries::session_touched;
     use serde_json::json;

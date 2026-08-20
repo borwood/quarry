@@ -1240,6 +1240,23 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
         }))?;
     }
     let brief = crate::render::brief(store, &d.item)?;
+    // The brief IS a delivery of the item's areas' record (backdrop per
+    // area), and attention rides the actor (dc-pwyd): record the badge's
+    // area reads at this log position so the arc's first write doesn't
+    // re-gate on ground the join just delivered. Badge-scoped — the
+    // holding session's own watermarks stay exactly where they were
+    // (it-csm3), and its first write into an area its own eyes never read
+    // still gates.
+    if let Ok(all) = store.load_all() {
+        if let Ok(item) = store.find(&all, &d.item) {
+            let reader = crate::coord::badge_attention_key(&d.item);
+            for e in item.front.edges.iter().filter(|e| e.rel == "about") {
+                if all.iter().any(|n| n.front.id == e.to && n.front.ty == "area") {
+                    crate::coord::record_area_read(store, &reader, &e.to);
+                }
+            }
+        }
+    }
     Ok(JoinOutcome {
         item_id: d.item,
         item_title: d.item_title,
