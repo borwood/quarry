@@ -1876,3 +1876,23 @@
 {"ts":"2026-08-20T10:23:34Z","node":"cl-8qn3","v":2,"op":"ratify","from":"asserted","cause":"it-e6wq","assay":"harvest","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:23:37Z","node":"it-e6wq","v":8,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:23:43Z","node":"do-qt4s","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:52Z","node":"it-f6c2","v":7,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:52Z","node":"it-f6c2","v":7,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T10:23:52Z","node":"it-f6c2","v":8,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:52Z","node":"it-f6c2","v":7,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T10:24:19Z","node":"it-f6c2","v":8,"op":"join","actor":"claude","dispatch":"it-f6c2","joined":"agent:aca903461b7b39612"}
+{"ts":"2026-08-20T10:35:39Z","node":"cl-cjbb","v":1,"op":"create","type":"claim","title":"`user-owned-accounting`: the RETURN slot declares, harvest reconciles declared calls against badge threads, the first-write echo names the thread landing","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-f6c2"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"1008a1cb6ccd","ts":"2026-08-20T10:35:39Z","node":"cl-cjbb","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-f6c2"}
+{"op":"link","rel":"supports","to":"it-f6c2","at":8,"ts":"2026-08-20T10:35:44Z","node":"cl-cjbb","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-f6c2"}
+{"ts":"2026-08-20T10:35:45Z","node":"cl-enu7","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-f6c2"}
+{"ts":"2026-08-20T10:35:57Z","node":"th-cqyg","v":1,"op":"create","type":"thread","title":"the mechanical N wants a report channel: harvest parses only a registered report","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-f6c2"}
+{"ts":"2026-08-20T10:37:15Z","node":"it-f6c2","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:37:56Z","node":"it-f6c2","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:25Z","node":"do-msy5","v":1,"op":"create","type":"doc","title":"dispatch report: silent user-owned calls in code shape trip no choke point","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-f6c2","at":8,"ts":"2026-08-20T10:38:25Z","node":"do-msy5","v":2,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:25Z","node":"it-f6c2","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T10:38:34Z","node":"it-f6c2","v":9,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:34Z","node":"cl-cjbb","v":3,"op":"ratify","from":"asserted","cause":"it-f6c2","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:37Z","node":"it-f6c2","v":9,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:39Z","node":"cl-cjbb","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:39Z","node":"do-msy5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

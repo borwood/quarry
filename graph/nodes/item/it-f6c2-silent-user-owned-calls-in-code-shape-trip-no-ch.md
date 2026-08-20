@@ -2,8 +2,8 @@
 id: it-f6c2
 type: item
 title: silent user-owned calls in code shape trip no choke point
-v: 7
-status: ready
+v: 9
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:07Z
 actor: claude
