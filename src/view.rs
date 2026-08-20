@@ -148,7 +148,8 @@ pub fn serve(store: &Store, listener: std::net::TcpListener) -> Result<()> {
             Err(_) => continue, // a failed accept is not a failed server
         };
         if let Err(e) = respond(store, &mut stream) {
-            eprintln!("  ✗ request failed mid-response: {e:#}");
+            // Non-fatal (it-8tcy): a dead stderr must not panic the loop.
+            crate::errln!("  ✗ request failed mid-response: {e:#}");
         }
     }
     Ok(())

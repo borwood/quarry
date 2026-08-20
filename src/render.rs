@@ -958,6 +958,54 @@ pub fn dispatch_wake(store: &Store, all: &[Node], area_ids: &[&str]) -> Vec<Stri
     out
 }
 
+/// The homework surface (it-8tcy): citers now behind the touched node(s) —
+/// each with the affirm command that clears it after review — and work the
+/// change unblocked; sediment collapses to its ratified count (dc-6gn9).
+/// DERIVED from current graph state, never stored: the act-time print after
+/// a mutating verb is a delivery of this surface, and `q query homework
+/// <node>` re-derives it on demand — a pipe that dies mid-print loses the
+/// delivery, never the homework.
+pub fn homework(all: &[Node], touched: &[&str]) -> Vec<String> {
+    let aref = |n: &Node| crate::surface::atom_ref(&crate::surface::atom(all, n));
+    let atom_line = |n: &Node| crate::surface::atom_line(&crate::surface::atom(all, n));
+    let mut lines: Vec<String> = Vec::new();
+    let mut sediment = 0usize;
+    for &id in touched {
+        let Some(target) = all.iter().find(|n| n.front.id == id) else { continue };
+        for (citer, e) in queries::citers_behind(all, id) {
+            // A reading drifting with its target is sediment (dc-6gn9) —
+            // no affirm is owed; the collapse says so once below. A dead
+            // target rots anywhere, reading or not.
+            let dead = matches!(target.front.status.as_str(), "refuted" | "superseded");
+            if !dead
+                && citer.front.ty == "claim"
+                && citer.front.kind.as_deref() == Some("reading")
+            {
+                sediment += 1;
+                continue;
+            }
+            lines.push(format!(
+                "⚠ behind: {} -[{}]→ {} (cited {}, now v{}). Review the change, then: q affirm {} --to {}",
+                aref(citer), e.rel, aref(target), e.at, target.front.v,
+                citer.front.id, target.front.id
+            ));
+        }
+        for n in queries::unblocked_by(all, id) {
+            let what = match (n.front.ty.as_str(), n.front.status.as_str()) {
+                ("thread", "queued") => "answerable in the queue",
+                ("thread", _) => "unblocked",
+                ("item", "ready") => "dispatchable",
+                _ => "unblocked (still shaping)",
+            };
+            lines.push(format!("✔ {}: {}", what, atom_line(n)));
+        }
+    }
+    if sediment > 0 {
+        lines.push(crate::framings::sediment_line(sediment));
+    }
+    lines
+}
+
 /// The harvest surface: the dispatcher's judgment seat at a dispatch's exit.
 /// Observed-vs-leased, the acts stamped under the badge, the RETURN spec to
 /// judge against, and the report-registration homework. Prints; never

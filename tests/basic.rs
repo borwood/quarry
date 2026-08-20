@@ -299,6 +299,55 @@ fn homework_helpers() {
 }
 
 #[test]
+fn homework_rederives_on_demand_the_act_print_is_only_a_delivery() {
+    // The it-8tcy resolution: homework is DERIVED from current graph state,
+    // never stored — render::homework is the one derivation point, the
+    // act-time print delivers it, and `q query homework <node>` re-derives
+    // it, so a pipe that dies mid-print loses nothing but the delivery.
+    let s = temp_store();
+    let mut th = NewArgs::bare("thread", "which layout?");
+    th.provenance = Some("user".into());
+    th.status = Some("queued".into());
+    let th = ops::new_node(&s, th).unwrap();
+    let mut it = NewArgs::bare("item", "build the layout");
+    it.status = Some("ready".into());
+    it.acceptance = vec!["the layout stands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    ops::link(&s, &it.front.id, "depends-on", &th.front.id, false, None).unwrap();
+
+    // bumping the thread: the derivation carries the behind line with the
+    // affirm command that clears it after review
+    ops::set(&s, &th.front.id, &["title=which storage layout?".to_string()], None).unwrap();
+    let all = s.load_all().unwrap();
+    let hw = quarry::render::homework(&all, &[th.front.id.as_str()]);
+    assert_eq!(hw.len(), 1, "one behind line: {:?}", hw);
+    assert!(
+        hw[0].contains("behind:")
+            && hw[0].contains(&format!("q affirm {} --to {}", it.front.id, th.front.id)),
+        "the behind line carries the affirm command: {:?}",
+        hw
+    );
+
+    // resolving the thread: the same derivation now carries the unblock line
+    ops::rule(&s, &th.front.id, "flat files", Some("user".into()), None).unwrap();
+    let all = s.load_all().unwrap();
+    let hw = quarry::render::homework(&all, &[th.front.id.as_str()]);
+    assert!(
+        hw.iter().any(|l| l.contains("dispatchable")),
+        "resolution derives the unblock line: {:?}",
+        hw
+    );
+
+    // a node with no homework derives empty — the query's honest silence
+    let quiet = ops::new_node(&s, NewArgs::bare("area", "quiet town")).unwrap();
+    let all = s.load_all().unwrap();
+    assert!(
+        quarry::render::homework(&all, &[quiet.front.id.as_str()]).is_empty(),
+        "no citers, nothing unblocked: empty derivation"
+    );
+}
+
+#[test]
 fn doc_markdown_content_embeds_in_view() {
     let s = temp_store();
     std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
