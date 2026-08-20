@@ -1855,3 +1855,24 @@
 {"ts":"2026-08-20T10:11:38Z","node":"it-ds6b","v":12,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:11:46Z","node":"cl-pq2t","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:11:46Z","node":"do-mz7p","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:11:54Z","node":"it-e6wq","v":6,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:11:54Z","node":"it-e6wq","v":6,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T10:11:54Z","node":"it-e6wq","v":7,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:11:54Z","node":"it-e6wq","v":6,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T10:12:20Z","node":"it-e6wq","v":7,"op":"join","actor":"claude","dispatch":"it-e6wq","joined":"agent:a1f8886739fa7c132"}
+{"ts":"2026-08-20T10:19:36Z","node":"cl-8qn3","v":1,"op":"create","type":"claim","title":"`retire-scope`: q session retire refuses only when the retiree is implicated - own session under a live badge, or a retiree mid-dispatch toward its q harvest","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-e6wq"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"30cfab00d970","ts":"2026-08-20T10:19:36Z","node":"cl-8qn3","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-e6wq"}
+{"ts":"2026-08-20T10:20:08Z","node":"cl-9nxr","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-e6wq"}
+{"ts":"2026-08-20T10:21:55Z","node":"it-e6wq","v":7,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:22:55Z","node":"cl-hngg","v":1,"op":"create","type":"claim","title":"`boundary-harvests-all`: wrap and session resume refuse under any live…","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"30cfab00d970","ts":"2026-08-20T10:22:55Z","node":"cl-hngg","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"link","rel":"supersedes","to":"cl-ahzk","at":5,"ts":"2026-08-20T10:23:03Z","node":"cl-hngg","v":3,"actor":"claude","session":"dispatcher"}
+{"op":"set","field":"status","from":"asserted","to":"superseded","cause":"cl-hngg","ts":"2026-08-20T10:23:03Z","node":"cl-ahzk","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:03Z","node":"th-6xgh","v":1,"op":"create","type":"thread","title":"dc-qyr5's boundary sentence still names retire: the landed scoping wants the user's amending word","actor":"claude","note":null,"session":"dispatcher"}
+{"ts":"2026-08-20T10:23:09Z","node":"cl-hngg","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:34Z","node":"do-qt4s","v":1,"op":"create","type":"doc","title":"dispatch report: session-retire overbreadth under an unrelated badge","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-e6wq","at":7,"ts":"2026-08-20T10:23:34Z","node":"do-qt4s","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T10:23:34Z","node":"it-e6wq","v":8,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:34Z","node":"cl-8qn3","v":2,"op":"ratify","from":"asserted","cause":"it-e6wq","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:37Z","node":"it-e6wq","v":8,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:23:43Z","node":"do-qt4s","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

@@ -2,8 +2,8 @@
 id: cl-ahzk
 type: claim
 title: '`boundary-harvests-all`: wrap and resume/retire refuse under any live held dispatch, enumerating each with its q harvest command'
-v: 5
-status: asserted
+v: 6
+status: superseded
 provenance: assistant
 created: 2026-08-13T13:41:49Z
 actor: claude-fable-5

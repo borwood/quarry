@@ -233,8 +233,12 @@ with a fresh token; from another chat, q dispatch --steal --reason
 takes the dispatch whole, loud and logged). Boundary verbs refuse
 while a chat holds ANY live dispatch, enumerating each with its
 q harvest command; a chat with no badge keeps its boundary verbs while
-other chats' dispatches fly. Harvest and release clear badge, token,
-and associations per item.
+other chats' dispatches fly. Retire alone is scoped to the RETIREE
+(it-e6wq): the chat's own session under a live badge refuses as above;
+a retiree with a dispatch of its own in flight refuses toward that
+dispatch's q harvest; a third session with no live dispatch retires
+clean while unrelated badges fly. Harvest and release clear badge,
+token, and associations per item.
 The badge pins the store (dc-g5x5): one resolver owns the graph locale
 for every verb and hook — the pin first (the spawn line's
 q join --store, then QUARRY_STORE injected per badged shell, launcher

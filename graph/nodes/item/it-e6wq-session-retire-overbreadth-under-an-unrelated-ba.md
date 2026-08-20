@@ -2,8 +2,8 @@
 id: it-e6wq
 type: item
 title: session-retire overbreadth under an unrelated badge
-v: 6
-status: ready
+v: 8
+status: done
 provenance: assistant
 created: 2026-08-11T05:25:26Z
 actor: claude
