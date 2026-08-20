@@ -4995,6 +4995,285 @@ fn witness_flags_ride_the_design_wake_until_user_ratified() {
     );
 }
 
+// ── acceptance change verbs (it-ds6b): removal by line, replace in one act ──
+
+/// The removal resolves forgiving and records faithful: the exact line
+/// wins outright, any substring matching exactly one line resolves, and
+/// zero or multiple matches refuse listing candidates — never a silent
+/// no-op. The log stores the FULL resolved line removed, never what was
+/// typed, and replace — both fields in one q set — is one act, one log
+/// event, one bump: the contract is content (unlike unlink, the item
+/// bumps).
+#[test]
+fn acceptance_removal_resolves_exact_or_unique_substring_and_refuses_ambiguity() {
+    let s = temp_store();
+    let mut it = NewArgs::bare("item", "layered contract");
+    it.acceptance = vec![
+        "the pass lands".into(),
+        "the clip lands".into(),
+        "walls mapped".into(),
+    ];
+    let it = ops::new_node(&s, it).unwrap();
+    // a unique substring resolves; the echo and log carry the full line
+    let o = ops::set(&s, &it.front.id, &["acceptance-=walls".to_string()], None).unwrap();
+    assert_eq!(o.removed, vec!["walls mapped".to_string()], "the resolved full line, never the typed fragment");
+    assert_eq!(o.node.front.acceptance.len(), 2);
+    assert!(o.demoted_from.is_none(), "a sketch item has no readiness to lose");
+    let ev = s
+        .read_log()
+        .unwrap()
+        .into_iter()
+        .filter(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("set")
+                && e.get("node").and_then(|v| v.as_str()) == Some(it.front.id.as_str())
+        })
+        .next_back()
+        .unwrap();
+    let fields: Vec<String> = ev["fields"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    assert!(
+        fields.contains(&"acceptance-=walls mapped".to_string()),
+        "the log stores the resolved line, never what was typed: {:?}",
+        fields
+    );
+    assert_eq!(
+        ev["removed_acceptance"].as_array().unwrap()[0].as_str().unwrap(),
+        "walls mapped"
+    );
+    // ambiguity refuses, listing every candidate — never a silent no-op
+    let err = ops::set(&s, &it.front.id, &["acceptance-=lands".to_string()], None).unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("ambiguous"), "got: {}", msg);
+    assert!(
+        msg.contains("the pass lands") && msg.contains("the clip lands"),
+        "candidates listed: {}",
+        msg
+    );
+    // zero matches refuse, listing what stands
+    let err = ops::set(&s, &it.front.id, &["acceptance-=zzz".to_string()], None).unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("matched no line"), "got: {}", msg);
+    assert!(msg.contains("the pass lands"), "what stands is listed: {}", msg);
+    let all = s.load_all().unwrap();
+    let n = s.find(&all, &it.front.id).unwrap();
+    assert_eq!(n.front.acceptance.len(), 2, "a refused removal mutates nothing");
+    assert_eq!(n.front.v, 2, "no bump on refusal");
+    // replace is both fields in one act — one log event, one bump
+    let v_before = n.front.v;
+    let o = ops::set(
+        &s,
+        &it.front.id,
+        &[
+            "acceptance-=clip".to_string(),
+            "acceptance+=the clip re-lands cleanly".to_string(),
+        ],
+        None,
+    )
+    .unwrap();
+    assert_eq!(o.removed, vec!["the clip lands".to_string()]);
+    assert_eq!(o.node.front.v, v_before + 1, "one act, one bump");
+    assert!(o.node.front.acceptance.contains(&"the clip re-lands cleanly".to_string()));
+    assert!(!o.node.front.acceptance.contains(&"the clip lands".to_string()));
+    // the exact line wins outright even when it substrings another
+    let mut twin = NewArgs::bare("item", "twin lines");
+    twin.acceptance = vec!["the pass".into(), "the pass lands".into()];
+    let twin = ops::new_node(&s, twin).unwrap();
+    let o = ops::set(&s, &twin.front.id, &["acceptance-=the pass".to_string()], None).unwrap();
+    assert_eq!(o.removed, vec!["the pass".to_string()], "exact beats substring ambiguity");
+    assert_eq!(o.node.front.acceptance, vec!["the pass lands".to_string()]);
+}
+
+/// The it-ds6b rider on dc-p6z4 at mutation time: an edit that strips a
+/// readied item's last acceptance line loudly demotes ready to shaped in
+/// the verb's own output — the ready feed carries only items whose
+/// contract is stated. Replace in one act keeps ready (the contract never
+/// empties); in-flight demotes the same way, mirroring the fire-time
+/// backstop's arm.
+#[test]
+fn stripping_a_readied_items_last_line_demotes_to_shaped_in_the_verbs_own_output() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        std::process::Command::new(q)
+            .current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args)
+            .output()
+            .unwrap()
+    };
+    let mut it = NewArgs::bare("item", "readied work");
+    it.status = Some("ready".into());
+    it.acceptance = vec!["the work lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out = run(&["set", &it.front.id, "acceptance-=the work"]);
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("acceptance removed: \"the work lands\""),
+        "the echo carries the full resolved line: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("UN-READIED") && stdout.contains("[shaped]"),
+        "the demotion is loud in the verb's own output: {}",
+        stdout
+    );
+    let all = s.load_all().unwrap();
+    let n = s.find(&all, &it.front.id).unwrap();
+    assert_eq!(n.front.status, "shaped", "ready-implies-acceptance held at mutation");
+    let ev = s
+        .read_log()
+        .unwrap()
+        .into_iter()
+        .filter(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("set")
+                && e.get("node").and_then(|v| v.as_str()) == Some(it.front.id.as_str())
+        })
+        .next_back()
+        .unwrap();
+    assert_eq!(
+        ev["demoted"]["from"].as_str().unwrap(),
+        "ready",
+        "the demotion is logged with its cause: {}",
+        ev
+    );
+    // replace in one act keeps ready — the contract never empties
+    let mut rep = NewArgs::bare("item", "replaced contract");
+    rep.status = Some("ready".into());
+    rep.acceptance = vec!["the old outcome".into()];
+    let rep = ops::new_node(&s, rep).unwrap();
+    let o = ops::set(
+        &s,
+        &rep.front.id,
+        &[
+            "acceptance-=old outcome".to_string(),
+            "acceptance+=the amended outcome".to_string(),
+        ],
+        None,
+    )
+    .unwrap();
+    assert_eq!(o.node.front.status, "ready", "replace never demotes");
+    assert!(o.demoted_from.is_none());
+    // in-flight strips demote the same way (the backstop's arm mirrored)
+    let mut fly = NewArgs::bare("item", "flying work");
+    fly.status = Some("in-flight".into());
+    fly.acceptance = vec!["the flight lands".into()];
+    let fly = ops::new_node(&s, fly).unwrap();
+    let o = ops::set(&s, &fly.front.id, &["acceptance-=flight".to_string()], None).unwrap();
+    assert_eq!(o.demoted_from.as_deref(), Some("in-flight"));
+    assert_eq!(o.node.front.status, "shaped");
+}
+
+/// The seat rules follow the pen (dc-mpg8, it-ds6b): authoring-by-
+/// subtraction is authoring, so a witness seat's removal is marked at the
+/// act and rides the design wake's review channel until the user
+/// ratifies — flagged though the line is gone by construction. Design
+/// seats mutate freely, unmarked; the removed line's own authored mark
+/// degrades to record, exactly as the display already states.
+#[test]
+fn witness_seat_removal_rides_the_review_channel_until_the_users_word() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    quarry::coord::save_session(&s, "disp", vec![area.front.id.clone()], Some("dispatch".into()), None, false)
+        .unwrap();
+    quarry::coord::save_session(&s, "design", vec![area.front.id.clone()], Some("design".into()), None, false)
+        .unwrap();
+    let mut it = NewArgs::bare("item", "design authored");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the gap closes".into(), "the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    // the witness seat removes a line: the act succeeds, marked for review
+    let out = run(
+        &[("QUARRY_SESSION", "disp")],
+        &["set", &it.front.id, "acceptance-=gap"],
+    );
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("acceptance removed: \"the gap closes\""),
+        "the echo carries the full resolved line: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("witness seat") && stdout.contains("review channel"),
+        "the act states its own review ride: {}",
+        stdout
+    );
+    let all = s.load_all().unwrap();
+    let n = s.find(&all, &it.front.id).unwrap();
+    assert_eq!(n.front.acceptance, vec!["the pass lands".to_string()]);
+    assert_eq!(n.front.witness.len(), 1, "the removal is marked");
+    let m = &n.front.witness[0];
+    assert!(m.removed, "marked as a removal act");
+    assert_eq!(m.line, "the gap closes", "the mark stores the resolved line");
+    assert_eq!(m.by, "session:disp");
+    assert!(m.ratified.is_none());
+    // the review channel carries the removal though the line is gone
+    let flags = queries::witness_flags(&all);
+    assert_eq!(flags.len(), 1, "the removal rides the channel: {:?}", flags.len());
+    assert!(flags[0].1.removed);
+    // the item view names the act and its state
+    let out = run(&[], &["witness", &it.front.id]);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("removed by session:disp") && stdout.contains("removal under review"),
+        "the display names the subtraction: {}",
+        stdout
+    );
+    // only the user's word clears it
+    let out = run(&[], &["witness", &it.front.id, "--ratify", "--by", "user"]);
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let all = s.load_all().unwrap();
+    assert!(
+        queries::witness_flags(&all).is_empty(),
+        "the user's word lets the channel go"
+    );
+    let m = &s.find(&all, &it.front.id).unwrap().front.witness[0];
+    assert!(m.removed && m.ratified.is_some(), "the mark stays as record");
+    // a design seat removes freely — no mark, no review
+    let out = run(
+        &[("QUARRY_SESSION", "design")],
+        &["set", &it.front.id, "acceptance-=pass"],
+    );
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        !stdout.contains("witness seat"),
+        "the design pen is free: {}",
+        stdout
+    );
+    let all = s.load_all().unwrap();
+    let n = s.find(&all, &it.front.id).unwrap();
+    assert!(n.front.acceptance.is_empty());
+    assert_eq!(n.front.witness.len(), 1, "no mark from the design seat");
+    assert!(queries::witness_flags(&all).is_empty());
+}
+
 /// The wrap sweep's deep-touch list (dc-hzrm): per-session acts fold per
 /// node and rank by touch depth — authoring outranks lifecycle outranks a
 /// bare affirm; foreign sessions' acts never enter; the wrap event plants

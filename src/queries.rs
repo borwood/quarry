@@ -85,13 +85,15 @@ pub fn awaiting_acceptance<'a>(all: &'a [Node]) -> Vec<&'a Node> {
 }
 
 /// The witness review channel (dc-mpg8), derived at read: every
-/// witness-authored acceptance line still awaiting the user's
+/// witness-authored acceptance act still awaiting the user's
 /// ratify-or-amend, on any non-archived item at any status — review
 /// outlives the landing (the inaugural lines seed the channel already
-/// done). A mark whose line no longer sits in `acceptance` (amended by a
-/// future change verb) carries no flag; ratified marks are the record and
-/// stay off this surface. Order: item creation, then id — the channel
-/// reads oldest debt first.
+/// done). An AUTHORING mark flags while its line still sits in
+/// `acceptance`; a line since retired (q set acceptance-=, it-ds6b)
+/// degrades the mark to record. A REMOVAL mark flags on the mark alone —
+/// authoring-by-subtraction is authoring, and its line is gone by
+/// construction. Ratified marks are the record and stay off this surface.
+/// Order: item creation, then id — the channel reads oldest debt first.
 pub fn witness_flags<'a>(all: &'a [Node]) -> Vec<(&'a Node, &'a WitnessMark)> {
     let mut items: Vec<&Node> = all
         .iter()
@@ -103,7 +105,9 @@ pub fn witness_flags<'a>(all: &'a [Node]) -> Vec<(&'a Node, &'a WitnessMark)> {
     let mut out = Vec::new();
     for n in items {
         for m in &n.front.witness {
-            if m.ratified.is_none() && n.front.acceptance.iter().any(|a| a == &m.line) {
+            if m.ratified.is_none()
+                && (m.removed || n.front.acceptance.iter().any(|a| a == &m.line))
+            {
                 out.push((n, m));
             }
         }

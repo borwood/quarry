@@ -195,9 +195,11 @@ pub struct Ratified {
 /// user's act on it (the archive-is-a-flag pattern).
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WitnessMark {
-    /// The acceptance line, verbatim — marks ride the text because
-    /// acceptance lines are append-only (dc-p6z4/it-ds6b); a line no longer
-    /// present in `acceptance` (amended by a future verb) carries no flag.
+    /// The acceptance line, verbatim — the full resolved line, never what
+    /// was typed (the mint-echo pattern). For an authoring mark, the line
+    /// still sitting in `acceptance` keeps the flag live; a line since
+    /// removed degrades to record. For a removal mark the line is gone by
+    /// construction, so its flag rides on the mark alone.
     pub line: String,
     /// The acting identity key at filing (agent:/chat:/session:) — the
     /// executor refusals compare against it: author is never executor.
@@ -214,6 +216,12 @@ pub struct WitnessMark {
     /// review flag). Absent while the line awaits ratify-or-amend.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub ratified: Option<Ratified>,
+    /// The mark records a REMOVAL act (it-ds6b): authoring-by-subtraction
+    /// is authoring (dc-mpg8), so a witness seat's `acceptance-=` rides the
+    /// review channel until the user's word — flagged regardless of line
+    /// presence, because the removed line is absent by construction.
+    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
+    pub removed: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

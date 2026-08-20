@@ -122,7 +122,16 @@ exist refuses and lists what the source carries.")]
         note: Option<String>,
     },
     /// Mutate fields: status=… title=… kind=… method=… path=… acceptance+=…
-    /// write-set+=… ratified=…
+    /// acceptance-=… write-set+=… ratified=…
+    #[command(after_help = "acceptance-= removes a line (it-ds6b): the value matches the exact line,
+or any substring matching exactly one — zero or multiple matches refuse,
+listing candidates, and the echo and log carry the full resolved line
+removed, never what was typed. Replace is both fields in one act:
+  q set <item> \"acceptance-=<old>\" \"acceptance+=<new>\"
+Stripping a readied item's last line loudly demotes it to shaped
+(dc-p6z4). From a non-design seat, subtraction is authoring: the removal
+rides the witness review channel until the user ratifies (dc-mpg8).
+Unlike unlink, the item BUMPS — the contract is content, not bookkeeping.")]
     Set {
         node: String,
         #[arg(required = true)]
@@ -2121,12 +2130,19 @@ fn main() -> Result<()> {
                         for m in &n.front.witness {
                             let state = match &m.ratified {
                                 Some(r) => format!("user-ratified {}", r.date),
+                                // A removal mark's line is gone by construction
+                                // (it-ds6b): the act itself is what awaits the
+                                // user's word.
+                                None if m.removed => {
+                                    "removal under review — awaiting the user's ratify-or-amend".to_string()
+                                }
                                 None if n.front.acceptance.iter().any(|a| a == &m.line) => {
                                     "under review — awaiting the user's ratify-or-amend".to_string()
                                 }
                                 None => "line no longer in acceptance — mark stands as record".to_string(),
                             };
-                            outln!("  · \"{}\"\n    authored by {} ({}) {} — {}", m.line, m.by, m.kind.as_deref().unwrap_or("kindless"), m.date, state);
+                            let act = if m.removed { "removed" } else { "authored" };
+                            outln!("  · \"{}\"\n    {} by {} ({}) {} — {}", m.line, act, m.by, m.kind.as_deref().unwrap_or("kindless"), m.date, state);
                         }
                     }
                 }
@@ -2142,9 +2158,10 @@ fn main() -> Result<()> {
                     if flags.is_empty() {
                         outln!("the witness channel is clear — no witness-authored acceptance line awaits the user (dc-mpg8).");
                     } else {
-                        outln!("witness-authored acceptance under review (dc-mpg8) — the pen from a non-design seat is transcription; each line awaits the user's ratify-or-amend:");
+                        outln!("witness-authored acceptance under review (dc-mpg8) — the pen from a non-design seat is transcription; each act awaits the user's ratify-or-amend:");
                         for (n, m) in &flags {
-                            outln!("  · \"{}\"\n      {} — authored by {} {}", m.line, aref(&all, n), m.by, m.date);
+                            let act = if m.removed { "removed" } else { "authored" };
+                            outln!("  · \"{}\"\n      {} — {} by {} {}", m.line, aref(&all, n), act, m.by, m.date);
                         }
                         outln!("the user's word clears a line: q witness <item> --ratify --by user (their word transcribed — the q rule --by user channel)");
                     }
@@ -2758,8 +2775,27 @@ fn main() -> Result<()> {
         }
         Cmd::Set { node, fields, note } => {
             let store = Store::resolve()?;
-            let n = ops::set(&store, &node, &fields, note)?;
+            let o = ops::set(&store, &node, &fields, note)?;
+            let n = o.node;
             outln!("✔ {}", line(&store.load_all().unwrap_or_default(), &n));
+            // The removal echo (it-ds6b): the FULL resolved line, never what
+            // was typed — the mint-echo pattern: a wrong-but-real match
+            // reads wrong here, at the moment it is cheapest to catch.
+            for l in &o.removed {
+                outln!("  acceptance removed: \"{}\"", l);
+            }
+            if o.witness_removals > 0 {
+                outln!(
+                    "  removed from a witness seat — authoring-by-subtraction is authoring (dc-mpg8): the removal rides the design wake's review channel until the user ratifies (q witness {}).",
+                    n.front.id
+                );
+            }
+            if let Some(df) = &o.demoted_from {
+                outln!(
+                    "  UN-READIED: {} [{}] → [shaped], loudly (logged) — the strip took the last acceptance line, and ready is stored intent (dc-p6z4): the ready feed carries only items whose contract is stated. Author acceptance, then flip ready again.",
+                    n.front.id, df
+                );
+            }
             presence_note(&store, &n.front.id);
             print_homework(&store, &[n.front.id.as_str()]);
             area_watermarks(&store, &n.front.id);

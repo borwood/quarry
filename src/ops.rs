@@ -134,6 +134,27 @@ fn witness_marks(seat: &crate::coord::WitnessSeat, lines: &[String]) -> Vec<Witn
             kind: Some(seat.kind.clone()),
             date: Store::today(),
             ratified: None,
+            removed: false,
+        })
+        .collect()
+}
+
+/// The removal mark (it-ds6b): a witness seat's `acceptance-=` is
+/// authoring-by-subtraction (dc-mpg8), so the removal itself rides the
+/// design wake's review channel until the user ratifies. The mark stores
+/// the FULL resolved line removed — the record is faithful whatever was
+/// typed — and `removed` keeps its flag live though the line is gone.
+fn witness_removal_marks(seat: &crate::coord::WitnessSeat, lines: &[String]) -> Vec<WitnessMark> {
+    lines
+        .iter()
+        .map(|l| WitnessMark {
+            line: l.clone(),
+            by: seat.key.clone(),
+            session: Some(seat.session.clone()),
+            kind: Some(seat.kind.clone()),
+            date: Store::today(),
+            ratified: None,
+            removed: true,
         })
         .collect()
 }
@@ -464,15 +485,79 @@ pub fn unlink(
     Ok((src, edge))
 }
 
-pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) -> Result<Node> {
+/// What a `q set` act did beyond the node itself (it-ds6b): the FULL
+/// resolved acceptance lines removed — the record is the resolved line,
+/// never what was typed (the mint-echo pattern: a wrong-but-real match
+/// reads wrong in the echo) — the loud demotion when a strip left a
+/// readied item contract-less (dc-p6z4 at mutation time), and whether the
+/// removal was authored from a witness seat (dc-mpg8: authoring-by-
+/// subtraction is authoring; the review channel carries it).
+#[derive(Debug)]
+pub struct SetOutcome {
+    pub node: Node,
+    /// Full resolved acceptance lines removed, in act order.
+    pub removed: Vec<String>,
+    /// The status the strip demoted from (ready or in-flight → shaped).
+    pub demoted_from: Option<String>,
+    /// Removal marks recorded (witness seat only; design seats mutate free).
+    pub witness_removals: usize,
+}
+
+/// Resolve one `acceptance-=` value to the line it removes (it-ds6b):
+/// the exact line wins outright; otherwise any substring matching exactly
+/// one line resolves — forgiving input, faithful record. Zero or multiple
+/// matches refuse, listing candidates — never a silent no-op. Strict-
+/// verbatim input would rebuild the forcing incident's trap (long
+/// backtick-laden lines round-tripping shell quoting) on the removal side.
+fn resolve_acceptance_removal(node: &Node, typed: &str) -> Result<usize> {
+    let lines = &node.front.acceptance;
+    let aref = crate::surface::atom_ref(&crate::surface::atom(&[], node));
+    if lines.is_empty() {
+        bail!(
+            "acceptance-= on {} — it carries no acceptance lines; nothing to remove.",
+            aref
+        );
+    }
+    if let Some(i) = lines.iter().position(|l| l == typed) {
+        return Ok(i);
+    }
+    let hits: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.contains(typed))
+        .map(|(i, _)| i)
+        .collect();
+    match hits.len() {
+        1 => Ok(hits[0]),
+        0 => bail!(
+            "acceptance-= matched no line on {} — the value is the exact line, or any substring matching exactly one. Nothing was removed. What stands:\n  {}",
+            aref,
+            lines.join("\n  ")
+        ),
+        n => bail!(
+            "acceptance-= is ambiguous on {} — \"{}\" sits in {} lines. Nothing was removed; give a longer substring or the exact line. Candidates:\n  {}",
+            aref,
+            typed,
+            n,
+            hits.iter().map(|&i| lines[i].as_str()).collect::<Vec<_>>().join("\n  ")
+        ),
+    }
+}
+
+pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) -> Result<SetOutcome> {
     let all = store.load_all()?;
     let mut node = store.find(&all, key)?.clone();
     let mut from_status: Option<String> = None;
     let mut new_acceptance: Vec<String> = Vec::new();
+    let mut removed: Vec<String> = Vec::new();
+    // The logged fields carry the FULL resolved line for every removal —
+    // the log stores what was actually removed, never what was typed.
+    let mut logged_fields: Vec<String> = Vec::new();
     for f in fields {
         let (k, v) = f
             .split_once('=')
             .ok_or_else(|| anyhow!("expected field=value, got '{}'", f))?;
+        let mut logged = f.clone();
         match k {
             "status" => {
                 if !allowed_statuses(&node.front.ty).contains(&v) {
@@ -501,6 +586,16 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                 node.front.acceptance.push(v.into());
                 new_acceptance.push(v.into());
             }
+            // Removal by line (it-ds6b): the -= value resolves against the
+            // lines as they stand at this point in the act, so replace is
+            // both fields in one call — "acceptance-=<old>" then
+            // "acceptance+=<new>" — one act, one log event, one bump.
+            "acceptance-" => {
+                let idx = resolve_acceptance_removal(&node, v)?;
+                let line = node.front.acceptance.remove(idx);
+                logged = format!("acceptance-={}", line);
+                removed.push(line);
+            }
             "write-set+" | "write_set+" => node.front.write_set.push(v.into()),
             "ratified" => {
                 node.front.ratified = Some(Ratified {
@@ -515,6 +610,7 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                 node.front.extra.insert(key, val);
             }
         }
+        logged_fields.push(logged);
     }
     // The witness pen at authoring (dc-mpg8): acceptance authored from a
     // witness seat passes the line check (no register names) and the
@@ -527,6 +623,21 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
             witness_line_check(&seat, &new_acceptance)?;
             witness_sequence_check(store, &node, &seat)?;
             node.front.witness.extend(witness_marks(&seat, &new_acceptance));
+        }
+    }
+    // The witness pen at removal (it-ds6b, dc-mpg8): authoring-by-
+    // subtraction is authoring, so a witness seat's removal is marked and
+    // rides the same review channel until the user ratifies; design seats
+    // mutate freely. No line check — removal takes names out of the
+    // register, never in — and the sequence check is vacuous here (the
+    // gate only refuses acceptance-less items, which carry nothing to
+    // remove).
+    let mut witness_removals = 0usize;
+    if !removed.is_empty() && node.front.ty == "item" {
+        if let Some(seat) = crate::coord::witness_seat(store) {
+            let marks = witness_removal_marks(&seat, &removed);
+            witness_removals = marks.len();
+            node.front.witness.extend(marks);
         }
     }
     // The acceptance gate's construction point (dc-p6z4): ready is stored
@@ -549,12 +660,49 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
             node.front.id
         );
     }
-    let mut ev = json!({"op": "set", "fields": fields});
-    if let Some(fs) = from_status {
+    // The it-ds6b rider on dc-p6z4, at mutation time: an edit that strips
+    // a readied item's last acceptance line loudly demotes ready to shaped
+    // in this verb's own act — the ready feed carries only items whose
+    // contract is stated. In-flight demotes the same way, mirroring the
+    // fire-time backstop's arm: an acceptance-less item past the gate is a
+    // breach state, never left standing. One act, one log event, one bump.
+    let demoted_from = if !removed.is_empty()
+        && node.front.ty == "item"
+        && node.front.acceptance.is_empty()
+        && matches!(node.front.status.as_str(), "ready" | "in-flight")
+    {
+        let from = node.front.status.clone();
+        node.front.status = "shaped".into();
+        Some(from)
+    } else {
+        None
+    };
+    // The logged fields carry resolved removals; the removed lines land
+    // whole on the event besides — who and why ride actor and --note, in
+    // the unlink spirit. Unlike unlink this BUMPS (via bump below): the
+    // contract is content, not bookkeeping, so citers' stamps go behind.
+    let mut ev = json!({"op": "set", "fields": logged_fields});
+    if let Some(fs) = &from_status {
         ev.as_object_mut().unwrap().insert("from_status".into(), json!(fs));
     }
+    if !removed.is_empty() {
+        ev.as_object_mut()
+            .unwrap()
+            .insert("removed_acceptance".into(), json!(removed));
+    }
+    if let Some(df) = &demoted_from {
+        ev.as_object_mut().unwrap().insert(
+            "demoted".into(),
+            json!({"from": df, "to": "shaped", "cause": "acceptance gate (dc-p6z4): last acceptance line stripped"}),
+        );
+    }
     bump(store, &mut node, ev, note)?;
-    Ok(node)
+    Ok(SetOutcome {
+        node,
+        removed,
+        demoted_from,
+        witness_removals,
+    })
 }
 
 pub fn edit_body(store: &Store, key: &str, body: String, note: Option<String>) -> Result<Node> {
@@ -1357,7 +1505,9 @@ pub fn witness_mark(
             node.front.acceptance.join("\n  ")
         );
     }
-    if node.front.witness.iter().any(|m| m.line == line) {
+    // Only authoring marks block a re-mark: a removal mark on the same text
+    // records a different act (a since-removed twin), never this line.
+    if node.front.witness.iter().any(|m| m.line == line && !m.removed) {
         bail!(
             "that line already carries a witness mark on {} — q witness {} shows the channel",
             node.front.id, node.front.id
@@ -1373,6 +1523,7 @@ pub fn witness_mark(
         kind,
         date: Store::today(),
         ratified: None,
+        removed: false,
     });
     store.save(&node)?;
     store.log_event(json!({
@@ -1393,7 +1544,7 @@ pub fn witness_mark(
 pub fn witness_ratify(store: &Store, item_key: &str, by: Option<&str>) -> Result<(Node, usize)> {
     if by != Some("user") {
         bail!(
-            "witness pen (dc-mpg8): only the user's word clears a witness flag — re-run with --by user when the user has ratified the line(s), their word transcribed (the q rule --by user channel). Amendment awaits the acceptance change verbs; until then an unratified line stays on the design wake's review channel."
+            "witness pen (dc-mpg8): only the user's word clears a witness flag — re-run with --by user when the user has ratified the line(s), their word transcribed (the q rule --by user channel). The amend arm is the design seat's: q set <item> \"acceptance-=<line>\" \"acceptance+=<amended>\" retires or replaces the line (it-ds6b); an unratified line stays on the design wake's review channel until either word lands."
         );
     }
     let all = store.load_all()?;
