@@ -1757,3 +1757,24 @@
 {"ts":"2026-08-20T08:55:22Z","node":"it-4q6t","v":9,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T08:55:32Z","node":"cl-2jas","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T08:55:32Z","node":"do-57qf","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:52Z","node":"it-8tcy","v":4,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:52Z","node":"it-8tcy","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T08:55:52Z","node":"it-8tcy","v":5,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:52Z","node":"it-8tcy","v":4,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T08:56:16Z","node":"it-8tcy","v":5,"op":"join","actor":"claude","dispatch":"it-8tcy","joined":"agent:aa6f1014952c7a5be"}
+{"ts":"2026-08-20T09:08:02Z","node":"cl-8h6r","v":1,"op":"create","type":"claim","title":"`nonfatal-print`: every print rides io-swallowing macros - output failure never skips state work; a closed pipe exits quietly","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-8tcy"}
+{"op":"link","rel":"source","to":"file:src/emit.rs","at":"3315e622a480","ts":"2026-08-20T09:08:02Z","node":"cl-8h6r","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-8tcy"}
+{"ts":"2026-08-20T09:08:09Z","node":"cl-ugqu","v":1,"op":"create","type":"claim","title":"`homework-query`: homework derives at one point and pulls on demand - the act-time print is a delivery, never the only copy","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-8tcy"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"6763c34abc08","ts":"2026-08-20T09:08:09Z","node":"cl-ugqu","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-8tcy"}
+{"op":"link","rel":"supports","to":"it-8tcy","at":5,"ts":"2026-08-20T09:08:13Z","node":"cl-8h6r","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-8tcy"}
+{"op":"link","rel":"supports","to":"it-8tcy","at":5,"ts":"2026-08-20T09:08:13Z","node":"cl-ugqu","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-8tcy"}
+{"ts":"2026-08-20T09:09:32Z","node":"it-8tcy","v":5,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:20Z","node":"do-kcn7","v":1,"op":"create","type":"doc","title":"dispatch report: broken pipe panics the verb: stdout closes mid-print and homework is lost","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-8tcy","at":5,"ts":"2026-08-20T09:11:20Z","node":"do-kcn7","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T09:11:20Z","node":"it-8tcy","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:20Z","node":"cl-8h6r","v":3,"op":"ratify","from":"asserted","cause":"it-8tcy","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:20Z","node":"cl-ugqu","v":3,"op":"ratify","from":"asserted","cause":"it-8tcy","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:22Z","node":"it-8tcy","v":6,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:30Z","node":"cl-8h6r","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:30Z","node":"cl-ugqu","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:11:30Z","node":"do-kcn7","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

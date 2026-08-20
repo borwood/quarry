@@ -2,8 +2,8 @@
 id: it-8tcy
 type: item
 title: 'broken pipe panics the verb: stdout closes mid-print and homework is lost'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-16T02:44:35Z
 actor: claude
