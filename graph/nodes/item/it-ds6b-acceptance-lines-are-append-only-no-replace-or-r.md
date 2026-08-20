@@ -2,8 +2,8 @@
 id: it-ds6b
 type: item
 title: 'acceptance lines are append-only: no replace or remove verb'
-v: 7
-status: ready
+v: 12
+status: done
 provenance: assistant
 created: 2026-08-11T10:29:40Z
 actor: claude
@@ -16,13 +16,22 @@ edges:
   at: 1
 - rel: about
   to: file:src/ops.rs
-  at: c4e91d7fe548
+  at: dcf1ef41f019
 - rel: depends-on
   to: dc-p6z4
   at: 2
 - rel: depends-on
   to: dc-mpg8
   at: 3
+- rel: about
+  to: file:src/queries.rs
+  at: a444d032fe31
+- rel: about
+  to: file:src/model.rs
+  at: 3c1ae26933b8
+- rel: about
+  to: file:src/main.rs
+  at: dbb05e52e902
 ---
 
 q set supports acceptance+= only; a corrupted or stale acceptance line cannot be repaired or retired through any verb. Forcing incident 2026-08-11: shell-mangled backtick names forced re-minting it-u7dp whole as it-ygw7 — the only repair for one bad line was dropping the item.
