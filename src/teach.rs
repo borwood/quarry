@@ -823,12 +823,15 @@ pub fn observe_write(
     }
     if let Some(b) = badge {
         // First badged write: echo the contract captured at dispatch time —
-        // the write path reads one small state file, never the graph.
+        // the write path reads one small state file, never the graph. The
+        // echo names the user-owned-calls rule (it-f6c2): the call itself
+        // is semantic and trips no hook, so the guaranteed in-flight
+        // channel says the landing once, where the first write lands.
         if prior.is_empty() {
             if let Some(d) = coord::dispatch_for_item(store, b) {
                 out.push(format!(
-                    "first write under dispatch {} — the contract: item \"{}\"; write-set {:?} (outside writes deny); RETURN: {} acceptance line(s), accepted by outcome. Report and stop — landing belongs to the dispatcher. (q brief {} re-renders the full brief.)",
-                    b, d.item_title, d.globs, d.acceptance.len(), b
+                    "first write under dispatch {} — the contract: item \"{}\"; write-set {:?} (outside writes deny); RETURN: {} acceptance line(s), accepted by outcome. {} Report and stop — landing belongs to the dispatcher. (q brief {} re-renders the full brief.)",
+                    b, d.item_title, d.globs, d.acceptance.len(), crate::framings::USER_OWNED_ECHO, b
                 ));
             }
         }

@@ -564,6 +564,11 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
         writeln!(s, "  · {}", a)?;
     }
     writeln!(s, "  Report against these outcomes — not effort, not process. A number needs its method; a mechanism is a hypothesis until measured.")?;
+    // The user-owned-calls slot (it-f6c2): the call itself is semantic —
+    // no hook sees a judgment buried in a diff — so the report template
+    // carries the declaration and harvest reconciles it against the
+    // badge's threads. Absence of the section is itself the flag.
+    writeln!(s, "  {}", crate::framings::USER_OWNED_SLOT)?;
     writeln!(s, "  REFLECTIONS (always): close the report with doubts, surprises, and design friction in your own words — candor beats polish; reflections are mined afterward.")?;
     writeln!(s, "  STOP-REPORTS: stopping before acceptance is met is a valid outcome — say so explicitly (why, where you stopped, what remains) and the dispatcher re-dispatches from your report. A partial report registers like any other.")?;
 
@@ -1094,6 +1099,33 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
         "\nGRAPH ACTS UNDER THE BADGE: {} event(s) — {} claim(s) minted, {} thread(s) filed, {} doc(s) registered. Full trace: q query dispatch {}",
         acts.len(), count_of("claim"), count_of("thread"), count_of("doc"), id
     )?;
+
+    // The user-owned-calls reconciliation (it-f6c2): a user-owned judgment
+    // landed purely in code shape trips no hook — the call is semantic —
+    // so the mechanical compare lands here, alongside the diff's judgment
+    // seat: report-declared calls (N) against threads filed under the
+    // badge (M). Absence of the report's section is itself the flag; a
+    // gap confronts, never verdicts — badge threads exist for other
+    // reasons too, and the diff decides.
+    let threads_filed = count_of("thread");
+    let report_text = crate::queries::latest_report_doc(&all, id).and_then(|doc| {
+        doc.front.path.as_deref().and_then(|p| {
+            std::fs::read_to_string(store.work_root.join(p))
+                .or_else(|_| std::fs::read_to_string(store.root.join(p)))
+                .ok()
+        })
+    });
+    match report_text {
+        Some(t) => writeln!(
+            s,
+            "  {}",
+            crate::framings::user_owned_reconcile(
+                crate::queries::declared_user_owned_calls(&t),
+                threads_filed
+            )
+        )?,
+        None => writeln!(s, "  {}", crate::framings::user_owned_await(threads_filed))?,
+    }
 
     // The assay office (dc-drr6): the landing act will ratify the badge's
     // vein and feature mints — named here, at the judgment seat, before the

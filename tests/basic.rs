@@ -5946,3 +5946,134 @@ fn a_badged_write_failing_resolution_is_recorded_and_harvest_states_the_boundary
     );
     assert!(tr.contains(quarry::framings::SIGHT_BOUNDARY), "boundary on the trace: {}", tr);
 }
+
+// ── silent user-owned calls trip the constructed ends (it-f6c2) ────────────
+
+#[test]
+fn return_spec_and_first_echo_carry_the_user_owned_calls_rule() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "hydrology")).unwrap();
+    let mut it = NewArgs::bare("item", "water body graph");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["bodies persist across reload".into()];
+    it.body = "build the graph".into();
+    let it = ops::new_node(&s, it).unwrap();
+    // The brief's RETURN spec carries the declaration slot: each call or
+    // "none", absence itself a harvest flag.
+    let text = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(
+        text.contains(quarry::framings::USER_OWNED_SLOT),
+        "the RETURN spec carries the user-owned-calls slot: {}",
+        text
+    );
+    // The first-interception echo names thread-filing as the only landing.
+    let d = quarry::coord::DispatchState {
+        item: "it-bdg".into(),
+        item_title: "guard growth".into(),
+        session: "geo".into(),
+        holder: "chat:chat-disp".into(),
+        globs: vec!["src/**".into()],
+        acceptance: vec!["a".into()],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: Store::now(),
+        token: None,
+        joined: None,
+    };
+    quarry::coord::save_dispatch(&s, &d).unwrap();
+    let out = quarry::teach::observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/main.rs");
+    assert!(
+        out.iter().any(|l| l.contains("first write under dispatch")
+            && l.contains(quarry::framings::USER_OWNED_ECHO)),
+        "the contract echo names the thread landing: {:?}",
+        out
+    );
+}
+
+#[test]
+fn declared_user_owned_calls_parses_the_section_shapes() {
+    use quarry::queries::declared_user_owned_calls;
+    // A markdown heading over list entries.
+    assert_eq!(
+        declared_user_owned_calls("intro\n\n## User-owned calls\n- one\n- two\n\nREFLECTIONS\n"),
+        Some(2)
+    );
+    // "none" on the head line, markdown dressing included.
+    assert_eq!(declared_user_owned_calls("user-owned calls: none"), Some(0));
+    assert_eq!(declared_user_owned_calls("**User-owned calls:** none"), Some(0));
+    // "none" on its own line under the head.
+    assert_eq!(declared_user_owned_calls("USER-OWNED CALLS ENCOUNTERED:\nnone\n\nmore"), Some(0));
+    // A single declaration on the head line itself.
+    assert_eq!(
+        declared_user_owned_calls("user-owned calls: the retire wording is the user's (th-1)"),
+        Some(1)
+    );
+    // Indented continuations never inflate the count.
+    assert_eq!(
+        declared_user_owned_calls("user-owned calls:\n- call one\n  filed as th-1\n- call two\n"),
+        Some(2)
+    );
+    // No section at all: None — absence is itself the harvest flag.
+    assert_eq!(declared_user_owned_calls("outcomes\n\nREFLECTIONS: fine\n"), None);
+}
+
+#[test]
+fn harvest_reconciles_declared_user_owned_calls_against_badge_threads() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+        .unwrap();
+    // No report file to parse yet: the count of badge threads confronts
+    // the prose in hand.
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_await(0)),
+        "pre-registration the reconciliation states the badge-thread count: {}",
+        h
+    );
+    // A thread filed under the badge (the stamped channel an agent's env
+    // provides).
+    s.log_event(serde_json::json!({
+        "ts": Store::now(), "node": "th-feed", "v": 1, "op": "create", "type": "thread",
+        "actor": "t", "dispatch": it.front.id
+    }))
+    .unwrap();
+    // The registered report declares the call: N = M reconciles.
+    std::fs::create_dir_all(s.root.join("docs/reports")).unwrap();
+    let rp = s.root.join("docs/reports/r.md");
+    std::fs::write(&rp, "outcomes hold\n\nuser-owned calls:\n- the retire wording is the user's; filed as th-feed\n\nREFLECTIONS: fine\n").unwrap();
+    let mut doc = NewArgs::bare("doc", "dispatch report: geo pass");
+    doc.kind = Some("report".into());
+    doc.path = Some("docs/reports/r.md".into());
+    let doc = ops::new_node(&s, doc).unwrap();
+    ops::link(&s, &doc.front.id, "supports", &it.front.id, false, None).unwrap();
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_reconcile(Some(1), 1)),
+        "declared 1 against 1 badge thread reconciles: {}",
+        h
+    );
+    // The section gone: absence is itself the flag.
+    std::fs::write(&rp, "outcomes hold\n\nREFLECTIONS: fine\n").unwrap();
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_reconcile(None, 1)),
+        "a report missing the section flags loud: {}",
+        h
+    );
+    assert!(h.contains("absence is itself the flag"), "the flag names itself: {}", h);
+    // "none" declared while a badge thread stands: the gap confronts.
+    std::fs::write(&rp, "outcomes hold\n\nuser-owned calls: none\n\nREFLECTIONS: fine\n").unwrap();
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_reconcile(Some(0), 1)),
+        "declared none against a filed thread confronts the gap: {}",
+        h
+    );
+    assert!(h.contains("a gap is a question"), "the gap confronts, never verdicts: {}", h);
+}

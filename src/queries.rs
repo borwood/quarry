@@ -607,6 +607,75 @@ pub fn kindless_backtick_mints<'a>(all: &'a [Node], mint_ids: &[String]) -> Vec<
     out
 }
 
+/// The latest registered report doc supporting an item — the report the
+/// harvest reconciliation parses (it-f6c2). The homework's registration
+/// shape (`q new doc ... --kind report --supports <item>`) is the join
+/// key; newest by created stamp wins, so a re-dispatch reconciles against
+/// the arc's own report, not its predecessor's.
+pub fn latest_report_doc<'a>(all: &'a [Node], item_id: &str) -> Option<&'a Node> {
+    all.iter()
+        .filter(|n| n.front.ty == "doc" && n.front.kind.as_deref() == Some("report"))
+        .filter(|n| n.front.edges.iter().any(|e| e.rel == "supports" && e.to == item_id))
+        .max_by(|a, b| a.front.created.cmp(&b.front.created))
+}
+
+/// The user-owned-calls declaration parsed from report prose (it-f6c2):
+/// find the section the RETURN spec demands — a line leading with
+/// "user-owned calls" once markdown dressing is stripped — and count what
+/// it declares. None = the section is absent, itself the harvest flag;
+/// Some(0) = the section declares none; Some(n) = n declared calls. The
+/// parse is best-effort by design (report prose is an agent's free text);
+/// the reconciliation line it feeds confronts, never verdicts — the diff
+/// judges.
+pub fn declared_user_owned_calls(report: &str) -> Option<usize> {
+    let clean = |l: &str| {
+        l.trim()
+            .trim_start_matches(|c: char| matches!(c, '#' | '*' | '·' | '-' | '>' | ' ' | '\t'))
+            .to_lowercase()
+    };
+    let lines: Vec<&str> = report.lines().collect();
+    let head = lines.iter().position(|l| clean(l).starts_with("user-owned calls"))?;
+    // Same-line content past the colon: "user-owned calls: none" closes at
+    // zero; any other content on the head line is one declaration.
+    let tail = clean(lines[head])
+        .split_once(':')
+        .map(|(_, t)| t.trim_matches(|c: char| c == '*' || c == '.' || c.is_whitespace()).to_string())
+        .unwrap_or_default();
+    if !tail.is_empty() {
+        return Some(if tail == "none" { 0 } else { 1 });
+    }
+    // Otherwise count list entries under the head until the section ends.
+    let mut n = 0usize;
+    for l in &lines[head + 1..] {
+        let t = l.trim();
+        if t.is_empty() {
+            if n > 0 {
+                break; // a blank line after entries closes the section
+            }
+            continue; // blank between head and content is layout
+        }
+        let entry = t.starts_with("- ")
+            || t.starts_with("· ")
+            || t.starts_with("* ")
+            || t.starts_with("• ")
+            || (t.len() > 1
+                && t.chars().next().map_or(false, |c| c.is_ascii_digit())
+                && (t[1..].starts_with('.') || t[1..].starts_with(')')));
+        if entry {
+            n += 1;
+            continue;
+        }
+        if l.starts_with(' ') || l.starts_with('\t') {
+            continue; // indented continuation of an entry's wrapped text
+        }
+        if n == 0 && t.trim_matches(|c: char| c == '*' || c == '.').eq_ignore_ascii_case("none") {
+            return Some(0);
+        }
+        break; // a new heading or prose ends the section
+    }
+    Some(n)
+}
+
 /// Graph-generic vocabulary excluded from relatedness matching: on any
 /// quarry graph these words appear everywhere and carry no subject signal.
 const GENERIC_TOKENS: &[&str] = &[

@@ -157,6 +157,55 @@ pub const COUNTER_VOICE_DENSE: &str = "every other line quarry speaks is the gra
 pub const COUNTER_VOICE_LIGHT: &str =
     "graph silence — anything floated in conversation with no node yet?";
 
+/// The user-owned-calls slot in the RETURN spec (it-f6c2; composed at the
+/// fix, for ratification at its harvest per dc-vzvf): an agent that embeds
+/// a user-owned judgment purely in code shape trips no hook — the call is
+/// semantic — so accounting lands at the ends construction reaches: the
+/// report template carries the declaration slot, and harvest reconciles it
+/// against the threads the badge filed. Absence of the section is itself
+/// the harvest flag.
+pub const USER_OWNED_SLOT: &str = "USER-OWNED CALLS (always): the report carries a section headed \"user-owned calls:\" naming each call this work met that belongs to the user — a fork that would contradict or overturn a user ruling, a judgment the graph reserves — each with the thread filed for it; or the single word none. The call itself is semantic: no hook can see a judgment buried in a diff, so this section and your threads are the machine's only sight of it. Code is not a landing for a user-owned call — the thread is. Harvest reconciles this section against the threads filed under your badge; a report missing the section is itself a flag.";
+
+/// The first-interception echo's user-owned-calls sentence (it-f6c2;
+/// composed at the fix, for ratification at its harvest): the guaranteed
+/// in-flight channel names the rule once, where the first badged write
+/// lands.
+pub const USER_OWNED_ECHO: &str = "User-owned calls land as threads (q new thread \"<the call>\" --about <area>), never as code shape — code is not a landing; your report's user-owned calls section declares each, or none.";
+
+/// The harvest reconciliation line (it-f6c2): report-declared calls (N)
+/// against threads filed under the badge (M) — the mechanical compare the
+/// settled fix demanded. `declared: None` means the registered report
+/// carries no user-owned-calls section — absence is itself the flag. A
+/// gap confronts the judge as a question, never a verdict: badge threads
+/// exist for other reasons too, and the diff decides.
+pub fn user_owned_reconcile(declared: Option<usize>, threads: usize) -> String {
+    match declared {
+        None => format!(
+            "user-owned calls: the registered report carries no \"user-owned calls\" section — absence is itself the flag: the RETURN spec demands each call declared, or none. Thread(s) filed under this badge: {}. Judge from the diff whether a user-owned judgment landed as code shape.",
+            threads
+        ),
+        Some(n) if n == threads => format!(
+            "user-owned calls: report declares {}, thread(s) filed under this badge: {} — reconciled; judge each declared call at its thread.",
+            n, threads
+        ),
+        Some(n) => format!(
+            "user-owned calls: report declares {}, thread(s) filed under this badge: {} — a gap is a question, not a verdict: a declared call with no thread never landed, and a badge thread with no declaration went undeclared. Confront it against the diff.",
+            n, threads
+        ),
+    }
+}
+
+/// The harvest reconciliation before a report file exists to parse
+/// (it-f6c2): the report is still prose in the dispatcher's hand — the
+/// count of badge threads confronts it anyway, and registration (the
+/// homework) makes the compare mechanical on a harvest re-run.
+pub fn user_owned_await(threads: usize) -> String {
+    format!(
+        "user-owned calls: {} thread(s) filed under this badge; no report file to parse yet — reconcile the report in hand against that count: its \"user-owned calls\" section declares each call or the word none, and a report missing the section is itself the flag. Registration (homework below) makes this mechanical: q harvest re-run after it reconciles by parse.",
+        threads
+    )
+}
+
 /// The claim species in shelf order (dc-yd9s, dc-6gn9): frontmatter kind,
 /// section label, ratified framing. The engine stays kindless-but-kind-aware
 /// — kinds outside this table still render, grouped under their own string,
