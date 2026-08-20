@@ -2,8 +2,8 @@
 id: it-rddg
 type: item
 title: 'derivational misses stand: leases never meets leaseless'
-v: 4
-status: ready
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-16T03:41:54Z
 actor: claude

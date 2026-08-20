@@ -1896,3 +1896,24 @@
 {"ts":"2026-08-20T10:38:37Z","node":"it-f6c2","v":9,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:38:39Z","node":"cl-cjbb","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T10:38:39Z","node":"do-msy5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:48Z","node":"it-rddg","v":4,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:48Z","node":"it-rddg","v":4,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T10:38:48Z","node":"it-rddg","v":5,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:38:48Z","node":"it-rddg","v":4,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T10:39:15Z","node":"it-rddg","v":5,"op":"join","actor":"claude","dispatch":"it-rddg","joined":"agent:a0876d98e2ac0bce5"}
+{"ts":"2026-08-20T10:47:07Z","node":"cl-xxkw","v":1,"op":"create","type":"claim","title":"`derivational-fold`: -less/-ful/-er folds at compare time under the plu…","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-rddg"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"506f0e12b921","ts":"2026-08-20T10:47:07Z","node":"cl-xxkw","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-rddg"}
+{"op":"link","rel":"supports","to":"it-rddg","at":5,"ts":"2026-08-20T10:47:12Z","node":"cl-xxkw","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-rddg"}
+{"ts":"2026-08-20T10:47:48Z","node":"cl-2dj3","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-rddg"}
+{"ts":"2026-08-20T10:47:49Z","node":"cl-baxa","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-rddg"}
+{"ts":"2026-08-20T10:49:20Z","node":"it-rddg","v":5,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"op":"body","ts":"2026-08-20T10:50:14Z","node":"cl-rbp9","v":4,"actor":"claude","note":"amended at it-rddg landing: the derivational fold joins the plural fold as deliberate divergence","session":"dispatcher"}
+{"op":"body","ts":"2026-08-20T10:50:14Z","node":"cl-ybth","v":4,"actor":"claude","note":"amended at it-rddg landing: the hyphen-compound clause described the pre-it-sc2u lexicon; divergence restated as the folds","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:19Z","node":"cl-89b5","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:45Z","node":"do-6va5","v":1,"op":"create","type":"doc","title":"dispatch report: derivational misses stand: leases never meets leaseless","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-rddg","at":5,"ts":"2026-08-20T10:50:45Z","node":"do-6va5","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T10:50:45Z","node":"it-rddg","v":6,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:45Z","node":"cl-xxkw","v":3,"op":"ratify","from":"asserted","cause":"it-rddg","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:48Z","node":"it-rddg","v":6,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:50Z","node":"cl-xxkw","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T10:50:54Z","node":"do-6va5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

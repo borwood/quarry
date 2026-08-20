@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/queries.rs
-  at: c710dc4143eb
+  at: 506f0e12b921
 ---
 
 backticked_spans filters 2-60 (was 4-60) under dc-qvtz: a deliberately registered short name (`cli`) now joins relatedness and intent-delta, while the bare-token floors — sig_tokens at five chars, the reverse pass at six — stand unchanged as the noise gate. Companion tightening: the relatedness backtick-vs-title check moved from raw substring to the word-boundary scan, so the dropped floor cannot re-admit the cli-in-click debris species it-hjed evicted from find.
