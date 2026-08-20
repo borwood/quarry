@@ -1740,3 +1740,20 @@
 {"op":"set","fields":["acceptance+=lands nothing new: floors measure the raw token before folding in both passes, a five-char folded pair joins forward and reverse alike, and the bare floors stand unchanged"],"ts":"2026-08-20T08:01:49Z","node":"it-wa6e","v":3,"actor":"claude","session":"quarry"}
 {"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-20T08:01:49Z","node":"it-wa6e","v":4,"actor":"claude","note":"shape settled with the user; acceptance authored from the design seat","session":"quarry"}
 {"op":"link","rel":"depends-on","to":"dc-qvtz","at":3,"ts":"2026-08-20T08:02:00Z","node":"it-wa6e","v":5,"actor":"claude","session":"quarry"}
+{"ts":"2026-08-20T08:32:12Z","node":"it-4q6t","v":7,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:32:12Z","node":"it-4q6t","v":7,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T08:32:12Z","node":"it-4q6t","v":8,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:32:12Z","node":"it-4q6t","v":7,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T08:32:36Z","node":"it-4q6t","v":8,"op":"join","actor":"claude","dispatch":"it-4q6t","joined":"agent:a7b48315e4933788d"}
+{"ts":"2026-08-20T08:51:54Z","node":"cl-2jas","v":1,"op":"create","type":"claim","title":"`commit-set`: the log owns the uncommitted graph - last writer since the prior commit; sweeps deny, explicit paths pass","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-4q6t"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"c116ec4a0a5b","ts":"2026-08-20T08:51:54Z","node":"cl-2jas","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-4q6t"}
+{"op":"link","rel":"supports","to":"it-4q6t","at":8,"ts":"2026-08-20T08:51:59Z","node":"cl-2jas","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-4q6t"}
+{"ts":"2026-08-20T08:51:59Z","node":"cl-qm6t","v":6,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-4q6t"}
+{"ts":"2026-08-20T08:53:46Z","node":"it-4q6t","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:20Z","node":"do-57qf","v":1,"op":"create","type":"doc","title":"dispatch report: commit sweep: git add graph stages other sessions uncommitted nodes","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-4q6t","at":8,"ts":"2026-08-20T08:55:20Z","node":"do-57qf","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T08:55:20Z","node":"it-4q6t","v":9,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:20Z","node":"cl-2jas","v":3,"op":"ratify","from":"asserted","cause":"it-4q6t","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:22Z","node":"it-4q6t","v":9,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:32Z","node":"cl-2jas","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T08:55:32Z","node":"do-57qf","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}

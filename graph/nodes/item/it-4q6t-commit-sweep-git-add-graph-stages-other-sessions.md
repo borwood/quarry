@@ -2,8 +2,8 @@
 id: it-4q6t
 type: item
 title: 'commit sweep: git add graph stages other sessions uncommitted nodes'
-v: 7
-status: ready
+v: 9
+status: done
 provenance: assistant
 created: 2026-08-12T21:12:19Z
 actor: claude
