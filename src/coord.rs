@@ -403,7 +403,12 @@ pub fn rehome_lease(store: &Store, item: &Node, session: &str, actor: &str) -> R
 // association map. In the no-agent-id fallback (a subagent is otherwise
 // indistinguishable from its parent chat — probed 2026-08-13), a chat-keyed
 // association may name the dispatching chat itself; that blur is accepted
-// and vanishes wherever the harness provides an agent id.
+// and vanishes wherever the harness provides an agent id. The map holds ONE
+// live badge per identity by construction (it-tanf, user-ruled 2026-08-20):
+// bind_acting is the sole writer and never overwrites a live binding, so
+// q join refuses a second badge and the sequential multi-join shape is dead
+// — multi-item work is separate dispatches, or the bundle (th-zzqv) when it
+// lands.
 
 /// The active dispatch, with the contract captured at dispatch time so the
 /// write guard can echo it without loading the graph.
@@ -437,7 +442,9 @@ pub struct DispatchState {
     pub token: Option<String>,
     /// The identity key ("agent:<id>" / "chat:<id>" / "session:<name>")
     /// that consumed the token. Re-join by the same identity is idempotent;
-    /// a different identity refuses — one badge binds one agent.
+    /// a different identity refuses — one badge binds one agent, and the
+    /// converse holds by construction too: one identity binds one live
+    /// badge (it-tanf; see bind_acting).
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub joined: Option<String>,
 }
@@ -588,13 +595,50 @@ pub enum JoinBind {
     Rejoined(DispatchState),
 }
 
+/// The identity's standing LIVE badge: its acting row, honored only while
+/// that badge's dispatch is held. A row pointing at a cleared dispatch is
+/// residue (clear_dispatch prunes; this read never trusts it), so a
+/// harvested arc frees its identity for the next join by construction.
+pub fn live_acting_badge(m: &DispatchMap, identity: &str) -> Option<String> {
+    m.acting
+        .get(identity)
+        .filter(|b| m.held.contains_key(b.as_str()))
+        .cloned()
+}
+
+/// The ONE writer of the acting map (it-tanf): an identity binds AT MOST ONE
+/// live badge, held by construction, not discipline. The map's keying always
+/// gave the shape; what this guard kills is the silent overwrite — sequential
+/// joins used to re-point an identity's row, so every later act and file
+/// write stamped the LAST join, not the item served, and per-item replay and
+/// observed-vs-leased misreported (the lexicon-trio incident, 2026-08-15).
+/// Ok(true): newly bound. Ok(false): already bound to this badge — nothing
+/// to write. Err(live badge): the identity wears a DIFFERENT live badge; the
+/// map is untouched, and the caller refuses loudly (the join road) or
+/// declines the learn (the env road, where the per-shell QUARRY_DISPATCH
+/// override still stamps env-first and no attribution is lost).
+fn bind_acting(m: &mut DispatchMap, identity: &str, badge: &str) -> std::result::Result<bool, String> {
+    if let Some(live) = live_acting_badge(m, identity) {
+        if live != badge {
+            return Err(live);
+        }
+        return Ok(false);
+    }
+    m.acting.insert(identity.to_string(), badge.to_string());
+    Ok(true)
+}
+
 /// Consume a join token: single-use, machine-local. Finds the held entry
 /// carrying the token, marks it joined by this identity, and records the
 /// acting association that stamping and the write guard resolve. A second
 /// DIFFERENT identity refuses — one badge binds one agent (a chat may hold
 /// many badges, dc-qyr5, but each badge is one agent's); re-dispatch mints
 /// a fresh token when a new agent takes the work over, and a steal takes
-/// the whole dispatch to another chat.
+/// the whole dispatch to another chat. The converse is construction too
+/// (it-tanf): one identity binds one LIVE badge — a second join refuses
+/// before the token is spent, naming the live badge and the roads out, so
+/// sequential multi-join can never silently re-point stamping. Re-join of
+/// the identity's own badge stays the idempotent read.
 pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<JoinBind> {
     let mut m = load_dispatches(store);
     let Some(key) = m
@@ -609,22 +653,55 @@ pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<
         );
     };
     let joined = m.held[&key].joined.clone();
+    if let Some(other) = joined.as_ref().filter(|j| j.as_str() != identity) {
+        let d = &m.held[&key];
+        bail!(
+            "this token was already consumed by another identity ({}) — a join token is single-use and one badge binds one agent. If a second agent is to work \"{}\" ({}), the dispatcher re-dispatches (minting a fresh token) or dispatches a separate item.",
+            other, d.item_title, d.item
+        );
+    }
+    // One badge per identity (it-tanf), refused BEFORE anything is spent:
+    // binding a second live badge would re-point this identity's stamping
+    // resolution, so every later act and file write lands on the last join,
+    // not the item it serves — the earlier badges observe nothing but their
+    // join events, and every surface harvest trusts misreports. The token
+    // stays live for the right agent. Checked on the re-join arm too: a
+    // legacy blur (joined recorded pre-fix while acting points elsewhere)
+    // must not re-render a brief for an item this identity no longer stamps.
+    if let Some(live) = live_acting_badge(&m, identity) {
+        if live != m.held[&key].item {
+            let live_title = m
+                .held
+                .get(&live)
+                .map(|d| d.item_title.clone())
+                .unwrap_or_default();
+            let d = &m.held[&key];
+            bail!(
+                "one agent, one badge (it-tanf): this identity ({}) is already bound to a live badge — \"{}\" ({}) — and the acting map holds one badge per identity by construction, so a second join cannot bind: it would re-point stamping, and every later act and file write would land on the last join, not the item it serves. Nothing was spent; the token for \"{}\" ({}) stays live. The roads out: report against \"{}\"'s RETURN spec and stop, so the dispatcher harvests that arc — harvest frees this identity; or the dispatcher hands \"{}\" to a separate agent as its own dispatch. Multi-item work under one agent is the bundle shape (th-zzqv), not yet built.",
+                identity, live_title, live, d.item_title, d.item, live_title, d.item_title
+            );
+        }
+    }
     match joined {
         None => {
             let d = m.held.get_mut(&key).expect("entry just found");
             d.joined = Some(identity.to_string());
             let bound = d.clone();
-            m.acting.insert(identity.to_string(), bound.item.clone());
+            // Cannot refuse: the live-badge check above already ruled this
+            // identity free (or bound to exactly this badge).
+            let _ = bind_acting(&mut m, identity, &bound.item);
             save_dispatches(store, &m)?;
             Ok(JoinBind::Bound(bound))
         }
-        Some(j) if j == identity => Ok(JoinBind::Rejoined(m.held[&key].clone())),
-        Some(other) => {
-            let d = &m.held[&key];
-            bail!(
-                "this token was already consumed by another identity ({}) — a join token is single-use and one badge binds one agent. If a second agent is to work \"{}\" ({}), the dispatcher re-dispatches (minting a fresh token) or dispatches a separate item.",
-                other, d.item_title, d.item
-            )
+        Some(_) => {
+            // Same identity by the filter above — idempotent read, and (the
+            // pin-restore pattern, dc-g5x5) a re-join restores a lost acting
+            // row: the read repairs the stamping road without a second act.
+            let item = m.held[&key].item.clone();
+            if bind_acting(&mut m, identity, &item) == Ok(true) {
+                save_dispatches(store, &m)?;
+            }
+            Ok(JoinBind::Rejoined(m.held[&key].clone()))
         }
     }
 }
@@ -636,17 +713,19 @@ pub fn consume_join_token(store: &Store, token: &str, identity: &str) -> Result<
 /// holds the dispatch. A key that also holds a dispatch may legally carry an
 /// association (the no-agent-id fallback, where a subagent is
 /// indistinguishable from its parent chat) — held and acting are separate
-/// maps: stamping reads acting, refusal reads held.
+/// maps: stamping reads acting, refusal reads held. One badge per identity
+/// (it-tanf): a key already bound to a DIFFERENT live badge declines the
+/// learn — the map never re-points, and the env-carried badge still stamps
+/// its own shell's acts env-first, so nothing is lost where the override is
+/// deliberate.
 pub fn record_acting(store: &Store, key: &str, badge: &str) {
     let mut m = load_dispatches(store);
     if !m.held.contains_key(badge) {
         return;
     }
-    if m.acting.get(key).map(|b| b.as_str()) == Some(badge) {
-        return;
+    if bind_acting(&mut m, key, badge) == Ok(true) {
+        let _ = save_dispatches(store, &m);
     }
-    m.acting.insert(key.to_string(), badge.to_string());
-    let _ = save_dispatches(store, &m);
 }
 
 /// Chat-keyed convenience over record_acting.

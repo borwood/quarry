@@ -1967,6 +1967,138 @@ fn join_cli_env_identity_transport() {
 }
 
 #[test]
+fn join_refuses_a_second_live_badge_naming_the_roads_out() {
+    // it-tanf: one agent, one badge — the sequential multi-join shape that
+    // silently re-pointed stamping (the lexicon-trio incident) refuses at
+    // the join, before the token is spent, and the first arc stands whole.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mk = |title: &str, accept: &str| {
+        let mut it = NewArgs::bare("item", title);
+        it.status = Some("ready".into());
+        it.about = vec![area.front.id.clone()];
+        it.acceptance = vec![accept.into()];
+        ops::new_node(&s, it).unwrap()
+    };
+    let one = mk("first pass", "the first lands");
+    let two = mk("second pass", "the second lands");
+    let d1 = ops::dispatch(&s, &one.front.id, vec!["src/one/**".into()], false, false, None, "geo", "t").unwrap();
+    let d2 = ops::dispatch(&s, &two.front.id, vec!["src/two/**".into()], false, false, None, "geo", "t").unwrap();
+    // the first join binds as ever
+    let j1 = ops::join(&s, &d1.token, Some("agent:ag-multi".into())).unwrap();
+    assert_eq!(j1.bound.as_deref(), Some("agent:ag-multi"));
+    // the second join REFUSES: the live badge is named with the roads out,
+    // and nothing is spent — no bind, no join event, no re-point
+    let err = ops::join(&s, &d2.token, Some("agent:ag-multi".into())).unwrap_err().to_string();
+    assert!(err.contains("one agent, one badge"), "the rule is named: {}", err);
+    assert!(err.contains(&one.front.id), "the live badge is named: {}", err);
+    assert!(err.contains("first pass"), "…with its title: {}", err);
+    assert!(err.contains("stays live"), "the token survives the refusal: {}", err);
+    assert!(err.contains("th-zzqv"), "the bundle road is named: {}", err);
+    assert!(
+        quarry::coord::dispatch_for_item(&s, &two.front.id).unwrap().joined.is_none(),
+        "a refused join spends nothing"
+    );
+    // the acting map still points at the FIRST badge — the overwrite path
+    // is dead, so stamping keeps landing on the item served
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-multi"), None, None).as_deref(),
+        Some(one.front.id.as_str())
+    );
+    // attention rides along (it-csm3 caveat): the refused join delivered no
+    // area record to the second badge — badge-scoped attention can no
+    // longer inherit a last-join blur
+    assert!(
+        quarry::coord::has_area_read(&s, &quarry::coord::badge_attention_key(&one.front.id), &area.front.id),
+        "the first join delivered the area to its badge"
+    );
+    assert!(
+        !quarry::coord::has_area_read(&s, &quarry::coord::badge_attention_key(&two.front.id), &area.front.id),
+        "the refused join delivered nothing to the second badge"
+    );
+    // re-join of the identity's OWN badge stays the idempotent read
+    let j1b = ops::join(&s, &d1.token, Some("agent:ag-multi".into())).unwrap();
+    assert!(j1b.rejoined && j1b.bound.is_none());
+    // the separate-dispatches road: the untouched token binds a fresh agent
+    let j2 = ops::join(&s, &d2.token, Some("agent:ag-second".into())).unwrap();
+    assert_eq!(j2.bound.as_deref(), Some("agent:ag-second"));
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-second"), None, None).as_deref(),
+        Some(two.front.id.as_str())
+    );
+    // harvest frees the identity: the refusal is scoped to LIVE badges
+    quarry::coord::clear_dispatch(&s, &one.front.id);
+    let three = mk("third pass", "the third lands");
+    let d3 = ops::dispatch(&s, &three.front.id, vec!["src/three/**".into()], false, false, None, "geo", "t").unwrap();
+    let j3 = ops::join(&s, &d3.token, Some("agent:ag-multi".into())).unwrap();
+    assert_eq!(j3.bound.as_deref(), Some("agent:ag-multi"), "a harvested arc frees its identity");
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-multi"), None, None).as_deref(),
+        Some(three.front.id.as_str())
+    );
+}
+
+#[test]
+fn acting_map_holds_one_badge_per_identity_by_construction() {
+    // it-tanf, the env road: record_acting (note_acting's writer) declines
+    // to re-point an identity bound to a different live badge — the map's
+    // single writer never overwrites a live binding, whichever road writes.
+    let s = temp_store();
+    let held = |item: &str| quarry::coord::DispatchState {
+        item: item.into(),
+        item_title: format!("work {}", item),
+        session: "geo".into(),
+        holder: "session:geo".into(),
+        globs: vec![],
+        acceptance: vec![],
+        since: "2026-01-01T00:00:00Z".into(),
+        cursor: 0,
+        checked: "2026-01-01T00:00:00Z".into(),
+        token: None,
+        joined: None,
+    };
+    quarry::coord::save_dispatch(&s, &held("it-one1")).unwrap();
+    quarry::coord::save_dispatch(&s, &held("it-two2")).unwrap();
+    quarry::coord::record_acting(&s, "agent:ag-c", "it-one1");
+    assert_eq!(quarry::coord::badge_for(&s, Some("ag-c"), None, None).as_deref(), Some("it-one1"));
+    // a second live badge declines the learn: the row stands untouched
+    quarry::coord::record_acting(&s, "agent:ag-c", "it-two2");
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-c"), None, None).as_deref(),
+        Some("it-one1"),
+        "the acting map never re-points a live binding"
+    );
+    // re-recording the SAME badge stays a no-op, never an error
+    quarry::coord::record_acting(&s, "agent:ag-c", "it-one1");
+    assert_eq!(quarry::coord::badge_for(&s, Some("ag-c"), None, None).as_deref(), Some("it-one1"));
+    // the badge's death frees the identity: clear prunes the row, and the
+    // next learn binds
+    quarry::coord::clear_dispatch(&s, "it-one1");
+    quarry::coord::record_acting(&s, "agent:ag-c", "it-two2");
+    assert_eq!(quarry::coord::badge_for(&s, Some("ag-c"), None, None).as_deref(), Some("it-two2"));
+    // a stale row pointing at a badge nobody holds is residue, never a
+    // binding — it blocks nothing and the fresh learn overwrites it
+    let v = serde_json::json!({
+        "held": {
+            "it-live": {
+                "item": "it-live", "item_title": "live work", "session": "geo",
+                "holder": "session:geo", "globs": [], "acceptance": [],
+                "since": "2026-01-01T00:00:00Z", "cursor": 0,
+                "checked": "2026-01-01T00:00:00Z"
+            }
+        },
+        "acting": { "agent:ag-stale": "it-gone" }
+    });
+    std::fs::write(s.root.join("graph").join(".dispatch.json"), v.to_string()).unwrap();
+    quarry::coord::record_acting(&s, "agent:ag-stale", "it-live");
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-stale"), None, None).as_deref(),
+        Some("it-live"),
+        "a dead badge's row never blocks the identity's next arc"
+    );
+}
+
+#[test]
 fn work_only_stamping_held_entry_alone_stamps_nothing() {
     // The fourth acceptance line, isolated: held entries resolve refusal
     // and boundary only; stamping resolves env and association, never the

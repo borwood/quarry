@@ -1346,7 +1346,10 @@ pub struct JoinOutcome {
 /// chat → session, hook-injected; resolved by the caller) to the badge in
 /// the association map, logs the join under the badge, and renders the
 /// brief fresh — the brief doctrine (derived, never hand-carried) applied
-/// to the hand-off itself. Re-join by the same identity is idempotent.
+/// to the hand-off itself. Re-join by the same identity is idempotent; an
+/// identity already bound to a DIFFERENT live badge refuses before the
+/// token is spent — one agent, one badge (it-tanf), the refusal down in
+/// coord::consume_join_token naming the live badge and the roads out.
 pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<JoinOutcome> {
     // Identity precedes consumption: a join that can bind nothing refuses
     // WITHOUT spending the token, so the retry (from a covered shell, or

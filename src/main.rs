@@ -326,8 +326,12 @@ gate: --solo fires from anywhere, no reason demanded.")]
     #[command(after_help = "The fetch half of the hand-off (dc-zbxj): the spawn prompt is one line —
 q join <token> --store <root> — and everything else derives here. The token
 is single-use (re-join by the same identity re-prints the brief; a second
-identity refuses). Identity is hook-injected (QUARRY_AGENT/QUARRY_CHAT) —
-outside hook coverage, export QUARRY_DISPATCH=<item> instead and skip join.
+identity refuses). One agent, one badge (it-tanf): an identity bound to a
+live badge cannot join a second — acts would stamp the last join, not the
+item served — so multi-item work is separate dispatches; the refusal leaves
+the token live and names the roads out. Identity is hook-injected
+(QUARRY_AGENT/QUARRY_CHAT) — outside hook coverage, export
+QUARRY_DISPATCH=<item> instead and skip join.
 --store is the store pin (dc-g5x5): the canonical graph root, stamped into
 the spawn line at dispatch. Join consumes it and plants it for your
 identity, so every later q act and observed write lands at that graph
