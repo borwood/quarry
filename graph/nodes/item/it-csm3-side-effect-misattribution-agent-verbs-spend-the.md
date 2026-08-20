@@ -2,8 +2,8 @@
 id: it-csm3
 type: item
 title: 'attention misattribution: agent verbs spend the holding session''s watermarks and drift'
-v: 7
-status: ready
+v: 9
+status: done
 provenance: assistant
 created: 2026-08-15T05:48:35Z
 actor: claude-fable-5

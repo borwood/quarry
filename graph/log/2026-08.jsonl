@@ -1809,3 +1809,25 @@
 {"ts":"2026-08-20T09:35:54Z","node":"it-bj3b","v":9,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T09:36:00Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T09:36:00Z","node":"do-r4mu","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:36:09Z","node":"it-csm3","v":7,"op":"brief","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:36:09Z","node":"it-csm3","v":7,"op":"reserve","globs":["src/**","tests/**"],"shared":false,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-20T09:36:09Z","node":"it-csm3","v":8,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:36:09Z","node":"it-csm3","v":7,"op":"dispatch","actor":"claude","session":"dispatcher","globs":["src/**","tests/**"]}
+{"ts":"2026-08-20T09:36:35Z","node":"it-csm3","v":8,"op":"join","actor":"claude","dispatch":"it-csm3","joined":"agent:a5dca196652016f48"}
+{"ts":"2026-08-20T09:49:52Z","node":"cl-b2z2","v":1,"op":"create","type":"claim","title":"`attention-key`: watermarks and drift deliveries spend the acting identity - badge-scoped for a joined arc, session otherwise","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-csm3"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"bccc4639a0bd","ts":"2026-08-20T09:49:53Z","node":"cl-b2z2","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-csm3"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"600b231917dc","ts":"2026-08-20T09:50:00Z","node":"cl-b2z2","v":3,"actor":"claude","session":"dispatcher","dispatch":"it-csm3"}
+{"ts":"2026-08-20T09:50:10Z","node":"cl-c34g","v":5,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-csm3"}
+{"ts":"2026-08-20T09:50:14Z","node":"cl-6ctr","v":4,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher","dispatch":"it-csm3"}
+{"ts":"2026-08-20T09:50:24Z","node":"it-nngn","v":1,"op":"create","type":"item","title":"protocol-gate memos spend the holding session: the once-per-rule key rides env session, not the acting identity","actor":"claude","note":null,"session":"dispatcher","dispatch":"it-csm3"}
+{"op":"link","rel":"depends-on","to":"dc-pwyd","at":2,"ts":"2026-08-20T09:50:32Z","node":"it-nngn","v":2,"actor":"claude","session":"dispatcher","dispatch":"it-csm3"}
+{"ts":"2026-08-20T09:52:20Z","node":"it-csm3","v":8,"op":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:52:46Z","node":"it-ap3x","v":1,"op":"create","type":"item","title":"the write-shape parser accrues sigils: a bare @ lands in the observed set as a touched path","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"set","fields":["status=ready"],"from_status":"sketch","ts":"2026-08-20T09:52:53Z","node":"it-ap3x","v":2,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:53:50Z","node":"do-4y49","v":1,"op":"create","type":"doc","title":"dispatch report: attention misattribution: agent verbs spend the holding session's watermarks and drift","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-csm3","at":8,"ts":"2026-08-20T09:53:50Z","node":"do-4y49","v":2,"actor":"claude","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-20T09:53:50Z","node":"it-csm3","v":9,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:53:50Z","node":"cl-b2z2","v":3,"op":"ratify","from":"asserted","cause":"it-csm3","assay":"harvest","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:53:52Z","node":"it-csm3","v":9,"op":"release","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-20T09:53:58Z","node":"do-4y49","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-tanf","at":4,"ts":"2026-08-20T09:53:58Z","node":"do-4y49","v":3,"actor":"claude","session":"dispatcher"}
