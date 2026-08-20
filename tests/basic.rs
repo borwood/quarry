@@ -3060,6 +3060,72 @@ fn lexicon_plural_fold_compare_time() {
 }
 
 #[test]
+fn lexicon_derivational_fold_compare_time() {
+    // it-rddg: the derivational family (-less, -ful, -er) folds at compare
+    // time under the plural-fold pattern — leases meets leaseless in both
+    // directions through the shared stem; the family boundary is a stated
+    // decision (DERIVATIONAL_SUFFIXES teaching), and find stays exact.
+    assert!(
+        queries::contains_word("the leaseless observation path", "leases"),
+        "leases meets leaseless: plural strip then family derive"
+    );
+    assert!(
+        queries::contains_word("solo leases release at wrap", "leaseless"),
+        "leaseless meets leases: family strip then re-pluralize"
+    );
+    // The other family members, both compositions.
+    assert!(queries::contains_word("a watchful reader", "watches"), "-ful folds");
+    assert!(queries::contains_word("the dispatcher counts turns", "dispatch"), "-er folds");
+    assert!(queries::contains_word("three watchers fire", "watch"), "-er plus plural folds");
+    // The boundary holds: outside the family stays unfolded — a decision.
+    assert!(
+        !queries::contains_word("the leaseness of it", "lease"),
+        "-ness stays outside the family"
+    );
+    assert!(
+        !queries::contains_word("an unleased zone", "lease"),
+        "prefixes stay outside the family"
+    );
+    // The three-char stem floor: user never collapses to us.
+    assert!(!queries::contains_word("give us the map", "user"), "the stem floor holds");
+    // Find's predicate stays exact — the fold is lexicon side only.
+    assert!(!queries::find_word("the leaseless zone", "leases"), "find stays exact");
+    assert!(!queries::find_word("solo leases release", "leaseless"), "find stays exact");
+
+    // Through the join both directions, like the plural fold before it:
+    // a leases-titled node meets a body speaking of leaseless work, and a
+    // leaseless-titled node meets an old body speaking of leases.
+    let s = temp_store();
+    let leases =
+        ops::new_node(&s, NewArgs::bare("item", "leases release at the boundary")).unwrap();
+    let mut d = NewArgs::bare("decision", "the observation ruling");
+    d.body = "leaseless writes are observed, never denied".into();
+    let d = ops::new_node(&s, d).unwrap();
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &d.front.id).unwrap();
+    let rel = queries::relatedness(&all, dn);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == leases.front.id),
+        "leases meets leaseless across the derivation: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+
+    let mut old = NewArgs::bare("doc", "lease diary");
+    old.body = "solo leases release at wrap with last rites".into();
+    let old = ops::new_node(&s, old).unwrap();
+    let leaseless =
+        ops::new_node(&s, NewArgs::bare("item", "leaseless observation window")).unwrap();
+    let all = s.load_all().unwrap();
+    let ln = s.find(&all, &leaseless.front.id).unwrap();
+    let rel = queries::relatedness(&all, ln);
+    assert!(
+        rel.iter().any(|(n, _)| n.front.id == old.front.id),
+        "leaseless meets leases in the reverse pass: {:?}",
+        rel.iter().map(|(n, _)| &n.front.title).collect::<Vec<_>>()
+    );
+}
+
+#[test]
 fn lexicon_compound_halves_join_and_outrank() {
     // it-sc2u: sig_tokens emits hyphen compounds whole plus halves of
     // five-plus chars; contains_word adopts hyphen-as-boundary; compound

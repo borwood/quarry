@@ -744,6 +744,16 @@ pub fn backtick_titled(title: &str) -> bool {
     }
 }
 
+/// The derivational suffix family the lexicon folds at compare time
+/// (it-rddg): -less, -ful, -er — the everyday derivations this register
+/// actually carries (leaseless, watchful, dispatcher). The boundary is a
+/// decision, not an accident: everything outside the family — -ness,
+/// -ment, -able, the -ing/-ed inflections, prefixes (un-, re-), and the
+/// vowel-drop respellings (lease → leaser, not leaseer) — stays unfolded
+/// until a real silent miss earns its entry, at this one point. Lexicon
+/// side ONLY, like the plural fold: `find_word` stays exact.
+const DERIVATIONAL_SUFFIXES: [&str; 3] = ["less", "ful", "er"];
+
 /// The lexicon join's word predicate (relatedness): `word` occurs in
 /// `text` not embedded in a longer token ("wrap" must not hit "wrapper").
 /// Boundary rule: word chars are ASCII alphanumerics only — the hyphen is
@@ -752,31 +762,61 @@ pub fn backtick_titled(title: &str) -> bool {
 /// atoms not through this predicate but through emission and scoring:
 /// `sig_tokens` emits compounds whole plus their halves, and
 /// `relatedness` scores compound hits above fragment hits.
-/// Compare-time plural fold (it-nuw5, lexicon side ONLY): s/es folds in
-/// both directions — watches meets watch, leases meets lease. This fold
-/// is the remaining deliberate divergence from `find_word` below, find's
-/// predicate, which stays exact for short human queries.
-pub(crate) fn contains_word(text: &str, word: &str) -> bool {
+/// Compare-time fold (lexicon side ONLY): plural s/es folds in both
+/// directions (it-nuw5) — watches meets watch, leases meets lease — and
+/// the derivational family `DERIVATIONAL_SUFFIXES` above folds under the
+/// same pattern (it-rddg) — leases meets leaseless, watches meets
+/// watchful, dispatch meets dispatcher — by reducing the word to its
+/// stems (one plural strip, then one family strip, three-char stem
+/// floor) and trying each stem bare, re-pluralized, and re-derived.
+/// This fold is the remaining deliberate divergence from `find_word`
+/// below, find's predicate, which stays exact for short human queries.
+pub fn contains_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
     }
     if find_word(text, word) {
         return true;
     }
-    // The plural fold: try the word's own s/es variants, so either side
-    // of the compare may carry the inflection.
-    let mut variants: Vec<String> = vec![format!("{word}s"), format!("{word}es")];
-    if let Some(stem) = word.strip_suffix("es") {
-        if stem.len() >= 3 {
-            variants.push(stem.to_string());
+    // Stems: the word itself, its plural-stripped forms (s/es), and each
+    // stem's family-stripped form — so leases and leaseless both reduce
+    // to lease, watchers to watch.
+    let mut stems: Vec<String> = vec![word.to_string()];
+    for suf in ["es", "s"] {
+        if let Some(stem) = word.strip_suffix(suf) {
+            if stem.len() >= 3 && !stems.iter().any(|s| s == stem) {
+                stems.push(stem.to_string());
+            }
         }
     }
-    if let Some(stem) = word.strip_suffix('s') {
-        if stem.len() >= 3 {
-            variants.push(stem.to_string());
+    let mut derived: Vec<String> = Vec::new();
+    for s in &stems {
+        for suf in DERIVATIONAL_SUFFIXES {
+            if let Some(stem) = s.strip_suffix(suf) {
+                if stem.len() >= 3
+                    && !stems.iter().any(|x| x == stem)
+                    && !derived.iter().any(|x| x == stem)
+                {
+                    derived.push(stem.to_string());
+                }
+            }
         }
     }
-    variants.iter().any(|v| find_word(text, v))
+    stems.extend(derived);
+    // Variants: each stem bare, re-pluralized, and re-derived (family
+    // suffix, plus its plain plural), so either side of the compare may
+    // carry the inflection or the derivation.
+    let mut variants: Vec<String> = Vec::new();
+    for stem in stems {
+        variants.push(format!("{stem}s"));
+        variants.push(format!("{stem}es"));
+        for suf in DERIVATIONAL_SUFFIXES {
+            variants.push(format!("{stem}{suf}"));
+            variants.push(format!("{stem}{suf}s"));
+        }
+        variants.push(stem);
+    }
+    variants.iter().any(|v| v != word && find_word(text, v))
 }
 
 /// Find's word predicate. Its rule: word chars are ASCII alphanumerics
@@ -784,9 +824,9 @@ pub(crate) fn contains_word(text: &str, word: &str) -> bool {
 /// query like "cli" hits "cli-area" and "the cli" but never "click".
 /// The lexicon join's `contains_word` above adopted this edge rule
 /// 2026-08-15 (it-sc2u); the remaining deliberate divergence is the
-/// plural fold — the lexicon folds s/es at compare time (it-nuw5), find
-/// stays exact. Full unification considered and declined 2026-08-12
-/// (it-hjed).
+/// compare-time fold — the lexicon folds plural s/es (it-nuw5) and the
+/// -less/-ful/-er derivational family (it-rddg), find stays exact. Full
+/// unification considered and declined 2026-08-12 (it-hjed).
 pub fn find_word(text: &str, word: &str) -> bool {
     if word.is_empty() {
         return false;
