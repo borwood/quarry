@@ -13,6 +13,7 @@ acceptance:
 write_set:
 - src/**
 - tests/**
+archived: true
 edges:
 - rel: about
   to: ar-c7f5

@@ -1959,3 +1959,13 @@
 {"ts":"2026-08-20T11:22:22Z","node":"it-wa6e","v":7,"op":"release","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T11:22:25Z","node":"cl-rs2r","v":3,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-20T11:22:29Z","node":"do-j6r5","v":2,"op":"affirm","restamped":1,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:41:30Z","node":"session:dispatcher","v":0,"op":"wrap","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:20Z","node":"it-jzdj","v":1,"op":"create","type":"item","title":"build mutex: worktree forks wait patiently for build time","actor":"claude","note":null,"session":"dispatcher"}
+{"ts":"2026-08-21T07:42:20Z","node":"it-fj73","v":1,"op":"create","type":"item","title":"the source-drift pass, second cut: re-read the run's drifted claims against the moved code","actor":"claude","note":null,"session":"dispatcher"}
+{"op":"link","rel":"depends-on","to":"th-ybv9","at":1,"ts":"2026-08-21T07:42:26Z","node":"it-fj73","v":2,"actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:26Z","node":"it-b5tq","v":8,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:26Z","node":"it-xzp7","v":11,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:26Z","node":"th-24u9","v":2,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:26Z","node":"th-bjk2","v":5,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:27Z","node":"th-cfmt","v":4,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T07:42:27Z","node":"th-xvv6","v":3,"op":"archive","actor":"claude","session":"dispatcher"}

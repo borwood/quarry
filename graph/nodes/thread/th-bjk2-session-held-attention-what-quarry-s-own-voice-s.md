@@ -7,6 +7,7 @@ status: resolved
 provenance: assistant
 created: 2026-08-11T06:06:58Z
 actor: claude
+archived: true
 edges:
 - rel: about
   to: ar-xa38
