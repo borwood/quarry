@@ -962,8 +962,11 @@ pub fn clear_dispatch(store: &Store, item_id: &str) {
     }
     crate::store::clear_pins(&store.root, item_id);
     // Badge-scoped attention dies with the badge (dc-pwyd): a re-dispatch's
-    // next agent reads with its own eyes, not a dead arc's cursors.
+    // next agent reads with its own eyes, not a dead arc's cursors. Both
+    // attention surfaces go, on the one key: area watermarks and the
+    // protocol-gate delivery memos (it-nngn), which key on the same reader.
     clear_area_reads(store, &badge_attention_key(item_id));
+    crate::protocol::clear_delivered(store, &badge_attention_key(item_id));
 }
 
 /// Resolve the badge that STAMPS this acting context's work — env identity

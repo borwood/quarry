@@ -2494,3 +2494,31 @@
 {"op":"body","ts":"2026-08-21T15:31:48Z","node":"it-jcnq","v":2,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a vein or feature mint carrying no backticked register name is asked again before a judge ratifies it: harvest lists it beside the kindless ones with the retitle settle command in hand, prompting only, and says plainly that a deliberately plain title is a fine answer"],"ts":"2026-08-21T15:31:49Z","node":"it-jcnq","v":3,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T15:32:29Z","node":"it-8vsm","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:33:03Z","node":"session:dispatcher","v":0,"op":"wrap","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:33:19Z","node":"session:dispatcher","v":0,"op":"wrap","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a protocol memo is spent by the reader that actually saw the teach: the once-per-rule key rides the acting identity, badge-scoped for a joined arc and session otherwise, so a joined agent never marks a rule delivered to its holding session nor inherits one that session already consumed"],"ts":"2026-08-21T15:33:58Z","node":"it-nngn","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:33:58Z","node":"it-nngn","v":3,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:33:58Z","node":"it-nngn","v":3,"op":"reserve","globs":["src/protocol.rs","src/coord.rs","src/queries.rs","tests/**"],"shared":false,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T15:33:59Z","node":"it-nngn","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:33:59Z","node":"it-nngn","v":3,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/protocol.rs","src/coord.rs","src/queries.rs","tests/**","docs/reports/2026-08-21-protocol-gate-memos-spend-the-holding-it-nngn.md"],"model":null}
+{"ts":"2026-08-21T15:34:12Z","node":"it-nngn","v":4,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:34:12Z","node":"it-nngn","v":4,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/protocol.rs","src/coord.rs","src/queries.rs","tests/**","docs/reports/2026-08-21-protocol-gate-memos-spend-the-holding-it-nngn.md"],"model":null}
+{"ts":"2026-08-21T15:34:25Z","node":"it-nngn","v":4,"op":"join","actor":"claude-opus-5","dispatch":"it-nngn","joined":"agent:ac883212e595450b5","session":"dispatcher"}
+{"ts":"2026-08-21T15:49:11Z","node":"it-sh8e","v":1,"op":"create","type":"item","title":"the protocol gate still says once per session: print_gate speaks to the wrong reader now that the memo rides the acting identity","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"depends-on","to":"it-nngn","at":4,"ts":"2026-08-21T15:49:18Z","node":"it-sh8e","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:49:34Z","node":"cl-2j49","v":1,"op":"create","type":"claim","title":"`gate-memo`: a protocol gate memo is attention state — it rides the reader key and dies with the badge","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"source","to":"file:src/protocol.rs","at":"d0d96f5ae2d0","ts":"2026-08-21T15:49:34Z","node":"cl-2j49","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"b891f4b5a953","ts":"2026-08-21T15:49:42Z","node":"cl-2j49","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"e5b9747a8c32","ts":"2026-08-21T15:49:43Z","node":"cl-2j49","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"supports","to":"cl-2j49","at":4,"ts":"2026-08-21T15:50:02Z","node":"cl-b2z2","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:50:09Z","node":"cl-gy6q","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:50:09Z","node":"cl-b2z2","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:50:35Z","node":"cl-b2z2","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:50:35Z","node":"cl-gy6q","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:51:54Z","node":"th-3uhm","v":1,"op":"create","type":"thread","title":"a gate-tier protocol now intercepts once per ARC, not once per session: the reader fix makes a heavy interception per-dispatch","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:53:25Z","node":"do-7sfy","v":1,"op":"create","type":"doc","title":"dispatch report: protocol-gate memos spend the holding session: the once-per-rule key rides env session, not the acting identity","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-nngn"}
+{"op":"link","rel":"supports","to":"it-nngn","at":4,"ts":"2026-08-21T15:53:25Z","node":"do-7sfy","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-nngn"}
+{"ts":"2026-08-21T15:54:51Z","node":"it-nngn","v":4,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T15:55:02Z","node":"cl-2j49","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T15:55:02Z","node":"it-nngn","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:55:05Z","node":"it-nngn","v":5,"op":"release","actor":"claude-opus-5","session":"dispatcher"}

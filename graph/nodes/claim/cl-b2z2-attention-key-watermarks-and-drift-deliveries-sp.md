@@ -2,7 +2,7 @@
 id: cl-b2z2
 type: claim
 title: '`attention-key`: watermarks and drift deliveries spend the acting identity - badge-scoped for a joined arc, session otherwise'
-v: 3
+v: 4
 status: ratified
 provenance: assistant
 created: 2026-08-20T09:49:52Z
@@ -17,10 +17,13 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 8f43237f98b6
+  at: b891f4b5a953
 - rel: source
   to: file:tests/basic.rs
-  at: 75f4c2e53c44
+  at: e5b9747a8c32
+- rel: supports
+  to: cl-2j49
+  at: 4
 ---
 
 coord::attention_key resolves the reader every attention surface keys on (dc-pwyd: attention rides the actor): a context resolving a live dispatch badge spends badge:<item> rows; everything else keys by session as before. touch_area compares EVENT attention keys for the own/foreign test - an event carrying a dispatch stamp is the badge acting, so a joined agent writes own-to-the-badge and foreign-to-the-holding-session, and drift lines name the dispatch, never the inherited session env. q join records the badge area reads over the item about-areas at the join log position - the brief is a real delivery of the area record, so the arc first mint does not re-gate on ground the join just delivered. clear_dispatch drops the badge rows with the badge: a re-dispatched item next agent reads with its own eyes. The q new gate and the q open read-record ride the same key, so a session own first write into an area its own eyes never read still gates, however many arcs it dispatched there (it-csm3, it-hjed). Pinned by attention_rides_the_actor_watermarks_and_deliveries_are_badge_scoped and joined_agent_spares_the_holding_sessions_watermarks_end_to_end in tests/basic.rs.

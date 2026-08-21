@@ -22,10 +22,10 @@ edges:
   at: 2c2276685d23
 - rel: source
   to: file:tests/basic.rs
-  at: 75f4c2e53c44
+  at: e5b9747a8c32
 - rel: supports
   to: cl-b2z2
-  at: 3
+  at: 4
 - rel: supports
   to: cl-kggw
   at: 3

@@ -1097,6 +1097,210 @@ fn joined_agent_spares_the_holding_sessions_watermarks_end_to_end() {
 }
 
 #[test]
+fn a_protocol_memo_is_spent_by_the_reader_that_saw_the_teach() {
+    // it-nngn under dc-pwyd: a gate-tier protocol answers
+    // has-this-READER-seen-the-teach, so the once-per-rule memo keys on the
+    // acting identity (coord::attention_key) — badge-scoped for a joined
+    // arc, session otherwise. Pre-fix it keyed on current_session, the
+    // env-inherited value it-csm3 already evicted from watermarks and drift
+    // deliveries: a joined agent's gate marked the rule DELIVERED to its
+    // holding session, whose eyes never saw the teach, and conversely an
+    // agent never received a protocol its holding session had consumed.
+    // Measured end to end through the spawned binary, because the reader
+    // only diverges from the session in a real dispatched shell.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let sout = |o: &std::process::Output| String::from_utf8_lossy(&o.stdout).to_string();
+    // the house rule: minting a thread carries protocol, gate tier
+    let mut p = NewArgs::bare("doc", "thread charter");
+    p.kind = Some("protocol".into());
+    p.fields = vec!["on=new".into(), "node_type=thread".into(), "tier=gate".into()];
+    p.body = "name the question, not the answer".into();
+    let rule = ops::new_node(&s, p).unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mk = |title: &str| {
+        let mut it = NewArgs::bare("item", title);
+        it.status = Some("ready".into());
+        it.about = vec![area.front.id.clone()];
+        it.acceptance = vec!["the pass lands".into()];
+        ops::new_node(&s, it).unwrap()
+    };
+    let it = mk("geo pass");
+    let out =
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "design", "t")
+            .unwrap();
+    // the agent joins from a shell wearing the holding session's env plus
+    // its own agent id — the real dispatched shape
+    let agent = [("QUARRY_SESSION", "design"), ("QUARRY_AGENT", "ag-proto")];
+    let j = run(&agent, &["join", &out.token]);
+    assert!(j.status.success(), "join: {}", String::from_utf8_lossy(&j.stderr));
+
+    // the agent trips the gate: the teach lands on ITS screen
+    let a1 = run(&agent, &["new", "thread", "agent finding"]);
+    let a1out = sout(&a1);
+    assert_eq!(a1.status.code(), Some(2), "the agent's first mint gates: {}", a1out);
+    assert!(a1out.contains("name the question"), "the teach is delivered: {}", a1out);
+    // ...and the memo it spent is the BADGE's, never the inherited session's
+    let memo: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(s.root.join("graph").join(".intents.json")).unwrap())
+            .unwrap();
+    let readers: Vec<String> = memo["delivered"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|d| d["rule"].as_str() == Some(rule.front.id.as_str()))
+        .map(|d| d["reader"].as_str().unwrap().to_string())
+        .collect();
+    // THE DEFECT, measured on the behaviour first: the holding session's own
+    // first mint STILL gates — its eyes never saw the teach. Pre-fix the
+    // agent had already spent this very row.
+    let g = run(&[("QUARRY_SESSION", "design")], &["new", "thread", "design question"]);
+    assert_eq!(
+        g.status.code(),
+        Some(2),
+        "the holding session's delivery survives the agent's arc: {}",
+        sout(&g)
+    );
+    // ...and on the key that makes it true
+    assert_eq!(
+        readers,
+        vec![format!("badge:{}", it.front.id)],
+        "the once-per-rule key rides the acting identity: {}",
+        memo
+    );
+    // the agent's own memo stands: its second mint executes untaught
+    let a2 = run(&agent, &["new", "thread", "second finding"]);
+    assert!(a2.status.success(), "agent mint 2: {}", String::from_utf8_lossy(&a2.stderr));
+    assert!(!sout(&a2).contains("gated"), "one teach per reader: {}", sout(&a2));
+    // ...and the intent the gate saved resumes from the agent's own seat
+    let token = a1out
+        .split("q resume ")
+        .nth(1)
+        .and_then(|t| t.split_whitespace().next())
+        .expect("the gate hands over its token");
+    let r = run(&agent, &["resume", token]);
+    assert!(r.status.success(), "resume: {}", String::from_utf8_lossy(&r.stderr));
+
+    // THE OTHER DIRECTION: a fresh agent never INHERITS a memo its holding
+    // session already consumed — design spent its own row at the gate above
+    let two = mk("second pass");
+    let d2 =
+        ops::dispatch(&s, &two.front.id, vec!["src/two/**".into()], false, false, None, None, "design", "t")
+            .unwrap();
+    let agent2 = [("QUARRY_SESSION", "design"), ("QUARRY_AGENT", "ag-two")];
+    let j2 = run(&agent2, &["join", &d2.token]);
+    assert!(j2.status.success(), "join 2: {}", String::from_utf8_lossy(&j2.stderr));
+    let b1 = run(&agent2, &["new", "thread", "other finding"]);
+    assert_eq!(
+        b1.status.code(),
+        Some(2),
+        "a joined agent meets the rule with its own eyes: {}",
+        sout(&b1)
+    );
+
+    // the badge's memo dies with the badge (cl-b2z2's invariant on this
+    // surface): a re-dispatch's next agent is taught, never handed the
+    // replaced agent's consumption
+    let again =
+        ops::dispatch(&s, &it.front.id, vec![], false, false, None, None, "design", "t").unwrap();
+    let agent3 = [("QUARRY_SESSION", "design"), ("QUARRY_AGENT", "ag-new")];
+    let j3 = run(&agent3, &["join", &again.token]);
+    assert!(j3.status.success(), "join 3: {}", String::from_utf8_lossy(&j3.stderr));
+    let c1 = run(&agent3, &["new", "thread", "replacement finding"]);
+    assert_eq!(
+        c1.status.code(),
+        Some(2),
+        "the replaced arc's memo cleared with its badge: {}",
+        sout(&c1)
+    );
+}
+
+#[test]
+fn a_legacy_session_keyed_memo_carries_onto_the_reader_key() {
+    // it-nngn's continuity half. The pre-fix memo keyed rows on the env
+    // session name; for any BOUND session that string IS the new reader key
+    // (coord::session_key), so the `session` alias carries every real memo
+    // across the rename with nothing re-delivered. Only the unbound fallback
+    // moved — "default" → "unbound", unifying the protocol memo's spelling
+    // with the attention state's — which re-delivers once, machine-local.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let mut p = NewArgs::bare("doc", "thread charter");
+    p.kind = Some("protocol".into());
+    p.fields = vec!["on=new".into(), "node_type=thread".into(), "tier=gate".into()];
+    p.body = "name the question, not the answer".into();
+    let rule = ops::new_node(&s, p).unwrap();
+    let memo_path = s.root.join("graph").join(".intents.json");
+    std::fs::write(
+        &memo_path,
+        serde_json::json!({
+            "delivered": [{"session": "design", "rule": rule.front.id}],
+            "intents": []
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let g = run(&[("QUARRY_SESSION", "design")], &["new", "thread", "design question"]);
+    assert!(
+        g.status.success(),
+        "a bound session's standing memo carries across the rename: {}",
+        String::from_utf8_lossy(&g.stdout)
+    );
+    // the unbound fallback is the one row that moves: it re-delivers once,
+    // and records itself under the unified spelling
+    let u = run(&[], &["new", "thread", "unbound question"]);
+    assert_eq!(
+        u.status.code(),
+        Some(2),
+        "the unbound fallback re-delivers once: {}",
+        String::from_utf8_lossy(&u.stdout)
+    );
+    let memo: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&memo_path).unwrap()).unwrap();
+    let readers: Vec<&str> = memo["delivered"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|d| d["reader"].as_str())
+        .collect();
+    assert!(
+        readers.contains(&"design") && readers.contains(&"unbound"),
+        "the carried row keeps its key and the fallback spells itself as attention state does: {}",
+        memo
+    );
+}
+
+#[test]
 fn wrap_session_touched_review() {
     use quarry::queries::session_touched;
     use serde_json::json;
