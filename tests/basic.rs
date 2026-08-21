@@ -6339,6 +6339,13 @@ fn return_spec_and_first_echo_carry_the_user_owned_calls_rule() {
         "the RETURN spec carries the user-owned-calls slot: {}",
         text
     );
+    // …and states the shape it will be READ in (it-drsu): the requirement
+    // was otherwise discoverable only by reading the parser.
+    assert!(
+        text.contains("The shape it is read in: one entry per call under that head"),
+        "the RETURN spec states the read shape: {}",
+        text
+    );
     // The first-interception echo names thread-filing as the only landing.
     let d = quarry::coord::DispatchState {
         item: "it-bdg".into(),
@@ -6388,6 +6395,63 @@ fn declared_user_owned_calls_parses_the_section_shapes() {
     );
     // No section at all: None — absence is itself the harvest flag.
     assert_eq!(declared_user_owned_calls("outcomes\n\nREFLECTIONS: fine\n"), None);
+}
+
+/// it-drsu: a lead-in sentence between the section head and its list is
+/// ordinary prose, and reading it as the section's end scored a declared
+/// call as zero — the false all-clear the whole accounting exists to
+/// prevent. The witnessed shape (do-yeum, the it-p8rp return) leads; the
+/// corpus shapes that must keep their old answers follow.
+#[test]
+fn a_lead_in_before_the_list_never_reads_as_a_declaration_of_none() {
+    use quarry::queries::declared_user_owned_calls;
+    // THE INCIDENT, verbatim in shape: a bold count announcement, a blank,
+    // then the numbered entry it announces.
+    let witnessed = "## user-owned calls\n\n**One.**\n\n1. **The ratified `user_owned_await` wording now carries a second meaning** —\n   filed as **th-t4j3** (queued). The line says \"no report file to parse yet\",\n   which was simply true before this fix.\n\n## Reflections\n\n- the fix is four lines\n- second-resolution stamps are a real edge\n";
+    assert_eq!(
+        declared_user_owned_calls(witnessed),
+        Some(1),
+        "the lead-in is skipped and the entry below it is counted"
+    );
+    // The section ends at the next heading, so the reflections list below
+    // it never inflates the count — the second half of the acceptance line.
+    let two_entries = "## user-owned calls\n\nTwo, both filed.\n\n- one (th-a)\n- two (th-b)\n\n## Reflections\n\n- a\n- b\n- c\n";
+    assert_eq!(declared_user_owned_calls(two_entries), Some(2));
+    // A loose list — blank lines between entries — keeps its count: a blank
+    // closes a paragraph, never the section.
+    assert_eq!(
+        declared_user_owned_calls("user-owned calls:\n\n- one (th-a)\n\n- two (th-b)\n\n## Reflections\n"),
+        Some(2)
+    );
+    // Prose-only sections. "none" opening the paragraph declares zero
+    // however much sentence rides with it (both real corpus shapes);
+    // prose that does NOT say none declares one, never zero.
+    assert_eq!(
+        declared_user_owned_calls("## user-owned calls:\n\nnone declared by the agent (the family was user-agreed per the brief). Two\nin-scope judgment calls flagged: `contains_word` visibility widened.\n\n## Dispatcher's judgment acts at landing\n"),
+        Some(0)
+    );
+    assert_eq!(
+        declared_user_owned_calls("## user-owned calls\n\n**none.** One near-miss checked rather than assumed: the `store pinned: …` line\ndeleted here was a composed string.\n\n**Composed register (dc-vzvf):** one string removed.\n\n## Reflections\n"),
+        Some(0)
+    );
+    assert_eq!(
+        declared_user_owned_calls("## user-owned calls\n\nThe retire wording is the user's; I took the provisional path.\n\n## Reflections\n"),
+        Some(1),
+        "a prose declaration is a declaration — never a silent zero"
+    );
+    // "Nonetheless" is not "none": the word must stand whole.
+    assert_eq!(
+        declared_user_owned_calls("## user-owned calls\n\nNonetheless the retire wording is the user's.\n\n## Reflections\n"),
+        Some(1)
+    );
+    // An empty section still declares nothing.
+    assert_eq!(declared_user_owned_calls("## user-owned calls\n\n## Reflections\n- a\n"), Some(0));
+    // An un-headed report cannot swallow its next section: a second prose
+    // paragraph past the lead-in ends the walk before that section's list.
+    assert_eq!(
+        declared_user_owned_calls("user-owned calls:\n\nA lead-in with no entries under it.\n\nReflections:\n\n- a\n- b\n- c\n"),
+        Some(1)
+    );
 }
 
 #[test]

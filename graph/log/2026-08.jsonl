@@ -2155,3 +2155,24 @@
 {"ts":"2026-08-21T10:51:30Z","node":"cl-8h8j","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-21T10:51:30Z","node":"do-hdbq","v":2,"op":"affirm","restamped":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T10:51:53Z","node":"it-drsu","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T10:52:39Z","node":"it-drsu","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T10:52:39Z","node":"it-drsu","v":4,"op":"reserve","globs":["src/queries.rs","src/render.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T10:52:39Z","node":"it-drsu","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T10:52:39Z","node":"it-drsu","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/queries.rs","src/render.rs","tests/**","docs/reports/2026-08-21-a-prose-lead-in-zeroes-the-user-owned-it-drsu.md"]}
+{"ts":"2026-08-21T10:53:04Z","node":"it-drsu","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-drsu","joined":"agent:a865ff7dc7065ebab","session":"dispatcher"}
+{"ts":"2026-08-21T11:06:57Z","node":"cl-stkv","v":1,"op":"create","type":"claim","title":"`user-owned-extent`: the declaration section runs to the next heading, so a lead-in is prose and prose that is not \"none\" is never a zero","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-drsu"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"53fa6ae103db","ts":"2026-08-21T11:06:57Z","node":"cl-stkv","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-drsu"}
+{"op":"link","rel":"supports","to":"it-drsu","at":5,"ts":"2026-08-21T11:07:22Z","node":"cl-stkv","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-drsu"}
+{"op":"link","rel":"source","to":"file:src/render.rs","at":"3d795e6d98e7","ts":"2026-08-21T11:07:22Z","node":"cl-stkv","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-drsu"}
+{"ts":"2026-08-21T11:07:42Z","node":"cl-cjbb","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-drsu"}
+{"ts":"2026-08-21T11:09:06Z","node":"do-bq8x","v":1,"op":"create","type":"doc","title":"dispatch report: a prose lead-in zeroes the user-owned count: declared calls read as none when a line stands between the head and the list","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-drsu"}
+{"op":"link","rel":"supports","to":"it-drsu","at":5,"ts":"2026-08-21T11:09:06Z","node":"do-bq8x","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-drsu"}
+{"ts":"2026-08-21T11:10:48Z","node":"it-drsu","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:11:06Z","node":"it-p8rp","v":4,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T11:11:26Z","node":"cl-stkv","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T11:11:26Z","node":"it-drsu","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:11:28Z","node":"it-drsu","v":6,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:11:38Z","node":"cl-stkv","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:11:39Z","node":"do-bq8x","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:11:39Z","node":"it-auj7","v":1,"op":"create","type":"item","title":"no verb shows an agent how its own report parsed: three throwaway instruments built in two days","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T11:12:00Z","node":"it-auj7","v":2,"actor":"claude-fable-5","session":"dispatcher"}

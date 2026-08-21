@@ -2,8 +2,8 @@
 id: it-drsu
 type: item
 title: 'a prose lead-in zeroes the user-owned count: declared calls read as none when a line stands between the head and the list'
-v: 4
-status: sketch
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-21T09:38:03Z
 actor: claude-fable-5

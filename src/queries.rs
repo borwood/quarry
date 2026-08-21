@@ -652,11 +652,45 @@ pub fn latest_report_doc<'a>(all: &'a [Node], item_id: &str, since: Option<&str>
 /// parse is best-effort by design (report prose is an agent's free text);
 /// the reconciliation line it feeds confronts, never verdicts — the diff
 /// judges.
+///
+/// THE SECTION'S EXTENT (it-drsu): a lead-in paragraph between the head and
+/// the list is ordinary prose, not the section's end. Breaking on it read a
+/// declared call as `Some(0)` — the false all-clear this parse exists to
+/// prevent — and two independent agents wrote that shape on one day, so it
+/// is what a careful writer reaches for, not an outlier. The walk now ends
+/// only where a section really ends: a markdown heading, a fresh unindented
+/// paragraph once entries or a lead-in have already been read (an un-headed
+/// report's next section), or the end of the report. A blank line never
+/// closes it, so a loose list keeps its count.
+///
+/// THE COUNT: the entries. With no entries the section still speaks — prose
+/// opening with the word `none` declares zero, and any other prose is one
+/// declaration, the rule the head line's own tail already uses. Silence is
+/// what must never happen in the zero direction: an under-count renders
+/// "reconciled" over a call the report plainly declared, while an over-count
+/// only asks the judge a question.
 pub fn declared_user_owned_calls(report: &str) -> Option<usize> {
     let clean = |l: &str| {
         l.trim()
             .trim_start_matches(|c: char| matches!(c, '#' | '*' | '·' | '-' | '>' | ' ' | '\t'))
             .to_lowercase()
+    };
+    let is_entry = |t: &str| {
+        t.starts_with("- ")
+            || t.starts_with("· ")
+            || t.starts_with("* ")
+            || t.starts_with("• ")
+            || (t.len() > 1
+                && t.chars().next().map_or(false, |c| c.is_ascii_digit())
+                && (t[1..].starts_with('.') || t[1..].starts_with(')')))
+    };
+    // Prose declaring none: the whole word, whatever dressing or sentence
+    // rides with it — "none.", "none declared by the agent (…)", "**none.**
+    // One near-miss checked rather than assumed". "Nonetheless" is not it.
+    let says_none = |l: &str| {
+        clean(l)
+            .strip_prefix("none")
+            .map_or(false, |rest| !rest.starts_with(|c: char| c.is_alphanumeric()))
     };
     let lines: Vec<&str> = report.lines().collect();
     let head = lines.iter().position(|l| clean(l).starts_with("user-owned calls"))?;
@@ -669,36 +703,46 @@ pub fn declared_user_owned_calls(report: &str) -> Option<usize> {
     if !tail.is_empty() {
         return Some(if tail == "none" { 0 } else { 1 });
     }
-    // Otherwise count list entries under the head until the section ends.
-    let mut n = 0usize;
+    // Otherwise walk the section: count its entries, and remember whether
+    // its prose spoke at all and whether that prose said none.
+    let mut entries = 0usize;
+    let mut paragraphs = 0usize;
+    let mut declared_none = false;
+    let mut in_paragraph = false;
     for l in &lines[head + 1..] {
         let t = l.trim();
         if t.is_empty() {
-            if n > 0 {
-                break; // a blank line after entries closes the section
-            }
-            continue; // blank between head and content is layout
+            in_paragraph = false; // a blank closes a paragraph, never the section
+            continue;
         }
-        let entry = t.starts_with("- ")
-            || t.starts_with("· ")
-            || t.starts_with("* ")
-            || t.starts_with("• ")
-            || (t.len() > 1
-                && t.chars().next().map_or(false, |c| c.is_ascii_digit())
-                && (t[1..].starts_with('.') || t[1..].starts_with(')')));
-        if entry {
-            n += 1;
+        if l.starts_with('#') {
+            break; // a markdown heading is the next section, always
+        }
+        if is_entry(t) {
+            entries += 1;
+            in_paragraph = false;
             continue;
         }
         if l.starts_with(' ') || l.starts_with('\t') {
-            continue; // indented continuation of an entry's wrapped text
+            continue; // an entry's wrapped text, or a nested continuation
         }
-        if n == 0 && t.trim_matches(|c: char| c == '*' || c == '.').eq_ignore_ascii_case("none") {
-            return Some(0);
+        if in_paragraph {
+            continue; // a later line of the paragraph already being read
         }
-        break; // a new heading or prose ends the section
+        if entries > 0 || paragraphs > 0 {
+            break; // a fresh paragraph past the lead-in: the next section
+        }
+        paragraphs += 1;
+        in_paragraph = true;
+        declared_none = says_none(l);
     }
-    Some(n)
+    Some(if entries > 0 {
+        entries
+    } else if declared_none || paragraphs == 0 {
+        0
+    } else {
+        1 // prose that is not "none" declares something: never a false zero
+    })
 }
 
 /// Graph-generic vocabulary excluded from relatedness matching: on any

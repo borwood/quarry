@@ -582,6 +582,13 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     // carries the declaration and harvest reconciles it against the
     // badge's threads. Absence of the section is itself the flag.
     writeln!(s, "  {}", crate::framings::USER_OWNED_SLOT)?;
+    // The shape the section is READ in (it-drsu): nothing told an agent that
+    // the count comes off list entries, so the requirement was discoverable
+    // only by reading `queries::declared_user_owned_calls` or building an
+    // instrument — and two agents wrote a shape the old parse scored zero.
+    // The parse is tolerant now; saying the shape costs one line and makes
+    // the contract self-teaching rather than archaeological.
+    writeln!(s, "    The shape it is read in: one entry per call under that head — a lead-in sentence before the list is fine, indented continuations belong to their entry, and the section ends at your next heading.")?;
     writeln!(s, "  REFLECTIONS (always): close the report with doubts, surprises, and design friction in your own words — candor beats polish; reflections are mined afterward.")?;
     writeln!(s, "  STOP-REPORTS: stopping before acceptance is met is a valid outcome — say so explicitly (why, where you stopped, what remains) and the dispatcher re-dispatches from your report. A partial report registers like any other.")?;
 
