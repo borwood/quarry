@@ -2074,13 +2074,10 @@ fn main() -> Result<()> {
                 ),
                 _ => {}
             }
-            if store.work_root != store.root {
-                outln!(
-                    "store pinned: {} — every q act and stamped write under this badge lands there; your working copy at {} keeps its graph/ checkout inert (dc-g5x5).\n",
-                    store.root.display(),
-                    store.work_root.display()
-                );
-            }
+            // The fork case says itself: ops::join opens the brief with the
+            // where-you-stand banner (it-rmqy), which states the pinned-store
+            // split this arm used to print — and states the file half too.
+            // A second paragraph here would only say it twice.
             out!("{}", out.brief);
         }
         Cmd::Harvest { item } => {

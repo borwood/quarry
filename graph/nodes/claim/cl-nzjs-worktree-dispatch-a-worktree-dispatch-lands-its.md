@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:tests/worktree_proof.rs
-  at: d979327b9e86
+  at: a6c6cd238f8d
 - rel: supports
   to: it-s789
   at: 7

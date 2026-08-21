@@ -1313,9 +1313,18 @@ pub fn dispatch(
     // The spawn line stamps the canonical graph root beside the token
     // (dc-g5x5): join consumes the pin explicitly, then plants it for the
     // identity so every later verb and hook resolves the same locale — a
-    // worktree fork's cwd never decides where acts land.
+    // worktree fork's cwd never decides where acts land. It therefore names
+    // NO working directory (it-rmqy): under the pin, cwd decides nothing,
+    // so directing the agent anywhere can only misdirect — an agent the
+    // harness sat in a worktree fork, obeying an "in <root>" clause, leaves
+    // its isolation and lands file work in the canonical tree (or edits in
+    // the fork while its stamps hash canon content it never wrote, the work
+    // root following cwd). Dispatch cannot know where the agent will sit;
+    // followed verbatim this line is correct from the canonical tree and
+    // from a fork alike, and where the agent actually stands is read from
+    // the real cwd at join and stated there.
     let spawn = format!(
-        "You are dispatched: in {root}, run: q join {token} --store {root} — then follow what it prints.",
+        "You are dispatched: run: q join {token} --store {root} — then follow what it prints.",
         root = store.root.display(),
         token = token
     );
@@ -1337,8 +1346,31 @@ pub struct JoinOutcome {
     /// The identity key newly bound (None on an idempotent re-join).
     pub bound: Option<String>,
     pub rejoined: bool,
-    /// The brief, rendered fresh from the graph at join time.
+    /// The brief, rendered fresh from the graph at join time — opened by the
+    /// where-you-stand banner when the join happens in a fork (it-rmqy).
     pub brief: String,
+}
+
+/// The where-you-stand banner (it-rmqy): `Some(line)` when the working
+/// checkout this process sits in is not the tree the graph lives in — a
+/// worktree fork acting under the badge's store pin (dc-g5x5). The spawn
+/// line names no directory because dispatch cannot know where the harness
+/// will sit the agent; the orientation is therefore owed at join, where the
+/// real cwd is in hand, and it opens the brief.
+///
+/// Composed at the join rather than inside `render::brief` deliberately: the
+/// brief's own second line promises everything below it is derived from the
+/// graph at render time, and this fact is read from the process's cwd, not
+/// from the graph.
+pub fn fork_banner(store: &Store) -> Option<String> {
+    if store.work_root == store.root {
+        return None;
+    }
+    Some(format!(
+        "WHERE YOU STAND: your working checkout is {work} — a fork of the tree this graph lives in ({root}). Work where you stand: read, edit, build, and test HERE, and never cd to the canonical tree to run a verb — that takes your file work out of its isolation, and your blob stamps would hash content you never wrote. Your q acts, those stamps, and every hook-observed write land at the canonical graph under the badge's store pin whatever your cwd (dc-g5x5); the fork's own graph/ copy stays inert and merges clean.",
+        work = store.work_root.display(),
+        root = store.root.display()
+    ))
 }
 
 /// `q join <token>`: the fetch half of the dc-zbxj hand-off. Consumes the
@@ -1390,7 +1422,15 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
             "actor": Store::actor(), "dispatch": d.item, "joined": id_key
         }))?;
     }
-    let brief = crate::render::brief(store, &d.item)?;
+    // The brief opens with where the agent actually stands (it-rmqy): a
+    // join whose working checkout differs from the store root says so before
+    // a derived line renders — work where you stand; the graph half of the
+    // arc lands canonically regardless.
+    let rendered = crate::render::brief(store, &d.item)?;
+    let brief = match fork_banner(store) {
+        Some(banner) => format!("{}\n\n{}", banner, rendered),
+        None => rendered,
+    };
     // The brief IS a delivery of the item's areas' record (backdrop per
     // area), and attention rides the actor (dc-pwyd): record the badge's
     // area reads at this log position so the arc's first write doesn't

@@ -1969,3 +1969,62 @@
 {"ts":"2026-08-21T07:42:26Z","node":"th-bjk2","v":5,"op":"archive","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-21T07:42:27Z","node":"th-cfmt","v":4,"op":"archive","actor":"claude","session":"dispatcher"}
 {"ts":"2026-08-21T07:42:27Z","node":"th-xvv6","v":3,"op":"archive","actor":"claude","session":"dispatcher"}
+{"ts":"2026-08-21T08:16:50Z","node":"it-rmqy","v":4,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:16:50Z","node":"it-rmqy","v":4,"op":"reserve","globs":["src/ops.rs,src/render.rs,tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-21T08:16:50Z","node":"it-rmqy","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:16:50Z","node":"it-rmqy","v":4,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs,src/render.rs,tests/**"]}
+{"ts":"2026-08-21T08:17:08Z","node":"it-rmqy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:17:08Z","node":"it-rmqy","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs,src/render.rs,tests/**"]}
+{"ts":"2026-08-21T08:20:44Z","node":"it-rmqy","v":5,"op":"witness-ratify","restamped":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T08:20:44Z","node":"it-ap3x","v":2,"op":"witness-ratify","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T08:20:44Z","node":"it-p8rp","v":2,"op":"witness-ratify","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T08:21:28Z","node":"it-rmqy","v":5,"op":"steal","from_chat":"chat:927a1f09-9c6c-49cb-89eb-6a667560cc36","from_session":"dispatcher","from_joined":null,"actor":"claude-fable-5","session":"dispatcher","reason":"prior chat 927a1f09 ended at the dispatch with no code landed (working tree shows only the graph status flip); this chat is the live dispatcher"}
+{"ts":"2026-08-21T08:21:28Z","node":"it-rmqy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:21:28Z","node":"it-rmqy","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs,src/render.rs,tests/**"]}
+{"ts":"2026-08-21T08:21:56Z","node":"it-rmqy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:21:56Z","node":"it-rmqy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:22:03Z","node":"it-rmqy","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-rmqy","joined":"agent:aef1da79f706bc5a8","session":"dispatcher"}
+{"ts":"2026-08-21T08:22:30Z","node":"it-p8rp","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:23:20Z","node":"it-ap3x","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:33:40Z","node":"dc-ng4h","v":1,"op":"create","type":"decision","title":"the salvage journal charter carries both: four lenses and blogworthy flags","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-ng4h","ts":"2026-08-21T08:33:40Z","node":"th-n2d9","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-n2d9","at":2,"ts":"2026-08-21T08:33:40Z","node":"dc-ng4h","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T08:33:50Z","node":"it-pf2w","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T08:34:03Z","node":"cl-kr7f","v":1,"op":"create","type":"claim","title":"`location-neutral-handoff`: the spawn line names no working directory; join reads the real cwd and opens the brief with where-you-stand","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-rmqy"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"5683b60631b3","ts":"2026-08-21T08:34:03Z","node":"cl-kr7f","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-rmqy"}
+{"op":"link","rel":"supports","to":"it-rmqy","at":5,"ts":"2026-08-21T08:34:17Z","node":"cl-kr7f","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:34:57Z","node":"it-x4bb","v":1,"op":"create","type":"item","title":"a comma-joined --files value leases one dead glob: the dispatched agent is denied its own write-set","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:36:16Z","node":"cl-6ctr","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:39:46Z","node":"it-rmqy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:39:46Z","node":"it-rmqy","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs,src/render.rs,tests/**"]}
+{"ts":"2026-08-21T08:40:25Z","node":"it-rmqy","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:40:33Z","node":"it-rmqy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:40:33Z","node":"it-rmqy","v":5,"op":"reserve","globs":["src/ops.rs","src/main.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:40:33Z","node":"it-rmqy","v":5,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs","src/main.rs","tests/**"]}
+{"ts":"2026-08-21T08:41:04Z","node":"it-rmqy","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:42:04Z","node":"do-qcvy","v":1,"op":"create","type":"doc","title":"dispatch report: the spawn line misdirects the fork (partial, arc 1)","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-rmqy","at":5,"ts":"2026-08-21T08:42:04Z","node":"do-qcvy","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:42:22Z","node":"it-rmqy","v":5,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:42:43Z","node":"it-rmqy","v":5,"op":"join","actor":"claude-fable-5","dispatch":"it-rmqy","joined":"agent:a900e284e8bd8a5d9","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a dispatched agent is never denied a write to a path its own brief prints as leased: a comma-bearing --files value is caught where the globs enter — split into its globs or refused with the repeatable flag taught, never leased whole — and q reserve inherits the same check"],"ts":"2026-08-21T08:43:31Z","node":"it-x4bb","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:47:57Z","node":"th-sth7","v":1,"op":"create","type":"thread","title":"the journal loop never closed: one entry since the charter; storyworthy needs a trigger surface","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"body","ts":"2026-08-21T08:51:20Z","node":"cl-kr7f","v":4,"actor":"claude-fable-5","note":"the instrument landed: tests/worktree_proof.rs pins both halves; the duplicate join-arm paragraph is gone","session":"dispatcher","dispatch":"it-rmqy"}
+{"op":"link","rel":"source","to":"file:tests/worktree_proof.rs","at":"a6c6cd238f8d","ts":"2026-08-21T08:51:33Z","node":"cl-kr7f","v":5,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:52:31Z","node":"cl-nzjs","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:54:45Z","node":"it-rzqv","v":1,"op":"create","type":"item","title":"a re-rendered brief loses the fork banner: q brief orients no one, and it is the command the agent is told to re-run","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-rmqy"}
+{"ts":"2026-08-21T08:58:29Z","node":"it-rmqy","v":5,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T08:59:45Z","node":"do-xzjj","v":1,"op":"create","type":"doc","title":"dispatch report: the spawn line misdirects the fork (arc 2, landed)","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-rmqy","at":5,"ts":"2026-08-21T08:59:45Z","node":"do-xzjj","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=true"],"ts":"2026-08-21T08:59:54Z","node":"cl-kr7f","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T09:00:35Z","node":"cl-kr7f","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:00:46Z","node":"it-rmqy","v":5,"op":"unlink","rel":"about","to":"file:src/render.rs","at":"2cda7860827d","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"about","to":"file:src/main.rs","at":"b04b98159c9b","ts":"2026-08-21T09:00:46Z","node":"it-rmqy","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"about","to":"file:tests/worktree_proof.rs","at":"a6c6cd238f8d","ts":"2026-08-21T09:00:47Z","node":"it-rmqy","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T09:00:56Z","node":"it-rmqy","v":8,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:00:58Z","node":"it-rmqy","v":8,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:01:10Z","node":"cl-kr7f","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:01:10Z","node":"do-qcvy","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:01:10Z","node":"do-xzjj","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:02:19Z","node":"it-xcvb","v":1,"op":"create","type":"item","title":"dispatched work is attributed to the dispatcher's model: a subagent's actor is inherited, never recorded","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T09:02:37Z","node":"it-xcvb","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a node's recorded actor names the model that actually wrote it: work done by a dispatched subagent whose model differs from its dispatcher's is never filed under the dispatcher's model, and the commit convention can be honoured from the graph alone"],"ts":"2026-08-21T09:02:46Z","node":"it-xcvb","v":3,"actor":"claude-fable-5","session":"dispatcher"}

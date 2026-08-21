@@ -113,6 +113,13 @@ fn snapshot(root: &Path) -> Vec<(String, Vec<u8>)> {
     out
 }
 
+/// Case-folded, separator-normalized — the same posture store::store_relative
+/// takes: a Windows path round-tripped through the OS current-directory comes
+/// back with its own idea of case and separators.
+fn norm(s: &str) -> String {
+    s.to_lowercase().replace('\\', "/")
+}
+
 fn md_count(dir: &Path) -> usize {
     fs::read_dir(dir)
         .map(|it| {
@@ -186,6 +193,23 @@ fn the_store_pin_carries_a_worktree_dispatch_end_to_end() {
         "the spawn line stamps the canonical root beside the token: {}",
         out
     );
+    // ── and it names NO working directory (it-rmqy): dispatch cannot know
+    // where the harness will sit the agent, so an "in <dir>," clause could
+    // only send a fork-isolated agent out of its isolation. Followed
+    // verbatim the line must be correct from canon and from a fork alike.
+    let spawn_line = out.lines().find(|l| l.contains(marker)).unwrap().trim();
+    let (before_cmd, _) = spawn_line.split_once(marker).unwrap();
+    assert!(
+        !before_cmd.contains(&canon_s) && !before_cmd.contains(','),
+        "no directing clause stands between the announcement and the command: {:?}",
+        before_cmd
+    );
+    let pin_spent = spawn_line.replacen(&format!("--store {}", canon_s), "--store <pin>", 1);
+    assert!(
+        !pin_spent.contains(&canon_s),
+        "the --store pin is the ONLY directory the spawn line names: {}",
+        spawn_line
+    );
 
     // ── the fork diverges: the agent's edit exists only in the worktree.
     fs::write(fork.join("src").join("lib.rs"), "pub fn fork_edit() {}\n").unwrap();
@@ -202,9 +226,41 @@ fn the_store_pin_carries_a_worktree_dispatch_end_to_end() {
         &["join", &token, "--store", &canon_s],
     );
     assert!(out.contains("joined:"), "join bound the identity: {}", out);
+    // ── the where-you-stand banner OPENS the brief (it-rmqy): the agent is
+    // told where it stands before it reads a line of the work, and the
+    // banner is the one place the split is stated (the redundant paragraph
+    // that used to precede it is gone — a fork join said it twice).
+    let banner_at = out
+        .find("WHERE YOU STAND:")
+        .unwrap_or_else(|| panic!("a fork join opens with the where-you-stand banner: {}", out));
+    let brief_at = out.find("DISPATCH BRIEF").expect("the brief renders");
     assert!(
-        out.contains("store pinned:"),
-        "join teaches the pinned-store split when cwd sits in a fork: {}",
+        banner_at < brief_at,
+        "the banner opens the brief rather than trailing it: {}",
+        out
+    );
+    let banner = &out[banner_at..brief_at];
+    assert!(
+        norm(banner).contains(&norm(&fork.display().to_string()))
+            && banner.contains(&canon_s),
+        "the banner names both roots — the fork it stands in and the graph its acts land at: {}",
+        banner
+    );
+    let mut speaking = out.lines().filter(|l| !l.trim().is_empty());
+    assert!(
+        speaking.next().unwrap_or_default().contains("joined:"),
+        "the bind is announced first: {}",
+        out
+    );
+    assert!(
+        speaking.next().unwrap_or_default().starts_with("WHERE YOU STAND:"),
+        "the banner is the very next thing the join says — nothing stands between the bind and the orientation it opens the brief with: {}",
+        out
+    );
+    assert_eq!(
+        out.matches("WHERE YOU STAND:").count(),
+        1,
+        "the split is stated once — never a second paragraph saying the same thing: {}",
         out
     );
     let pins: serde_json::Value = serde_json::from_str(
@@ -385,6 +441,85 @@ fn the_store_pin_carries_a_worktree_dispatch_end_to_end() {
         .current_dir(&canon)
         .args(["worktree", "remove", "--force", fork.to_str().unwrap()])
         .output();
+    let _ = fs::remove_dir_all(&base);
+}
+
+/// The negative half of the where-you-stand banner (it-rmqy): a join whose
+/// working checkout IS the tree the graph lives in says nothing about where
+/// it stands — from the store root and from a subdirectory of it alike, so
+/// the walk-up that finds the graph from a nested cwd never fakes a fork.
+#[test]
+fn a_canonical_join_says_nothing_about_where_it_stands() {
+    std::env::set_var("QUARRY_ACTOR", "test-user");
+    for v in ["QUARRY_SESSION", "QUARRY_DISPATCH", "QUARRY_CHAT", "QUARRY_AGENT", "QUARRY_STORE"] {
+        std::env::remove_var(v);
+    }
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let base =
+        std::env::temp_dir().join(format!("quarry-canonjoin-{}-{}", std::process::id(), nanos));
+    let canon = base.join("canon");
+    let qhome = base.join("qhome");
+    fs::create_dir_all(&canon).unwrap();
+    fs::create_dir_all(&qhome).unwrap();
+    fs::create_dir_all(canon.join("src")).unwrap();
+
+    let cs = Store::init(&canon).unwrap();
+    let area = ops::new_node(&cs, NewArgs::bare("area", "canon join area")).unwrap();
+    let mut ia = NewArgs::bare("item", "the canonical join slice");
+    ia.kind = Some("slice".into());
+    ia.acceptance = vec!["the join opens with the work, not with directions".into()];
+    ia.about = vec![area.front.id.clone()];
+    let item = ops::new_node(&cs, ia).unwrap();
+    ops::set(&cs, &item.front.id, &["status=ready".to_string()], None).unwrap();
+    let canon_s = canon.display().to_string();
+    let item_id = item.front.id.clone();
+
+    let out = run(
+        &qhome,
+        &canon,
+        &[("QUARRY_SESSION", "canon-dispatcher")],
+        &["dispatch", &item_id, "--files", "src/**", "--solo"],
+    );
+    let marker = "run: q join ";
+    let pos = out.find(marker).expect("spawn line present");
+    let token: String = out[pos + marker.len()..]
+        .split_whitespace()
+        .next()
+        .unwrap()
+        .to_string();
+
+    // ── the join at the canonical root: work root and store root are one.
+    let out = run(
+        &qhome,
+        &canon,
+        &[("QUARRY_AGENT", "canon-agent-1")],
+        &["join", &token, "--store", &canon_s],
+    );
+    assert!(out.contains("joined:"), "the canonical join bound: {}", out);
+    assert!(
+        !out.contains("WHERE YOU STAND"),
+        "an agent standing in the graph's own tree is told nothing about where it stands: {}",
+        out
+    );
+
+    // ── and from a SUBDIRECTORY: discovery walks up to the same root, so
+    // the split the banner announces does not exist here either.
+    let out = run(
+        &qhome,
+        &canon.join("src"),
+        &[("QUARRY_AGENT", "canon-agent-1")],
+        &["join", &token, "--store", &canon_s],
+    );
+    assert!(out.contains("already joined:"), "the re-join is an idempotent read: {}", out);
+    assert!(
+        !out.contains("WHERE YOU STAND"),
+        "a nested cwd inside the store is not a fork — no false banner: {}",
+        out
+    );
+
     let _ = fs::remove_dir_all(&base);
 }
 

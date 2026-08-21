@@ -2,8 +2,8 @@
 id: it-rmqy
 type: item
 title: 'the spawn line misdirects the fork: in-root phrasing sends a worktree agent out of its isolation'
-v: 4
-status: ready
+v: 8
+status: done
 provenance: assistant
 created: 2026-08-19T10:17:30Z
 actor: claude
@@ -17,27 +17,36 @@ witness:
   session: dispatcher
   kind: dispatch
   date: 2026-08-19
+  ratified:
+    by: user
+    date: 2026-08-21
 - line: 'a join whose working checkout differs from the store root opens the brief by saying so: the agent works where it stands, and acts, stamps, and observed writes land at the canonical graph'
   by: chat:f2fea7f8-a89a-4143-860e-d3196969d549
   session: dispatcher
   kind: dispatch
   date: 2026-08-19
+  ratified:
+    by: user
+    date: 2026-08-21
 edges:
 - rel: about
   to: ar-c7f5
   at: 1
 - rel: about
   to: file:src/ops.rs
-  at: 2f23adcb5114
-- rel: about
-  to: file:src/render.rs
-  at: 4fb197f5a445
+  at: 5683b60631b3
 - rel: depends-on
   to: dc-g5x5
   at: 3
 - rel: depends-on
   to: dc-zbxj
   at: 1
+- rel: about
+  to: file:src/main.rs
+  at: b04b98159c9b
+- rel: about
+  to: file:tests/worktree_proof.rs
+  at: a6c6cd238f8d
 ---
 
 Witnessed 2026-08-19 from the dispatcher seat during the worktree surface walk. The spawn line composed at dispatch (src/ops.rs) reads "in {root}, run: q join <token> --store {root}" with {root} the canonical store. A worktree agent obeying "in {root}" leaves its fork: file work lands in the canonical tree and the isolation is defeated — or the agent edits in the fork but runs verbs from the canonical root, and blob stamps hash canonical content it never wrote (the work root follows cwd). The clause predates the worktree case dc-g5x5 landed; under the pin, cwd is irrelevant to where graph acts land, so directing the agent anywhere serves nothing and only misdirects.
