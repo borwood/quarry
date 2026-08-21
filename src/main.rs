@@ -2179,23 +2179,25 @@ fn main() -> Result<()> {
                 out.item_id
             );
             // Attribution is stated at the fire (it-xcvb), every time, right
-            // where the dispatcher is about to choose a model: the harness
-            // gives a subagent's hooks no model of its own, so the badge's
-            // stamp is the only thing standing between a dispatched arc and
-            // filing every node it mints under the model that merely sent it.
-            // This is the one station that can still fix a wrong answer — the
-            // agent does not exist yet, and by the time it does, extending
-            // the record is the dispatcher's hand again.
-            if out.actor_stamped {
-                outln!(
-                    "  attribution: this arc's graph writes file under {} — spawn the agent on that model, or re-fire naming the one you use.",
-                    out.arc_actor
-                );
-            } else {
-                outln!(
-                    "  attribution: no --model given, so this arc's graph writes file under {} — this chat's own model, inherited. Right only if the spawn inherits it too; on any other model every node the agent mints files under a model that did not write it, and the commit convention is read from the graph. Re-fire naming it: q dispatch {} --model <model>",
-                    out.arc_actor, out.item_id
-                );
+            // where the dispatcher is about to choose a model. What the fire
+            // can honestly say changed at it-6ekf (it-xwpw): the harness
+            // keeps its own record of a subagent's model, keyed by the agent
+            // id the hook already injects, so an UNSTAMPED arc no longer
+            // files under the dispatching chat — it files under the agent's
+            // own model, resolved at the agent's own first fire. The fire
+            // cannot name that model (the agent does not exist yet, so there
+            // is no id and no record), and it must not pretend to: what it
+            // states instead is WHICH ROAD attribution will take, because
+            // this is still the one station where the stamp can be added.
+            match &out.arc_actor {
+                Some(actor) => outln!(
+                    "  attribution: --model stamped, so this arc's graph writes file under {} — the stamp OVERRIDES the harness's own record of the agent's model (cl-jp4q), so spawn on that model, or re-fire naming the one you use.",
+                    actor
+                ),
+                None => outln!(
+                    "  attribution: no --model given, so this arc files under the AGENT's own model, resolved from the harness's own record of it at its first fire (cl-jp4q) — not this chat's, and nothing to remember. Stamp one only to override that read: q dispatch {} --model <model>",
+                    out.item_id
+                ),
             }
             outln!("\nSPAWN PROMPT (one line — the agent fetches its own brief at join):");
             outln!("{}", out.spawn);
@@ -2211,26 +2213,34 @@ fn main() -> Result<()> {
                 coord::current_session().as_deref(),
             );
             let out = ops::join(&store, &token, identity)?;
-            // The second net, at the only seat that KNOWS (it-xcvb): no
-            // channel tells a subagent's hooks what model it runs, but the
-            // agent itself is told so in its own system prompt. Stating what
-            // the arc files under makes a wrong stamp reportable instead of
-            // silent — the machine cannot see the mismatch, and the agent
-            // cannot fix it (extending a badge is the dispatcher's hand), so
-            // the report is the road. It rides the BIND line rather than a
-            // line of its own: the banner must be the very next thing a fork
-            // join says (it-rmqy), and this is the same sentence's subject —
-            // where your acts resolve, and what they file under.
-            let attribution = if out.actor_stamped {
-                format!(
-                    " Those acts file under {}, stamped into the badge at the fire — if that is not the model you are, say so in your report.",
+            // The second net, at the only seat that KNOWS (it-xcvb): the
+            // agent itself is told its own model in its own system prompt.
+            // Stating what the arc files under makes a wrong answer
+            // reportable instead of silent — the agent cannot fix it
+            // (extending a badge is the dispatcher's hand), so the report is
+            // the road. It rides the BIND line rather than a line of its own:
+            // the banner must be the very next thing a fork join says
+            // (it-rmqy), and this is the same sentence's subject — where your
+            // acts resolve, and what they file under.
+            //
+            // The join NAMES what it resolved rather than predicting it
+            // (it-xwpw). It runs inside the agent with QUARRY_AGENT in hand,
+            // so ops::join reads the harness's own record of this agent
+            // instead of repeating the fire's guess — and each of the three
+            // roads reads differently to the agent, so each says which it is.
+            let attribution = match out.actor_source {
+                ops::ArcActorSource::Stamp => format!(
+                    " Those acts file under {}, stamped into the badge at the fire — the stamp overrides the harness's own record of your model, so if that is not the model you are, say so in your report.",
                     out.arc_actor
-                )
-            } else {
-                format!(
-                    " Those acts file under {}, inherited from the dispatching chat because the harness tells a subagent's hooks nothing about its own model — if that is not the model you are, say so in your report and the dispatcher re-fires with q dispatch {} --model <yours>.",
+                ),
+                ops::ArcActorSource::Record => format!(
+                    " Those acts file under {} — read here from the harness's own record of THIS agent, not inherited from the dispatching chat and not predicted; if that is not the model you are, say so in your report.",
+                    out.arc_actor
+                ),
+                ops::ArcActorSource::Injected => format!(
+                    " Those acts file under {} — the harness's own record could not answer for this seat, so this is the actor your shell was injected with rather than a model read of you; if that is not the model you are, say so in your report and the dispatcher re-fires with q dispatch {} --model <yours>.",
                     out.arc_actor, out.item_id
-                )
+                ),
             };
             match (&out.bound, out.rejoined) {
                 (Some(key), _) => outln!(

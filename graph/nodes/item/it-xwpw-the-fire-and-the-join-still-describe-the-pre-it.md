@@ -2,12 +2,20 @@
 id: it-xwpw
 type: item
 title: 'the fire and the join still describe the pre-it-6ekf world: two attribution statements now read as false'
-v: 3
-status: sketch
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-21T13:45:36Z
 actor: claude-opus-5
 kind: bug
+acceptance:
+- 'the fire and the join state attribution as it actually behaves: an unstamped dispatch never claims the arc inherits the dispatching chat''s model, and the join — which runs inside the agent with its own id in hand — names the model it resolved rather than predicting one'
+witness:
+- line: 'the fire and the join state attribution as it actually behaves: an unstamped dispatch never claims the arc inherits the dispatching chat''s model, and the join — which runs inside the agent with its own id in hand — names the model it resolved rather than predicting one'
+  by: chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-21
 edges:
 - rel: about
   to: ar-c7f5

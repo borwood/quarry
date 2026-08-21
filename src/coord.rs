@@ -1972,6 +1972,74 @@ pub fn agent_actor(chat_transcript: Option<&str>, agent: Option<&str>) -> Option
     agent_model(chat_transcript, agent?).map(|m| safe_actor(&m))
 }
 
+/// Where the harness keeps its per-project transcript directories (it-xwpw).
+/// `CLAUDE_CONFIG_DIR` overrides the home, `~/.claude` otherwise — the same
+/// home resolution `store::pins_path` uses, minus quarry's own QUARRY_HOME
+/// override, because this directory belongs to the harness and not to us.
+fn harness_projects_root() -> Option<std::path::PathBuf> {
+    let base = match std::env::var("CLAUDE_CONFIG_DIR").ok().filter(|s| !s.trim().is_empty()) {
+        Some(d) => std::path::PathBuf::from(d),
+        None => {
+            let home = std::env::var("USERPROFILE")
+                .ok()
+                .filter(|s| !s.trim().is_empty())
+                .or_else(|| std::env::var("HOME").ok().filter(|s| !s.trim().is_empty()))?;
+            std::path::PathBuf::from(home).join(".claude")
+        }
+    };
+    Some(base.join("projects"))
+}
+
+/// The walk under `locate_chat_transcript`, taking its root as a parameter so
+/// it is measurable against a fabricated layout rather than the machine's own.
+///
+/// The harness files transcripts one project directory down and names each
+/// for its chat id, so the file is found by testing `<project>/<chat>.jsonl`
+/// in each. A chat id carrying a path separator is refused outright: the id
+/// arrives from the environment, and joining it as a path component is the
+/// one way this walk could reach outside the projects tree.
+pub fn find_chat_transcript_in(
+    projects: &std::path::Path,
+    chat: &str,
+) -> Option<std::path::PathBuf> {
+    if chat.trim().is_empty() || chat.contains('/') || chat.contains('\\') {
+        return None;
+    }
+    let name = format!("{}.jsonl", chat);
+    for entry in fs::read_dir(projects).ok()? {
+        let Ok(entry) = entry else { continue };
+        let candidate = entry.path().join(&name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+/// The chat transcript path a q VERB can reach (it-xwpw).
+///
+/// `agent_model` needs the chat transcript to locate the harness's record of
+/// a subagent, and a HOOK is handed that path in its payload. A verb run from
+/// a shell is not — nothing injects it — so before this the record road
+/// existed only inside the hook, and `q join` could do no better than repeat
+/// whatever QUARRY_ACTOR the hook had already resolved. What the join does
+/// have is the chat id (QUARRY_CHAT, cl-z6gc) and the harness's naming
+/// convention, which together find the file.
+///
+/// Best-effort like every other read of this undocumented layout: None means
+/// the caller keeps whatever answer it already had.
+pub fn locate_chat_transcript(chat: &str) -> Option<std::path::PathBuf> {
+    find_chat_transcript_in(&harness_projects_root()?, chat)
+}
+
+/// `agent_actor` from the seat INSIDE the agent (it-xwpw), where the chat
+/// transcript is located rather than handed over. The hook keeps the
+/// path-taking form; this is the verb's road to the same answer.
+pub fn agent_actor_here(chat: Option<&str>, agent: Option<&str>) -> Option<String> {
+    let transcript = locate_chat_transcript(chat?)?;
+    agent_actor(Some(transcript.to_str()?), agent)
+}
+
 /// Provenance derivation keys on "claude" in the actor string; a display
 /// name like "Fable 5" would silently derive USER provenance. Any actor the
 /// hook injects passes through this guard.

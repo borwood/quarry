@@ -1104,13 +1104,15 @@ pub struct DispatchOutcome {
     /// The model stamped into the badge (it-xcvb), verbatim as the
     /// dispatcher typed it. None when the fire named none.
     pub model: Option<String>,
-    /// The actor this arc's graph writes will file under — the stamped model
-    /// through `safe_actor`, or the dispatching chat's own actor inherited.
-    /// The fire states it either way: this is the one station that can fix a
-    /// wrong answer before the agent exists.
-    pub arc_actor: String,
-    /// True when `arc_actor` came from the stamp rather than inheritance.
-    pub actor_stamped: bool,
+    /// What this arc's graph writes will file under, WHERE THE FIRE CAN KNOW
+    /// IT (it-xwpw). `Some` is the stamped model through `safe_actor`, which
+    /// the hook prefers over every derived answer, so a stamped fire is
+    /// certain of it. `None` is an unstamped fire, and there is nothing here
+    /// to name: the agent does not exist yet, and its model resolves from the
+    /// harness's own record of it at its own first fire (cl-jp4q). This field
+    /// used to fall back to the dispatching chat's actor, which is exactly
+    /// the statement it-6ekf made false.
+    pub arc_actor: Option<String>,
 }
 
 /// The acceptance gate's fire-time backstop (dc-p6z4): reserve and dispatch
@@ -1393,11 +1395,7 @@ pub fn dispatch(
         stolen_from,
         token,
         spawn,
-        arc_actor: stamped
-            .as_deref()
-            .map(crate::coord::safe_actor)
-            .unwrap_or_else(|| actor.to_string()),
-        actor_stamped: stamped.is_some(),
+        arc_actor: stamped.as_deref().map(crate::coord::safe_actor),
         model: stamped,
     })
 }
@@ -1412,14 +1410,34 @@ pub struct JoinOutcome {
     /// The brief, rendered fresh from the graph at join time — opened by the
     /// where-you-stand banner when the join happens in a fork (it-rmqy).
     pub brief: String,
-    /// The actor this arc's graph writes file under (it-xcvb) — the badge's
-    /// stamped model when the dispatcher named one, the inherited chat actor
-    /// otherwise. Stated at the join because the joining agent is the ONE
-    /// party that knows its own model for certain and can say so in its
-    /// report when this reads wrong.
+    /// The actor this arc's graph writes file under (it-xcvb) — resolved
+    /// HERE, at the one seat that has the agent's own id in hand, rather
+    /// than predicted at the fire. Stated at the join because the joining
+    /// agent is the ONE party that knows its own model for certain and can
+    /// say so in its report when this reads wrong.
     pub arc_actor: String,
-    /// True when `arc_actor` came from the badge stamp.
-    pub actor_stamped: bool,
+    /// Which of the three roads answered — the join says which rather than
+    /// asserting one of them (it-xwpw).
+    pub actor_source: ArcActorSource,
+}
+
+/// Where a join's attribution answer came from (it-xwpw). Three real states,
+/// and they read differently to the agent: one is certain, one is derived
+/// from the harness's own record of this very agent, and one is a fallback
+/// that may not be the joining agent's model at all.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArcActorSource {
+    /// `q dispatch --model` stamped the badge. The hook prefers the stamp
+    /// over the harness record (cl-jp4q), so this is what the arc files
+    /// under whether or not it is what the agent actually runs.
+    Stamp,
+    /// The harness's OWN record of this agent id, read at this seat — the
+    /// structural answer, owing nothing to the dispatcher's memory.
+    Record,
+    /// Neither answered: the actor this shell was injected with stands. For
+    /// a subagent whose record could not be reached that is the dispatching
+    /// chat's model; for a chat- or session-keyed joiner it is its own.
+    Injected,
 }
 
 /// The where-you-stand banner (it-rmqy): `Some(line)` when the working
@@ -1484,18 +1502,41 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
     // The badge's model stamp reaches this process one act too late to ride
     // the hook (it-xcvb): the PreToolUse firing that injected QUARRY_ACTOR
     // into THIS shell ran before the bind existed, so the env still carries
-    // the dispatching chat's model. Every later shell resolves the badge and
-    // gets it right; the join event is the whole of the window, so it is
-    // stamped here from the badge directly. Agent-keyed only, matching
-    // `coord::badge_model` — a chat- or session-keyed joiner is a real chat
-    // whose own model is already recorded.
+    // whatever the hook could resolve without a badge. Every later shell
+    // resolves the badge and gets it right; the join event is the whole of
+    // the window, so it is stamped here from the badge directly. Agent-keyed
+    // only, matching `coord::badge_model` — a chat- or session-keyed joiner
+    // is a real chat whose own model is already recorded.
     let stamped = d
         .model
         .as_deref()
         .filter(|m| !m.trim().is_empty())
         .filter(|_| id_key.starts_with("agent:"))
         .map(crate::coord::safe_actor);
-    let arc_actor = stamped.clone().unwrap_or_else(Store::actor);
+    // BENEATH THE STAMP, THE AGENT'S OWN RECORD, READ HERE (it-xwpw). Before
+    // it-6ekf an unstamped arc genuinely inherited the dispatching chat's
+    // model and the join said so; it no longer does, and repeating the old
+    // sentence made the join state a falsehood to the one mind that could
+    // check it. This is also the seat that can do better than the hook did:
+    // the hook that injected QUARRY_ACTOR into this very shell was the arc's
+    // FIRST fire, the one window where the agent's own turns may not have
+    // reached disk yet and `agent_model` falls back to the sidecar's coarse
+    // spawn alias (cl-jp4q's named grain). By the time this line composes,
+    // that turn is on disk, so re-deriving here answers with the resolved
+    // model where the injected value carries the alias — and the join event
+    // below files under it.
+    let recorded = match stamped {
+        Some(_) => None,
+        None => crate::coord::agent_actor_here(
+            crate::coord::current_chat().as_deref(),
+            id_key.strip_prefix("agent:"),
+        ),
+    };
+    let (arc_actor, actor_source) = match (stamped, recorded) {
+        (Some(m), _) => (m, ArcActorSource::Stamp),
+        (None, Some(m)) => (m, ArcActorSource::Record),
+        (None, None) => (Store::actor(), ArcActorSource::Injected),
+    };
     if bound.is_some() {
         // Logged once, at the bind: the join is the arc's first badged act.
         let v = store
@@ -1540,7 +1581,7 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
         bound,
         rejoined,
         brief,
-        actor_stamped: stamped.is_some(),
+        actor_source,
         arc_actor,
     })
 }

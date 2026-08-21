@@ -7531,20 +7531,21 @@ fn a_dispatched_arc_files_under_the_model_it_was_spawned_on() {
         ops::new_node(&s, a).unwrap()
     };
 
-    // THE DEFECT IN SHAPE: a fire that names no model stamps none, and the
-    // arc keeps inheriting. That answer is CORRECT for an inheriting spawn —
-    // which is why it cannot simply be replaced — and the fire says which of
-    // the two the dispatcher got, at the one station that can still fix it.
+    // THE DEFECT IN SHAPE: a fire that names no model stamps none, so the
+    // badge overrides nothing and the hook road below the stamp answers. The
+    // fire says which of the two the dispatcher got, at the one station that
+    // can still fix it — amended at it-xwpw: the unstamped answer is no
+    // longer the dispatching chat's actor, so the fire names no model there
+    // at all (a_bare_fire_names_no_model_and_the_join_names_what_it_read).
     let plain = ready("inherited arc");
     let bare = ops::dispatch(
         &s, &plain.front.id, vec!["src/a/**".into()], false, false, None, None, "disp", "claude-fable-5",
     )
     .unwrap();
     assert!(bare.model.is_none(), "nothing stamped when nothing was named");
-    assert!(!bare.actor_stamped);
-    assert_eq!(bare.arc_actor, "claude-fable-5", "the fire states the inherited answer verbatim");
+    assert_eq!(bare.arc_actor, None, "an unstamped fire has no model to name");
     let jb = ops::join(&s, &bare.token, Some("agent:ag-inherit".into())).unwrap();
-    assert!(!jb.actor_stamped, "an unstamped badge overrides nothing");
+    assert_ne!(jb.actor_source, ops::ArcActorSource::Stamp, "an unstamped badge overrides nothing");
     assert_eq!(
         quarry::coord::badge_model(&quarry::coord::load_dispatches(&s), "ag-inherit"),
         None,
@@ -7567,13 +7568,16 @@ fn a_dispatched_arc_files_under_the_model_it_was_spawned_on() {
     )
     .unwrap();
     assert_eq!(out.model.as_deref(), Some("claude-opus-5"));
-    assert!(out.actor_stamped);
-    assert_eq!(out.arc_actor, "claude-opus-5", "the fire states what the arc will file under");
+    assert_eq!(
+        out.arc_actor.as_deref(),
+        Some("claude-opus-5"),
+        "the fire states what the arc will file under"
+    );
     let d = quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap();
     assert_eq!(d.model.as_deref(), Some("claude-opus-5"), "the stamp rides the badge, not the log alone");
 
     let j = ops::join(&s, &out.token, Some("agent:ag-opus".into())).unwrap();
-    assert!(j.actor_stamped);
+    assert_eq!(j.actor_source, ops::ArcActorSource::Stamp);
     assert_eq!(j.arc_actor, "claude-opus-5", "the join states it to the one mind that knows its own model");
     // The join event is the whole of the pre-bind window: the hook fired
     // before the bind existed, so that shell's QUARRY_ACTOR is still the
@@ -7621,7 +7625,11 @@ fn a_dispatched_arc_files_under_the_model_it_was_spawned_on() {
     )
     .unwrap();
     let cj = ops::join(&s, &co.token, Some("chat:chat-elsewhere".into())).unwrap();
-    assert!(!cj.actor_stamped, "a chat-keyed joiner keeps its own recorded model");
+    assert_eq!(
+        cj.actor_source,
+        ops::ArcActorSource::Injected,
+        "a chat-keyed joiner keeps its own recorded model"
+    );
     assert_eq!(
         quarry::coord::badge_model(&quarry::coord::load_dispatches(&s), "chat-elsewhere"),
         None,
@@ -7649,7 +7657,11 @@ fn a_dispatched_arc_files_under_the_model_it_was_spawned_on() {
         "claude-fable-5",
     )
     .unwrap();
-    assert_eq!(dn.arc_actor, "claude:Opus 5", "a display name cannot mint user provenance");
+    assert_eq!(
+        dn.arc_actor.as_deref(),
+        Some("claude:Opus 5"),
+        "a display name cannot mint user provenance"
+    );
     let dj = ops::join(&s, &dn.token, Some("agent:ag-display".into())).unwrap();
     assert_eq!(dj.arc_actor, "claude:Opus 5");
     assert_eq!(
@@ -8309,4 +8321,329 @@ fn a_subagents_model_resolves_from_the_harness_record_keyed_by_its_agent_id() {
         "the guide states the exposure plainly"
     );
     assert!(g.contains("OVERRIDE"), "the guide says --model is now an override");
+}
+
+#[test]
+fn a_bare_fire_names_no_model_and_the_join_names_what_it_read() {
+    // it-xwpw. it-6ekf made a subagent's model resolve structurally from the
+    // harness's own record keyed by the injected agent id (cl-jp4q), so an
+    // UNSTAMPED dispatch stopped filing under the dispatching chat's model.
+    // Two statements written for the old world went on saying it does, in the
+    // present tense, at the two seats an operator and an agent actually read:
+    // the fire's unstamped attribution line and the join's. Both were false
+    // in every clause, and the join's was worse than wrong — it told the ONE
+    // mind that could check the answer a reason that had stopped being true.
+    //
+    // The two seats are not symmetrical, and the cure differs by seat. The
+    // FIRE genuinely cannot know: the agent does not exist yet, so there is
+    // no agent id and no record, and the honest line names the ROAD rather
+    // than a model. The JOIN runs INSIDE the agent with its id in hand, so it
+    // can read the record itself and NAME what it resolved.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+
+    // ── THE LOCATOR, the piece the join needed and did not have.
+    // `agent_model` takes the CHAT transcript path, which a hook is handed in
+    // its payload and a verb is not: nothing injects it. What a verb does
+    // have is the chat id (QUARRY_CHAT) and the harness's naming convention —
+    // each chat's transcript sits one project directory down, named for the
+    // chat — so the file is found by walking the project directories for
+    // `<chat>.jsonl`.
+    let harness = s.root.join("harness");
+    let projects = harness.join("projects");
+    std::fs::create_dir_all(projects.join("proj-decoy")).unwrap();
+    let projb = projects.join("proj-b");
+    std::fs::create_dir_all(&projb).unwrap();
+    let chat_file = projb.join("chat-chatty.jsonl");
+    std::fs::write(&chat_file, "").unwrap();
+    assert_eq!(
+        quarry::coord::find_chat_transcript_in(&projects, "chat-chatty").as_deref(),
+        Some(chat_file.as_path()),
+        "the walk passes a project directory that does not hold the chat and finds the one that does"
+    );
+    assert_eq!(
+        quarry::coord::find_chat_transcript_in(&projects, "chat-stranger"),
+        None,
+        "an unknown chat answers nothing rather than guessing at a neighbour"
+    );
+    // The chat id arrives from the ENVIRONMENT, and joining it as a path
+    // component is the one way this walk could reach outside the tree it was
+    // pointed at — measured on a file that a traversal really would find:
+    // <project>/../escape.jsonl resolves back up into the projects root, and
+    // without the guard the walk returns it. Refused at the top, before any
+    // directory is read.
+    std::fs::write(projects.join("escape.jsonl"), "").unwrap();
+    assert_eq!(
+        quarry::coord::find_chat_transcript_in(&projects, "../escape"),
+        None,
+        "a separator-bearing id never becomes a path component"
+    );
+    assert_eq!(
+        quarry::coord::find_chat_transcript_in(&projects, "   "),
+        None,
+        "an empty id names nothing"
+    );
+    assert_eq!(
+        quarry::coord::find_chat_transcript_in(&s.root.join("no-such-root"), "chat-chatty"),
+        None,
+        "a missing root degrades to None — a verb must not fail over an undocumented layout"
+    );
+
+    // The harness's record of three agents. ag-sub opens with its SIDECAR
+    // alone — the pre-first-turn window cl-jp4q names, where the spawn alias
+    // is the only answer — and its own transcript lands later, mid-test.
+    let subdir = projb.join("chat-chatty").join("subagents");
+    std::fs::create_dir_all(&subdir).unwrap();
+    let agent_turns = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"},"isSidechain":true}"#,
+        "\n"
+    );
+    std::fs::write(
+        subdir.join("agent-ag-sub.meta.json"),
+        r#"{"agentType":"general-purpose","spawnDepth":1,"model":"opus"}"#,
+    )
+    .unwrap();
+    std::fs::write(subdir.join("agent-ag-two.jsonl"), agent_turns).unwrap();
+    std::fs::write(subdir.join("agent-ag-three.jsonl"), agent_turns).unwrap();
+
+    // ── THE FIRE HAS NOTHING TO NAME when the dispatcher stamps nothing, and
+    // the outcome type now says so: the field that used to fall back to the
+    // dispatching chat's actor is an Option, so the false statement is no
+    // longer representable.
+    let area = ops::new_node(&s, NewArgs::bare("area", "attribution-statements")).unwrap();
+    let ready = |title: &str| {
+        let mut a = NewArgs::bare("item", title);
+        a.status = Some("ready".into());
+        a.about = vec![area.front.id.clone()];
+        a.acceptance = vec!["the arc lands".into()];
+        ops::new_node(&s, a).unwrap()
+    };
+    let pure = ready("the pure fire");
+    let pd = ops::dispatch(
+        &s, &pure.front.id, vec!["src/p/**".into()], false, false, None, None, "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    assert_eq!(pd.arc_actor, None, "an unstamped fire has no model to name");
+    let ps = ops::dispatch(
+        &s,
+        &ready("the stamped fire").front.id,
+        vec!["src/q/**".into()],
+        false,
+        false,
+        None,
+        Some("claude-haiku-5"),
+        "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    assert_eq!(
+        ps.arc_actor.as_deref(),
+        Some("claude-haiku-5"),
+        "a stamped fire is certain of it"
+    );
+    // With no record reachable in-process (temp_store scrubs QUARRY_CHAT), the
+    // join degrades to the injected actor and SAYS it is a fallback — it never
+    // claims a road it did not take.
+    let pj = ops::join(&s, &pd.token, Some("agent:ag-nowhere".into())).unwrap();
+    assert_eq!(pj.actor_source, ops::ArcActorSource::Injected);
+
+    // ── END TO END THROUGH THE SPAWNED BINARY, the only seat where the two
+    // printed statements exist at all. The child's environment carries the
+    // dispatching chat's model as QUARRY_ACTOR — which is exactly what the
+    // old lines named — and a fabricated harness home under CLAUDE_CONFIG_DIR.
+    let sroot = s.root.display().to_string();
+    let hroot = harness.display().to_string();
+    let empty = s.root.join("empty-harness");
+    std::fs::create_dir_all(&empty).unwrap();
+    let eroot = empty.display().to_string();
+    let qrun = |envs: &[(&str, &str)], args: &[&str]| -> String {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env_remove("CLAUDE_CONFIG_DIR")
+            .env("QUARRY_HOME", &s.root)
+            .env("QUARRY_ACTOR", "claude-fable-5")
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        let out = c.output().unwrap();
+        assert!(
+            out.status.success(),
+            "q {:?} failed: {}{}",
+            args,
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8_lossy(&out.stdout).to_string()
+    };
+    let fire = |item: &str, model: Option<&str>| -> (String, String) {
+        let mut args = vec!["dispatch", item, "--files", "src/**", "--solo"];
+        if let Some(m) = model {
+            args.push("--model");
+            args.push(m);
+        }
+        let out = qrun(&[("QUARRY_SESSION", "disp")], &args);
+        let line = out
+            .lines()
+            .find(|l| l.contains("attribution:"))
+            .unwrap_or_else(|| panic!("the fire states attribution every time: {}", out))
+            .to_string();
+        let marker = "run: q join ";
+        let pos = out.find(marker).expect("spawn line present");
+        let token = out[pos + marker.len()..].split_whitespace().next().unwrap().to_string();
+        (line, token)
+    };
+
+    // THE FIRE'S UNSTAMPED LINE. Every clause of the old one was false: it
+    // named the dispatching chat's model as what the arc would file under,
+    // called it inherited, and warned that on any other model the agent's
+    // mints would file under a model that did not write them.
+    let bare_item = ready("the unstamped arc");
+    let (bare_line, bare_token) = fire(&bare_item.front.id, None);
+    assert!(
+        !bare_line.contains("claude-fable-5"),
+        "the fire never names the dispatching chat's model as the arc's: {}",
+        bare_line
+    );
+    assert!(
+        !bare_line.contains("inherit"),
+        "and never calls the unstamped answer inherited: {}",
+        bare_line
+    );
+    assert!(
+        bare_line.contains("AGENT's own model") && bare_line.contains("first fire"),
+        "it names the road instead — the record read at the agent's own first fire: {}",
+        bare_line
+    );
+    assert!(
+        bare_line.contains("--model <model>"),
+        "the stamp stays in hand as an override at the one station that can add it: {}",
+        bare_line
+    );
+    // THE FIRE'S STAMPED LINE still names the model, and now says what the
+    // stamp DOES: it outranks the harness's own record of the agent.
+    let stamped_item = ready("the stamped arc");
+    let (stamped_line, stamped_token) = fire(&stamped_item.front.id, Some("claude-haiku-5"));
+    assert!(
+        stamped_line.contains("claude-haiku-5") && stamped_line.contains("OVERRIDES"),
+        "a stamped fire names the model and what the stamp does to the record: {}",
+        stamped_line
+    );
+
+    let join = |token: &str, agent: &str, cfg: &str| -> String {
+        let out = qrun(
+            &[
+                ("QUARRY_CHAT", "chat-chatty"),
+                ("QUARRY_AGENT", agent),
+                ("CLAUDE_CONFIG_DIR", cfg),
+            ],
+            &["join", token, "--store", &sroot],
+        );
+        out.lines()
+            .find(|l| l.contains("file under"))
+            .unwrap_or_else(|| panic!("the join states attribution every time: {}", out))
+            .to_string()
+    };
+
+    // ── THE JOIN NAMES WHAT IT READ. The old line said the acts file under
+    // the dispatching chat's model, "because the harness tells a subagent's
+    // hooks nothing about its own model" — both halves false after it-6ekf:
+    // the harness does tell, one directory over, and the acts do not file
+    // under the chat.
+    let bare_join = join(&bare_token, "ag-sub", &hroot);
+    assert!(
+        !bare_join.contains("claude-fable-5"),
+        "the join never hands the agent the dispatching chat's model: {}",
+        bare_join
+    );
+    assert!(
+        !bare_join.contains("the harness tells a subagent's hooks nothing"),
+        "nor the reason that stopped being true: {}",
+        bare_join
+    );
+    // THE PRE-FIRST-TURN WINDOW, cl-jp4q's one named grain: before this
+    // agent's own turns reach disk the sidecar's coarse spawn alias is the
+    // only answer, and a family-correct alias beats the dispatcher's model,
+    // which is wrong outright. safe_actor still guards it.
+    assert!(
+        bare_join.contains("claude:opus"),
+        "the sidecar answers the window the transcript cannot: {}",
+        bare_join
+    );
+    assert!(
+        bare_join.contains("harness's own record of THIS agent"),
+        "and the line names the road it took: {}",
+        bare_join
+    );
+    // …AND THE GRAIN CLOSES ONE SHELL LATER. The join is composed after the
+    // hook that injected this shell's actor, so a turn that had not reached
+    // disk at the fire has by now: the same identity's re-join — an
+    // idempotent read — reads the RESOLVED model where the alias stood.
+    std::fs::write(subdir.join("agent-ag-sub.jsonl"), agent_turns).unwrap();
+    let rejoin = join(&bare_token, "ag-sub", &hroot);
+    assert!(
+        rejoin.contains("claude-opus-5") && !rejoin.contains("claude:opus"),
+        "once the agent's own turns are on disk the resolved name answers: {}",
+        rejoin
+    );
+
+    // THE STAMP STILL OUTRANKS THE RECORD, which is what makes --model an
+    // override rather than dead weight: ag-two's own transcript says
+    // claude-opus-5 and the badge says claude-haiku-5, and the arc files
+    // under the badge — stated as a stamp, so a mismatch is reportable.
+    let stamped_join = join(&stamped_token, "ag-two", &hroot);
+    assert!(
+        stamped_join.contains("claude-haiku-5") && stamped_join.contains("stamped into the badge"),
+        "the dispatcher's explicit word wins, and the line says so: {}",
+        stamped_join
+    );
+
+    // ── THE ARC'S FIRST ACT FILES UNDER THE MODEL THAT MADE IT, with no
+    // stamp anywhere. The join event used to take whatever actor the shell
+    // was injected with; it now takes what the record answered here, so an
+    // unstamped arc's first badged act is right even when the hook that
+    // injected the shell could not resolve it.
+    let third = ready("the recorded arc");
+    let (_, third_token) = fire(&third.front.id, None);
+    let third_join = join(&third_token, "ag-three", &hroot);
+    assert!(third_join.contains("claude-opus-5"), "the record answers: {}", third_join);
+    let log = s.read_log().unwrap();
+    let join_ev = log
+        .iter()
+        .rev()
+        .find(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("join")
+                && e.get("node").and_then(|v| v.as_str()) == Some(third.front.id.as_str())
+        })
+        .expect("the bind logs a join");
+    assert_eq!(
+        join_ev.get("actor").and_then(|v| v.as_str()),
+        Some("claude-opus-5"),
+        "unstamped, and the first act still files under the agent's own model: {}",
+        join_ev
+    );
+
+    // ── EVERY MISS DEGRADES, NEVER ERRORS, AND NEVER INVENTS. Pointed at a
+    // harness home holding no record of this agent, the join keeps the actor
+    // its shell was injected with — and says that is what it is, rather than
+    // dressing a fallback as a reading.
+    let ghost = ready("the unrecorded arc");
+    let (_, ghost_token) = fire(&ghost.front.id, None);
+    let ghost_join = join(&ghost_token, "ag-ghost", &eroot);
+    assert!(
+        ghost_join.contains("claude-fable-5") && ghost_join.contains("could not answer"),
+        "no record, no invention — the fallback is named as one: {}",
+        ghost_join
+    );
+    assert!(
+        !ghost_join.contains("the harness tells a subagent's hooks nothing"),
+        "and still never asserts the reason it-6ekf retired: {}",
+        ghost_join
+    );
 }
