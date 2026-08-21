@@ -3874,6 +3874,236 @@ fn affirm_teaching_is_species_shaped() {
     assert_eq!(queries::affirm_teaching(&vein), None, "other species teach nothing here");
 }
 
+/// The incident of it-awhz in shape: a claim sourced on two files, both
+/// drifted, affirmed `--to` a node target it has no ref toward. The count is
+/// zero for a reason that says nothing about the claim's state — and the old
+/// surface printed the unscoped all-clear ("nothing behind — no restamp
+/// needed.") over it. The derivation the new surface reads is measured here.
+#[test]
+fn a_scoped_affirm_zero_is_a_statement_about_its_scope_alone() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("src")).unwrap();
+    std::fs::write(s.root.join("src/teach.rs"), "fn shell_tokens() {}\n").unwrap();
+    std::fs::write(s.root.join("src/render.rs"), "fn brief() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let mut it = NewArgs::bare("item", "the heredoc landing");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the body is one opaque token".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let c = ops::claim(
+        &s,
+        "`parse-plausibility`: the parser swallows here-strings whole",
+        None,
+        Some("vein".into()),
+        vec![area.front.id.clone()],
+        Some("file:src/teach.rs".into()),
+        None,
+        Some("assistant".into()),
+        None,
+    )
+    .unwrap();
+    ops::link(&s, &c.front.id, "source", "file:src/render.rs", false, None).unwrap();
+    // both sources drift under the claim
+    std::fs::write(s.root.join("src/teach.rs"), "fn shell_tokens() { /* heredoc */ }\n").unwrap();
+    std::fs::write(s.root.join("src/render.rs"), "fn brief() { /* scope */ }\n").unwrap();
+    let all = s.load_all().unwrap();
+    let cn = s.find(&all, &c.front.id).unwrap();
+    assert_eq!(
+        queries::behind_node(&s, &all, cn).len(),
+        2,
+        "the per-node classifier sees both drifted sources"
+    );
+
+    // THE INCIDENT: the recipe names a target this claim has no ref toward.
+    let n = ops::affirm(&s, &c.front.id, Some(it.front.id.clone())).unwrap();
+    assert_eq!(n, 0, "the scope selected nothing to restamp");
+    let all = s.load_all().unwrap();
+    let cn = s.find(&all, &c.front.id).unwrap();
+    let scope = queries::affirm_scope(&s, &all, cn, &it.front.id);
+    assert!(!scope.target_known, "the claim carries no ref toward the item — THIS is the zero");
+    assert_eq!(scope.toward, 0);
+    assert_eq!(scope.elsewhere, 2, "and the zero says nothing about these two");
+
+    // THE FILE-REF AFFORDANCE: review covered one file of a multi-file claim.
+    let n = ops::affirm(&s, &c.front.id, Some("file:src/teach.rs".into())).unwrap();
+    assert_eq!(n, 1, "--to takes a file ref, spelled as the behind lines print it");
+    let all = s.load_all().unwrap();
+    let cn = s.find(&all, &c.front.id).unwrap();
+    let scope = queries::affirm_scope(&s, &all, cn, "file:src/teach.rs");
+    assert!(scope.target_known);
+    assert_eq!(scope.toward, 0, "the affirmed file is current");
+    assert_eq!(scope.elsewhere, 1, "the claim's other source is still behind");
+
+    // A DANGLING REF RESTAMPS NOTHING, so an unscoped zero is not proof of
+    // currency either — the second zero the surface must not collapse.
+    std::fs::remove_file(s.root.join("src/render.rs")).unwrap();
+    let n = ops::affirm(&s, &c.front.id, None).unwrap();
+    assert_eq!(n, 0, "a missing file cannot be restamped");
+    let all = s.load_all().unwrap();
+    let cn = s.find(&all, &c.front.id).unwrap();
+    assert_eq!(
+        queries::behind_node(&s, &all, cn).len(),
+        1,
+        "the node is still behind after an unscoped zero"
+    );
+}
+
+/// A scoped affirm acts on its scope alone (it-awhz). The path-backed doc's
+/// self-blob restamp used to run regardless of `--to`, so a scoped affirm on
+/// a drifted doc restamped its own file and returned a count the caller could
+/// only read as the named target having moved.
+#[test]
+fn a_scoped_affirm_restamps_only_within_the_scope_it_was_given() {
+    let s = temp_store();
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("docs/reports")).unwrap();
+    std::fs::write(s.root.join("docs/reports/r.md"), "the outcomes hold\n").unwrap();
+    let it = ops::new_node(&s, NewArgs::bare("item", "geo pass")).unwrap();
+    let mut doc = NewArgs::bare("doc", "dispatch report: geo pass");
+    doc.kind = Some("report".into());
+    doc.path = Some("docs/reports/r.md".into());
+    let doc = ops::new_node(&s, doc).unwrap();
+    ops::link(&s, &doc.front.id, "supports", &it.front.id, false, None).unwrap();
+    std::fs::write(s.root.join("docs/reports/r.md"), "the outcomes hold, amended\n").unwrap();
+
+    // scoped at the item: the doc's own file is OUTSIDE that scope
+    let n = ops::affirm(&s, &doc.front.id, Some(it.front.id.clone())).unwrap();
+    assert_eq!(n, 0, "a scoped affirm never restamps outside its scope");
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &doc.front.id).unwrap();
+    let scope = queries::affirm_scope(&s, &all, dn, &it.front.id);
+    assert!(scope.target_known, "the supports edge is a ref toward the item");
+    assert_eq!(scope.toward, 0, "that edge is current");
+    assert_eq!(scope.elsewhere, 1, "the doc's own drifted path is what the scope excluded");
+
+    // scoped at the doc's own file — the spelling the homework line advertises
+    let n = ops::affirm(&s, &doc.front.id, Some("file:docs/reports/r.md".into())).unwrap();
+    assert_eq!(n, 1, "the advertised scoped command still restamps the doc's blob");
+    let all = s.load_all().unwrap();
+    let dn = s.find(&all, &doc.front.id).unwrap();
+    assert!(queries::behind_node(&s, &all, dn).is_empty(), "and clears the drift");
+}
+
+/// End to end through the spawned binary: the two zeros no longer share a
+/// line, and the unscoped all-clear still means every ref is current.
+#[test]
+fn the_affirm_surface_says_which_zero_it_is() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        let out = c.output().unwrap();
+        assert!(out.status.success(), "q {:?}: {}", args, String::from_utf8_lossy(&out.stderr));
+        String::from_utf8_lossy(&out.stdout).to_string()
+    };
+    std::process::Command::new("git").arg("init").arg("-q").current_dir(&s.root).status().unwrap();
+    std::fs::create_dir_all(s.root.join("src")).unwrap();
+    std::fs::write(s.root.join("src/teach.rs"), "fn shell_tokens() {}\n").unwrap();
+    std::fs::write(s.root.join("src/render.rs"), "fn brief() {}\n").unwrap();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let mut it = NewArgs::bare("item", "the heredoc landing");
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the body is one opaque token".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let c = ops::claim(
+        &s,
+        "`parse-plausibility`: the parser swallows here-strings whole",
+        None,
+        Some("vein".into()),
+        vec![area.front.id.clone()],
+        Some("file:src/teach.rs".into()),
+        None,
+        Some("assistant".into()),
+        None,
+    )
+    .unwrap();
+    ops::link(&s, &c.front.id, "source", "file:src/render.rs", false, None).unwrap();
+    std::fs::write(s.root.join("src/teach.rs"), "fn shell_tokens() { /* heredoc */ }\n").unwrap();
+    std::fs::write(s.root.join("src/render.rs"), "fn brief() { /* scope */ }\n").unwrap();
+
+    // the incident call: the all-clear must not appear over real drift
+    let out = run(&["affirm", &c.front.id, "--to", &it.front.id]);
+    assert!(
+        !out.contains("nothing behind — no restamp needed."),
+        "the unscoped all-clear never speaks for a scoped zero: {}",
+        out
+    );
+    assert!(out.contains("no ref toward"), "the zero names its own reason: {}", out);
+    assert!(out.contains(&it.front.id), "and names the scope it was given: {}", out);
+    assert!(
+        out.contains("2 other ref(s) on this node are still behind"),
+        "the node's reach beyond the scope is stated: {}",
+        out
+    );
+    assert!(
+        out.contains(&format!("q affirm {} unscoped", c.front.id)),
+        "with the unscoped command in hand: {}",
+        out
+    );
+
+    // the file-ref affordance, scoped: restamps one, still says what is left
+    let out = run(&["affirm", &c.front.id, "--to", "file:src/teach.rs"]);
+    assert!(
+        out.contains("restamped 1 ref(s) toward file:src/teach.rs"),
+        "a scoped restamp names its scope too: {}",
+        out
+    );
+    assert!(
+        out.contains("1 other ref(s) on this node are still behind"),
+        "and never reads as an all-clear for the node: {}",
+        out
+    );
+
+    // unscoped: clears the rest, then earns the all-clear
+    let out = run(&["affirm", &c.front.id]);
+    assert!(out.contains("restamped 1 ref(s)"), "unscoped restamp keeps its line: {}", out);
+    assert!(!out.contains("still behind"), "nothing is left behind: {}", out);
+    let out = run(&["affirm", &c.front.id]);
+    assert!(
+        out.contains("nothing behind — no restamp needed."),
+        "the unscoped zero keeps its all-clear, and now means it: {}",
+        out
+    );
+
+    // a scoped zero over a current ref is its own third line
+    let out = run(&["affirm", &c.front.id, "--to", "file:src/teach.rs"]);
+    assert!(
+        out.contains("nothing behind toward file:src/teach.rs"),
+        "a scoped all-clear names the scope: {}",
+        out
+    );
+    assert!(
+        out.contains("nothing else on this node is behind either"),
+        "and states the reach it does not cover: {}",
+        out
+    );
+
+    // and the unscoped zero is not proof of currency either: a ref no
+    // restamp can reach (a missing file, a dangling target) is behind and
+    // stays behind, so it is said out loud instead of collapsing.
+    std::fs::remove_file(s.root.join("src/render.rs")).unwrap();
+    let out = run(&["affirm", &c.front.id]);
+    assert!(
+        !out.contains("nothing behind — no restamp needed."),
+        "an unrestampable ref never collapses into the all-clear: {}",
+        out
+    );
+    assert!(
+        out.contains("1 ref(s) on this node are behind but not restampable"),
+        "the unscoped zero says what it could not clear: {}",
+        out
+    );
+}
+
 #[test]
 fn readings_archive_when_last_consumer_settles() {
     let s = temp_store();

@@ -259,6 +259,21 @@ pub struct Behind {
 pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
     let mut out = Vec::new();
     for n in all {
+        out.extend(behind_node(store, all, n));
+    }
+    out.sort_by_key(|b| b.severity);
+    out
+}
+
+/// The stale citations of ONE node — the classifier's per-node core, so
+/// there is still exactly one place a ref is judged sediment or rot
+/// (cl-34ra: surfaces render what they find). `behind` maps this over the
+/// store; the affirm surface asks it about the single node under review,
+/// so a zero-count affirm can say what it did NOT cover (it-awhz) without
+/// walking and re-hashing the whole graph.
+pub fn behind_node(store: &Store, all: &[Node], n: &Node) -> Vec<Behind> {
+    let mut out = Vec::new();
+    {
         let reading_src =
             n.front.ty == "claim" && n.front.kind.as_deref() == Some("reading");
         for e in &n.front.edges {
@@ -354,8 +369,38 @@ pub fn behind(store: &Store, all: &[Node]) -> Vec<Behind> {
             }
         }
     }
-    out.sort_by_key(|b| b.severity);
     out
+}
+
+/// What a scoped affirm did NOT cover (it-awhz). `--to` limits the restamp
+/// to one target, so a zero under it is a statement about that target
+/// alone — at the surface it was indistinguishable from the unscoped zero
+/// that means every ref on the node is current. This splits the node's
+/// post-affirm behind set at the scope the caller gave, so the print layer
+/// can say which zero it is: whether the node carries a ref toward the
+/// target at all, what is still behind toward it (a dangling ref restamps
+/// nothing, so a zero count is not proof of currency), and what is still
+/// behind elsewhere on the node.
+pub struct AffirmScope {
+    /// The node carries a ref toward this target — an edge, or the doc's
+    /// own registered path. False means the `--to` never selected anything,
+    /// which is the incident shape: the recipe named a target this node has
+    /// no behind edge toward.
+    pub target_known: bool,
+    /// Refs toward the target still behind after the affirm.
+    pub toward: usize,
+    /// Refs on this node behind anywhere else — the reach of the statement
+    /// the scoped zero must never make.
+    pub elsewhere: usize,
+}
+
+pub fn affirm_scope(store: &Store, all: &[Node], n: &Node, to: &str) -> AffirmScope {
+    let target_known = n.front.edges.iter().any(|e| e.to == to)
+        || (n.front.ty == "doc"
+            && n.front.path.as_deref().map_or(false, |p| to == format!("file:{}", p)));
+    let (toward, elsewhere): (Vec<_>, Vec<_>) =
+        behind_node(store, all, n).into_iter().partition(|b| b.to == to);
+    AffirmScope { target_known, toward: toward.len(), elsewhere: elsewhere.len() }
 }
 
 /// Affirm is species-shaped by method (dc-6gn9): the ratified teaching the

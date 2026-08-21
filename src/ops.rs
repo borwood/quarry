@@ -1528,14 +1528,28 @@ pub fn affirm(store: &Store, key: &str, only_to: Option<String>) -> Result<usize
             }
         }
     }
-    // A path-backed doc re-affirms its own file.
+    // A path-backed doc re-affirms its own file — under `--to`, only when
+    // the scope names that file (it-awhz). Unscoped, this rides along as
+    // it always has; scoped, it used to restamp regardless of the filter,
+    // so a `--to <some edge>` on a drifted doc restamped the doc's blob and
+    // reported the count as if the named edge had moved. A scoped affirm
+    // acts on its scope alone, or the count it returns cannot be read. The
+    // homework line that advertises this restamp spells the target
+    // `file:<path>` (render::homework, print_homework), so that is the
+    // spelling the scope answers to.
     let mut new_blob = None;
     if node.front.ty == "doc" {
         if let (Some(p), Some(old)) = (&node.front.path, &node.front.blob) {
-            if let Ok(nb) = store.blob(p) {
-                if &nb != old {
-                    new_blob = Some(nb);
-                    count += 1;
+            let in_scope = match &only_to {
+                None => true,
+                Some(f) => f == &format!("file:{}", p),
+            };
+            if in_scope {
+                if let Ok(nb) = store.blob(p) {
+                    if &nb != old {
+                        new_blob = Some(nb);
+                        count += 1;
+                    }
                 }
             }
         }

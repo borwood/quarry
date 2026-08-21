@@ -2225,3 +2225,26 @@
 {"op":"set","fields":["acceptance+=a zero-count affirm says which zero it is: a scoped affirm that restamped nothing names the scope it was given and never reads as a statement about the whole node, while an unscoped zero keeps meaning every ref is current"],"ts":"2026-08-21T11:48:10Z","node":"it-awhz","v":3,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T11:49:08Z","node":"cl-p4k2","v":6,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T11:49:40Z","node":"cl-zj2c","v":8,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:50:17Z","node":"it-awhz","v":3,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:50:17Z","node":"it-awhz","v":3,"op":"reserve","globs":["src/main.rs","src/ops.rs","src/queries.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T11:50:17Z","node":"it-awhz","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:50:17Z","node":"it-awhz","v":3,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/main.rs","src/ops.rs","src/queries.rs","tests/**","docs/reports/2026-08-21-a-scoped-affirm-prints-the-unscoped-all-it-awhz.md"]}
+{"ts":"2026-08-21T11:50:28Z","node":"it-awhz","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-awhz","joined":"agent:a0914170a099b539a","session":"dispatcher"}
+{"ts":"2026-08-21T12:03:22Z","node":"cl-2kxr","v":1,"op":"create","type":"claim","title":"`scoped-affirm`: --to acts and reports on one target alone — the zero names its scope and the node's reach beyond it; the unscoped zero earns its all-clear","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"da8ef57cd4da","ts":"2026-08-21T12:03:22Z","node":"cl-2kxr","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"1fdd2b2cb752","ts":"2026-08-21T12:03:31Z","node":"cl-2kxr","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"55d346308d3f","ts":"2026-08-21T12:03:32Z","node":"cl-2kxr","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"a0b0aeaf24a1","ts":"2026-08-21T12:03:32Z","node":"cl-2kxr","v":5,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"supports","to":"it-awhz","at":4,"ts":"2026-08-21T12:03:32Z","node":"cl-2kxr","v":6,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"ts":"2026-08-21T12:03:47Z","node":"cl-34ra","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"ts":"2026-08-21T12:03:48Z","node":"cl-rr2j","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"ts":"2026-08-21T12:06:00Z","node":"do-anpc","v":1,"op":"create","type":"doc","title":"dispatch report: a scoped affirm prints the unscoped all-clear: --to a target with no behind edge says nothing behind","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-awhz"}
+{"op":"link","rel":"supports","to":"it-awhz","at":4,"ts":"2026-08-21T12:06:00Z","node":"do-anpc","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"ts":"2026-08-21T12:06:21Z","node":"do-anpc","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-awhz"}
+{"ts":"2026-08-21T12:07:57Z","node":"it-awhz","v":4,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T12:08:09Z","node":"cl-2kxr","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T12:08:09Z","node":"it-awhz","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:08:12Z","node":"it-awhz","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:08:14Z","node":"it-nnrs","v":1,"op":"create","type":"item","title":"affirm --to takes no key: a slug or title silently scopes to nothing where every other verb resolves it","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"ts":"2026-08-21T12:08:31Z","node":"cl-2kxr","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T12:08:31Z","node":"it-nnrs","v":2,"actor":"claude-fable-5","session":"dispatcher"}

@@ -205,9 +205,21 @@ well-named vein surfaces itself to future work.
         #[arg(long)]
         note: Option<String>,
     },
-    /// Re-stamp behind edges after review (--to limits to one target)
+    /// Re-stamp behind refs after review (--to limits to one target)
+    #[command(after_help = "EXAMPLES:
+  q affirm cl-up6s                           every behind ref on the node
+  q affirm cl-up6s --to it-dprv              one node target
+  q affirm cl-up6s --to file:src/teach.rs    one file of a multi-file claim
+A file ref is spelled file:<path> — exactly as the behind and homework lines
+print the target, and the right affordance when review covered one file of a
+claim that sources several. --to limits the restamp to ONE target, so what it
+reports speaks for that target alone: the surface names the scope and states
+whether the node is behind anywhere else. Unscoped affirms the whole node.")]
     Affirm {
         node: String,
+        /// Restamp one target only — a node id, or a file ref spelled
+        /// file:<path>. What the affirm reports then speaks for that
+        /// target alone, never for the whole node.
         #[arg(long)]
         to: Option<String>,
     },
@@ -889,6 +901,92 @@ fn line(all: &[Node], n: &Node) -> String {
 /// composed line stands on.
 fn aref(all: &[Node], n: &Node) -> String {
     quarry::surface::atom_ref(&quarry::surface::atom(all, n))
+}
+
+/// The affirm surface's report (it-awhz). One message stood for two facts
+/// the reader could not tell apart: a zero because every ref on this node is
+/// current, and a zero because `--to` named a target this node has no ref
+/// toward — the second is what a copied recipe produces, and it read as an
+/// all-clear over real drift. So a SCOPED affirm now always names the scope
+/// it was given and always states the node's reach beyond it; a scoped line
+/// never makes a statement about the whole node. The UNSCOPED zero keeps its
+/// all-clear and now earns it: a ref that is behind but not restampable (a
+/// dangling target, a missing file) is said out loud instead of collapsing
+/// into "nothing behind". Derived AFTER the act, from the node's own behind
+/// set (queries::behind_node — the same classifier `q query behind` reads),
+/// so every line reports the state the caller now holds, not a prediction.
+fn print_affirm(store: &Store, key: &str, to: Option<&str>, count: usize, teaching: Option<&str>) {
+    let all = store.load_all().unwrap_or_default();
+    let restamped = |t: Option<&str>| {
+        if let Some(x) = teaching {
+            outln!("{}", x);
+        }
+        match t {
+            Some(t) => outln!("✔ restamped {} ref(s) toward {}", count, t),
+            None => outln!("✔ restamped {} ref(s)", count),
+        }
+    };
+    // ops::affirm just resolved this key; the fallback is unreachable in
+    // practice and says nothing it cannot read.
+    let Ok(n) = store.find(&all, key) else {
+        if count == 0 {
+            outln!("nothing restamped.");
+        } else {
+            restamped(to);
+        }
+        return;
+    };
+    match to {
+        Some(t) => {
+            let scope = queries::affirm_scope(store, &all, n, t);
+            // The target reads as itself: an id resolves to its atom, a
+            // file ref stands as written.
+            let target = all
+                .iter()
+                .find(|x| x.front.id == t)
+                .map(|x| aref(&all, x))
+                .unwrap_or_else(|| t.to_string());
+            if count > 0 {
+                restamped(Some(&target));
+            } else if !scope.target_known {
+                outln!("nothing restamped — this node carries no ref toward {}.", target);
+            } else if scope.toward > 0 {
+                outln!(
+                    "nothing restamped toward {} — {} ref(s) there are behind but not restampable (a dangling target or a missing file): q query behind.",
+                    target, scope.toward
+                );
+            } else {
+                outln!("nothing behind toward {} — that ref is current.", target);
+            }
+            if scope.elsewhere > 0 {
+                outln!(
+                    "  --to scoped this to one target: {} other ref(s) on this node are still behind — q query behind, then q affirm {} unscoped to restamp them all.",
+                    scope.elsewhere, n.front.id
+                );
+            } else {
+                outln!("  --to scoped this to one target; nothing else on this node is behind either.");
+            }
+        }
+        None => {
+            let residual = queries::behind_node(store, &all, n).len();
+            if count > 0 {
+                restamped(None);
+                if residual > 0 {
+                    outln!(
+                        "  {} ref(s) on this node are still behind — q query behind.",
+                        residual
+                    );
+                }
+            } else if residual > 0 {
+                outln!(
+                    "nothing restamped — {} ref(s) on this node are behind but not restampable (a dangling target or a missing file): q query behind.",
+                    residual
+                );
+            } else {
+                outln!("nothing behind — no restamp needed.");
+            }
+        }
+    }
 }
 
 /// After a mutation, report the homework it created: citers now behind (with
@@ -2979,15 +3077,13 @@ fn main() -> Result<()> {
                     .ok()
                     .and_then(queries::affirm_teaching)
             });
-            let count = ops::affirm(&store, &node, to)?;
-            if count == 0 {
-                outln!("nothing behind — no restamp needed.");
-            } else {
-                if let Some(t) = teaching {
-                    outln!("{}", t);
-                }
-                outln!("✔ restamped {} ref(s)", count);
-            }
+            let count = ops::affirm(&store, &node, to.clone())?;
+            // Which zero is this? (it-awhz) A `--to` limits the restamp to
+            // one target, so its zero says nothing about the rest of the
+            // node — print_affirm reads the node's post-affirm behind set
+            // and names the scope rather than letting the two zeros share
+            // one line.
+            print_affirm(&store, &node, to.as_deref(), count, teaching);
         }
         Cmd::Archive { node, undo } => {
             let store = Store::resolve()?;

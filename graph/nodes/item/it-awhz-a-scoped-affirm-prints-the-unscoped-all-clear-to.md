@@ -2,8 +2,8 @@
 id: it-awhz
 type: item
 title: 'a scoped affirm prints the unscoped all-clear: --to a target with no behind edge says nothing behind'
-v: 3
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-21T11:44:38Z
 actor: claude-fable-5
