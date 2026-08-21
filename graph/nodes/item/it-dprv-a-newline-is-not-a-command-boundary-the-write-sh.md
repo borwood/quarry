@@ -2,8 +2,8 @@
 id: it-dprv
 type: item
 title: 'a newline is not a command boundary: the write-shape parser reads the next line''s command word as the previous line''s argument'
-v: 2
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-21T11:22:04Z
 actor: claude-fable-5

@@ -919,6 +919,11 @@ pub fn observe_write(
 /// of `>` split into their own token even glued to a neighbor (`2>file`),
 /// so the scan can pair each redirect with the token that follows it.
 ///
+/// An unquoted newline is a command separator too (it-dprv), unless the line
+/// continues — a bash `\` or a PowerShell backtick standing as its own word
+/// before it, which joins the two lines instead. A quoted newline is not a
+/// separator at all: prose inside an argument stays one token.
+///
 /// Two multi-line literals are consumed WHOLE, each as one opaque token,
 /// because both carry PROSE through a parser that would otherwise read it as
 /// command text.
@@ -1030,6 +1035,34 @@ fn shell_tokens(command: &str) -> Vec<Option<String>> {
                     out.push(Some(body));
                     boundary(&mut out);
                 }
+            }
+            // A CRLF's `\r` belongs to the newline behind it, never to the
+            // word in front: skipping it here leaves the continuation check
+            // below reading the real last character of the line.
+            '\r' if chars.peek() == Some(&'\n') => {}
+            // A LINE CONTINUATION, so the two lines are one command: bash's
+            // trailing `\` and PowerShell's trailing backtick, each STANDING
+            // AS ITS OWN WORD — the idiomatic form in both shells. It vanishes
+            // exactly as bash removes a backslash-newline pair, so the tail
+            // joins the command in front of it instead of starting a new one.
+            // The word rule is what keeps the exception from minting: `\` also
+            // ends a Windows directory path, and both shells share this
+            // parser. Measured, a rule reading any trailing `\` turns a
+            // `Copy-Item a.rs B:\dest\` line followed by a `touch src/b.rs`
+            // line into the single target ["B:\desttouch"] — a plausible path
+            // nobody wrote, the expensive direction — and it buys nothing for
+            // the glued form it would cover: a `cp a.rs\` line followed by
+            // `src/b.rs` parses to [] either way, since bash's own joining
+            // makes that destination "a.rssrc/b.rs".
+            '\n' if cur == "\\" || cur == "`" => cur.clear(),
+            // AN UNQUOTED NEWLINE ENDS THE COMMAND BEFORE IT (it-dprv). It
+            // used to be ordinary whitespace, so a multi-line command was ONE
+            // command and only its first word was ever read as a command word
+            // — minting line two's `touch` as a plausible touched path, and
+            // consuming line two's real `cp` as an argument nothing rescanned.
+            '\n' => {
+                flush(&mut cur, &mut out);
+                boundary(&mut out);
             }
             c if c.is_whitespace() => flush(&mut cur, &mut out),
             ';' | '|' | '&' | '(' | ')' => {

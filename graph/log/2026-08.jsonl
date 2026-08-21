@@ -2199,3 +2199,29 @@
 {"ts":"2026-08-21T11:27:11Z","node":"th-rb2j","v":1,"op":"create","type":"thread","title":"a claim that stands on another claim has no edge to say so: builds-on stops at decisions and docs, supports points the load the other way","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T11:27:32Z","node":"th-rb2j","v":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-21T11:27:32Z","node":"th-rb2j","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:28:08Z","node":"it-dprv","v":2,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:28:08Z","node":"it-dprv","v":2,"op":"reserve","globs":["src/teach.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T11:28:08Z","node":"it-dprv","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:28:08Z","node":"it-dprv","v":2,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/teach.rs","tests/**","docs/reports/2026-08-21-a-newline-is-not-a-command-boundary-the-it-dprv.md"]}
+{"ts":"2026-08-21T11:28:19Z","node":"it-dprv","v":3,"op":"join","actor":"claude-fable-5","dispatch":"it-dprv","joined":"agent:a211dc6b7d04e1a62","session":"dispatcher"}
+{"ts":"2026-08-21T11:38:33Z","node":"cl-v2vh","v":1,"op":"create","type":"claim","title":"`newline-boundary`: an unquoted newline ends the command before it; the continuation exception is one word wide","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dprv"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"263089dded71","ts":"2026-08-21T11:38:33Z","node":"cl-v2vh","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"op":"link","rel":"supports","to":"it-dprv","at":3,"ts":"2026-08-21T11:38:57Z","node":"cl-v2vh","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"op":"link","rel":"supports","to":"cl-v2vh","at":3,"ts":"2026-08-21T11:39:14Z","node":"cl-p4k2","v":5,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:40:24Z","node":"cl-p4k2","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:40:25Z","node":"cl-zj2c","v":7,"op":"affirm","restamped":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:40:28Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:42:27Z","node":"do-rrzu","v":1,"op":"create","type":"doc","title":"dispatch report: a newline is not a command boundary: the write-shape parser reads the next line's command word as the previous line's argument","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dprv"}
+{"op":"link","rel":"supports","to":"it-dprv","at":3,"ts":"2026-08-21T11:42:27Z","node":"do-rrzu","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:43:24Z","node":"do-rrzu","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:44:38Z","node":"it-awhz","v":1,"op":"create","type":"item","title":"a scoped affirm prints the unscoped all-clear: --to a target with no behind edge says nothing behind","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dprv"}
+{"op":"body","ts":"2026-08-21T11:44:42Z","node":"it-awhz","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:45:19Z","node":"do-rrzu","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dprv"}
+{"ts":"2026-08-21T11:47:04Z","node":"it-dprv","v":3,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T11:47:14Z","node":"cl-v2vh","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T11:47:15Z","node":"it-dprv","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:47:17Z","node":"it-dprv","v":4,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:47:29Z","node":"cl-v2vh","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a zero-count affirm says which zero it is: a scoped affirm that restamped nothing names the scope it was given and never reads as a statement about the whole node, while an unscoped zero keeps meaning every ref is current"],"ts":"2026-08-21T11:48:10Z","node":"it-awhz","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T11:49:08Z","node":"cl-p4k2","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T11:49:40Z","node":"cl-zj2c","v":8,"actor":"claude-fable-5","session":"dispatcher"}

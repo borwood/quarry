@@ -6254,6 +6254,83 @@ fn write_shapes_never_mints_a_path_from_a_bash_heredoc_body() {
     assert_eq!(write_shapes("sort < in.txt > out/sorted.txt"), vec!["out/sorted.txt"]);
 }
 
+/// The it-dprv defect: a newline was ordinary whitespace, so a multi-line
+/// command tokenized as ONE command and only its first word was ever read as
+/// a command word. Both error directions followed — a later line's command
+/// word minted as a path (the plausibility floor cannot catch it: "touch" is
+/// a legal filename), and a real write on a later line went unseen.
+#[test]
+fn a_newline_ends_the_command_before_it_unless_the_line_continues() {
+    use quarry::teach::write_shapes;
+    // FALSE POSITIVE, the it-ap3x/it-dt68 class again: pre-fix this parsed to
+    // ["src/a.rs", "touch", "src/b.rs"] — line two's command word read as an
+    // argument of line one's `touch` and minted as a touched path.
+    assert_eq!(
+        write_shapes("touch src/a.rs\ntouch src/b.rs"),
+        vec!["src/a.rs", "src/b.rs"]
+    );
+    // FALSE NEGATIVE: pre-fix this parsed to ["build.log"] alone — the `cp` on
+    // line two was consumed as an argument of line one and never scanned as a
+    // command, so the sight boundary widened by a whole line.
+    assert_eq!(
+        write_shapes("cargo build > build.log\ncp fixtures/a.rs src/a.rs"),
+        vec!["build.log", "src/a.rs"]
+    );
+    // Every line is its own command, however many there are, and a CRLF ends
+    // one exactly as an LF does.
+    assert_eq!(
+        write_shapes("touch src/a.rs\ntouch src/b.rs\ntouch src/c.rs"),
+        vec!["src/a.rs", "src/b.rs", "src/c.rs"]
+    );
+    assert_eq!(
+        write_shapes("touch src/a.rs\r\ntouch src/b.rs"),
+        vec!["src/a.rs", "src/b.rs"]
+    );
+    // A redirect left dangling at the end of a line takes no target from the
+    // next line — pre-fix it took "touch".
+    assert_eq!(write_shapes("cargo build >\ntouch src/a.rs"), vec!["src/a.rs"]);
+    // A LINE CONTINUATION KEEPS ITS TAIL. This tokenizer does no escape
+    // handling, so a naive newline boundary would drop the destination of a
+    // wrapped command: bash's trailing `\` and PowerShell's trailing backtick
+    // both join the lines instead.
+    assert_eq!(write_shapes("cp fixtures/a.rs \\\n  src/b.rs"), vec!["src/b.rs"]);
+    assert_eq!(write_shapes("cp fixtures/a.rs \\\r\n  src/b.rs"), vec!["src/b.rs"]);
+    assert_eq!(
+        write_shapes("Copy-Item a.rs `\n  -Destination src/b.rs"),
+        vec!["src/b.rs"]
+    );
+    assert_eq!(write_shapes("cargo build \\\n  > build.log"), vec!["build.log"]);
+    // The continuation character must STAND AS ITS OWN WORD — the idiomatic
+    // form in both shells, and the narrowing that keeps the exception from
+    // minting. A Windows path ending in a separator is not a continuation, so
+    // the line after it is still read as its own command: measured, a rule
+    // reading ANY trailing `\` parses this to ["B:\\desttouch"] alone — a
+    // plausible path nobody wrote, and line two's real write lost with it.
+    assert_eq!(
+        write_shapes("Copy-Item a.rs B:\\dest\\\ntouch src/b.rs"),
+        vec!["B:\\dest\\", "src/b.rs"]
+    );
+    // The residue, pinned: a continuation GLUED to its word is not read, so a
+    // wrapped `cp` loses its destination. The broad rule buys nothing here —
+    // bash's own joining makes that destination "a.rssrc/b.rs", which the
+    // parse drops either way — so the loss is the word rule's price nowhere.
+    assert!(write_shapes("cp a.rs\\\nsrc/b.rs").is_empty());
+    // A QUOTED newline is not a boundary: prose inside an argument stays one
+    // token, so a commit message line that reads like a command mints nothing
+    // (the it-ap3x/it-dt68 floor, reached through this arm).
+    assert_eq!(
+        write_shapes("git commit -m \"line one\ntouch src/ghost.rs\" && touch src/real.rs"),
+        vec!["src/real.rs"]
+    );
+    // The heredoc body is still taken whole, and the command after its
+    // terminator is still its own command (it-dt68's positive control, now
+    // reached with newlines carrying boundaries of their own).
+    assert_eq!(
+        write_shapes("cat <<EOF > out/real.txt\ntouch src/ghost.rs\nEOF\ntouch src/real.rs"),
+        vec!["out/real.txt", "src/real.rs"]
+    );
+}
+
 #[test]
 fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
     let s = temp_store();
@@ -6337,6 +6414,26 @@ fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
         paths,
         vec!["tests/basic.rs", "src/lib.rs", "out.log"],
         "the heredoc commit accrued its body as touched paths"
+    );
+    // it-dprv, the same reasoning where a newline was mere whitespace: line
+    // two's command word read as line one's argument, and a bare "touch"
+    // resolves store-relative by mere joining — an observed path no judgment
+    // seat could tell from a real write, and no plausibility floor can refuse
+    // ("touch" is a legal filename). The drop belongs at the parse; line two's
+    // own write, invisible for the same reason, accrues.
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        "touch src/one.rs\ncp fixtures/a.rs src/two.rs",
+        Some(&cwd),
+    );
+    let touches = quarry::coord::touches_for(&s, "item:it-shell");
+    let paths: Vec<&str> = touches.iter().map(|t| t.path.as_str()).collect();
+    assert_eq!(
+        paths,
+        vec!["tests/basic.rs", "src/lib.rs", "out.log", "src/one.rs", "src/two.rs"],
+        "the second line's command word accrued, or its write went unseen"
     );
 }
 

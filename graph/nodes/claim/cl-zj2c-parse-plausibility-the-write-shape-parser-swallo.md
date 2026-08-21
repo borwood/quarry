@@ -2,7 +2,7 @@
 id: cl-zj2c
 type: claim
 title: '`parse-plausibility`: the write-shape parser swallows here-strings whole and refuses targets that cannot be filenames'
-v: 7
+v: 8
 status: ratified
 provenance: assistant
 created: 2026-08-21T09:16:17Z
@@ -17,13 +17,13 @@ edges:
   at: 1
 - rel: source
   to: file:src/teach.rs
-  at: b4c33066b79b
+  at: 263089dded71
 - rel: supports
   to: it-ap3x
   at: 4
 - rel: source
   to: file:tests/basic.rs
-  at: 8de5dd671593
+  at: 1e4899ab4417
 - rel: supports
   to: it-dt68
   at: 5
@@ -45,4 +45,6 @@ Pinned by write_shapes_drops_parser_debris_and_sigils (the incident command verb
 
 AMENDED AT THE it-dt68 LANDING (2026-08-21, the dispatcher's hand): the heredoc residue this paragraph used to name as open is closed. cl-p4k2 tracks the delimiter from the opener and consumes a bash heredoc body — bare, quoted, and tab-stripped forms alike — as one opaque token, taken at the newline that ends the opener line so a redirect beside the delimiter still belongs to its command. It was the same class one channel over, and worse than predicted: measured pre-fix, the repo's own commit road (git commit -F - with a heredoc) minted the terminator EOF as a touched path, the it-ap3x incident replayed verbatim in the channel this repo moved to BECAUSE of it-ap3x.
 
-The residue that remains is narrower and named: it-dprv — a newline is not a command boundary in shell_tokens, so a multi-line command reads as one command. Both directions are measured there: a later line's command word mints as a plausible path (the floor cannot catch it, "touch" being a legal filename), and a real write on a later line goes unseen. The cure wants the newline boundary plus a line-continuation exception, which is why it was filed rather than folded in here.
+AMENDED AGAIN AT THE it-dprv LANDING (2026-08-21, same hand, same day): that landing closed the last of it. it-dprv was a newline not being a command boundary, so a multi-line command read as one command — a later line's command word minting as a plausible path the floor cannot catch ("touch" is a legal filename), and a real write on a later line going unseen. cl-v2vh ends the command at an unquoted newline, with a continuation exception one word wide.
+
+So the three tokenizer holes this vein's line of work opened with are all shut: the here-string desync here, the heredoc body at cl-p4k2, the newline boundary at cl-v2vh. What is left is not a hole but a stated boundary — framings::SIGHT_BOUNDARY's own residue: opaque scripts, git apply, generated files, and the glued line-continuation form, which parses to nothing either way. The channel remains best-effort by construction, and that is the design, not a gap.
