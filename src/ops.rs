@@ -1101,6 +1101,16 @@ pub struct DispatchOutcome {
     /// agent runs q join and the brief renders fresh from the graph, so a
     /// stale or dispatcher-mangled copy is impossible.
     pub spawn: String,
+    /// The model stamped into the badge (it-xcvb), verbatim as the
+    /// dispatcher typed it. None when the fire named none.
+    pub model: Option<String>,
+    /// The actor this arc's graph writes will file under — the stamped model
+    /// through `safe_actor`, or the dispatching chat's own actor inherited.
+    /// The fire states it either way: this is the one station that can fix a
+    /// wrong answer before the agent exists.
+    pub arc_actor: String,
+    /// True when `arc_actor` came from the stamp rather than inheritance.
+    pub actor_stamped: bool,
 }
 
 /// The acceptance gate's fire-time backstop (dc-p6z4): reserve and dispatch
@@ -1184,6 +1194,7 @@ pub fn dispatch(
     shared: bool,
     steal: bool,
     reason: Option<&str>,
+    model: Option<&str>,
     session: &str,
     actor: &str,
 ) -> Result<DispatchOutcome> {
@@ -1342,11 +1353,18 @@ pub fn dispatch(
             checked: now,
             token: Some(token.clone()),
             joined: None,
+            // The model stamp (it-xcvb), minted with the badge and spent by
+            // the session hook at the joined agent's shells. Re-stamped on
+            // every fire by construction — a re-dispatch or a steal builds a
+            // fresh entry, so an arc handed to a different model carries the
+            // model it was handed to.
+            model: model.map(|m| m.trim().to_string()).filter(|m| !m.is_empty()),
         },
     )?;
     store.log_event(json!({
         "ts": Store::now(), "node": item.front.id, "v": item.front.v,
-        "op": "dispatch", "actor": actor, "session": session, "globs": globs
+        "op": "dispatch", "actor": actor, "session": session, "globs": globs,
+        "model": model
     }))?;
     // The spawn line stamps the canonical graph root beside the token
     // (dc-g5x5): join consumes the pin explicitly, then plants it for the
@@ -1366,6 +1384,7 @@ pub fn dispatch(
         root = store.root.display(),
         token = token
     );
+    let stamped = model.map(|m| m.trim().to_string()).filter(|m| !m.is_empty());
     Ok(DispatchOutcome {
         item_id: item.front.id.clone(),
         item_title: crate::surface::title_raw(&item).to_string(),
@@ -1374,6 +1393,12 @@ pub fn dispatch(
         stolen_from,
         token,
         spawn,
+        arc_actor: stamped
+            .as_deref()
+            .map(crate::coord::safe_actor)
+            .unwrap_or_else(|| actor.to_string()),
+        actor_stamped: stamped.is_some(),
+        model: stamped,
     })
 }
 
@@ -1387,6 +1412,14 @@ pub struct JoinOutcome {
     /// The brief, rendered fresh from the graph at join time — opened by the
     /// where-you-stand banner when the join happens in a fork (it-rmqy).
     pub brief: String,
+    /// The actor this arc's graph writes file under (it-xcvb) — the badge's
+    /// stamped model when the dispatcher named one, the inherited chat actor
+    /// otherwise. Stated at the join because the joining agent is the ONE
+    /// party that knows its own model for certain and can say so in its
+    /// report when this reads wrong.
+    pub arc_actor: String,
+    /// True when `arc_actor` came from the badge stamp.
+    pub actor_stamped: bool,
 }
 
 /// The where-you-stand banner (it-rmqy): `Some(line)` when the working
@@ -1448,6 +1481,21 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
     // badged shells, and hook processes read it directly. Recorded on
     // re-join too: an idempotent read that restores a lost pin.
     crate::store::pin_identity(&id_key, &store.root, &d.item);
+    // The badge's model stamp reaches this process one act too late to ride
+    // the hook (it-xcvb): the PreToolUse firing that injected QUARRY_ACTOR
+    // into THIS shell ran before the bind existed, so the env still carries
+    // the dispatching chat's model. Every later shell resolves the badge and
+    // gets it right; the join event is the whole of the window, so it is
+    // stamped here from the badge directly. Agent-keyed only, matching
+    // `coord::badge_model` — a chat- or session-keyed joiner is a real chat
+    // whose own model is already recorded.
+    let stamped = d
+        .model
+        .as_deref()
+        .filter(|m| !m.trim().is_empty())
+        .filter(|_| id_key.starts_with("agent:"))
+        .map(crate::coord::safe_actor);
+    let arc_actor = stamped.clone().unwrap_or_else(Store::actor);
     if bound.is_some() {
         // Logged once, at the bind: the join is the arc's first badged act.
         let v = store
@@ -1457,7 +1505,7 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
             .unwrap_or(0);
         store.log_event(json!({
             "ts": Store::now(), "node": d.item, "v": v, "op": "join",
-            "actor": Store::actor(), "dispatch": d.item, "joined": id_key
+            "actor": arc_actor, "dispatch": d.item, "joined": id_key
         }))?;
     }
     // The brief opens with where the agent actually stands (it-rmqy): a
@@ -1492,6 +1540,8 @@ pub fn join(store: &Store, token: &str, identity: Option<String>) -> Result<Join
         bound,
         rejoined,
         brief,
+        actor_stamped: stamped.is_some(),
+        arc_actor,
     })
 }
 

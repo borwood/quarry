@@ -323,7 +323,14 @@ Fire-time routing (dc-crea): from a non-dispatch session, when a live
 dispatch-kind session covers the item, nothing fires — the item stays
 ready (ready IS the dispatcher feed) and the live session(s) are named;
 none awake offers which dispatcher to wake. Advisory, stateless, never a
-gate: --solo fires from anywhere, no reason demanded.")]
+gate: --solo fires from anywhere, no reason demanded.
+--model names the model you are SPAWNING ON, and the fire stamps it into
+the badge (it-xcvb). The harness hands a subagent's hooks no model of any
+kind — only SessionStart carries one, and a subagent never fires it — so
+without the stamp the agent's shells inherit YOUR model and every node it
+mints files under a model that did not write it. Omit --model only when
+the spawn genuinely inherits this chat's model; the fire states which of
+the two you got, above the spawn prompt, every time.")]
     Dispatch {
         item: String,
         /// Write-set globs for the lease, one glob per flag, repeatable
@@ -343,6 +350,11 @@ gate: --solo fires from anywhere, no reason demanded.")]
         /// (routing is advisory — fire solo stays legitimate, dc-crea)
         #[arg(long)]
         solo: bool,
+        /// The model you are spawning this arc on — stamped into the badge so
+        /// the agent's graph writes file under the model that wrote them.
+        /// Omit only when the spawn inherits this chat's model.
+        #[arg(long)]
+        model: Option<String>,
     },
     /// Join a dispatch: consume the spawn-prompt token, bind this agent's
     /// identity to the badge, and render the brief fresh from the graph
@@ -2041,7 +2053,7 @@ fn main() -> Result<()> {
                 outln!("  view regenerated: {}", p.display());
             }
         }
-        Cmd::Dispatch { item, files, shared, steal, reason, solo } => {
+        Cmd::Dispatch { item, files, shared, steal, reason, solo, model } => {
             let store = Store::resolve()?;
             let sess = coord::current_session().ok_or_else(|| {
                 anyhow::anyhow!(
@@ -2122,6 +2134,7 @@ fn main() -> Result<()> {
                 shared,
                 steal,
                 reason.as_deref(),
+                model.as_deref(),
                 &sess,
                 &Store::actor(),
             )?;
@@ -2165,6 +2178,25 @@ fn main() -> Result<()> {
                 "  when the report arrives, YOU judge and land: q harvest {}  (the agent's done is a stop signal)",
                 out.item_id
             );
+            // Attribution is stated at the fire (it-xcvb), every time, right
+            // where the dispatcher is about to choose a model: the harness
+            // gives a subagent's hooks no model of its own, so the badge's
+            // stamp is the only thing standing between a dispatched arc and
+            // filing every node it mints under the model that merely sent it.
+            // This is the one station that can still fix a wrong answer — the
+            // agent does not exist yet, and by the time it does, extending
+            // the record is the dispatcher's hand again.
+            if out.actor_stamped {
+                outln!(
+                    "  attribution: this arc's graph writes file under {} — spawn the agent on that model, or re-fire naming the one you use.",
+                    out.arc_actor
+                );
+            } else {
+                outln!(
+                    "  attribution: no --model given, so this arc's graph writes file under {} — this chat's own model, inherited. Right only if the spawn inherits it too; on any other model every node the agent mints files under a model that did not write it, and the commit convention is read from the graph. Re-fire naming it: q dispatch {} --model <model>",
+                    out.arc_actor, out.item_id
+                );
+            }
             outln!("\nSPAWN PROMPT (one line — the agent fetches its own brief at join):");
             outln!("{}", out.spawn);
         }
@@ -2179,14 +2211,35 @@ fn main() -> Result<()> {
                 coord::current_session().as_deref(),
             );
             let out = ops::join(&store, &token, identity)?;
+            // The second net, at the only seat that KNOWS (it-xcvb): no
+            // channel tells a subagent's hooks what model it runs, but the
+            // agent itself is told so in its own system prompt. Stating what
+            // the arc files under makes a wrong stamp reportable instead of
+            // silent — the machine cannot see the mismatch, and the agent
+            // cannot fix it (extending a badge is the dispatcher's hand), so
+            // the report is the road. It rides the BIND line rather than a
+            // line of its own: the banner must be the very next thing a fork
+            // join says (it-rmqy), and this is the same sentence's subject —
+            // where your acts resolve, and what they file under.
+            let attribution = if out.actor_stamped {
+                format!(
+                    " Those acts file under {}, stamped into the badge at the fire — if that is not the model you are, say so in your report.",
+                    out.arc_actor
+                )
+            } else {
+                format!(
+                    " Those acts file under {}, inherited from the dispatching chat because the harness tells a subagent's hooks nothing about its own model — if that is not the model you are, say so in your report and the dispatcher re-fires with q dispatch {} --model <yours>.",
+                    out.arc_actor, out.item_id
+                )
+            };
             match (&out.bound, out.rejoined) {
                 (Some(key), _) => outln!(
-                    "✔ joined: \"{}\" ({}) — identity {} bound to the badge; your q acts and file writes now resolve to it. The brief below is derived fresh from the graph.\n",
-                    out.item_title, out.item_id, key
+                    "✔ joined: \"{}\" ({}) — identity {} bound to the badge; your q acts and file writes now resolve to it.{} The brief below is derived fresh from the graph.\n",
+                    out.item_title, out.item_id, key, attribution
                 ),
                 (None, true) => outln!(
-                    "already joined: \"{}\" ({}) — re-rendering the brief (derived fresh; a re-join is a read, not a state change).\n",
-                    out.item_title, out.item_id
+                    "already joined: \"{}\" ({}) — re-rendering the brief (derived fresh; a re-join is a read, not a state change).{}\n",
+                    out.item_title, out.item_id, attribution
                 ),
                 _ => {}
             }

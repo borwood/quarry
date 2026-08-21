@@ -626,6 +626,19 @@ pub struct DispatchState {
     /// badge (it-tanf; see bind_acting).
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub joined: Option<String>,
+    /// The MODEL the dispatcher spawned this arc with, stamped at the fire
+    /// (it-xcvb). The harness hands a subagent's hook input no model of any
+    /// kind — measured 2026-08-21: a PreToolUse firing inside a subagent
+    /// carries session_id, transcript_path, cwd, prompt_id, permission_mode,
+    /// agent_id, agent_type, effort, and the tool fields, and nothing else —
+    /// and only SessionStart carries `model`, which a subagent never fires.
+    /// So the model cannot be learned at the agent's seat; the dispatcher is
+    /// the one party that knows it, and the badge is where it already writes.
+    /// Absent means "not stated": the arc keeps inheriting the dispatching
+    /// chat's recorded model, which is correct exactly when the spawn
+    /// inherited it too.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub model: Option<String>,
 }
 
 /// The machine-local dispatch state: one held entry per live-dispatched
@@ -1664,6 +1677,39 @@ pub fn chat_actor(store: &Store, chat_id: &str) -> Option<String> {
     let map: BTreeMap<String, String> =
         serde_json::from_str(&fs::read_to_string(actors_path(store)).ok()?).ok()?;
     map.get(chat_id).cloned()
+}
+
+/// The model a JOINED SUBAGENT's work files under (it-xcvb) — the one
+/// derivation point, pure over the dispatch map so the defect and the cure
+/// are both measurable without a store.
+///
+/// Keyed on the AGENT identity alone, deliberately. An agent id is the mark
+/// the harness gives only to a subagent, and a subagent is exactly the
+/// population whose model no channel reports; every other identity is a real
+/// chat, which fired SessionStart and therefore already has its own model in
+/// the chat-actor map. Reading a chat-keyed acting row here would buy nothing
+/// and would spread the badge's model onto the dispatching chat's own shells
+/// in the no-agent-id fallback, where parent and subagent are
+/// indistinguishable (see `record_acting`) — mis-attribution in the other
+/// direction, which is the expensive one.
+///
+/// `live_acting_badge` does the honest work: a row pointing at a cleared
+/// dispatch is residue, so a harvested arc stops overriding by construction.
+pub fn badge_model(m: &DispatchMap, agent: &str) -> Option<String> {
+    let badge = live_acting_badge(m, &format!("agent:{}", agent))?;
+    m.held
+        .get(&badge)?
+        .model
+        .clone()
+        .filter(|s| !s.trim().is_empty())
+}
+
+/// The store-reading half of `badge_model`, already through `safe_actor` —
+/// what the session hook injects as QUARRY_ACTOR for a joined agent's shells.
+/// None means "nothing stamped": the caller keeps its existing resolution.
+pub fn badge_actor(store: &Store, agent: Option<&str>) -> Option<String> {
+    let agent = agent?;
+    badge_model(&load_dispatches(store), agent).map(|m| safe_actor(&m))
 }
 
 /// Provenance derivation keys on "claude" in the actor string; a display

@@ -2,8 +2,8 @@
 id: it-xcvb
 type: item
 title: 'dispatched work is attributed to the dispatcher''s model: a subagent''s actor is inherited, never recorded'
-v: 3
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-21T09:02:19Z
 actor: claude-fable-5

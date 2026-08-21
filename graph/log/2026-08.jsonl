@@ -2248,3 +2248,34 @@
 {"ts":"2026-08-21T12:08:14Z","node":"it-nnrs","v":1,"op":"create","type":"item","title":"affirm --to takes no key: a slug or title silently scopes to nothing where every other verb resolves it","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"ts":"2026-08-21T12:08:31Z","node":"cl-2kxr","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T12:08:31Z","node":"it-nnrs","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:08:58Z","node":"it-xcvb","v":3,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:08:58Z","node":"it-xcvb","v":3,"op":"reserve","globs":["src/coord.rs","src/teach.rs","src/main.rs","src/ops.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T12:08:58Z","node":"it-xcvb","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:08:58Z","node":"it-xcvb","v":3,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/coord.rs","src/teach.rs","src/main.rs","src/ops.rs","tests/**","docs/reports/2026-08-21-dispatched-work-is-attributed-to-the-it-xcvb.md"]}
+{"ts":"2026-08-21T12:09:25Z","node":"it-xcvb","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-xcvb","joined":"agent:ac023366b4c2830a6","session":"dispatcher"}
+{"ts":"2026-08-21T12:35:08Z","node":"cl-dqt4","v":1,"op":"create","type":"claim","title":"`attribution-stamp`: dispatch stamps the spawn model into the badge; the session hook spends it for the joined agent, keyed on the agent id alone","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"b7a568132432","ts":"2026-08-21T12:35:08Z","node":"cl-dqt4","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"d050af9d9994","ts":"2026-08-21T12:35:24Z","node":"cl-dqt4","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"7785f1965da3","ts":"2026-08-21T12:35:24Z","node":"cl-dqt4","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"75651d05f793","ts":"2026-08-21T12:35:24Z","node":"cl-dqt4","v":5,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"e8aeebc6fba8","ts":"2026-08-21T12:35:24Z","node":"cl-dqt4","v":6,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"supports","to":"it-xcvb","at":4,"ts":"2026-08-21T12:35:34Z","node":"cl-dqt4","v":7,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"about","to":"ar-xa38","at":1,"ts":"2026-08-21T12:35:34Z","node":"cl-dqt4","v":8,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"supports","to":"cl-dqt4","at":8,"ts":"2026-08-21T12:35:50Z","node":"cl-z6gc","v":6,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"supports","to":"cl-dqt4","at":8,"ts":"2026-08-21T12:35:50Z","node":"cl-kggw","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:36:08Z","node":"it-j4tx","v":1,"op":"create","type":"item","title":"the chat-actor row goes stale on a model switch: SessionStart writes it once and the session files under a model that stopped writing it","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:36:25Z","node":"it-6ekf","v":1,"op":"create","type":"item","title":"probe SubagentStart for a model field: if the harness names a subagent's model, per-agent attribution stops being a flag","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:36:43Z","node":"th-e5ez","v":1,"op":"create","type":"thread","title":"should q dispatch require --model? the attribution stamp is discipline, and dc-zbxj ruled identity structural","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:05Z","node":"th-t2fx","v":1,"op":"create","type":"thread","title":"this arc's own mints file under the wrong model, and nothing can re-attribute a node after the fact","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:49Z","node":"cl-z6gc","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:50Z","node":"cl-6ctr","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:50Z","node":"cl-p6aj","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:58Z","node":"cl-kggw","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:37:59Z","node":"cl-kr7f","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:39:56Z","node":"do-ezea","v":1,"op":"create","type":"doc","title":"dispatch report: dispatched work is attributed to the dispatcher's model: a subagent's actor is inherited, never recorded","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-xcvb"}
+{"op":"link","rel":"supports","to":"it-xcvb","at":4,"ts":"2026-08-21T12:39:56Z","node":"do-ezea","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-xcvb"}
+{"ts":"2026-08-21T12:43:13Z","node":"it-xcvb","v":4,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T12:43:36Z","node":"cl-dqt4","v":9,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T12:43:36Z","node":"it-xcvb","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:43:39Z","node":"it-xcvb","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:43:49Z","node":"cl-dqt4","v":9,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}

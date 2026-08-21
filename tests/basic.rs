@@ -611,7 +611,7 @@ fn dispatch_wake_leads_with_ready_inflight_and_homework() {
     f.about = vec![aid.clone()];
     f.acceptance = vec!["the flight lands".into()];
     let f = ops::new_node(&s, f).unwrap();
-    ops::dispatch(&s, &f.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    ops::dispatch(&s, &f.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     let mut th = NewArgs::bare("thread", "which datum wins?");
     th.status = Some("queued".into());
     th.about = vec![aid.clone()];
@@ -961,7 +961,7 @@ fn attention_rides_the_actor_watermarks_and_deliveries_are_badge_scoped() {
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
     let out =
-        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "design", "t")
             .unwrap();
     // the holding session read the area with its own eyes before dispatching
     record_area_read(&s, "design", &aid);
@@ -1051,7 +1051,7 @@ fn joined_agent_spares_the_holding_sessions_watermarks_end_to_end() {
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
     let out =
-        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "design", "t")
             .unwrap();
     // the agent joins from a shell wearing the holding session's env plus
     // its own agent id — the real dispatched shape
@@ -1281,6 +1281,7 @@ fn dispatch_state_and_touched_accrual() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     assert_eq!(quarry::coord::dispatch_for_item(&s, "it-test").unwrap().holder, "chat:chat-a");
@@ -1457,6 +1458,7 @@ fn log_events_stamp_the_badge_from_state() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     // env transport is per child process — the threaded suite never sets
@@ -1561,6 +1563,7 @@ fn observe_write_contract_echo_and_drift() {
         checked: Store::now(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     // first badged write echoes the contract once
@@ -1639,7 +1642,7 @@ fn dispatch_one_act_then_harvest() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     // the hand-off is a FETCH (dc-zbxj): one line, token inside, nothing
     // hand-carried — the manual-export instruction is dead
     assert_eq!(out.spawn.lines().count(), 1, "spawn prompt is one line: {}", out.spawn);
@@ -1665,7 +1668,7 @@ fn dispatch_one_act_then_harvest() {
     assert!(d.joined.is_none(), "unconsumed until an agent joins");
     assert!(quarry::coord::briefed_this_session(&s, &it.front.id, "geo"), "dispatch briefs (C8)");
     // re-dispatch keeps the lease but is a NEW hand-off: fresh token
-    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, None, "geo", "t").unwrap();
     assert!(again.reused_lease);
     assert_ne!(again.token, out.token, "a re-dispatch mints a fresh token");
     // FLIP (dc-qyr5, was: "a second dispatch refuses from the chat already
@@ -1674,14 +1677,14 @@ fn dispatch_one_act_then_harvest() {
     let mut other = NewArgs::bare("item", "other work");
     other.acceptance = vec!["the docs land".into()];
     let other = ops::new_node(&s, other).unwrap();
-    let par = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, false, None, "geo", "t").unwrap();
+    let par = ops::dispatch(&s, &other.front.id, vec!["docs/**".into()], false, false, None, None, "geo", "t").unwrap();
     assert!(!par.reused_lease);
     let held = quarry::coord::held_dispatches(&s, "session:geo");
     assert_eq!(held.len(), 2, "one chat, two live dispatches (dc-qyr5)");
     // …what refuses now is PER-ITEM ownership: another chat dispatching a
     // live-dispatched item is turned away naming the holding chat and
     // session, with the loud road advertised
-    let err = ops::dispatch(&s, &other.front.id, vec![], false, false, None, "geo2", "t").unwrap_err();
+    let err = ops::dispatch(&s, &other.front.id, vec![], false, false, None, None, "geo2", "t").unwrap_err();
     assert!(err.to_string().contains("already dispatched"), "got: {}", err);
     assert!(err.to_string().contains("session:geo"), "holding chat named: {}", err);
     assert!(err.to_string().contains("session geo"), "holding session named: {}", err);
@@ -1755,7 +1758,7 @@ fn dispatch_refuses_settled_and_foreign_lease() {
     let mut done = NewArgs::bare("item", "landed work");
     done.status = Some("done".into());
     let done = ops::new_node(&s, done).unwrap();
-    let err = ops::dispatch(&s, &done.front.id, vec!["src/**".into()], false, false, None, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &done.front.id, vec!["src/**".into()], false, false, None, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("[done]"), "got: {}", err);
     // a foreign SOLO lease (no live dispatch) still blocks dispatch with the
     // holder named — the dispatch steal takes dispatches, not solo leases
@@ -1763,13 +1766,13 @@ fn dispatch_refuses_settled_and_foreign_lease() {
     it.acceptance = vec!["the work lands".into()];
     let it = ops::new_node(&s, it).unwrap();
     quarry::coord::reserve(&s, &it, "bodies", "t", vec!["src/x/**".into()], false, false, None).unwrap();
-    let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, false, None, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &it.front.id, vec!["src/x/**".into()], false, false, None, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("bodies"), "got: {}", err);
     // no globs anywhere refuses with the teaching line
     let mut bare = NewArgs::bare("item", "bare work");
     bare.acceptance = vec!["the work lands".into()];
     let bare = ops::new_node(&s, bare).unwrap();
-    let err = ops::dispatch(&s, &bare.front.id, vec![], false, false, None, "geo", "t").unwrap_err();
+    let err = ops::dispatch(&s, &bare.front.id, vec![], false, false, None, None, "geo", "t").unwrap_err();
     assert!(err.to_string().contains("--files"), "got: {}", err);
 }
 
@@ -1782,17 +1785,17 @@ fn dispatch_steal_takes_the_dispatch_whole() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     // an agent joined the original dispatch and works under it
     ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap();
     assert_eq!(quarry::coord::badge_for(&s, Some("ag-old"), None, None).as_deref(), Some(it.front.id.as_str()));
     // --steal without --reason refuses: the reason is required (dc-qyr5),
     // and nothing moved
-    let err = ops::dispatch(&s, &it.front.id, vec![], false, true, None, "ops", "t").unwrap_err();
+    let err = ops::dispatch(&s, &it.front.id, vec![], false, true, None, None, "ops", "t").unwrap_err();
     assert!(err.to_string().contains("--reason"), "got: {}", err);
     assert_eq!(quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap().holder, "session:geo");
     // steal with the reason takes the dispatch WHOLE
-    let st = ops::dispatch(&s, &it.front.id, vec![], false, true, Some("holder went dark"), "ops", "t").unwrap();
+    let st = ops::dispatch(&s, &it.front.id, vec![], false, true, Some("holder went dark"), None, "ops", "t").unwrap();
     assert_eq!(
         st.stolen_from,
         Some(("session:geo".to_string(), "geo".to_string())),
@@ -1844,7 +1847,7 @@ fn join_consumes_token_binds_and_renders() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     // no identity refuses WITHOUT consuming — the retry stays possible
     let err = ops::join(&s, &out.token, None).unwrap_err();
     assert!(err.to_string().contains("no identity"), "got: {}", err);
@@ -1895,7 +1898,7 @@ fn join_consumes_token_binds_and_renders() {
     let err = ops::join(&s, "zzzzzzzzzz", Some("agent:ag-1".into())).unwrap_err();
     assert!(err.to_string().contains("unknown join token"), "got: {}", err);
     // a re-dispatch is a new hand-off: fresh token, joined reset, old dead
-    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, None, "geo", "t").unwrap();
     assert!(quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap().joined.is_none());
     let err = ops::join(&s, &out.token, Some("agent:ag-1".into())).unwrap_err();
     assert!(err.to_string().contains("unknown join token"), "the old token died with the re-dispatch: {}", err);
@@ -1916,7 +1919,7 @@ fn join_cli_env_identity_transport() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     let q = env!("CARGO_BIN_EXE_q");
     let run = |envs: &[(&str, &str)], args: &[&str]| {
         let mut c = std::process::Command::new(q);
@@ -1964,7 +1967,7 @@ fn join_cli_env_identity_transport() {
     it2.about = vec![area.front.id.clone()];
     it2.acceptance = vec!["the second lands".into()];
     let it2 = ops::new_node(&s, it2).unwrap();
-    let out4 = ops::dispatch(&s, &it2.front.id, vec!["docs/**".into()], false, false, None, "geo2", "t").unwrap();
+    let out4 = ops::dispatch(&s, &it2.front.id, vec!["docs/**".into()], false, false, None, None, "geo2", "t").unwrap();
     let out5 = run(&[("QUARRY_CHAT", "chat-f")], &["join", &out4.token]);
     assert!(out5.status.success(), "{}", String::from_utf8_lossy(&out5.stderr));
     assert_eq!(
@@ -1989,8 +1992,8 @@ fn join_refuses_a_second_live_badge_naming_the_roads_out() {
     };
     let one = mk("first pass", "the first lands");
     let two = mk("second pass", "the second lands");
-    let d1 = ops::dispatch(&s, &one.front.id, vec!["src/one/**".into()], false, false, None, "geo", "t").unwrap();
-    let d2 = ops::dispatch(&s, &two.front.id, vec!["src/two/**".into()], false, false, None, "geo", "t").unwrap();
+    let d1 = ops::dispatch(&s, &one.front.id, vec!["src/one/**".into()], false, false, None, None, "geo", "t").unwrap();
+    let d2 = ops::dispatch(&s, &two.front.id, vec!["src/two/**".into()], false, false, None, None, "geo", "t").unwrap();
     // the first join binds as ever
     let j1 = ops::join(&s, &d1.token, Some("agent:ag-multi".into())).unwrap();
     assert_eq!(j1.bound.as_deref(), Some("agent:ag-multi"));
@@ -2036,7 +2039,7 @@ fn join_refuses_a_second_live_badge_naming_the_roads_out() {
     // harvest frees the identity: the refusal is scoped to LIVE badges
     quarry::coord::clear_dispatch(&s, &one.front.id);
     let three = mk("third pass", "the third lands");
-    let d3 = ops::dispatch(&s, &three.front.id, vec!["src/three/**".into()], false, false, None, "geo", "t").unwrap();
+    let d3 = ops::dispatch(&s, &three.front.id, vec!["src/three/**".into()], false, false, None, None, "geo", "t").unwrap();
     let j3 = ops::join(&s, &d3.token, Some("agent:ag-multi".into())).unwrap();
     assert_eq!(j3.bound.as_deref(), Some("agent:ag-multi"), "a harvested arc frees its identity");
     assert_eq!(
@@ -2063,6 +2066,7 @@ fn acting_map_holds_one_badge_per_identity_by_construction() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &held("it-one1")).unwrap();
     quarry::coord::save_dispatch(&s, &held("it-two2")).unwrap();
@@ -2123,6 +2127,7 @@ fn work_only_stamping_held_entry_alone_stamps_nothing() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: Some("tok4wrk123".into()),
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     // the held entry, alone, stamps nothing — for its chat, its session, or
@@ -2668,6 +2673,7 @@ fn boundary_verbs_refuse_only_for_the_badged_chat() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     // ANOTHER chat's live badge no longer captures this context's boundary:
@@ -2746,6 +2752,7 @@ fn wrap_refuses_badged_then_regenerates_view_when_clear() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     let mut d2 = d.clone();
@@ -2844,6 +2851,7 @@ fn session_retire_refuses_only_when_the_retiree_is_implicated() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     // … and the worker's dispatch in flight, fired from another chat.
@@ -2941,6 +2949,7 @@ fn unlink_retires_edge_logged_without_bump() {
         checked: "2026-01-01T00:00:00Z".into(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     let (src, edge) =
@@ -3087,7 +3096,7 @@ fn fire_time_routing_offers_leave_and_wake() {
 
     // a continuation never routes: once the item is live-dispatched, the
     // re-dispatch and steal flows keep their own surfaces
-    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t").unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "design", "t").unwrap();
     assert!(
         matches!(coord::fire_routing(&s, it, "design"), FireRouting::Fire),
         "a live dispatch on the item is a continuation, not a routing case"
@@ -4232,7 +4241,7 @@ fn landing_ratifies_badge_mints_and_harvest_names_the_assay() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t")
         .unwrap();
     let mk = |title: &str, kind: &str| {
         ops::claim(
@@ -4525,7 +4534,7 @@ fn reserve_backstop_refuses_at_fire_and_unreadies() {
     }
     // the dispatch station refuses, un-readies, and teaches return-to-design
     let err =
-        ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+        ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, None, "geo", "t")
             .unwrap_err();
     let msg = err.to_string();
     assert!(msg.contains("acceptance gate"), "got: {}", msg);
@@ -4574,7 +4583,7 @@ fn reserve_backstop_refuses_at_fire_and_unreadies() {
     // a sketch never demotes — there is nothing to un-ready
     let sk = ops::new_node(&s, NewArgs::bare("item", "quiet sketch")).unwrap();
     let err =
-        ops::dispatch(&s, &sk.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+        ops::dispatch(&s, &sk.front.id, vec!["src/**".into()], false, false, None, None, "geo", "t")
             .unwrap_err();
     assert!(!err.to_string().contains("UN-READIED"), "got: {}", err);
     let all = s.load_all().unwrap();
@@ -5239,7 +5248,7 @@ fn harvest_asks_the_kindless_backtick_mints_before_ratification_passes_them_by()
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the ask lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t")
         .unwrap();
     let mk = |title: &str, kind: Option<&str>| {
         ops::claim(
@@ -6677,7 +6686,7 @@ fn a_badged_write_failing_resolution_is_recorded_and_harvest_states_the_boundary
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the accounting lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, "geo", "t").unwrap();
+    ops::dispatch(&s, &it.front.id, vec!["src/**".into()], false, false, None, None, "geo", "t").unwrap();
     let badge = it.front.id.clone();
     let key = format!("item:{}", badge);
     // A badged tool write whose path never resolved store-relative is
@@ -6722,7 +6731,7 @@ fn a_badged_write_failing_resolution_is_recorded_and_harvest_states_the_boundary
         b.acceptance = vec!["lands".into()];
         ops::new_node(&s, b).unwrap()
     };
-    ops::dispatch(&s, &bare.front.id, vec!["src/**".into()], false, false, None, "geo", "t")
+    ops::dispatch(&s, &bare.front.id, vec!["src/**".into()], false, false, None, None, "geo", "t")
         .unwrap();
     let h2 = quarry::render::harvest(&s, &bare.front.id).unwrap();
     assert!(h2.contains("no code writes observed under this badge"));
@@ -6774,6 +6783,7 @@ fn return_spec_and_first_echo_carry_the_user_owned_calls_rule() {
         checked: Store::now(),
         token: None,
         joined: None,
+        model: None,
     };
     quarry::coord::save_dispatch(&s, &d).unwrap();
     let out = quarry::teach::observe_write(&s, &[], Some("geo"), Some("it-bdg"), "src/main.rs");
@@ -6878,7 +6888,7 @@ fn harvest_reconciles_declared_user_owned_calls_against_badge_threads() {
     it.about = vec![area.front.id.clone()];
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
-    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t")
         .unwrap();
     // No report file to parse yet: the count of badge threads confronts
     // the prose in hand.
@@ -6974,7 +6984,7 @@ fn the_reconcile_never_parses_a_report_that_predates_the_arcs_dispatch() {
     let prior_node = s.find(&all, &prior.front.id).unwrap();
     assert_eq!(prior_node.front.created, "2020-01-01T00:00:00Z", "backdating held");
 
-    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t")
         .unwrap();
 
     // THE PURE PICK: the carried report is visible unbounded (the old
@@ -7089,7 +7099,7 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
     b.status = Some("ready".into());
     b.acceptance = vec!["the work lands".into()];
     let b = ops::new_node(&s, b).unwrap();
-    let err = ops::dispatch(&s, &b.front.id, vec![joined.into()], false, false, None, "geo", "t")
+    let err = ops::dispatch(&s, &b.front.id, vec![joined.into()], false, false, None, None, "geo", "t")
         .unwrap_err()
         .to_string();
     assert!(err.contains("REPEATABLE"), "the same teaching at both stations: {}", err);
@@ -7110,7 +7120,7 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
     // so it meets the same floor at reserve — a --files-less dispatch cannot
     // inherit the shape from the item either.
     ops::set(&s, &b.front.id, &[format!("write-set+={}", joined)], None).unwrap();
-    let err = ops::dispatch(&s, &b.front.id, vec![], false, false, None, "geo", "t")
+    let err = ops::dispatch(&s, &b.front.id, vec![], false, false, None, None, "geo", "t")
         .unwrap_err()
         .to_string();
     assert!(err.contains("REPEATABLE"), "the fallback inherits the floor: {}", err);
@@ -7128,6 +7138,7 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
         vec!["src/ops.rs".into(), "src/render.rs".into(), "tests/**".into()],
         false,
         false,
+        None,
         None,
         "geo",
         "t",
@@ -7242,7 +7253,7 @@ fn the_arcs_report_path_is_leased_at_the_fire_and_registers_from_the_agents_seat
 
     // THE FIRE: the dispatch leases a concrete report path beside the
     // write-set the dispatcher named.
-    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
     let path = arc_report_in(&out.globs).expect("the arc's report path is leased").to_string();
     assert!(path.starts_with("docs/reports/") && path.ends_with(".md"), "{}", path);
     assert!(path.contains(&it.front.id), "the item id keeps concurrent arcs apart: {}", path);
@@ -7269,7 +7280,7 @@ fn the_arcs_report_path_is_leased_at_the_fire_and_registers_from_the_agents_seat
     other.about = vec![area.front.id.clone()];
     other.acceptance = vec!["the pass lands".into()];
     let other = ops::new_node(&s, other).unwrap();
-    let o = ops::dispatch(&s, &other.front.id, vec!["src/hydro/**".into()], false, false, None, "ops", "t").unwrap();
+    let o = ops::dispatch(&s, &other.front.id, vec!["src/hydro/**".into()], false, false, None, None, "ops", "t").unwrap();
     let opath = arc_report_in(&o.globs).expect("the second arc leases its own").to_string();
     assert_ne!(opath, path);
     assert!(!globs_overlap(&path, &opath), "two arcs' returns never overlap: {} vs {}", path, opath);
@@ -7281,7 +7292,7 @@ fn the_arcs_report_path_is_leased_at_the_fire_and_registers_from_the_agents_seat
     docs.about = vec![area.front.id.clone()];
     docs.acceptance = vec!["the docs land".into()];
     let docs = ops::new_node(&s, docs).unwrap();
-    let d = ops::dispatch(&s, &docs.front.id, vec!["docs/**".into()], false, false, None, "scribe", "t")
+    let d = ops::dispatch(&s, &docs.front.id, vec!["docs/**".into()], false, false, None, None, "scribe", "t")
         .expect("a docs write-set fires beside a live arc's leased return");
     assert!(d.globs.contains(&"docs/**".to_string()), "{:?}", d.globs);
 
@@ -7336,7 +7347,7 @@ fn the_arcs_report_path_is_leased_at_the_fire_and_registers_from_the_agents_seat
 
     // A RE-DISPATCH is a new arc with its own return: the lease re-points, so
     // arc two can never overwrite the file arc one registered.
-    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, None, "geo", "t").unwrap();
     let p2 = arc_report_in(&again.globs).expect("arc two leases its own return").to_string();
     assert_ne!(p2, path, "a re-dispatch never inherits its predecessor's path");
     assert!(p2.contains("-arc2"), "{}", p2);
@@ -7397,7 +7408,7 @@ fn the_arcs_own_return_never_satisfies_the_land_time_landmark_check() {
     it.acceptance = vec!["the pass lands".into()];
     let it = ops::new_node(&s, it).unwrap();
     let out =
-        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "design", "t")
             .unwrap();
     let path = quarry::coord::arc_report_in(&out.globs)
         .expect("the arc's report path is leased")
@@ -7495,5 +7506,265 @@ fn the_arcs_own_return_never_satisfies_the_land_time_landmark_check() {
         !backstop.contains(&path),
         "the arc's return is not dead weight to answer for at the boundary: {}",
         backstop
+    );
+}
+
+#[test]
+fn a_dispatched_arc_files_under_the_model_it_was_spawned_on() {
+    // it-xcvb. The chat-actor map is keyed by CHAT and written at
+    // SessionStart; a subagent is not a chat and never fires SessionStart, so
+    // a dispatched agent's shells inherited the DISPATCHER's model and every
+    // node the agent minted filed under a model that did not write it. The
+    // harness offers no cure: measured 2026-08-21, a PreToolUse firing inside
+    // a subagent carries session_id, transcript_path, cwd, prompt_id,
+    // permission_mode, agent_id, agent_type, effort and the tool fields —
+    // and no model at all. The dispatcher is the one party that knows, so the
+    // badge carries the stamp.
+    let s = temp_store();
+    quarry::coord::record_chat_actor(&s, "chat-disp", "claude-fable-5");
+    let area = ops::new_node(&s, NewArgs::bare("area", "attribution")).unwrap();
+    let ready = |title: &str| {
+        let mut a = NewArgs::bare("item", title);
+        a.status = Some("ready".into());
+        a.about = vec![area.front.id.clone()];
+        a.acceptance = vec!["the arc lands".into()];
+        ops::new_node(&s, a).unwrap()
+    };
+
+    // THE DEFECT IN SHAPE: a fire that names no model stamps none, and the
+    // arc keeps inheriting. That answer is CORRECT for an inheriting spawn —
+    // which is why it cannot simply be replaced — and the fire says which of
+    // the two the dispatcher got, at the one station that can still fix it.
+    let plain = ready("inherited arc");
+    let bare = ops::dispatch(
+        &s, &plain.front.id, vec!["src/a/**".into()], false, false, None, None, "disp", "claude-fable-5",
+    )
+    .unwrap();
+    assert!(bare.model.is_none(), "nothing stamped when nothing was named");
+    assert!(!bare.actor_stamped);
+    assert_eq!(bare.arc_actor, "claude-fable-5", "the fire states the inherited answer verbatim");
+    let jb = ops::join(&s, &bare.token, Some("agent:ag-inherit".into())).unwrap();
+    assert!(!jb.actor_stamped, "an unstamped badge overrides nothing");
+    assert_eq!(
+        quarry::coord::badge_model(&quarry::coord::load_dispatches(&s), "ag-inherit"),
+        None,
+        "no stamp, no override — the hook falls through to the chat-actor map, the defect's own road"
+    );
+
+    // THE CURE: the fire names the model it is spawning on, the badge carries
+    // it, and the joined AGENT identity resolves it.
+    let it = ready("opus arc");
+    let out = ops::dispatch(
+        &s,
+        &it.front.id,
+        vec!["src/b/**".into()],
+        false,
+        false,
+        None,
+        Some("claude-opus-5"),
+        "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    assert_eq!(out.model.as_deref(), Some("claude-opus-5"));
+    assert!(out.actor_stamped);
+    assert_eq!(out.arc_actor, "claude-opus-5", "the fire states what the arc will file under");
+    let d = quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap();
+    assert_eq!(d.model.as_deref(), Some("claude-opus-5"), "the stamp rides the badge, not the log alone");
+
+    let j = ops::join(&s, &out.token, Some("agent:ag-opus".into())).unwrap();
+    assert!(j.actor_stamped);
+    assert_eq!(j.arc_actor, "claude-opus-5", "the join states it to the one mind that knows its own model");
+    // The join event is the whole of the pre-bind window: the hook fired
+    // before the bind existed, so that shell's QUARRY_ACTOR is still the
+    // dispatcher's. Stamped here from the badge directly, the arc's FIRST
+    // badged act already files right.
+    let log = s.read_log().unwrap();
+    let join_ev = log
+        .iter()
+        .rev()
+        .find(|e| e.get("op").and_then(|v| v.as_str()) == Some("join"))
+        .expect("the bind logs a join");
+    assert_eq!(
+        join_ev.get("actor").and_then(|v| v.as_str()),
+        Some("claude-opus-5"),
+        "the arc's first act files under the model that made it, not the one that sent it: {}",
+        join_ev
+    );
+    let dispatch_ev = log
+        .iter()
+        .rev()
+        .find(|e| {
+            e.get("op").and_then(|v| v.as_str()) == Some("dispatch")
+                && e.get("node").and_then(|v| v.as_str()) == Some(it.front.id.as_str())
+        })
+        .expect("the fire logs");
+    assert_eq!(
+        dispatch_ev.get("model").and_then(|v| v.as_str()),
+        Some("claude-opus-5"),
+        "the log carries the stamp too — the badge dies at harvest, the log is the durable seat: {}",
+        dispatch_ev
+    );
+
+    // KEYED ON THE AGENT ALONE. Every other identity is a real chat, which
+    // fired SessionStart and already has its own model recorded; reading a
+    // chat-keyed acting row would buy nothing and would spread the badge's
+    // model onto the dispatching chat's own shells wherever parent and
+    // subagent are indistinguishable.
+    let m = quarry::coord::load_dispatches(&s);
+    assert_eq!(quarry::coord::badge_model(&m, "ag-opus").as_deref(), Some("claude-opus-5"));
+    assert_eq!(quarry::coord::badge_model(&m, "ag-stranger"), None, "a foreign agent resolves nothing");
+    let chatted = ready("chat-joined arc");
+    let co = ops::dispatch(
+        &s, &chatted.front.id, vec!["src/c/**".into()], false, false, None, Some("claude-opus-5"), "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    let cj = ops::join(&s, &co.token, Some("chat:chat-elsewhere".into())).unwrap();
+    assert!(!cj.actor_stamped, "a chat-keyed joiner keeps its own recorded model");
+    assert_eq!(
+        quarry::coord::badge_model(&quarry::coord::load_dispatches(&s), "chat-elsewhere"),
+        None,
+        "the resolver never reads a chat row, however it is spelled"
+    );
+
+    // RESIDUE IS NEVER A BINDING. live_acting_badge already refuses a row
+    // pointing at a cleared dispatch, so a harvested arc stops overriding by
+    // construction — the next thing that agent does files under its chat
+    // again, not under a dead badge's model.
+    quarry::coord::clear_dispatch(&s, &it.front.id);
+    assert_eq!(
+        quarry::coord::badge_model(&quarry::coord::load_dispatches(&s), "ag-opus"),
+        None,
+        "harvest frees the actor with the badge"
+    );
+
+    // THE PROVENANCE GUARD STILL RUNS. Derivation keys on "claude" in the
+    // actor string, so a display-name model would otherwise read as USER
+    // provenance — the stamp goes through safe_actor like every other
+    // injected actor.
+    let named = ready("display-name arc");
+    let dn = ops::dispatch(
+        &s, &named.front.id, vec!["src/d/**".into()], false, false, None, Some("Opus 5"), "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    assert_eq!(dn.arc_actor, "claude:Opus 5", "a display name cannot mint user provenance");
+    let dj = ops::join(&s, &dn.token, Some("agent:ag-display".into())).unwrap();
+    assert_eq!(dj.arc_actor, "claude:Opus 5");
+    assert_eq!(
+        quarry::coord::badge_actor(&s, Some("ag-display")).as_deref(),
+        Some("claude:Opus 5"),
+        "the store-reading half is the same value the hook injects"
+    );
+    assert_eq!(quarry::coord::badge_actor(&s, None), None, "no agent id, no override");
+}
+
+#[test]
+fn the_session_hook_injects_the_badge_model_over_the_inherited_chat_actor() {
+    // it-xcvb, end to end through the spawned binary — the only seat where
+    // QUARRY_ACTOR can honestly be absent from the environment, which is the
+    // state a real hook process runs in.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    quarry::coord::record_chat_actor(&s, "chat-disp", "claude-fable-5");
+    let area = ops::new_node(&s, NewArgs::bare("area", "attribution")).unwrap();
+    let mut a = NewArgs::bare("item", "the spawned arc");
+    a.status = Some("ready".into());
+    a.about = vec![area.front.id.clone()];
+    a.acceptance = vec!["the arc lands".into()];
+    let it = ops::new_node(&s, a).unwrap();
+
+    let hook = |input: &str| {
+        use std::io::Write as _;
+        let mut c = std::process::Command::new(q)
+            .current_dir(&s.root)
+            .args(["hook", "session"])
+            .env_remove("QUARRY_ACTOR")
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        c.stdin.as_mut().unwrap().write_all(input.as_bytes()).unwrap();
+        let o = c.wait_with_output().unwrap();
+        let text = String::from_utf8_lossy(&o.stdout).to_string();
+        let v: serde_json::Value = serde_json::from_str(text.trim()).unwrap_or_else(|e| {
+            panic!(
+                "hook output not JSON ({}): {} / stderr {}",
+                e,
+                text,
+                String::from_utf8_lossy(&o.stderr)
+            )
+        });
+        v["hookSpecificOutput"]["updatedInput"]["command"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string()
+    };
+    let sub = r#"{"session_id":"chat-disp","agent_id":"ag-opus","tool_name":"Bash","tool_input":{"command":"q open it-x"}}"#;
+    let parent = r#"{"session_id":"chat-disp","tool_name":"Bash","tool_input":{"command":"q open it-x"}}"#;
+
+    // THE DEFECT, MEASURED BEFORE THE STAMP EXISTS: the subagent's shell and
+    // its dispatcher's shell are handed the SAME actor, because the only map
+    // the hook could read is keyed by the chat they share.
+    let before = hook(sub);
+    assert!(before.contains("QUARRY_ACTOR='claude-fable-5'"), "unstamped: the subagent inherits — {}", before);
+    assert!(
+        hook(parent).contains("QUARRY_ACTOR='claude-fable-5'"),
+        "the dispatcher's own shell, for contrast"
+    );
+
+    // THE CURE: fire naming the model, join as the agent, and that agent's
+    // shells file under the model that spawned them.
+    let out = ops::dispatch(
+        &s,
+        &it.front.id,
+        vec!["src/**".into()],
+        false,
+        false,
+        None,
+        Some("claude-opus-5"),
+        "disp",
+        "claude-fable-5",
+    )
+    .unwrap();
+    ops::join(&s, &out.token, Some("agent:ag-opus".into())).unwrap();
+    let after = hook(sub);
+    assert!(
+        after.contains("QUARRY_ACTOR='claude-opus-5'"),
+        "the joined agent files under the model that wrote it: {}",
+        after
+    );
+    assert!(!after.contains("claude-fable-5"), "and never under the one that sent it: {}", after);
+    assert!(
+        after.contains("QUARRY_AGENT='ag-opus'") && after.contains("QUARRY_CHAT='chat-disp'"),
+        "the identity injections are undisturbed beside it: {}",
+        after
+    );
+    // The dispatching chat's OWN shells are untouched — the override is keyed
+    // on the agent id, so the badge's model can never leak back up the wire
+    // to the seat that fired it.
+    let par = hook(parent);
+    assert!(
+        par.contains("QUARRY_ACTOR='claude-fable-5'"),
+        "the dispatcher keeps its own model while its agent flies: {}",
+        par
+    );
+
+    // Harvest frees it: the acting row survives as residue and resolves
+    // nothing, so the same agent's next shell inherits again.
+    quarry::coord::clear_dispatch(&s, &it.front.id);
+    let cleared = hook(sub);
+    assert!(
+        cleared.contains("QUARRY_ACTOR='claude-fable-5'"),
+        "a cleared badge stops overriding: {}",
+        cleared
     );
 }

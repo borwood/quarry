@@ -286,12 +286,27 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     // Actor injection applies to ANY chat (bound or not): the model recorded
     // at SessionStart, safety-prefixed so provenance derivation stays honest;
     // "claude" as the fallback when the harness gave no model. Env wins.
+    //
+    // The BADGE's model outranks the chat's for a joined subagent (it-xcvb).
+    // The chat-actor map is keyed by CHAT and written at SessionStart, which
+    // a subagent never fires, so a dispatched agent inherited its
+    // dispatcher's model and every node it minted filed under a model that
+    // did not write it — the house commit convention names the model that
+    // did the work, and the graph was the only record of it. The dispatcher
+    // stamps what it spawned with into the badge at the fire; this is where
+    // that stamp is spent. Falls through to the chat model whenever nothing
+    // is stamped, so an inheriting spawn keeps the answer that is right for
+    // it.
     let inject_actor = if env_actor.is_none() {
-        Some(crate::coord::safe_actor(
-            &chat_id
-                .and_then(|cid| crate::coord::chat_actor(store, cid))
-                .unwrap_or_else(|| "claude".into()),
-        ))
+        Some(
+            crate::coord::badge_actor(store, agent_id.as_deref()).unwrap_or_else(|| {
+                crate::coord::safe_actor(
+                    &chat_id
+                        .and_then(|cid| crate::coord::chat_actor(store, cid))
+                        .unwrap_or_else(|| "claude".into()),
+                )
+            }),
+        )
     } else {
         None
     };
@@ -330,7 +345,7 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
             || inject_chat.is_some()
             || inject_agent.is_some()
             || inject_store.is_some()
-            || (inject_actor.is_some() && chat_id.is_some()))
+            || (inject_actor.is_some() && (chat_id.is_some() || agent_id.is_some())))
     {
         if let Some(ti) = v.get("tool_input").and_then(|x| x.as_object()) {
             if let Some(cmd) = ti.get("command").and_then(|c| c.as_str()) {
