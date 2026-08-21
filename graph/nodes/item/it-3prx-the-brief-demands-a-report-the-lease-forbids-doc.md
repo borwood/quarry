@@ -2,8 +2,8 @@
 id: it-3prx
 type: item
 title: 'the brief demands a report the lease forbids: docs/reports sits outside every dispatch write-set'
-v: 3
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-21T09:20:53Z
 actor: claude-fable-5

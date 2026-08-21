@@ -250,11 +250,25 @@ pub fn globs_overlap(a: &str, b: &str) -> bool {
     pa.starts_with(&pb) || pb.starts_with(&pa)
 }
 
+/// Does a live lease CONTEND with these globs? Arc report paths on either
+/// side never do (it-3prx): a return is a per-arc artifact, unique by
+/// construction and naming a file that does not exist yet, so no one can be
+/// co-writing it. Counting them would make the reports zone contended
+/// ground — every write-set covering `docs/**` would refuse against every
+/// live arc's return — for a protection the write guard never offered
+/// anyway: a badged write is judged against the BADGE's own lease, foreign
+/// exclusivity unconsulted.
 fn lease_overlaps(lease: &Lease, globs: &[String]) -> bool {
     lease
         .globs
         .iter()
-        .any(|lg| globs.iter().any(|g| globs_overlap(lg, g)))
+        .filter(|lg| !is_arc_report(lg))
+        .any(|lg| {
+            globs
+                .iter()
+                .filter(|g| !is_arc_report(g))
+                .any(|g| globs_overlap(lg, g))
+        })
 }
 
 /// The shape floor under every lease (it-x4bb): a `--files` value carrying a
@@ -296,6 +310,126 @@ pub fn check_glob_shapes(globs: &[String]) -> Result<()> {
         "--files takes ONE glob per flag and no value delimiter, so {:?} would be leased whole as a single pattern, never a list: the overlap test compares static prefixes, so that lease matches only the FIRST path in the value — every path after a comma is leased in name only, printed as leased in the agent's brief and then DENIED to it at the write by its own badge, mid-arc, in a seat that cannot extend a lease (it-x4bb). The flag is REPEATABLE — pass each glob its own: {}. (An item's recorded write-set, which a dispatch falls back to, is authored the same way, one glob per act: q set <item> write-set+=\"<glob>\".)",
         bad, repeated
     );
+}
+
+// ── the arc's return rides the lease (it-3prx) ─────────────────────────────
+//
+// The brief demands a report and harvest prints its registration command,
+// but a lease derived from `--files` or an item's recorded write-set names
+// only the CODE the work touches — so the write guard denied the one
+// artifact the contract mandates, mid-arc, in a seat that cannot extend a
+// lease. The firing station closes it: every dispatch derives the arc's own
+// report path and leases it beside the write-set, so the agent writes and
+// registers its return from its own seat.
+//
+// ONE PATH PER ARC, never the zone. A `docs/reports/**` glob on every
+// dispatch would make the reports directory a co-write zone nobody asked
+// for — parallel dispatch is the normal shape (dc-ydvb), and `globs_overlap`
+// compares static prefixes, so every concurrent arc would collide there and
+// each agent would hold write access to its neighbours' returns. Two arcs
+// writing distinct files need no shared lease, only their own paths: the
+// derived path carries the item id, so no two arcs' paths are ever prefixes
+// of one another and concurrent dispatches never overlap.
+
+/// The reports zone: where a dispatch's RETURN lands.
+pub const REPORTS_DIR: &str = "docs/reports/";
+
+/// A concrete report file (never a pattern) inside the reports zone — the
+/// shape `arc_report_path` mints and the read side picks back out of a
+/// lease. A dispatcher's own broader glob (`docs/reports/**`, passed with
+/// `--files`) is deliberately NOT this shape: it survives untouched beside
+/// the arc's path, and never stands in for it where a path is printed.
+pub fn is_arc_report(glob: &str) -> bool {
+    let g = glob.replace('\\', "/");
+    g.starts_with(REPORTS_DIR) && g.ends_with(".md") && !g.contains(['*', '?', '['])
+}
+
+/// The report path a lease carries for its arc, if any. The brief names it
+/// in the RETURN spec and harvest prints it into the registration command —
+/// one derivation at the fire, read back everywhere after.
+pub fn arc_report_in(globs: &[String]) -> Option<&str> {
+    globs.iter().find(|g| is_arc_report(g)).map(|g| g.as_str())
+}
+
+/// Point a write-set at `path` as its arc report: any PRIOR arc's report
+/// path drops (a re-dispatch is a new arc with its own return — leaving the
+/// old path would let arc two overwrite arc one's registered file), every
+/// other glob stays. True when the globs changed.
+pub fn set_arc_report(globs: &mut Vec<String>, path: &str) -> bool {
+    let already = {
+        let mut carried = globs.iter().filter(|g| is_arc_report(g));
+        carried.next().map(|g| g == path).unwrap_or(false) && carried.next().is_none()
+    };
+    if already {
+        return false;
+    }
+    globs.retain(|g| !is_arc_report(g));
+    globs.push(path.to_string());
+    true
+}
+
+/// A filename slug in the reports register: lowercase, one hyphen per run of
+/// anything else, cut at a hyphen boundary under `cap`.
+fn slug(title: &str, cap: usize) -> String {
+    let mut s = String::new();
+    for ch in title.chars() {
+        if ch.is_ascii_alphanumeric() {
+            s.push(ch.to_ascii_lowercase());
+        } else if !s.ends_with('-') && !s.is_empty() {
+            s.push('-');
+        }
+    }
+    let s = s.trim_matches('-');
+    if s.len() <= cap {
+        return s.to_string();
+    }
+    match s[..cap].rfind('-') {
+        Some(i) if i > 0 => s[..i].to_string(),
+        _ => s[..cap].to_string(),
+    }
+}
+
+/// THE arc report path, derived at the firing station: the reports register's
+/// own shape — `<date>-<slug>-<item>.md` — with the item id making it unique
+/// among concurrent arcs. A re-dispatch takes the next free `-arcN` name
+/// rather than the file its predecessor left behind: a prior arc's report is
+/// a registered doc node whose blob stamp still names that path (the partial
+/// and landed reports of a re-dispatched item both stand as record), so
+/// overwriting it would make one of them a silent lie.
+pub fn arc_report_path(store: &Store, item_id: &str, title: &str) -> String {
+    let s = slug(title, 40);
+    let base = if s.is_empty() {
+        format!("{}{}-{}", REPORTS_DIR, Store::today(), item_id)
+    } else {
+        format!("{}{}-{}-{}", REPORTS_DIR, Store::today(), s, item_id)
+    };
+    let taken = |p: &str| store.work_root.join(p).exists() || store.root.join(p).exists();
+    let first = format!("{}.md", base);
+    if !taken(&first) {
+        return first;
+    }
+    for n in 2..99 {
+        let c = format!("{}-arc{}.md", base, n);
+        if !taken(&c) {
+            return c;
+        }
+    }
+    format!("{}-arc99.md", base)
+}
+
+/// Re-write the globs of an item's live lease — the FIRING station's own
+/// hand, never the agent's (extending a lease is release plus re-reserve,
+/// and an agent may not release its own lease). A re-dispatch reuses the
+/// standing lease, so this is where the new arc's report path replaces its
+/// predecessor's. Silent when the item holds no lease: a research dispatch
+/// leases nothing at all.
+pub fn set_lease_globs(store: &Store, item_id: &str, globs: &[String]) -> Result<()> {
+    let mut leases = load_leases(store);
+    let Some(l) = leases.iter_mut().find(|l| l.item == item_id) else {
+        return Ok(());
+    };
+    l.globs = globs.to_vec();
+    save_leases(store, &leases)
 }
 
 #[derive(Debug)]

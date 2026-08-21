@@ -1657,7 +1657,9 @@ fn dispatch_one_act_then_harvest() {
     // env unset in-process: the holder falls back to the session key
     let d = quarry::coord::dispatch_for_item(&s, &it.front.id).unwrap();
     assert_eq!(d.holder, "session:geo");
-    assert_eq!(d.globs, vec!["src/geo/**".to_string()]);
+    // the write-set as fired, plus the arc's own report path (it-3prx)
+    assert!(d.globs.contains(&"src/geo/**".to_string()), "{:?}", d.globs);
+    assert!(quarry::coord::arc_report_in(&d.globs).is_some(), "{:?}", d.globs);
     assert_eq!(d.acceptance.len(), 1, "the contract rides the state file");
     assert_eq!(d.token.as_deref(), Some(out.token.as_str()), "the join token rides the held entry");
     assert!(d.joined.is_none(), "unconsumed until an agent joins");
@@ -1805,7 +1807,12 @@ fn dispatch_steal_takes_the_dispatch_whole() {
     let leases = quarry::coord::load_leases(&s);
     assert_eq!(leases.len(), 1);
     assert_eq!(leases[0].session, "ops");
-    assert_eq!(leases[0].globs, vec!["src/geo/**".to_string()], "globs survive the take-over");
+    assert!(leases[0].globs.contains(&"src/geo/**".to_string()), "globs survive the take-over");
+    assert!(
+        quarry::coord::arc_report_in(&leases[0].globs).is_some(),
+        "and the arc's report path rides across it (it-3prx): {:?}",
+        leases[0].globs
+    );
     // the old agent's association died with the steal: its acts stop
     // stamping into an arc it no longer works
     assert!(quarry::coord::badge_for(&s, Some("ag-old"), None, None).is_none());
@@ -6647,7 +6654,7 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
         "t",
     )
     .unwrap();
-    assert_eq!(out.globs.len(), 3, "three flags, three globs");
+    assert_eq!(out.globs.len(), 4, "three flags, three globs — plus the arc's own report path (it-3prx)");
     for p in ["src/ops.rs", "src/render.rs", "tests/basic.rs"] {
         assert!(
             out.globs.iter().any(|g| globs_overlap(g, p)),
@@ -6705,7 +6712,7 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
         String::from_utf8_lossy(&ok.stderr)
     );
     let held = quarry::coord::dispatch_for_item(&s, &e2e.front.id).unwrap();
-    assert_eq!(held.globs.len(), 3, "the badge carries all three: {:?}", held.globs);
+    assert_eq!(held.globs.len(), 4, "the badge carries all three, plus the arc report: {:?}", held.globs);
     for p in ["src/ops.rs", "src/render.rs", "tests/basic.rs"] {
         assert!(
             held.globs.iter().any(|g| globs_overlap(g, p)),
@@ -6713,4 +6720,301 @@ fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
             p
         );
     }
+}
+
+/// it-3prx: the brief demanded a report the lease forbade. A lease is derived
+/// from `--files` or an item's recorded write-set, and a write-set names the
+/// CODE the work touches — so the one artifact the RETURN spec mandates fell
+/// outside it and the guard denied it, mid-arc, in a seat that cannot extend a
+/// lease. The firing station leases the arc's own report path beside the
+/// write-set: one concrete path per arc, never the zone.
+#[test]
+fn the_arcs_report_path_is_leased_at_the_fire_and_registers_from_the_agents_seat() {
+    use quarry::coord::{arc_report_in, globs_overlap, is_arc_report, set_arc_report};
+    use quarry::teach::{lease_check, LeaseCheck};
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "the geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let disp = vec![it.front.id.clone()];
+
+    // THE DEFECT, measured on the lease shape the station used to hand out:
+    // code globs alone, and the report lands outside them — denied under the
+    // badge with the extend-the-lease line, in the one seat that cannot.
+    let code_only = vec![quarry::coord::Lease {
+        item: it.front.id.clone(),
+        item_title: "the geo pass".into(),
+        session: "geo".into(),
+        actor: "t".into(),
+        globs: vec!["src/geo/**".into()],
+        shared: false,
+        since: "now".into(),
+    }];
+    assert!(
+        matches!(
+            lease_check(&code_only, None, Some(it.front.id.as_str()), &disp, "docs/reports/r.md"),
+            LeaseCheck::Deny(_)
+        ),
+        "the pre-fix shape: the brief's own artifact is outside the brief's own write-set"
+    );
+
+    // THE FIRE: the dispatch leases a concrete report path beside the
+    // write-set the dispatcher named.
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t").unwrap();
+    let path = arc_report_in(&out.globs).expect("the arc's report path is leased").to_string();
+    assert!(path.starts_with("docs/reports/") && path.ends_with(".md"), "{}", path);
+    assert!(path.contains(&it.front.id), "the item id keeps concurrent arcs apart: {}", path);
+    assert!(out.globs.contains(&"src/geo/**".to_string()), "the write-set is untouched: {:?}", out.globs);
+    let leases = quarry::coord::load_leases(&s);
+    assert!(
+        matches!(lease_check(&leases, None, Some(it.front.id.as_str()), &disp, &path), LeaseCheck::Allow),
+        "the guard now admits the artifact the contract demands"
+    );
+    assert!(
+        matches!(
+            lease_check(&leases, None, Some(it.front.id.as_str()), &disp, "docs/reports/someone-elses.md"),
+            LeaseCheck::Deny(_)
+        ),
+        "one path, never the zone — a neighbour's return stays out of reach"
+    );
+
+    // NO CO-WRITE ZONE: a second arc fires from another session, and the two
+    // returns never overlap. Leasing `docs/reports/**` instead would have
+    // refused this fire outright (C7) and handed each agent write access to
+    // the other's return.
+    let mut other = NewArgs::bare("item", "the hydro pass");
+    other.status = Some("ready".into());
+    other.about = vec![area.front.id.clone()];
+    other.acceptance = vec!["the pass lands".into()];
+    let other = ops::new_node(&s, other).unwrap();
+    let o = ops::dispatch(&s, &other.front.id, vec!["src/hydro/**".into()], false, false, None, "ops", "t").unwrap();
+    let opath = arc_report_in(&o.globs).expect("the second arc leases its own").to_string();
+    assert_ne!(opath, path);
+    assert!(!globs_overlap(&path, &opath), "two arcs' returns never overlap: {} vs {}", path, opath);
+    // …and a write-set that COVERS the reports zone still fires beside a live
+    // arc. A return is never contended ground: counted at the C7 test, every
+    // `docs/**` dispatch would refuse while any other arc flies.
+    let mut docs = NewArgs::bare("item", "the docs pass");
+    docs.status = Some("ready".into());
+    docs.about = vec![area.front.id.clone()];
+    docs.acceptance = vec!["the docs land".into()];
+    let docs = ops::new_node(&s, docs).unwrap();
+    let d = ops::dispatch(&s, &docs.front.id, vec!["docs/**".into()], false, false, None, "scribe", "t")
+        .expect("a docs write-set fires beside a live arc's leased return");
+    assert!(d.globs.contains(&"docs/**".to_string()), "{:?}", d.globs);
+
+    // THE BRIEF names the path and hands over the registration command,
+    // filled in — the agent memorizes nothing.
+    let b = quarry::render::brief(&s, &it.front.id).unwrap();
+    assert!(b.contains(&path), "the RETURN spec names the leased path: {}", b);
+    assert!(
+        b.contains(&format!(
+            "--kind report --path {} --about {} --supports {}",
+            path, area.front.id, it.front.id
+        )),
+        "the registration command is delivered whole: {}",
+        b
+    );
+
+    // HARVEST, before the arc returns: the exact path rides the homework, and
+    // an unwritten report is never "dead weight in the lease".
+    let h0 = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(h0.contains(&format!("--kind report --path {}", path)), "{}", h0);
+    assert!(!h0.contains("leased but untouched: docs/reports"), "{}", h0);
+    assert!(h0.contains(&quarry::framings::user_owned_await(0)), "no return yet: {}", h0);
+
+    // THE AGENT'S OWN SEAT: it writes the report at the leased path and
+    // registers the doc itself.
+    std::fs::create_dir_all(s.root.join("docs/reports")).unwrap();
+    std::fs::write(
+        s.root.join(&path),
+        "outcomes hold\n\nuser-owned calls: none\n\nREFLECTIONS: fine\n",
+    )
+    .unwrap();
+    quarry::coord::accrue_touch(&s, &format!("item:{}", it.front.id), &path);
+    let mut doc = NewArgs::bare("doc", "dispatch report: the geo pass");
+    doc.kind = Some("report".into());
+    doc.path = Some(path.clone());
+    let doc = ops::new_node(&s, doc).unwrap();
+    ops::link(&s, &doc.front.id, "supports", &it.front.id, false, None).unwrap();
+
+    // …and harvest reconciles what the agent declared, with no dispatcher's
+    // hand in the registration — and asks for nothing it already holds.
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_reconcile(Some(0), 0)),
+        "the declaration is mechanical now, not the dispatcher's good faith: {}",
+        h
+    );
+    assert!(!h.contains(&quarry::framings::user_owned_await(0)), "the await arm is gone: {}", h);
+    assert!(h.contains("registered from the agent's own seat"), "{}", h);
+    assert!(h.contains(&doc.front.id), "the registered report is named at the seat that judges it: {}", h);
+    assert!(!h.contains("q new doc"), "no second doc node is invited for one report: {}", h);
+    assert!(!h.contains("⚠ outside the lease"), "the report reads as leased work: {}", h);
+
+    // A RE-DISPATCH is a new arc with its own return: the lease re-points, so
+    // arc two can never overwrite the file arc one registered.
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, "geo", "t").unwrap();
+    let p2 = arc_report_in(&again.globs).expect("arc two leases its own return").to_string();
+    assert_ne!(p2, path, "a re-dispatch never inherits its predecessor's path");
+    assert!(p2.contains("-arc2"), "{}", p2);
+    let leases = quarry::coord::load_leases(&s);
+    let live = leases.iter().find(|l| l.item == it.front.id).unwrap();
+    assert!(live.globs.contains(&"src/geo/**".to_string()), "the code write-set survives the re-point: {:?}", live.globs);
+    assert!(
+        matches!(lease_check(&leases, None, Some(it.front.id.as_str()), &disp, &path), LeaseCheck::Deny(_)),
+        "arc one's registered report is out of arc two's reach"
+    );
+    assert!(matches!(lease_check(&leases, None, Some(it.front.id.as_str()), &disp, &p2), LeaseCheck::Allow));
+
+    // THE PURE MOVES: a prior arc's path drops when the new one lands, one
+    // return per arc, and a dispatcher's own broader glob is neither mistaken
+    // for an arc's return nor thrown away.
+    let mut g = vec!["src/**".to_string(), "docs/reports/**".to_string()];
+    assert!(set_arc_report(&mut g, "docs/reports/a.md"));
+    assert_eq!(arc_report_in(&g), Some("docs/reports/a.md"), "a pattern never stands in for a path: {:?}", g);
+    assert!(g.contains(&"docs/reports/**".to_string()), "the dispatcher's own glob survives: {:?}", g);
+    assert!(!set_arc_report(&mut g, "docs/reports/a.md"), "idempotent: the same path changes nothing");
+    assert!(set_arc_report(&mut g, "docs/reports/b.md"));
+    assert_eq!(g.iter().filter(|x| is_arc_report(x)).count(), 1, "one return per arc: {:?}", g);
+    assert!(g.contains(&"src/**".to_string()), "the code write-set is never touched: {:?}", g);
+}
+
+/// it-2eqk: the arc's own return can never satisfy the land-time landmark
+/// check. With the report path leased (cl-ue2e) the agent's report is an
+/// in-repo write under the badge, so it accrues into the observed set like any
+/// other touch — and `vein_check` hands the observed set to `files_cited`,
+/// which counts a DOC WHOSE OWN PATH falls inside the checked globs as a
+/// citation. The registered report is exactly such a doc, so every dispatched
+/// landing whose agent registered its return satisfied the check trivially and
+/// the prompt of dc-grrb went silent on the one class of landing it was
+/// written for.
+#[test]
+fn the_arcs_own_return_never_satisfies_the_land_time_landmark_check() {
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |envs: &[(&str, &str)], args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        for (k, v) in envs {
+            c.env(k, v);
+        }
+        c.output().unwrap()
+    };
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "the geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+    let out =
+        ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "design", "t")
+            .unwrap();
+    let path = quarry::coord::arc_report_in(&out.globs)
+        .expect("the arc's report path is leased")
+        .to_string();
+
+    // What the guard actually sees a dispatched arc touch: the code it
+    // repaired, and the return it was leased to write.
+    let observed = vec!["src/geo/pass.rs".to_string(), path.clone()];
+    let all = s.load_all().unwrap();
+    assert!(
+        !queries::files_cited(&all, &observed),
+        "before the return registers, nothing in the graph cites either path"
+    );
+
+    // THE AGENT'S SEAT: it writes its report at the leased path and registers
+    // the doc the RETURN spec demands — and changes NOTHING else.
+    std::fs::create_dir_all(s.root.join("docs/reports")).unwrap();
+    std::fs::write(s.root.join(&path), "outcomes hold\n\nuser-owned calls: none\n").unwrap();
+    let mut doc = NewArgs::bare("doc", "dispatch report: the geo pass");
+    doc.kind = Some("report".into());
+    doc.path = Some(path.clone());
+    let doc = ops::new_node(&s, doc).unwrap();
+    ops::link(&s, &doc.front.id, "supports", &it.front.id, false, None).unwrap();
+
+    // THE DEFECT, measured: that one registration — no claim, no file edge,
+    // nothing said about the code — flips the unfiltered check to satisfied.
+    let all = s.load_all().unwrap();
+    assert!(
+        queries::files_cited(&all, &observed),
+        "the pre-fix shape: the registered report is a doc sitting inside the observed set, so the arc cites itself"
+    );
+
+    // THE FIX at the consumer: the return drops before the check, and the code
+    // the arc actually landed is still uncited — the prompt has its say.
+    let judged = queries::landmark_globs(&observed);
+    assert_eq!(
+        judged,
+        vec!["src/geo/pass.rs".to_string()],
+        "the return is accounting, never a landed capability: {:?}",
+        judged
+    );
+    assert!(!queries::files_cited(&all, &judged), "the code the arc touched is uncited");
+
+    // THE REPORT PATH ALONE never satisfies the check: judged, the set is
+    // empty, so the check has nothing to ask about — never a citation.
+    assert!(
+        queries::landmark_globs(&[path.clone()]).is_empty(),
+        "an arc that touched only its own return landed no code to cite"
+    );
+    // A dispatcher's own broader glob is not an arc's return (coord::is_arc_report)
+    // and survives: it was authored as write-set, so a doc under it really cites.
+    assert_eq!(
+        queries::landmark_globs(&["docs/reports/**".to_string()]),
+        vec!["docs/reports/**".to_string()],
+        "the dispatcher's own glob is the work, not the paperwork"
+    );
+
+    // END TO END at the landing seat: the dispatcher lands the item, the
+    // observed set carries both touches, and the prompt still speaks — naming
+    // the code that landed and never the paperwork about it.
+    let key = format!("item:{}", it.front.id);
+    quarry::coord::accrue_touch(&s, &key, "src/geo/pass.rs");
+    quarry::coord::accrue_touch(&s, &key, &path);
+    let o = run(&[("QUARRY_SESSION", "design")], &["set", &it.front.id, "status=done"]);
+    let text = String::from_utf8_lossy(&o.stdout).to_string();
+    let uncited = text
+        .lines()
+        .find(|l| l.contains("landed uncited"))
+        .unwrap_or_else(|| panic!("a dispatched landing still draws the prompt: {}", text));
+    assert!(uncited.contains("src/geo/pass.rs"), "the code wants a vein: {}", uncited);
+    assert!(
+        !uncited.contains(&path),
+        "the arc's return never appears among the files asked for a vein: {}",
+        uncited
+    );
+
+    // THE SECOND CONSUMER, the wrap backstop, takes the same exclusion. It is
+    // reachable: harvest clears the BADGE, never the lease, so a dispatcher who
+    // lands without releasing reaches the boundary with the arc's report path
+    // still in the held globs — and there the backstop reads the lease, not the
+    // observed set.
+    let h = run(&[("QUARRY_SESSION", "design")], &["harvest", &it.front.id]);
+    assert!(h.status.success(), "harvest: {}", String::from_utf8_lossy(&h.stderr));
+    let live = quarry::coord::load_leases(&s);
+    let held = live.iter().find(|l| l.item == it.front.id).expect("the lease outlives the harvest");
+    assert!(held.globs.contains(&path), "the held globs still carry the arc's return: {:?}", held.globs);
+    let w = run(&[("QUARRY_SESSION", "design")], &["wrap"]);
+    let wtext = String::from_utf8_lossy(&w.stdout).to_string();
+    let backstop = wtext
+        .lines()
+        .find(|l| l.contains("landed uncited") && l.contains("held"))
+        .unwrap_or_else(|| panic!("the boundary backstop still speaks: {}", wtext));
+    assert!(backstop.contains("src/geo/**"), "the code wants a vein: {}", backstop);
+    assert!(
+        !backstop.contains(&path),
+        "the arc's return is not dead weight to answer for at the boundary: {}",
+        backstop
+    );
 }

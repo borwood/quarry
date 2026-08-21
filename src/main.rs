@@ -735,6 +735,13 @@ fn vein_check(store: &Store, item: &Node, globs: Option<Vec<String>>) {
                 .unwrap_or_else(|| item.front.write_set.clone())
         })
     };
+    // The arc's own return drops out before the check (it-2eqk): a leased
+    // report is an in-repo write under the badge, so it lands in the observed
+    // set, and a registered doc sitting at a checked path IS a citation by
+    // `files_cited`'s doc-path clause — every dispatched landing would pass
+    // trivially. It also drops before the prompt names the files: what wants a
+    // vein is the code that landed, never the paperwork about it.
+    let globs = quarry::queries::landmark_globs(&globs);
     if globs.is_empty() || quarry::queries::files_cited(&all, &globs) {
         return;
     }
@@ -2550,6 +2557,11 @@ fn main() -> Result<()> {
                                 .find(|l| &l.item == id)
                                 .map(|l| l.globs.clone())
                                 .unwrap_or_else(|| n.front.write_set.clone());
+                            // Same exclusion as `vein_check` (it-2eqk): a
+                            // still-held lease carries the arc's report path,
+                            // and the registered return would satisfy the
+                            // backstop by itself.
+                            let globs = queries::landmark_globs(&globs);
                             if !globs.is_empty() && !queries::files_cited(&all, &globs) {
                                 outln!(
                                     "  landed uncited: {} held {:?} and nothing cites those files — vein or no vein? (q claim --source file:...)",

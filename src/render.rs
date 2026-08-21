@@ -5,6 +5,19 @@ use crate::model::{At, Node};
 use crate::queries;
 use crate::store::Store;
 
+/// The area a registration command files a node under: the item's first
+/// `about` edge that names a real area, else the placeholder the reader
+/// fills. One derivation, both seats — the brief's report line (it-3prx) and
+/// harvest's homework print the same `--about`.
+fn about_area(all: &[Node], item: &Node) -> String {
+    item.front
+        .edges
+        .iter()
+        .find(|e| e.rel == "about" && all.iter().any(|n| n.front.id == e.to && n.front.ty == "area"))
+        .map(|e| e.to.clone())
+        .unwrap_or_else(|| "<area>".into())
+}
+
 fn event_line(e: &serde_json::Value) -> String {
     let v = e.get("v").and_then(|x| x.as_u64()).unwrap_or(0);
     let op = e.get("op").and_then(|x| x.as_str()).unwrap_or("?");
@@ -572,9 +585,37 @@ pub fn brief(store: &Store, key: &str) -> Result<String> {
     writeln!(s, "  REFLECTIONS (always): close the report with doubts, surprises, and design friction in your own words — candor beats polish; reflections are mined afterward.")?;
     writeln!(s, "  STOP-REPORTS: stopping before acceptance is met is a valid outcome — say so explicitly (why, where you stopped, what remains) and the dispatcher re-dispatches from your report. A partial report registers like any other.")?;
 
-    writeln!(s, "\nWRITE-SET:")?;
+    // THE REPORT, from the agent's own seat (it-3prx): the arc's report path
+    // is leased with the write-set, so the artifact the spec above demands is
+    // one the guard admits — and the registration command is delivered where
+    // the work is understood, not memorized. Registration is what makes the
+    // report READABLE by the machine: `latest_report_doc` joins the harvest
+    // seat to the file and `declared_user_owned_calls` parses the section out
+    // of it. Unregistered, the declaration lives only in a returned message
+    // no verb can reach, and the accounting degrades to the dispatcher's
+    // good faith. Silent when no report path is leased (a research dispatch
+    // holds no lease at all): the dispatcher registers at harvest as before.
     let leases = crate::coord::load_leases(store);
-    match leases.iter().find(|l| l.item == item.front.id) {
+    let lease = leases.iter().find(|l| l.item == item.front.id);
+    if let Some(path) = lease.and_then(|l| crate::coord::arc_report_in(&l.globs)) {
+        writeln!(
+            s,
+            "  THE REPORT (yours to register, from your own seat): write it to {} — that exact path is leased to this arc for this purpose — and register it before you stop:",
+            path
+        )?;
+        writeln!(
+            s,
+            "      q new doc \"dispatch report: {}\" --kind report --path {} --about {} --supports {}",
+            crate::surface::title_raw(item),
+            path,
+            about_area(&all, item),
+            item.front.id
+        )?;
+        writeln!(s, "    Registration is how the harvest seat READS you: the reconcile parses your user-owned section out of the registered file. An unregistered report is prose no verb can reach.")?;
+    }
+
+    writeln!(s, "\nWRITE-SET:")?;
+    match lease {
         Some(l) => {
             writeln!(s, "  leased{}: {:?}", if l.shared { " [shared — co-writers may be present]" } else { "" }, l.globs)?;
             writeln!(s, "  everything outside those globs is DO-NOT-TOUCH.")?;
@@ -1072,8 +1113,13 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
             writeln!(s, "    {}", t.path)?;
         }
     }
+    // The arc's own report path stays out of this enumeration (it-3prx): it
+    // is leased by construction, never dispatcher-authored write-set, so an
+    // unwritten report is not "dead weight in the lease" — it is a missing
+    // return, and the reconcile and homework below say so in those words.
     let untouched: Vec<&String> = globs
         .iter()
+        .filter(|g| !crate::coord::is_arc_report(g))
         .filter(|g| !observed.iter().any(|t| crate::coord::globs_overlap(g, &t.path)))
         .collect();
     for g in untouched {
@@ -1116,7 +1162,8 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     // until this arc registers.
     let threads_filed = count_of("thread");
     let dispatched_at = crate::queries::arc_dispatched_at(&log, id);
-    let report_text = crate::queries::latest_report_doc(&all, id, dispatched_at.as_deref()).and_then(|doc| {
+    let arc_report = crate::queries::latest_report_doc(&all, id, dispatched_at.as_deref());
+    let report_text = arc_report.and_then(|doc| {
         doc.front.path.as_deref().and_then(|p| {
             std::fs::read_to_string(store.work_root.join(p))
                 .or_else(|_| std::fs::read_to_string(store.root.join(p)))
@@ -1167,20 +1214,32 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
         }
     }
 
-    let area = item
-        .front
-        .edges
-        .iter()
-        .find(|e| e.rel == "about" && all.iter().any(|n| n.front.id == e.to && n.front.ty == "area"))
-        .map(|e| e.to.clone())
-        .unwrap_or_else(|| "<area>".into());
-    writeln!(s, "\nHOMEWORK — register the report (a stop/partial report registers the same way):")?;
-    writeln!(
-        s,
-        "  q new doc \"dispatch report: {}\" --kind report --path <report.md> --about {} --supports {}",
-        crate::surface::title_raw(item), area, id
-    )?;
-    writeln!(s, "  (the supports edge carries it into any re-dispatch brief — prior reports ride along.)")?;
+    // The report's homework (it-3prx): the arc's report path is leased at
+    // the fire, so the registration command carries the exact --path and the
+    // agent can have run it already. An arc that returned registered needs
+    // nothing here — asking again would only mint a second doc node for one
+    // report; what stands is judged with the rest of the diff.
+    match arc_report {
+        Some(doc) => {
+            writeln!(s, "\nHOMEWORK — the report: registered from the agent's own seat, nothing owed here.")?;
+            writeln!(s, "  {}", crate::surface::atom_line(&crate::surface::atom(&all, doc)))?;
+            if let Some(p) = doc.front.path.as_deref() {
+                writeln!(s, "  {} — judge it with the rest of the arc; the record stands unless you drop it.", p)?;
+            }
+        }
+        None => {
+            writeln!(s, "\nHOMEWORK — register the report (a stop/partial report registers the same way):")?;
+            writeln!(
+                s,
+                "  q new doc \"dispatch report: {}\" --kind report --path {} --about {} --supports {}",
+                crate::surface::title_raw(item),
+                crate::coord::arc_report_in(&globs).unwrap_or("<report.md>"),
+                about_area(&all, item),
+                id
+            )?;
+            writeln!(s, "  (the supports edge carries it into any re-dispatch brief — prior reports ride along.)")?;
+        }
+    }
     writeln!(s, "\nLANDING (yours, if the outcomes hold): q set {} status=done · q release {}", id, id)?;
     writeln!(s, "  not yet earned → re-dispatch from the report: q dispatch {}", id)?;
     Ok(s)

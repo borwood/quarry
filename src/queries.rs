@@ -1275,9 +1275,36 @@ pub fn unblocked_by<'a>(all: &'a [Node], id: &str) -> Vec<&'a Node> {
         .collect()
 }
 
+/// The globs the land-time landmark check judges (it-2eqk): every glob but
+/// the arc's own report path.
+///
+/// With the return leased (cl-ue2e) the agent writes its report in-repo under
+/// the badge, so the path accrues into the observed set like any other touch
+/// — correctly, by cl-up6s's no-silent-discard invariant — and the observed
+/// set is what `vein_check` hands to `files_cited`. But `files_cited` counts
+/// a DOC WHOSE OWN PATH falls inside the globs as a citation, and the
+/// registered report is exactly such a doc: every dispatched landing whose
+/// agent registered its return satisfied the check trivially, and the prompt
+/// of dc-grrb went silent on the one class of landing it was written for.
+///
+/// The arc's return is accounting, never a landed capability, so it can
+/// neither cite one nor be cited for one — it drops before the check, and
+/// before the prompt names the files, which must list the code that landed
+/// and not the paperwork about it. `render::harvest` makes the same
+/// exclusion for its leased-but-untouched enumeration.
+///
+/// A dispatcher's own broader `docs/reports/**` glob is deliberately not this
+/// shape (`coord::is_arc_report`) and survives: it was authored as write-set,
+/// so it is the work, and a doc landing under it is a real citation.
+pub fn landmark_globs(globs: &[String]) -> Vec<String> {
+    globs.iter().filter(|g| !crate::coord::is_arc_report(g)).cloned().collect()
+}
+
 /// Does any claim or doc cite files under these globs? The land-time
 /// landmark check is PRESENCE of citation, never quality — quality is
-/// judged at review, and a gate here would breed Goodhart claims.
+/// judged at review, and a gate here would breed Goodhart claims. Callers
+/// making that check pass their globs through `landmark_globs` first; this
+/// predicate answers literally about whatever it is handed.
 pub fn files_cited(all: &[Node], globs: &[String]) -> bool {
     all.iter().any(|n| {
         (matches!(n.front.ty.as_str(), "claim" | "doc")

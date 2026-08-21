@@ -1265,7 +1265,18 @@ pub fn dispatch(
     let existing = crate::coord::load_leases(store)
         .into_iter()
         .find(|l| l.item == item.front.id);
-    let (globs, reused_lease) = match existing {
+    // The arc's own return (it-3prx): the RETURN spec demands a report and
+    // the homework prints its registration command, but a write-set names
+    // the CODE the work touches — so until this line the guard denied the
+    // one artifact the contract mandates, and only the dispatcher's hand
+    // could land it. Derived once here, at the station that CAN lease it;
+    // the brief names it and harvest prints it back from the lease.
+    let report = crate::coord::arc_report_path(
+        store,
+        &item.front.id,
+        crate::surface::title_raw(&item),
+    );
+    let (mut globs, reused_lease) = match existing {
         Some(l) if l.session == session => (l.globs, true),
         // The steal takes the lease with the dispatch: re-homed under the
         // stealing session, globs intact.
@@ -1280,6 +1291,10 @@ pub fn dispatch(
         ),
         None => {
             let globs = if !files.is_empty() { files } else { item.front.write_set.clone() };
+            // The empty check reads the write-set the dispatcher NAMED, and
+            // the arc report joins below it: a report path is the contract's
+            // artifact, never a write-set, and a dispatch leasing nothing
+            // else would be a research dispatch that stopped saying so.
             if globs.is_empty() {
                 bail!(
                     "a dispatch leases a write-set — pass --files <globs> (use ** to cover files the work will create): q dispatch {} --files \"src/**\"",
@@ -1290,6 +1305,18 @@ pub fn dispatch(
             (globs, false)
         }
     };
+    // The report path joins AFTER the lease is taken — deliberately outside
+    // `reserve`'s C7 overlap test. Inside it, any arc whose write-set covers
+    // `docs/**` would refuse against every other live arc's report path, and
+    // docs-touching work would become unfireable while any dispatch flies.
+    // There is nothing to contend for: the path is unique to this arc and
+    // names a file that does not exist yet, so no co-writer can be standing
+    // on it. Every arm re-points here — the reused and stolen leases were
+    // taken for a PRIOR arc, and a re-dispatch is a new arc with its own
+    // return.
+    if crate::coord::set_arc_report(&mut globs, &report) {
+        crate::coord::set_lease_globs(store, &item.front.id, &globs)?;
+    }
     if item.front.status != "in-flight" {
         set(store, &item.front.id, &["status=in-flight".to_string()], None)?;
     }
