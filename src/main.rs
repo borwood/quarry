@@ -262,6 +262,10 @@ fix the graph and re-render — never hand-compose dispatch context.")]
     #[command(after_help = "EXAMPLES:
   q reserve \"water body graph\" --files \"crates/dc-worldgen/**\"
   q reserve \"sdk docs pass\" --files \"docs/sdk/**\" --shared
+--files is REPEATABLE and takes one glob per flag — for a multi-glob
+write-set, repeat it (--files \"src/**\" --files \"tests/**\"). A comma-joined
+value is refused (it-x4bb): it would lease one dead pattern matching only
+the first path in it, denying the rest at write time.
 Exclusive by default: an overlapping foreign lease denies, naming the
 holder. --shared marks a co-write zone (shared leases coexist, with mutual
 visibility). --steal overrides loudly and is logged. Release explicitly
@@ -270,6 +274,7 @@ A lease follows a brief: reserve refuses unless this session rendered
 `q brief <item>` first (C8) — no lease on unbriefed work.")]
     Reserve {
         item: String,
+        /// Write-set globs for the lease, one glob per flag, repeatable
         #[arg(long = "files", required = true)]
         files: Vec<String>,
         #[arg(long)]
@@ -286,6 +291,11 @@ A lease follows a brief: reserve refuses unless this session rendered
     /// join token in a one-line spawn prompt, as one act
     #[command(after_help = "EXAMPLES:
   q dispatch \"water body graph\" --files \"crates/dc-worldgen/**\"
+  q dispatch \"the parser fix\" --files \"src/**\" --files \"tests/**\"
+--files is REPEATABLE and takes one glob per flag — never a comma-joined
+list, which is refused (it-x4bb): leased whole it is one dead pattern
+matching only the first path in it, and the agent's writes to the rest are
+denied mid-arc by its own badge, in a seat that cannot extend a lease.
 One act: logs the brief (C8), reserves the write-set (--files, falling
 back to the item's recorded write-set), sets in-flight, records the badge
 machine-locally with a single-use join token, and prints the ONE-LINE
@@ -304,7 +314,8 @@ none awake offers which dispatcher to wake. Advisory, stateless, never a
 gate: --solo fires from anywhere, no reason demanded.")]
     Dispatch {
         item: String,
-        /// Write-set globs for the lease (falls back to the item's write-set)
+        /// Write-set globs for the lease, one glob per flag, repeatable
+        /// (falls back to the item's recorded write-set)
         #[arg(long = "files")]
         files: Vec<String>,
         /// Mark the lease as a co-write zone

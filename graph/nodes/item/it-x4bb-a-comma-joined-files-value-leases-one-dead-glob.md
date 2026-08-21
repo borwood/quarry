@@ -2,8 +2,8 @@
 id: it-x4bb
 type: item
 title: 'a comma-joined --files value leases one dead glob: the dispatched agent is denied its own write-set'
-v: 2
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-21T08:34:57Z
 actor: claude-fable-5

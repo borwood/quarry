@@ -1199,6 +1199,17 @@ pub fn dispatch(
             item.front.status, item.front.id
         );
     }
+    // The write-set shape floor (it-x4bb), ahead of everything that mutates:
+    // a comma-joined --files value leases one dead glob whose static prefix
+    // runs across the commas, so only the first path in it would ever match
+    // and the agent is denied its own write-set mid-arc. Refusing the FLAG
+    // here — not only inside reserve — keeps a mistyped fire free of side
+    // effects: no gate-refusal event, no brief event, no lease, no in-flight
+    // flip, nothing to undo before the corrected command re-runs. The other
+    // road into the same lease, the fallback to the item's recorded
+    // write-set, inherits the floor at `coord::reserve` below, where it
+    // refuses beside the foreign-lease refusal and like it.
+    crate::coord::check_glob_shapes(&files)?;
     // The fire-time backstop (dc-p6z4), ahead of ownership and lease logic:
     // no brief event, no lease, no in-flight flip on a contract-less item —
     // and the re-dispatch path (lease kept) is covered by sitting here, not

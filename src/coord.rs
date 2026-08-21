@@ -257,6 +257,47 @@ fn lease_overlaps(lease: &Lease, globs: &[String]) -> bool {
         .any(|lg| globs.iter().any(|g| globs_overlap(lg, g)))
 }
 
+/// The shape floor under every lease (it-x4bb): a `--files` value carrying a
+/// comma is ONE dead glob, never a list. The flag is repeatable and carries
+/// no value delimiter, so `--files "src/ops.rs,src/render.rs,tests/**"`
+/// arrives as a single pattern — and `globs_overlap` compares STATIC PREFIXES
+/// by the prefix-of relation, so that pattern matches the first path in the
+/// value and nothing after it. Every path past the first comma is leased in
+/// name only: the brief prints it as leased, and then `teach::lease_check`'s
+/// under-a-badge arm denies the agent's write to it as "outside the leased
+/// write-set" — mid-arc, in a seat that cannot fix it (extending a lease is
+/// release plus re-reserve, and an agent may not release its own lease). It
+/// degrades quietly rather than failing: the first path keeps working, so the
+/// arc starts, spends context, and dies at whichever write comes second.
+///
+/// REFUSED, never split — the fork it-x4bb left to build time, settled here:
+/// one meaning per flag, never a guess. A comma is legal inside a real
+/// filename, so a silent split can mint exactly the dead globs this check
+/// exists to prevent; the refusal instead costs one re-run at the station
+/// that CAN fix it, and teaches the repeatable flag once.
+///
+/// One predicate point, two call sites (the stations it-x4bb named):
+/// `reserve` calls it, so every lease-taking road inherits it — `q reserve`
+/// and the dispatch fallback to an item's recorded write-set alike — and
+/// `ops::dispatch` calls it on the flag value ahead of any mutation, so a
+/// mistyped fire logs no brief event, takes no lease, and flips no status.
+pub fn check_glob_shapes(globs: &[String]) -> Result<()> {
+    let Some(bad) = globs.iter().find(|g| g.contains(',')) else {
+        return Ok(());
+    };
+    let repeated = bad
+        .split(',')
+        .map(str::trim)
+        .filter(|g| !g.is_empty())
+        .map(|g| format!("--files \"{}\"", g))
+        .collect::<Vec<_>>()
+        .join(" ");
+    bail!(
+        "--files takes ONE glob per flag and no value delimiter, so {:?} would be leased whole as a single pattern, never a list: the overlap test compares static prefixes, so that lease matches only the FIRST path in the value — every path after a comma is leased in name only, printed as leased in the agent's brief and then DENIED to it at the write by its own badge, mid-arc, in a seat that cannot extend a lease (it-x4bb). The flag is REPEATABLE — pass each glob its own: {}. (An item's recorded write-set, which a dispatch falls back to, is authored the same way, one glob per act: q set <item> write-set+=\"<glob>\".)",
+        bad, repeated
+    );
+}
+
 #[derive(Debug)]
 pub struct ReserveOutcome {
     pub co_holders: Vec<Lease>,
@@ -277,6 +318,10 @@ pub fn reserve(
     if globs.is_empty() {
         bail!("a lease needs at least one --files glob (use ** to cover files the work will create)");
     }
+    // The shape floor (it-x4bb), here so every lease-taking road inherits it:
+    // a comma-joined value is one dead glob, and the denial it causes lands
+    // on the agent, mid-arc, in a seat that cannot fix it.
+    check_glob_shapes(&globs)?;
     let mut leases = load_leases(store);
     if leases.iter().any(|l| l.item == item.front.id) {
         bail!(

@@ -2080,3 +2080,31 @@
 {"ts":"2026-08-21T09:38:03Z","node":"it-drsu","v":1,"op":"create","type":"item","title":"a prose lead-in zeroes the user-owned count: declared calls read as none when a line stands between the head and the list","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T09:38:25Z","node":"it-drsu","v":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a report's declared user-owned calls are counted whatever prose stands between the section head and its entries: a lead-in line never reads as a declaration of none, and the count still ends at the next heading"],"ts":"2026-08-21T09:38:33Z","node":"it-drsu","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:39:53Z","node":"it-x4bb","v":2,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:39:53Z","node":"it-x4bb","v":2,"op":"reserve","globs":["src/ops.rs","src/coord.rs","src/main.rs","tests/**","docs/reports/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T09:39:53Z","node":"it-x4bb","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:39:53Z","node":"it-x4bb","v":2,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/ops.rs","src/coord.rs","src/main.rs","tests/**","docs/reports/**"]}
+{"ts":"2026-08-21T09:40:11Z","node":"it-x4bb","v":3,"op":"join","actor":"claude-fable-5","dispatch":"it-x4bb","joined":"agent:aa4b0cd95310ada31","session":"dispatcher"}
+{"ts":"2026-08-21T09:43:09Z","node":"it-man2","v":1,"op":"create","type":"item","title":"field reports: the channel back built as protocol content per dc-4fgc","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-4fgc","at":2,"ts":"2026-08-21T09:43:17Z","node":"it-man2","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T09:46:57Z","node":"dc-ywe8","v":1,"op":"create","type":"decision","title":"the species claims contract; the dispatch-side register sweeps to acceptance vocabulary","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"ts":"2026-08-21T09:47:05Z","node":"it-jw4w","v":1,"op":"create","type":"item","title":"the acceptance sweep: dispatch-side titles and prose stop saying contract","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"link","rel":"depends-on","to":"dc-ywe8","at":1,"ts":"2026-08-21T09:47:09Z","node":"it-jw4w","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"op":"body","ts":"2026-08-21T09:47:33Z","node":"th-yzmj","v":8,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T09:52:24Z","node":"cl-74qt","v":1,"op":"create","type":"claim","title":"`glob-shape-floor`: a comma-joined --files value is refused where the globs enter — one predicate, both stations, ahead of every mutation","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-x4bb"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"cc55587b721c","ts":"2026-08-21T09:52:24Z","node":"cl-74qt","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"dd32b5271636","ts":"2026-08-21T09:52:52Z","node":"cl-74qt","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:54:25Z","node":"cl-p6aj","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:54:25Z","node":"cl-t7nx","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:54:25Z","node":"cl-kr7f","v":7,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:54:33Z","node":"cl-qm6t","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:56:31Z","node":"do-umgh","v":1,"op":"create","type":"doc","title":"dispatch report: a comma-joined --files value leases one dead glob","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-x4bb"}
+{"op":"link","rel":"supports","to":"it-x4bb","at":3,"ts":"2026-08-21T09:56:31Z","node":"do-umgh","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-x4bb"}
+{"ts":"2026-08-21T09:59:23Z","node":"it-x4bb","v":3,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T09:59:44Z","node":"cl-74qt","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T09:59:45Z","node":"it-x4bb","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:59:47Z","node":"it-x4bb","v":4,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:59:57Z","node":"do-umgh","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-x4bb","at":4,"ts":"2026-08-21T09:59:57Z","node":"cl-74qt","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:59:57Z","node":"it-am2r","v":1,"op":"create","type":"item","title":"the write-set shaping station takes a comma-joined glob the fire-time floor will later refuse","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T10:00:14Z","node":"it-am2r","v":2,"actor":"claude-fable-5","session":"dispatcher"}

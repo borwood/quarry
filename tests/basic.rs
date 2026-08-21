@@ -6561,3 +6561,156 @@ fn the_reconcile_never_parses_a_report_that_predates_the_arcs_dispatch() {
     // unfiltered rather than to empty.
     assert!(queries::arc_dispatched_at(&log, "it-never").is_none());
 }
+
+#[test]
+fn a_comma_joined_files_value_is_refused_where_the_globs_enter() {
+    // it-x4bb: --files is repeatable and carries no value delimiter, so one
+    // comma-joined value mints ONE glob. `globs_overlap` compares STATIC
+    // PREFIXES by the prefix-of relation, so that glob matches the first path
+    // in the value and nothing after it: the brief prints the rest as leased
+    // and the agent's own badge then denies the writes, mid-arc, in a seat
+    // that cannot extend a lease. The shape is refused where the globs enter.
+    use quarry::coord::{check_glob_shapes, globs_overlap};
+    let s = temp_store();
+    let joined = "src/ops.rs,src/render.rs,tests/**";
+
+    // THE DEFECT, measured on the matcher itself — the arc that lost its
+    // src/render.rs and tests/** halves (it-rmqy) lost them to exactly this.
+    assert!(globs_overlap(joined, "src/ops.rs"), "the first path matches — the arc starts");
+    assert!(!globs_overlap(joined, "src/render.rs"), "the second is leased in name only");
+    assert!(!globs_overlap(joined, "tests/basic.rs"), "and so is the third");
+
+    // THE SOLO STATION (q reserve's road): coord::reserve refuses, teaching
+    // the repeatable flag with the corrected command derived from the value
+    // in hand, and no lease is written.
+    let mut a = NewArgs::bare("item", "comma at reserve");
+    a.acceptance = vec!["the work lands".into()];
+    let a = ops::new_node(&s, a).unwrap();
+    let err = quarry::coord::reserve(&s, &a, "geo", "t", vec![joined.into()], false, false, None)
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("REPEATABLE"), "the flag's shape is taught: {}", err);
+    assert!(
+        err.contains("--files \"src/ops.rs\" --files \"src/render.rs\" --files \"tests/**\""),
+        "the corrected command is derived from the offending value: {}",
+        err
+    );
+    assert!(quarry::coord::load_leases(&s).is_empty(), "nothing is leased whole");
+
+    // THE FIRING STATION: ops::dispatch refuses ahead of every mutation —
+    // no brief event, no lease, no badge, no in-flight flip, nothing to undo.
+    let mut b = NewArgs::bare("item", "comma at dispatch");
+    b.status = Some("ready".into());
+    b.acceptance = vec!["the work lands".into()];
+    let b = ops::new_node(&s, b).unwrap();
+    let err = ops::dispatch(&s, &b.front.id, vec![joined.into()], false, false, None, "geo", "t")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("REPEATABLE"), "the same teaching at both stations: {}", err);
+    assert!(quarry::coord::load_leases(&s).is_empty(), "no lease on a refused fire");
+    assert!(quarry::coord::dispatch_for_item(&s, &b.front.id).is_none(), "no badge minted");
+    assert!(
+        !quarry::coord::briefed_this_session(&s, &b.front.id, "geo"),
+        "no brief event — C8 stays unsatisfied, so the refusal cannot be walked past"
+    );
+    let all = s.load_all().unwrap();
+    assert_eq!(
+        s.find(&all, &b.front.id).unwrap().front.status,
+        "ready",
+        "a mistyped fire leaves the item exactly as it found it"
+    );
+
+    // THE FALLBACK ROAD: an item's recorded write-set reaches the same lease,
+    // so it meets the same floor at reserve — a --files-less dispatch cannot
+    // inherit the shape from the item either.
+    ops::set(&s, &b.front.id, &[format!("write-set+={}", joined)], None).unwrap();
+    let err = ops::dispatch(&s, &b.front.id, vec![], false, false, None, "geo", "t")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("REPEATABLE"), "the fallback inherits the floor: {}", err);
+    assert!(quarry::coord::load_leases(&s).is_empty(), "still nothing leased whole");
+
+    // THE POSITIVE CONTROL: the repeatable form leases every glob, and every
+    // path the brief would print as leased passes the overlap test for real.
+    let mut c = NewArgs::bare("item", "the repeatable form");
+    c.status = Some("ready".into());
+    c.acceptance = vec!["the work lands".into()];
+    let c = ops::new_node(&s, c).unwrap();
+    let out = ops::dispatch(
+        &s,
+        &c.front.id,
+        vec!["src/ops.rs".into(), "src/render.rs".into(), "tests/**".into()],
+        false,
+        false,
+        None,
+        "geo",
+        "t",
+    )
+    .unwrap();
+    assert_eq!(out.globs.len(), 3, "three flags, three globs");
+    for p in ["src/ops.rs", "src/render.rs", "tests/basic.rs"] {
+        assert!(
+            out.globs.iter().any(|g| globs_overlap(g, p)),
+            "{} is leased for real, not in name only",
+            p
+        );
+    }
+    // The predicate itself: a comma anywhere in the list is the tell, and
+    // ordinary globs pass untouched.
+    assert!(check_glob_shapes(&["src/**".into(), "tests/**".into()]).is_ok());
+    assert!(check_glob_shapes(&[]).is_ok());
+    assert!(check_glob_shapes(&["src/**".into(), "docs/a.md,docs/b.md".into()]).is_err());
+
+    // END TO END through the real binary: the value arrives at the station
+    // unsplit (nothing in the arg parse divides it), the station refuses with
+    // the teaching, and the invariant holds whatever the arm — no lease may
+    // exist that leases the value whole.
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        let mut cmd = std::process::Command::new(q);
+        cmd.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .env("QUARRY_SESSION", "geo")
+            .args(args);
+        cmd.output().unwrap()
+    };
+    let mut e2e = NewArgs::bare("item", "fired through the binary");
+    e2e.status = Some("ready".into());
+    e2e.acceptance = vec!["the work lands".into()];
+    let e2e = ops::new_node(&s, e2e).unwrap();
+    let out = run(&["dispatch", &e2e.front.id, "--solo", "--files", joined]);
+    assert!(!out.status.success(), "the comma-joined fire refuses at the station");
+    let msg = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(msg.contains("REPEATABLE"), "the repeatable flag is taught to the dispatcher: {}", msg);
+    let leases = quarry::coord::load_leases(&s);
+    assert!(
+        !leases.iter().any(|l| l.globs.iter().any(|g| g.contains(','))),
+        "never leased whole: {:?}",
+        leases
+    );
+    // …and the corrected command fires, leasing each glob on its own.
+    let ok = run(&[
+        "dispatch", &e2e.front.id, "--solo",
+        "--files", "src/ops.rs", "--files", "src/render.rs", "--files", "tests/**",
+    ]);
+    assert!(
+        ok.status.success(),
+        "the repeatable form fires: {}{}",
+        String::from_utf8_lossy(&ok.stdout),
+        String::from_utf8_lossy(&ok.stderr)
+    );
+    let held = quarry::coord::dispatch_for_item(&s, &e2e.front.id).unwrap();
+    assert_eq!(held.globs.len(), 3, "the badge carries all three: {:?}", held.globs);
+    for p in ["src/ops.rs", "src/render.rs", "tests/basic.rs"] {
+        assert!(
+            held.globs.iter().any(|g| globs_overlap(g, p)),
+            "{} is leased on the badge the agent's brief renders from",
+            p
+        );
+    }
+}
