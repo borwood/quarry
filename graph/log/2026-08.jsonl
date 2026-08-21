@@ -2522,3 +2522,11 @@
 {"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T15:55:02Z","node":"cl-2j49","v":5,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T15:55:02Z","node":"it-nngn","v":5,"actor":"claude-opus-5","session":"dispatcher"}
 {"ts":"2026-08-21T15:55:05Z","node":"it-nngn","v":5,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:55:39Z","node":"it-sh8e","v":2,"op":"gate-refusal","solo":false,"actor":"claude-opus-5","refused_key":"chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d","session":"dispatcher"}
+{"ts":"2026-08-21T15:55:49Z","node":"it-sh8e","v":2,"op":"gate-refusal","solo":false,"actor":"claude-opus-5","refused_key":"chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d","session":"dispatcher"}
+{"ts":"2026-08-21T15:57:02Z","node":"it-vtcp","v":1,"op":"create","type":"item","title":"the witness pen's at-filing-never-at-fire half is discipline, not construction: authoring then firing evades the sequence check","actor":"claude-opus-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T15:57:32Z","node":"it-vtcp","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:57:57Z","node":"th-w3pk","v":1,"op":"create","type":"thread","title":"the dispatcher authored acceptance at fire fifteen times today: does the at-filing rule want construction, and do those landings stand?","actor":"claude-opus-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T15:58:22Z","node":"th-w3pk","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-21T15:58:22Z","node":"th-w3pk","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"link","rel":"depends-on","to":"th-w3pk","at":3,"ts":"2026-08-21T15:58:23Z","node":"it-vtcp","v":3,"actor":"claude-opus-5","session":"dispatcher"}
