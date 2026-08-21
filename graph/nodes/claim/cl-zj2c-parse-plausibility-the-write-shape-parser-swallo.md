@@ -2,7 +2,7 @@
 id: cl-zj2c
 type: claim
 title: '`parse-plausibility`: the write-shape parser swallows here-strings whole and refuses targets that cannot be filenames'
-v: 6
+v: 7
 status: ratified
 provenance: assistant
 created: 2026-08-21T09:16:17Z
@@ -26,7 +26,7 @@ edges:
   at: 8de5dd671593
 - rel: supports
   to: it-dt68
-  at: 3
+  at: 5
 ---
 
 `parse-plausibility`: the write-shape parser swallows here-strings whole and refuses targets that cannot be filenames
@@ -43,4 +43,6 @@ The two halves are independent — either alone kills this incident — and each
 
 Pinned by write_shapes_drops_parser_debris_and_sigils (the incident command verbatim in shape, the sigil and metacharacter shapes, the unterminated literal, and the plausible targets that must survive) and by an added arm of observe_shell_accrues_only_resolvable_targets_marked_shell, which carries the reason the drop must happen at the PARSE and not at resolution: debris resolves store-relative by mere path joining, so nothing downstream would have caught it.
 
-Residue the parse still cannot see: a bash heredoc body (<< then a delimiter) tokenizes as ordinary command text, so prose in one can still mint a plausible-looking target — the same false-positive class, one channel over. The plausibility floor catches its debris shapes but not a heredoc line that reads like "touch foo". Closing it wants delimiter tracking in shell_tokens, the same move made here for the PowerShell form.
+AMENDED AT THE it-dt68 LANDING (2026-08-21, the dispatcher's hand): the heredoc residue this paragraph used to name as open is closed. cl-p4k2 tracks the delimiter from the opener and consumes a bash heredoc body — bare, quoted, and tab-stripped forms alike — as one opaque token, taken at the newline that ends the opener line so a redirect beside the delimiter still belongs to its command. It was the same class one channel over, and worse than predicted: measured pre-fix, the repo's own commit road (git commit -F - with a heredoc) minted the terminator EOF as a touched path, the it-ap3x incident replayed verbatim in the channel this repo moved to BECAUSE of it-ap3x.
+
+The residue that remains is narrower and named: it-dprv — a newline is not a command boundary in shell_tokens, so a multi-line command reads as one command. Both directions are measured there: a later line's command word mints as a plausible path (the floor cannot catch it, "touch" being a legal filename), and a real write on a later line goes unseen. The cure wants the newline boundary plus a line-continuation exception, which is why it was filed rather than folded in here.

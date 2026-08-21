@@ -914,26 +914,49 @@ pub fn observe_write(
 }
 
 /// Quote-aware shell tokenization for the write-shape parser: whitespace
-/// splits words outside quotes; command separators (`;`, `|`, `&`, newlines,
-/// parens) and input redirects (`<`, heredocs) push None — a boundary; runs
+/// splits words outside quotes; command separators (`;`, `|`, `&`, parens)
+/// and input redirects (`<`, heredoc openers) push None — a boundary; runs
 /// of `>` split into their own token even glued to a neighbor (`2>file`),
 /// so the scan can pair each redirect with the token that follows it.
 ///
-/// A PowerShell here-string (`@'` … newline `'@`, or the `@"` form) is
-/// consumed WHOLE as one opaque token (it-ap3x). This is the repo's own
-/// documented way to hand a multi-line commit message to git, and its body is
-/// prose: an apostrophe in it ("main.rs's arm") would otherwise open a quote
-/// the tokenizer never closes, desyncing every token after it — the closing
-/// `'@` re-opens the quote instead, and the command's real tail (`2>&1 | tail
-/// -20`) arrives as one bogus word behind a `>` from an unrelated `<…>` in
-/// the prose. Swallowing the literal keeps the tail tokenizing correctly.
+/// Two multi-line literals are consumed WHOLE, each as one opaque token,
+/// because both carry PROSE through a parser that would otherwise read it as
+/// command text.
+///
+/// A PowerShell here-string (`@'` … newline `'@`, or the `@"` form) —
+/// it-ap3x. This is the repo's own documented way to hand a multi-line commit
+/// message to git: an apostrophe in it ("main.rs's arm") would otherwise open
+/// a quote the tokenizer never closes, desyncing every token after it — the
+/// closing `'@` re-opens the quote instead, and the command's real tail
+/// (`2>&1 | tail -20`) arrives as one bogus word behind a `>` from an
+/// unrelated `<…>` in the prose. Swallowing the literal keeps the tail
+/// tokenizing correctly.
+///
+/// A bash heredoc (`<<EOF`, `<<'EOF'`, `<<-EOF`) — it-dt68, the same class one
+/// channel over. The `<<` pushes a boundary, so nothing desyncs, but every
+/// line of the body used to tokenize as ordinary words: a message line reading
+/// `touch foo` minted `foo` as a perfectly plausible touched path, and the
+/// judgment seat cannot tell such a mint from a real write. The delimiter is
+/// tracked from the opener and the body is consumed at the newline that ends
+/// the opener line (bash's own ordering — a redirect after the delimiter,
+/// `cat <<EOF > out.txt`, still belongs to the command) through its
+/// line-initial terminator, or to end of input when it has none. The token
+/// carries the `<<` it opened with, so it is opaque by construction.
 fn shell_tokens(command: &str) -> Vec<Option<String>> {
     let mut out: Vec<Option<String>> = Vec::new();
     let mut cur = String::new();
     let mut quote: Option<char> = None;
+    // Heredocs opened on the line being tokenized, in the order their bodies
+    // arrive: (opener text as written, delimiter, `<<-` tab-stripping form).
+    let mut pending: Vec<(String, String, bool)> = Vec::new();
     let flush = |cur: &mut String, out: &mut Vec<Option<String>>| {
         if !cur.is_empty() {
             out.push(Some(std::mem::take(cur)));
+        }
+    };
+    let boundary = |out: &mut Vec<Option<String>>| {
+        if out.last() != Some(&None) {
+            out.push(None);
         }
     };
     let mut chars = command.chars().peekable();
@@ -971,12 +994,104 @@ fn shell_tokens(command: &str) -> Vec<Option<String>> {
                 out.push(Some(body));
             }
             '\'' | '"' => quote = Some(c),
-            c if c.is_whitespace() => flush(&mut cur, &mut out),
-            ';' | '|' | '&' | '(' | ')' | '<' => {
+            // The newline that ends an opener line: every heredoc opened on it
+            // now takes its body, in order, each as one opaque token followed
+            // by a boundary — so a real command after the terminator is read
+            // as its own command, not as an argument of the prose.
+            '\n' if !pending.is_empty() => {
                 flush(&mut cur, &mut out);
-                if out.last() != Some(&None) {
-                    out.push(None);
+                for (opener, delim, strip) in std::mem::take(&mut pending) {
+                    let mut body = opener;
+                    body.push('\n');
+                    loop {
+                        let mut line = String::new();
+                        let mut saw_newline = false;
+                        while let Some(&b) = chars.peek() {
+                            chars.next();
+                            if b == '\n' {
+                                saw_newline = true;
+                                break;
+                            }
+                            line.push(b);
+                        }
+                        // Trailing whitespace (a CRLF's `\r` included) never
+                        // makes a terminator a body line; leading whitespace
+                        // only under the `<<-` form.
+                        let t = line.trim_end();
+                        let done = if strip { t.trim_start() == delim } else { t == delim };
+                        body.push_str(&line);
+                        if saw_newline {
+                            body.push('\n');
+                        }
+                        if done || !saw_newline {
+                            break;
+                        }
+                    }
+                    out.push(Some(body));
+                    boundary(&mut out);
                 }
+            }
+            c if c.is_whitespace() => flush(&mut cur, &mut out),
+            ';' | '|' | '&' | '(' | ')' => {
+                flush(&mut cur, &mut out);
+                boundary(&mut out);
+            }
+            // Input redirects. A run of exactly two is a heredoc opener: read
+            // its delimiter here (the body waits for the newline). One `<` is
+            // a plain input redirect and three is a bash here-string, whose
+            // word is a single token already — both are boundaries alone.
+            '<' => {
+                let mut run = 1;
+                while chars.peek() == Some(&'<') {
+                    chars.next();
+                    run += 1;
+                }
+                flush(&mut cur, &mut out);
+                if run == 2 {
+                    let mut opener = String::from("<<");
+                    let mut strip = false;
+                    if chars.peek() == Some(&'-') {
+                        chars.next();
+                        opener.push('-');
+                        strip = true;
+                    }
+                    while matches!(chars.peek(), Some(' ') | Some('\t')) {
+                        opener.push(chars.next().expect("peeked"));
+                    }
+                    let mut delim = String::new();
+                    match chars.peek().copied() {
+                        // `<<'EOF'` / `<<"EOF"`: the quotes belong to the
+                        // opener, the delimiter is what they hold.
+                        Some(q @ ('\'' | '"')) => {
+                            chars.next();
+                            opener.push(q);
+                            while let Some(b) = chars.next() {
+                                opener.push(b);
+                                if b == q {
+                                    break;
+                                }
+                                delim.push(b);
+                            }
+                        }
+                        // `<<EOF`: to the first whitespace or metacharacter.
+                        _ => {
+                            while let Some(&b) = chars.peek() {
+                                if b.is_whitespace()
+                                    || matches!(b, ';' | '|' | '&' | '(' | ')' | '<' | '>')
+                                {
+                                    break;
+                                }
+                                chars.next();
+                                opener.push(b);
+                                delim.push(b);
+                            }
+                        }
+                    }
+                    if !delim.is_empty() {
+                        pending.push((opener, delim, strip));
+                    }
+                }
+                boundary(&mut out);
             }
             '>' => {
                 flush(&mut cur, &mut out);

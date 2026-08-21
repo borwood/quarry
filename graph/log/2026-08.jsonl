@@ -2176,3 +2176,26 @@
 {"ts":"2026-08-21T11:11:39Z","node":"do-bq8x","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-21T11:11:39Z","node":"it-auj7","v":1,"op":"create","type":"item","title":"no verb shows an agent how its own report parsed: three throwaway instruments built in two days","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T11:12:00Z","node":"it-auj7","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:12:42Z","node":"it-dt68","v":3,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:12:42Z","node":"it-dt68","v":3,"op":"reserve","globs":["src/teach.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T11:12:42Z","node":"it-dt68","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:12:42Z","node":"it-dt68","v":3,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/teach.rs","tests/**","docs/reports/2026-08-21-a-bash-heredoc-body-tokenizes-as-it-dt68.md"]}
+{"ts":"2026-08-21T11:12:53Z","node":"it-dt68","v":4,"op":"join","actor":"claude-fable-5","dispatch":"it-dt68","joined":"agent:abd84d185dbedba00","session":"dispatcher"}
+{"ts":"2026-08-21T11:22:04Z","node":"it-dprv","v":1,"op":"create","type":"item","title":"a newline is not a command boundary: the write-shape parser reads the next line's command word as the previous line's argument","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dt68"}
+{"ts":"2026-08-21T11:22:36Z","node":"cl-p4k2","v":1,"op":"create","type":"claim","title":"`heredoc-opaque`: a bash heredoc body is one opaque token, taken at the opener's newline so the redirect beside it survives","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dt68"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"cdb043c6d64a","ts":"2026-08-21T11:22:36Z","node":"cl-p4k2","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dt68"}
+{"op":"link","rel":"supports","to":"it-dt68","at":4,"ts":"2026-08-21T11:22:42Z","node":"cl-p4k2","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dt68"}
+{"ts":"2026-08-21T11:22:55Z","node":"cl-zj2c","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dt68"}
+{"ts":"2026-08-21T11:24:08Z","node":"do-5yds","v":1,"op":"create","type":"doc","title":"dispatch report: a bash heredoc body tokenizes as command text: prose inside it can mint a plausible false positive","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-dt68"}
+{"op":"link","rel":"supports","to":"it-dt68","at":4,"ts":"2026-08-21T11:24:08Z","node":"do-5yds","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-dt68"}
+{"ts":"2026-08-21T11:25:49Z","node":"it-dt68","v":4,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T11:26:01Z","node":"cl-p4k2","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T11:26:01Z","node":"it-dt68","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:26:03Z","node":"it-dt68","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a multi-line command is read as the commands it is: an unquoted newline ends the command before it, so no later line's command word mints as a path and no write on a later line goes unseen, while a line continuation keeps its tail"],"ts":"2026-08-21T11:26:05Z","node":"it-dprv","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:26:29Z","node":"cl-p4k2","v":4,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:26:29Z","node":"cl-zj2c","v":6,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T11:26:59Z","node":"cl-zj2c","v":7,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T11:27:11Z","node":"th-rb2j","v":1,"op":"create","type":"thread","title":"a claim that stands on another claim has no edge to say so: builds-on stops at decisions and docs, supports points the load the other way","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T11:27:32Z","node":"th-rb2j","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-21T11:27:32Z","node":"th-rb2j","v":3,"actor":"claude-fable-5","session":"dispatcher"}

@@ -6187,6 +6187,73 @@ fn write_shapes_drops_parser_debris_and_sigils() {
     assert_eq!(write_shapes("touch src\\teach.rs"), vec!["src\\teach.rs"]);
 }
 
+/// The it-dt68 defect: a bash heredoc body tokenized as command text, so a
+/// line of PROSE reading like a command minted a perfectly plausible touched
+/// path — the it-ap3x false-positive class, one channel over, on the channel
+/// this repo's own commit road runs through (`git commit -F - <<'EOF'`).
+#[test]
+fn write_shapes_never_mints_a_path_from_a_bash_heredoc_body() {
+    use quarry::teach::write_shapes;
+    // THE INCIDENT SHAPE: the commit road. Every line of the message used to
+    // tokenize as words — `touch src/ghost.rs` in the prose minted
+    // src/ghost.rs, and the judgment seat cannot tell it from a real write.
+    let commit = "git commit -F - <<'EOF'\n\
+        the parse: touch src/ghost.rs was never run\n\
+        it also never ran cp fixtures/a.rs src/ghost2.rs\n\
+        \n\
+        Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\
+        EOF";
+    assert!(
+        write_shapes(commit).is_empty(),
+        "a heredoc commit message names no write target, got {:?}",
+        write_shapes(commit)
+    );
+    // All three openers: quoted (above), bare, and the tab-stripped form
+    // whose terminator is indented.
+    assert!(write_shapes("cat <<EOF\ntouch src/ghost.rs\nEOF").is_empty());
+    assert!(write_shapes("cat <<\"EOF\"\ntouch src/ghost.rs\nEOF").is_empty());
+    assert!(write_shapes("cat <<-EOF\n\ttouch src/ghost.rs\n\tEOF").is_empty());
+    // A space between the operator and the delimiter is legal too.
+    assert!(write_shapes("cat << EOF\ntouch src/ghost.rs\nEOF").is_empty());
+    // A REAL WRITE BESIDE THE HEREDOC STILL PARSES. The body is taken at the
+    // newline that ends the opener line, not at the operator, so a redirect
+    // standing after the delimiter still belongs to its command.
+    assert_eq!(
+        write_shapes("cat <<EOF > out/real.txt\ntouch src/ghost.rs\nEOF"),
+        vec!["out/real.txt"]
+    );
+    // And the command after the terminator is its own command, not an
+    // argument of the prose that preceded it.
+    assert_eq!(
+        write_shapes("git commit -F - <<'EOF'\ntouch src/ghost.rs\nEOF\ntouch src/real.rs"),
+        vec!["src/real.rs"]
+    );
+    // Two heredocs on one line take their bodies in order.
+    assert_eq!(
+        write_shapes("diff <<A <<B > out/diff.txt\ntouch src/g1.rs\nA\ntouch src/g2.rs\nB"),
+        vec!["out/diff.txt"]
+    );
+    // An unterminated body ends the parse quietly — never a panic, never a
+    // token of the leftover prose.
+    assert!(write_shapes("cat <<EOF\ntouch src/ghost.rs\nnever closes").is_empty());
+    // The delimiter must match the WHOLE line: prose that merely contains the
+    // word does not end the body (trailing whitespace and a CRLF's `\r` do
+    // not make a terminator a body line, though).
+    assert!(write_shapes("cat <<EOF\nEOF is the delimiter here\ntouch src/ghost.rs\nEOF").is_empty());
+    assert_eq!(
+        write_shapes("cat <<EOF\ntouch src/ghost.rs\r\nEOF \ntouch src/real.rs"),
+        vec!["src/real.rs"]
+    );
+    // `<<<` is a here-string, not a heredoc: one word, no body to swallow —
+    // the write beside it stays visible.
+    assert_eq!(
+        write_shapes("cat <<< \"prose that says touch src/ghost.rs\" > out/real.txt"),
+        vec!["out/real.txt"]
+    );
+    // A plain input redirect is untouched.
+    assert_eq!(write_shapes("sort < in.txt > out/sorted.txt"), vec!["out/sorted.txt"]);
+}
+
 #[test]
 fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
     let s = temp_store();
@@ -6250,6 +6317,27 @@ fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
     let touches = quarry::coord::touches_for(&s, "item:it-shell");
     let paths: Vec<&str> = touches.iter().map(|t| t.path.as_str()).collect();
     assert_eq!(paths, vec!["tests/basic.rs", "src/lib.rs"], "the here-string commit accrued debris");
+    // it-dt68, the same reasoning one channel over: a heredoc body line that
+    // READS like a command names a path that resolves store-relative by mere
+    // joining — src/ghost.rs is a perfectly plausible touched path and no
+    // resolution step can tell it from a real write. The drop belongs at the
+    // parse; the real write beside the heredoc still accrues.
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        "git commit -F - <<'EOF' > out.log\n\
+            the parse: touch src/ghost.rs was never run\n\
+            EOF",
+        Some(&cwd),
+    );
+    let touches = quarry::coord::touches_for(&s, "item:it-shell");
+    let paths: Vec<&str> = touches.iter().map(|t| t.path.as_str()).collect();
+    assert_eq!(
+        paths,
+        vec!["tests/basic.rs", "src/lib.rs", "out.log"],
+        "the heredoc commit accrued its body as touched paths"
+    );
 }
 
 #[test]

@@ -2,8 +2,8 @@
 id: it-dt68
 type: item
 title: 'a bash heredoc body tokenizes as command text: prose inside it can mint a plausible false positive'
-v: 3
-status: sketch
+v: 5
+status: done
 provenance: assistant
 created: 2026-08-21T09:20:15Z
 actor: claude-fable-5
