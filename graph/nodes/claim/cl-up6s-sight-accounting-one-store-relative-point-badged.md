@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/teach.rs
-  at: 263089dded71
+  at: d15f00a82b95
 - rel: source
   to: file:src/store.rs
   at: bcd701ef3890
@@ -26,7 +26,7 @@ edges:
   at: ceb6cf060a06
 - rel: source
   to: file:src/coord.rs
-  at: bfb7e65a2a57
+  at: 24df8ce05680
 - rel: source
   to: file:tests/observed_set.rs
   at: 845c755fae73

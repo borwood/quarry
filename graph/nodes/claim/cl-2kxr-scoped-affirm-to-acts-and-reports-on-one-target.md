@@ -26,7 +26,7 @@ edges:
   at: 55d346308d3f
 - rel: source
   to: file:tests/basic.rs
-  at: a0b0aeaf24a1
+  at: 4716c2fa0694
 - rel: supports
   to: it-awhz
   at: 5

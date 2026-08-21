@@ -25,7 +25,7 @@ edges:
   at: 1
 - rel: about
   to: file:src/teach.rs
-  at: 7ee40b0057f9
+  at: d15f00a82b95
 ---
 
 Witnessed 2026-08-20 at the it-csm3 harvest: OBSERVED vs LEASED rendered a literal @ entry marked shell-parsed and outside the lease. The write-shape tokenizer (landed at it-bj3b) read a PowerShell sigil-shaped token from command text as a write target and accrued it. The diff shows no such file; the entry is parser debris at the judgment seat - exactly the false-positive pollution the it-bj3b report said the parser was designed against. cl-up6s holds; this is a tokenizer edge, not a design fault.

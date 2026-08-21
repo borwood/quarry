@@ -17,10 +17,10 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: b7a568132432
+  at: 24df8ce05680
 - rel: source
   to: file:src/teach.rs
-  at: d050af9d9994
+  at: d15f00a82b95
 - rel: source
   to: file:src/ops.rs
   at: 7785f1965da3
@@ -29,7 +29,7 @@ edges:
   at: 75651d05f793
 - rel: source
   to: file:tests/basic.rs
-  at: e8aeebc6fba8
+  at: 4716c2fa0694
 - rel: supports
   to: it-xcvb
   at: 5

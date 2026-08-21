@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/teach.rs
-  at: 76fab39b5aad
+  at: d15f00a82b95
 ---
 
 File writes into globs held by a live dispatch from a context resolving no badge are denied with a teaching line naming the item and q join — the C8 move applied to the hand-off. The holder session and the unbound context are taught the join (this replaces the holder-session Allow for dispatched zones); a genuinely foreign session keeps the C7 denial; solo leases (reserve without dispatch) keep their holder Allow and scope-creep warn, and the dispatcher chores outside a dispatched zone stay ordinary leaseless observation.

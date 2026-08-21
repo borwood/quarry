@@ -221,6 +221,15 @@ the session hook for chats running in this repo — you should never set
 them by hand. Set QUARRY_ACTOR manually only when operating outside hook
 coverage (e.g. from a parent directory). If unset entirely, provenance
 safely derives as assistant; user provenance is always explicit.
+The injected actor is re-derived at EVERY fire (it-j4tx), from the model
+naming the last assistant turn in this session's own transcript — so a
+/model switch or a resume onto another model re-points attribution
+instead of leaving the whole session filing under whatever SessionStart
+happened to see. A joined agent's badge stamp still outranks it
+(cl-dqt4). Where the transcript cannot answer — none in the hook
+payload, or none of its tail readable — the recorded row stands, and
+that row is SessionStart-grained: the model this session STARTED on,
+not necessarily the one writing now.
 The dispatch badge is bound at q join, never exported by hand: the
 session hook injects QUARRY_AGENT (in subagents) and QUARRY_CHAT
 alongside SESSION/ACTOR, and q resolves badges from the machine-local

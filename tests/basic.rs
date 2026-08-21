@@ -7768,3 +7768,283 @@ fn the_session_hook_injects_the_badge_model_over_the_inherited_chat_actor() {
         cleared
     );
 }
+
+#[test]
+fn the_chat_actor_row_refreshes_from_the_transcript_at_every_fire() {
+    // it-j4tx. The row is written ONCE, at SessionStart, and used to be read
+    // back unquestioned: a `/model` switch or a resume onto a different model
+    // left the whole rest of the session filing under a model that had
+    // stopped writing it. Measured on the dispatching chat itself, 2026-08-21
+    // — the row said claude-fable-5 while all 400 assistant entries in that
+    // chat's own transcript said claude-opus-5.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+
+    // THE PURE CORE, on the incident shape: a session that started on one
+    // model and switched. The LAST assistant entry wins, whatever came first.
+    let switched = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-fable-5"},"isSidechain":false}"#,
+        "\n",
+        r#"{"type":"user","message":{"role":"user"}}"#,
+        "\n",
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"},"isSidechain":false}"#,
+        "\n",
+        r#"{"type":"system","subtype":"stop_hook_summary"}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(switched.as_bytes(), false).as_deref(),
+        Some("claude-opus-5"),
+        "the last assistant entry names the model producing turns now"
+    );
+
+    // THE FILTERS, each a measured shape rather than a guess.
+    // `<synthetic>` is what the harness writes for assistant entries it
+    // composed itself — measured in 4 of the 23 real transcripts on this
+    // machine — and it is not a model anyone can be attributed to.
+    let synthetic = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"}}"#,
+        "\n",
+        r#"{"type":"assistant","message":{"model":"<synthetic>"}}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(synthetic.as_bytes(), false).as_deref(),
+        Some("claude-opus-5"),
+        "a synthetic entry is skipped, never adopted as a model name"
+    );
+    // A subagent's turns carry isSidechain:true (measured: all 78 assistant
+    // entries of this arc's own subagent transcript). They are never the
+    // chat's model, in whatever file they land in.
+    let sidechain = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-fable-5"},"isSidechain":false}"#,
+        "\n",
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"},"isSidechain":true}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(sidechain.as_bytes(), false).as_deref(),
+        Some("claude-fable-5"),
+        "a subagent's turn never becomes the chat's model"
+    );
+    // The tail begins mid-file, so its first line is a fragment. Dropped —
+    // and dropping it is the whole of what `truncated` means. The fragment
+    // here is deliberately one that PARSES: a half-line usually parses to
+    // nothing and would be skipped anyway, so a shape that survives the
+    // parser is what actually pins the rule.
+    let fragment = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-fragment-5"}}"#,
+        "\n",
+        r#"{"type":"user","message":{"role":"user"}}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(fragment.as_bytes(), true),
+        None,
+        "the first line of a truncated tail is never read as an entry"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(fragment.as_bytes(), false).as_deref(),
+        Some("claude-fragment-5"),
+        "…and is read as one when the tail is the whole file"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(b"", false),
+        None,
+        "an empty tail answers nothing"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(b"not json at all\n{\"a\":1}\n", false),
+        None,
+        "unreadable lines are skipped, never guessed at"
+    );
+
+    // THE DEFECT, MEASURED ON THE DERIVATION. The recorded row is the model
+    // SessionStart saw; the transcript is the model writing now.
+    let tdir = s.root.join("transcripts");
+    std::fs::create_dir_all(&tdir).unwrap();
+    let tpath = tdir.join("chat-live.jsonl");
+    std::fs::write(&tpath, switched).unwrap();
+    quarry::coord::record_chat_actor(&s, "chat-live", "claude-fable-5");
+    assert_eq!(
+        quarry::coord::chat_actor(&s, "chat-live").as_deref(),
+        Some("claude-fable-5"),
+        "the stale row, exactly as SessionStart left it"
+    );
+    let tp = tpath.display().to_string();
+    assert_eq!(
+        quarry::coord::refreshed_chat_actor(&s, "chat-live", Some(&tp)).as_deref(),
+        Some("claude-opus-5"),
+        "the fire reads the model actually producing turns"
+    );
+    // And the row itself is corrected, so the record on disk stops lying.
+    assert_eq!(
+        quarry::coord::chat_actor(&s, "chat-live").as_deref(),
+        Some("claude-opus-5"),
+        "the refresh writes back — the row is a record, not a cache of one moment"
+    );
+
+    // NO TRANSCRIPT, NO REGRESSION: the recorded row stands and attribution
+    // keeps its old SessionStart grain. A hook must never fail a shell over
+    // an undocumented file format, and it must never fall to "claude" when it
+    // already holds a better answer.
+    quarry::coord::record_chat_actor(&s, "chat-quiet", "claude-fable-5");
+    assert_eq!(
+        quarry::coord::refreshed_chat_actor(&s, "chat-quiet", None).as_deref(),
+        Some("claude-fable-5"),
+        "no transcript path: the recorded row stands"
+    );
+    assert_eq!(
+        quarry::coord::refreshed_chat_actor(&s, "chat-quiet", Some("B:/nope/missing.jsonl"))
+            .as_deref(),
+        Some("claude-fable-5"),
+        "a transcript that cannot be read: the recorded row stands"
+    );
+    let empty = tdir.join("empty.jsonl");
+    std::fs::write(&empty, "").unwrap();
+    assert_eq!(
+        quarry::coord::refreshed_chat_actor(&s, "chat-quiet", Some(&empty.display().to_string()))
+            .as_deref(),
+        Some("claude-fable-5"),
+        "a transcript with no assistant entry: the recorded row stands"
+    );
+
+    // THE TAIL IS READ FROM THE END, so the cost does not grow with the
+    // session. A transcript padded past the window still answers, and the
+    // answer comes from its end rather than its beginning.
+    let big = tdir.join("big.jsonl");
+    let pad = format!(
+        "{}\n",
+        serde_json::json!({"type": "user", "message": {"role": "user", "content": "x".repeat(4096)}})
+    );
+    let mut body = String::new();
+    body.push_str(r#"{"type":"assistant","message":{"model":"claude-ancient-1"}}"#);
+    body.push('\n');
+    while body.len() < (quarry::coord::TRANSCRIPT_TAIL_BYTES as usize) * 2 {
+        body.push_str(&pad);
+    }
+    body.push_str(r#"{"type":"assistant","message":{"model":"claude-opus-5"}}"#);
+    body.push('\n');
+    std::fs::write(&big, &body).unwrap();
+    assert_eq!(
+        quarry::coord::transcript_model(&big).as_deref(),
+        Some("claude-opus-5"),
+        "a transcript larger than the window is read from its end"
+    );
+
+    // END TO END THROUGH THE SPAWNED BINARY — the only seat where
+    // QUARRY_ACTOR is honestly absent from the environment, which is the
+    // state a real hook process runs in.
+    let hook = |input: &str| {
+        use std::io::Write as _;
+        let mut c = std::process::Command::new(q)
+            .current_dir(&s.root)
+            .args(["hook", "session"])
+            .env_remove("QUARRY_ACTOR")
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        c.stdin.as_mut().unwrap().write_all(input.as_bytes()).unwrap();
+        let o = c.wait_with_output().unwrap();
+        let text = String::from_utf8_lossy(&o.stdout).to_string();
+        let v: serde_json::Value = serde_json::from_str(text.trim()).unwrap_or_else(|e| {
+            panic!(
+                "hook output not JSON ({}): {} / stderr {}",
+                e,
+                text,
+                String::from_utf8_lossy(&o.stderr)
+            )
+        });
+        v["hookSpecificOutput"]["updatedInput"]["command"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string()
+    };
+    let esc = tp.replace('\\', "\\\\");
+    quarry::coord::record_chat_actor(&s, "chat-switch", "claude-fable-5");
+    let stale =
+        r#"{"session_id":"chat-switch","tool_name":"Bash","tool_input":{"command":"q open it-x"}}"#;
+    assert!(
+        hook(stale).contains("QUARRY_ACTOR='claude-fable-5'"),
+        "the defect's own shape end to end: no transcript in the payload, the stale row rides"
+    );
+    let live = format!(
+        r#"{{"session_id":"chat-switch","transcript_path":"{}","tool_name":"Bash","tool_input":{{"command":"q open it-x"}}}}"#,
+        esc
+    );
+    let out = hook(&live);
+    assert!(
+        out.contains("QUARRY_ACTOR='claude-opus-5'"),
+        "the switched-to model reaches the shell: {}",
+        out
+    );
+    assert!(
+        !out.contains("claude-fable-5"),
+        "and the model that stopped writing this session does not: {}",
+        out
+    );
+
+    // THE BADGE STILL OUTRANKS IT (cl-dqt4). A joined subagent's model comes
+    // from the stamp its dispatcher made, and the transcript the hook is
+    // handed inside a subagent is the PARENT CHAT's — measured 2026-08-21 —
+    // so reading it there would file the agent's work under the chat that
+    // spawned it. The order is: badge, then the refreshed chat row.
+    let area = ops::new_node(&s, NewArgs::bare("area", "attribution-live")).unwrap();
+    let mut a = NewArgs::bare("item", "the arc under a switched chat");
+    a.status = Some("ready".into());
+    a.about = vec![area.front.id.clone()];
+    a.acceptance = vec!["the arc lands".into()];
+    let it = ops::new_node(&s, a).unwrap();
+    let d = ops::dispatch(
+        &s,
+        &it.front.id,
+        vec!["src/**".into()],
+        false,
+        false,
+        None,
+        Some("claude-haiku-5"),
+        "disp",
+        "claude-opus-5",
+    )
+    .unwrap();
+    ops::join(&s, &d.token, Some("agent:ag-live".into())).unwrap();
+    let sub = format!(
+        r#"{{"session_id":"chat-switch","agent_id":"ag-live","transcript_path":"{}","tool_name":"Bash","tool_input":{{"command":"q open it-x"}}}}"#,
+        esc
+    );
+    let subout = hook(&sub);
+    assert!(
+        subout.contains("QUARRY_ACTOR='claude-haiku-5'"),
+        "the badge stamp outranks the chat's live model: {}",
+        subout
+    );
+    // …and the chat's own shells still get the chat's live model beside it.
+    assert!(
+        hook(&live).contains("QUARRY_ACTOR='claude-opus-5'"),
+        "the dispatcher's own shell keeps its own live model"
+    );
+
+    // THE RESIDUE IS STATED WHERE THE ACTOR IS EXPLAINED. The refresh road is
+    // the one taken, so the row normally names the model writing now — but
+    // when the transcript cannot answer, the recorded row stands and it is
+    // SessionStart-grained. The guide's ENVIRONMENT section is the one place
+    // that explains the injected actor to an agent, so it is where the grain
+    // has to be readable rather than inferable.
+    let g = quarry::teach::GUIDE;
+    assert!(
+        g.contains("re-derived at EVERY fire"),
+        "the guide states that the actor refreshes per fire"
+    );
+    assert!(
+        g.contains("SessionStart-grained"),
+        "the guide names the grain the fallback keeps"
+    );
+}

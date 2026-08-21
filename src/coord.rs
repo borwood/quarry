@@ -1679,6 +1679,125 @@ pub fn chat_actor(store: &Store, chat_id: &str) -> Option<String> {
     map.get(chat_id).cloned()
 }
 
+/// How far back from EOF a transcript is read when deriving the live model
+/// (it-j4tx). Sized by measurement, never by taste: across the 23 real
+/// transcripts on this machine the last assistant entry sat at most 32,820
+/// bytes from EOF, and the largest single line anywhere in them was 144,652
+/// bytes — half a megabyte clears their sum three times over. A miss is not a
+/// failure: the caller keeps the recorded row.
+pub const TRANSCRIPT_TAIL_BYTES: u64 = 512 * 1024;
+
+/// The pure core of the model refresh (it-j4tx): the model named by the LAST
+/// assistant entry in a slice of transcript tail, or None when the tail holds
+/// no readable one.
+///
+/// `truncated` says the slice began mid-file, in which case its first line is
+/// a fragment and is dropped — a half-line of JSON parses to nothing anyway,
+/// but dropping it keeps the scan's meaning exact rather than accidental.
+///
+/// The transcript format is undocumented and harness-internal, so every
+/// judgment here is a filter rather than an assumption: an entry must be
+/// `type: assistant`, must not be a sidechain entry (a subagent's turn written
+/// into its parent's file, the shape older transcripts on this machine carry),
+/// and its `message.model` must be a real model name. `<synthetic>` is the
+/// measured counter-example — the harness writes it for assistant entries it
+/// composed itself — and any other angle-bracketed placeholder falls with it.
+/// Anything unrecognised is skipped, never guessed at; the walk simply
+/// continues to the entry before it.
+pub fn last_assistant_model(tail: &[u8], truncated: bool) -> Option<String> {
+    let text = std::str::from_utf8(tail).ok()?;
+    let mut lines: Vec<&str> = text.lines().collect();
+    if truncated && !lines.is_empty() {
+        lines.remove(0);
+    }
+    for line in lines.iter().rev() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if v.get("type").and_then(|t| t.as_str()) != Some("assistant") {
+            continue;
+        }
+        if v.get("isSidechain").and_then(|s| s.as_bool()) == Some(true) {
+            continue;
+        }
+        let Some(m) = v.get("message").and_then(|m| m.get("model")).and_then(|m| m.as_str())
+        else {
+            continue;
+        };
+        let m = m.trim();
+        if m.is_empty() || m.starts_with('<') {
+            continue;
+        }
+        return Some(m.to_string());
+    }
+    None
+}
+
+/// The I/O half: the model currently producing a transcript's turns, read
+/// backwards from the end. Best-effort by construction — a missing, unreadable
+/// or unrecognisable transcript returns None and the caller keeps whatever it
+/// already had. A hook must never fail a shell over this.
+pub fn transcript_model(path: &std::path::Path) -> Option<String> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut f = fs::File::open(path).ok()?;
+    let len = f.metadata().ok()?.len();
+    let take = len.min(TRANSCRIPT_TAIL_BYTES);
+    let truncated = take < len;
+    f.seek(SeekFrom::Start(len - take)).ok()?;
+    let mut buf = Vec::with_capacity(take as usize);
+    f.take(take).read_to_end(&mut buf).ok()?;
+    last_assistant_model(&buf, truncated)
+}
+
+/// The chat's model as of THIS fire (it-j4tx) — the one derivation point for
+/// the chat-actor row, and the only place it is read.
+///
+/// `record_chat_actor` is called once, from the SessionStart arm, and nothing
+/// re-read it: a `/model` switch or a resume onto a different model left the
+/// row naming a model that had stopped writing the session, and every node the
+/// rest of the session minted filed under it. Measured on the dispatching chat
+/// itself, 2026-08-21: the row said claude-fable-5 while all 400 assistant
+/// entries in that chat's own transcript said claude-opus-5.
+///
+/// The transcript is the one channel that answers per-fire. The PreToolUse
+/// payload carries no model (cl-dqt4) but it does carry `transcript_path`, and
+/// the last assistant entry there names the model producing turns right now.
+/// It is read tail-first, so the cost does not grow with the session.
+///
+/// CHAT-KEYED BY CONSTRUCTION, which is why a subagent's fire may write here.
+/// Measured 2026-08-21: a PreToolUse firing inside a subagent carries the
+/// PARENT CHAT's `transcript_path`, not the subagent's own (which exists, one
+/// directory down, and is not what the harness hands the hook). So the value
+/// derived from it is the chat's model whoever fires, and storing it under the
+/// chat key can never smear a subagent's model onto its dispatcher — the
+/// hazard `badge_model` refuses in the other direction. A joined subagent's
+/// own model still comes from the badge stamp, which outranks this.
+///
+/// The row is rewritten only when the derived value differs, so a settled
+/// session's fires are reads. When the transcript cannot answer, the recorded
+/// row stands and attribution keeps its old SessionStart grain.
+pub fn refreshed_chat_actor(
+    store: &Store,
+    chat_id: &str,
+    transcript: Option<&str>,
+) -> Option<String> {
+    let recorded = chat_actor(store, chat_id);
+    let Some(live) = transcript
+        .map(std::path::Path::new)
+        .and_then(transcript_model)
+    else {
+        return recorded;
+    };
+    if recorded.as_deref() != Some(live.as_str()) {
+        record_chat_actor(store, chat_id, &live);
+    }
+    Some(live)
+}
+
 /// The model a JOINED SUBAGENT's work files under (it-xcvb) — the one
 /// derivation point, pure over the dispatch map so the defect and the cure
 /// are both measurable without a store.

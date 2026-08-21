@@ -15,7 +15,7 @@ edges:
   at: 1
 - rel: source
   to: file:tests/basic.rs
-  at: 600b231917dc
+  at: 4716c2fa0694
 ---
 
 the area gate and per-area watermarks deliver read-firsts and foreign drift at write time

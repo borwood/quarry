@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 5f2e8b4afc49
+  at: 24df8ce05680
 - rel: supports
   to: dc-ad8b
   at: 2

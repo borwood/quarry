@@ -230,6 +230,15 @@ the session hook for chats running in this repo — you should never set
 them by hand. Set QUARRY_ACTOR manually only when operating outside hook
 coverage (e.g. from a parent directory). If unset entirely, provenance
 safely derives as assistant; user provenance is always explicit.
+The injected actor is re-derived at EVERY fire (it-j4tx), from the model
+naming the last assistant turn in this session's own transcript — so a
+/model switch or a resume onto another model re-points attribution
+instead of leaving the whole session filing under whatever SessionStart
+happened to see. A joined agent's badge stamp still outranks it
+(cl-dqt4). Where the transcript cannot answer — none in the hook
+payload, or none of its tail readable — the recorded row stands, and
+that row is SessionStart-grained: the model this session STARTED on,
+not necessarily the one writing now.
 The dispatch badge is bound at q join, never exported by hand: the
 session hook injects QUARRY_AGENT (in subagents) and QUARRY_CHAT
 alongside SESSION/ACTOR, and q resolves badges from the machine-local
@@ -297,12 +306,20 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     // that stamp is spent. Falls through to the chat model whenever nothing
     // is stamped, so an inheriting spawn keeps the answer that is right for
     // it.
+    //
+    // The chat's own half of that answer is refreshed at every fire (it-j4tx).
+    // The row is written once, at SessionStart, and used to be read back
+    // unquestioned, so a `/model` switch or a resume onto a different model
+    // left the whole rest of the session filing under a model that had stopped
+    // writing it. coord::refreshed_chat_actor re-derives it from the
+    // transcript this fire was handed and rewrites the row when it moved.
+    let transcript = v.get("transcript_path").and_then(|x| x.as_str());
     let inject_actor = if env_actor.is_none() {
         Some(
             crate::coord::badge_actor(store, agent_id.as_deref()).unwrap_or_else(|| {
                 crate::coord::safe_actor(
                     &chat_id
-                        .and_then(|cid| crate::coord::chat_actor(store, cid))
+                        .and_then(|cid| crate::coord::refreshed_chat_actor(store, cid, transcript))
                         .unwrap_or_else(|| "claude".into()),
                 )
             }),

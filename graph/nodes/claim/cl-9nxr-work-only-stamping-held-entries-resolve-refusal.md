@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 30cfab00d970
+  at: 24df8ce05680
 - rel: supersedes
   to: cl-vsew
   at: 6

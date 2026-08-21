@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 06cae6d3ede0
+  at: 24df8ce05680
 - rel: supports
   to: cl-5n6m
   at: 2

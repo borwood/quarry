@@ -2,12 +2,20 @@
 id: it-j4tx
 type: item
 title: 'the chat-actor row goes stale on a model switch: SessionStart writes it once and the session files under a model that stopped writing it'
-v: 1
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-21T12:36:08Z
 actor: claude-fable-5
 kind: bug
+acceptance:
+- 'a session''s recorded actor names the model actually producing its turns, or the surface says plainly that it cannot: a model switch after SessionStart either refreshes the row or the SessionStart grain is stated where the actor is read, and whichever road is taken is chosen by measurement rather than assumption'
+witness:
+- line: 'a session''s recorded actor names the model actually producing its turns, or the surface says plainly that it cannot: a model switch after SessionStart either refreshes the row or the SessionStart grain is stated where the actor is read, and whichever road is taken is chosen by measurement rather than assumption'
+  by: chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-21
 edges:
 - rel: about
   to: ar-c7f5

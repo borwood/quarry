@@ -2279,3 +2279,61 @@
 {"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T12:43:36Z","node":"it-xcvb","v":5,"actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-21T12:43:39Z","node":"it-xcvb","v":5,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
 {"ts":"2026-08-21T12:43:49Z","node":"cl-dqt4","v":9,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a session's recorded actor names the model actually producing its turns, or the surface says plainly that it cannot: a model switch after SessionStart either refreshes the row or the SessionStart grain is stated where the actor is read, and whichever road is taken is chosen by measurement rather than assumption"],"ts":"2026-08-21T12:44:58Z","node":"it-j4tx","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:45:06Z","node":"it-j4tx","v":2,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:45:06Z","node":"it-j4tx","v":2,"op":"reserve","globs":["src/coord.rs","src/teach.rs","src/main.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T12:45:06Z","node":"it-j4tx","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T12:45:06Z","node":"it-j4tx","v":2,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/coord.rs","src/teach.rs","src/main.rs","tests/**","docs/reports/2026-08-21-the-chat-actor-row-goes-stale-on-a-it-j4tx.md"],"model":"claude-opus-5"}
+{"ts":"2026-08-21T12:45:32Z","node":"it-j4tx","v":3,"op":"join","actor":"claude-opus-5","dispatch":"it-j4tx","joined":"agent:a11cf5b918215e053","session":"dispatcher"}
+{"ts":"2026-08-21T13:11:00Z","node":"cl-cv92","v":1,"op":"create","type":"claim","title":"`live-actor`: the injected actor is re-derived from the transcript at every fire; the badge still outranks it","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-j4tx"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"24df8ce05680","ts":"2026-08-21T13:11:00Z","node":"cl-cv92","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"d15f00a82b95","ts":"2026-08-21T13:11:24Z","node":"cl-cv92","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"4716c2fa0694","ts":"2026-08-21T13:11:24Z","node":"cl-cv92","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"op":"link","rel":"supports","to":"it-j4tx","at":3,"ts":"2026-08-21T13:11:24Z","node":"cl-cv92","v":5,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:37Z","node":"cl-dqt4","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:38Z","node":"cl-2kxr","v":7,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:38Z","node":"cl-b2z2","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:38Z","node":"cl-c34g","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:39Z","node":"cl-en99","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:39Z","node":"cl-qm6t","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:39Z","node":"cl-zj2c","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:49Z","node":"cl-3rx9","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:49Z","node":"cl-74qt","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:50Z","node":"cl-8qn3","v":2,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:50Z","node":"cl-9nxr","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:50Z","node":"cl-9v7c","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:50Z","node":"cl-ahzk","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:50Z","node":"cl-amza","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:51Z","node":"cl-b2z2","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:51Z","node":"cl-br3p","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:51Z","node":"cl-dqt4","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:52Z","node":"cl-farc","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:52Z","node":"cl-h2gx","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:52Z","node":"cl-hngg","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:52Z","node":"cl-kggw","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:53Z","node":"cl-s98g","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:53Z","node":"cl-ue2e","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:53Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:53Z","node":"cl-vsew","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:13:54Z","node":"cl-xfkw","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:05Z","node":"cl-2jas","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:06Z","node":"cl-2pc9","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:06Z","node":"cl-ce58","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:06Z","node":"cl-dqt4","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:06Z","node":"cl-p4k2","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:07Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:07Z","node":"cl-v2vh","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:07Z","node":"cl-z6gc","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:07Z","node":"cl-zj2c","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:08Z","node":"cl-znh4","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:14:08Z","node":"it-ap3x","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:15:59Z","node":"do-65x2","v":1,"op":"create","type":"doc","title":"dispatch report: the chat-actor row goes stale on a model switch: SessionStart writes it once and the session files under a model that stopped writing it","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-j4tx"}
+{"op":"link","rel":"supports","to":"it-j4tx","at":3,"ts":"2026-08-21T13:15:59Z","node":"do-65x2","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-j4tx"}
+{"ts":"2026-08-21T13:18:31Z","node":"it-j4tx","v":3,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T13:19:48Z","node":"cl-cv92","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T13:19:48Z","node":"it-j4tx","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:19:51Z","node":"it-j4tx","v":4,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:20:02Z","node":"cl-cv92","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T13:20:27Z","node":"it-6ekf","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["title=the subagent model is already on disk: a sidecar keyed by the injected agent id names it","kind=slice"],"ts":"2026-08-21T13:20:37Z","node":"it-6ekf","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a dispatched agent's graph writes file under its own model with nothing for the dispatcher to remember: the model is resolved from the harness record keyed by the injected agent id, --model survives only as an override, and the undocumented-layout dependency is stated where it is read"],"ts":"2026-08-21T13:20:37Z","node":"it-6ekf","v":4,"actor":"claude-opus-5","session":"dispatcher"}

@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 1cb9b241aa5a
+  at: 24df8ce05680
 - rel: source
   to: file:src/ops.rs
   at: c282feb29612
