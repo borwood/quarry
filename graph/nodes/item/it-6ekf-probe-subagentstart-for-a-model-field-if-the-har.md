@@ -2,8 +2,8 @@
 id: it-6ekf
 type: item
 title: 'the subagent model is already on disk: a sidecar keyed by the injected agent id names it'
-v: 4
-status: sketch
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-21T12:36:25Z
 actor: claude-fable-5

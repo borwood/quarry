@@ -230,6 +230,20 @@ happened to see. A joined agent's badge stamp still outranks it
 payload, or none of its tail readable — the recorded row stands, and
 that row is SessionStart-grained: the model this session STARTED on,
 not necessarily the one writing now.
+A SUBAGENT's own model is resolved beneath that stamp from the
+HARNESS'S OWN RECORD of it (it-6ekf), keyed by the agent id the hook
+already injects — so a dispatched arc files under the model that wrote
+it with nothing for the dispatcher to remember, and q dispatch --model
+survives as an OVERRIDE rather than the only road. The harness writes
+each subagent's turns and a spawn sidecar beside the chat transcript,
+at <chat-transcript minus .jsonl>/subagents/agent-<id>.jsonl and
+.meta.json. The transcript leads (it names the RESOLVED model, and it
+sees models the spawn call never named — an agent type's own default,
+or a nested spawn's inheritance); the sidecar answers before the
+agent's first turn reaches disk, with the coarser alias the dispatcher
+typed. THAT LAYOUT IS UNDOCUMENTED AND HARNESS-INTERNAL: read
+best-effort, never depended on — when it answers nothing the chat row
+answers instead, which is right for a spawn that truly inherits.
 The dispatch badge is bound at q join, never exported by hand: the
 session hook injects QUARRY_AGENT (in subagents) and QUARRY_CHAT
 alongside SESSION/ACTOR, and q resolves badges from the machine-local

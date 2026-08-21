@@ -8048,3 +8048,265 @@ fn the_chat_actor_row_refreshes_from_the_transcript_at_every_fire() {
         "the guide names the grain the fallback keeps"
     );
 }
+
+#[test]
+fn a_subagents_model_resolves_from_the_harness_record_keyed_by_its_agent_id() {
+    // it-6ekf. cl-dqt4 put ATTRIBUTION on the discipline road it had just
+    // taken IDENTITY off: q dispatch --model is a flag the dispatcher must
+    // remember on every fire, and omitting it while spawning on another model
+    // reproduces the original defect silently — which is what dc-zbxj's
+    // "identity is structural, never discipline" rules against and what
+    // th-e5ez asks the user to settle. The road cl-dqt4 could not find is on
+    // disk: the harness writes each subagent's own transcript AND a spawn
+    // sidecar beside the chat's transcript, keyed by the very agent id the
+    // session hook already injects (cl-z6gc). Nothing has to arrive in a hook
+    // payload; nothing has to be remembered.
+    let s = temp_store();
+    let q = env!("CARGO_BIN_EXE_q");
+
+    // THE PURE CORE, on the shape that made the reuse non-trivial. cl-cv92's
+    // sidechain filter is LOAD-BEARING over a chat's file and FATAL over a
+    // subagent's: measured across the 268 subagent transcripts on this
+    // machine, every one of the 261 holding a readable assistant entry
+    // carries isSidechain:true on ALL of them, with no non-sidechain entry
+    // anywhere among them. Same bytes, two answers, by whose file it is.
+    let agent_tail = concat!(
+        r#"{"type":"user","message":{"role":"user"},"isSidechain":true}"#,
+        "\n",
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"},"isSidechain":true}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_agent_model(agent_tail.as_bytes(), false).as_deref(),
+        Some("claude-opus-5"),
+        "in a subagent's own file the sidechain mark is native, not foreign"
+    );
+    assert_eq!(
+        quarry::coord::last_assistant_model(agent_tail.as_bytes(), false),
+        None,
+        "the chat scan is unchanged: a subagent's turn is never the chat's model"
+    );
+    // Every other filter still runs on the relaxed road — the format is
+    // undocumented either way, so relaxing ONE judgment relaxes only it.
+    let synthetic = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-opus-5"},"isSidechain":true}"#,
+        "\n",
+        r#"{"type":"assistant","message":{"model":"<synthetic>"},"isSidechain":true}"#,
+        "\n"
+    );
+    assert_eq!(
+        quarry::coord::last_agent_model(synthetic.as_bytes(), false).as_deref(),
+        Some("claude-opus-5"),
+        "a synthetic entry is skipped on the agent road too"
+    );
+    // …and a truncated tail still drops its fragment first line. The fragment
+    // here is deliberately one that PARSES, so the rule is what drops it.
+    let fragment = concat!(
+        r#"{"type":"assistant","message":{"model":"claude-fragment-5"},"isSidechain":true}"#,
+        "\n",
+        r#"{"type":"user","message":{"role":"user"},"isSidechain":true}"#,
+        "\n"
+    );
+    assert_eq!(quarry::coord::last_agent_model(fragment.as_bytes(), true), None);
+    assert_eq!(
+        quarry::coord::last_agent_model(fragment.as_bytes(), false).as_deref(),
+        Some("claude-fragment-5"),
+        "…and is read as an entry when the tail is the whole file"
+    );
+
+    // THE LAYOUT, derived from the one path a subagent's hook is handed: the
+    // PARENT CHAT's transcript (cl-cv92, measured). The chat dir sits beside
+    // the chat file, named for it without the suffix.
+    let projects = s.root.join("projects");
+    let chat_file = projects.join("chat-chatty.jsonl");
+    let subdir = projects.join("chat-chatty").join("subagents");
+    std::fs::create_dir_all(&subdir).unwrap();
+    let (jsonl, meta) = quarry::coord::subagent_records(&chat_file, "ag-sub").unwrap();
+    assert_eq!(jsonl, subdir.join("agent-ag-sub.jsonl"));
+    assert_eq!(meta, subdir.join("agent-ag-sub.meta.json"));
+    // ONE KNOWN SUFFIX, stripped by name. with_extension("") would agree on
+    // every path that really ends .jsonl and diverge the moment one does not:
+    // handed anything else, it would amputate whatever follows the last dot
+    // and point the lookup at a directory nobody named. Strip what is known
+    // to be there; leave every other name alone.
+    let dotted = projects.join("chat.v2.jsonl");
+    let (dj, _) = quarry::coord::subagent_records(&dotted, "ag-sub").unwrap();
+    assert!(
+        dj.starts_with(projects.join("chat.v2")),
+        "a dotted chat id keeps its whole stem: {}",
+        dj.display()
+    );
+    let suffixless = projects.join("chat.v2");
+    let (sj, _) = quarry::coord::subagent_records(&suffixless, "ag-sub").unwrap();
+    assert!(
+        sj.starts_with(projects.join("chat.v2")),
+        "a path that is not a .jsonl is not truncated at its last dot: {}",
+        sj.display()
+    );
+
+    // THE SIDECAR reads the spawn's own record — the ALIAS the dispatcher
+    // typed, never a resolved id. Measured across the 268 sidecars here,
+    // `opus` resolved to claude-opus-5 in 128 arcs and claude-opus-4-8 in 43,
+    // so no table maps one to the other and this can only ever be a fallback.
+    std::fs::write(
+        &meta,
+        r#"{"agentType":"general-purpose","description":"d","toolUseId":"t","spawnDepth":1,"model":"opus"}"#,
+    )
+    .unwrap();
+    assert_eq!(quarry::coord::sidecar_model(&meta).as_deref(), Some("opus"));
+    // 88 of the 268 carry no model key at all. That is "the spawn named none",
+    // never "runs the parent's model".
+    let bare = subdir.join("agent-ag-bare.meta.json");
+    std::fs::write(&bare, r#"{"agentType":"Explore","spawnDepth":2}"#).unwrap();
+    assert_eq!(quarry::coord::sidecar_model(&bare), None, "no model key, no answer");
+    assert_eq!(
+        quarry::coord::sidecar_model(&subdir.join("agent-nobody.meta.json")),
+        None,
+        "a missing sidecar answers nothing rather than failing"
+    );
+
+    // THE PRECEDENCE INSIDE THE RECORD: the agent's own transcript leads,
+    // because it names the RESOLVED model — one spelling across the arc — and
+    // because it sees models the spawn call never named (an agent type's own
+    // default, a nested spawn inheriting its parent AGENT). Measured on the 88
+    // model-less sidecars: 9 ran on a model their parent chat was not running.
+    let cp = chat_file.display().to_string();
+    assert_eq!(
+        quarry::coord::agent_model(Some(&cp), "ag-sub").as_deref(),
+        Some("opus"),
+        "before the first turn lands, the sidecar alias is the only answer"
+    );
+    std::fs::write(&jsonl, agent_tail).unwrap();
+    assert_eq!(
+        quarry::coord::agent_model(Some(&cp), "ag-sub").as_deref(),
+        Some("claude-opus-5"),
+        "once the agent's own turns are on disk, the resolved name wins"
+    );
+    // Every road out is a degradation to None, never an error: a hook must
+    // not fail a shell over an undocumented layout.
+    assert_eq!(quarry::coord::agent_model(None, "ag-sub"), None, "no transcript path, no directory to find");
+    assert_eq!(quarry::coord::agent_model(Some(&cp), "ag-ghost"), None, "an agent with no record answers nothing");
+    assert_eq!(
+        quarry::coord::agent_model(Some(&jsonl.display().to_string()), "ag-sub"),
+        None,
+        "handed a subagent's own path instead of the chat's, the lookup misses and degrades"
+    );
+
+    // THE DEFECT, MEASURED END TO END THROUGH THE SPAWNED BINARY — the only
+    // seat where QUARRY_ACTOR is honestly absent, which is the state a real
+    // hook process runs in.
+    let hook = |input: &str| {
+        use std::io::Write as _;
+        let mut c = std::process::Command::new(q)
+            .current_dir(&s.root)
+            .args(["hook", "session"])
+            .env_remove("QUARRY_ACTOR")
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        c.stdin.as_mut().unwrap().write_all(input.as_bytes()).unwrap();
+        let o = c.wait_with_output().unwrap();
+        let text = String::from_utf8_lossy(&o.stdout).to_string();
+        let v: serde_json::Value = serde_json::from_str(text.trim()).unwrap_or_else(|e| {
+            panic!("hook output not JSON ({}): {} / stderr {}", e, text, String::from_utf8_lossy(&o.stderr))
+        });
+        v["hookSpecificOutput"]["updatedInput"]["command"].as_str().unwrap_or_default().to_string()
+    };
+    // The chat runs fable and its transcript says so; the subagent runs opus
+    // and its own record says so. This is exactly the shape that mis-filed
+    // every node of the it-xcvb arc.
+    std::fs::write(
+        &chat_file,
+        concat!(r#"{"type":"assistant","message":{"model":"claude-fable-5"}}"#, "\n"),
+    )
+    .unwrap();
+    let esc = cp.replace('\\', "\\\\");
+    let sub = format!(
+        r#"{{"session_id":"chat-chatty","agent_id":"ag-sub","transcript_path":"{}","tool_name":"Bash","tool_input":{{"command":"q open it-x"}}}}"#,
+        esc
+    );
+    let parent = format!(
+        r#"{{"session_id":"chat-chatty","transcript_path":"{}","tool_name":"Bash","tool_input":{{"command":"q open it-x"}}}}"#,
+        esc
+    );
+    let out = hook(&sub);
+    assert!(
+        out.contains("QUARRY_ACTOR='claude-opus-5'"),
+        "an UNSTAMPED subagent files under its own model, nothing remembered: {}",
+        out
+    );
+    assert!(
+        !out.contains("claude-fable-5"),
+        "and never under the chat that spawned it: {}",
+        out
+    );
+    // THE CHAT'S OWN SHELLS ARE UNTOUCHED. The lookup is keyed on the agent
+    // id, which the harness gives only to a subagent, so the record can never
+    // leak back up the wire to the seat that fired.
+    assert!(
+        hook(&parent).contains("QUARRY_ACTOR='claude-fable-5'"),
+        "the dispatcher keeps its own live model beside its agent"
+    );
+
+    // --model SURVIVES AS AN OVERRIDE, not as the mechanism. The badge stamp
+    // still outranks the harness record: the dispatcher's explicit word beats
+    // a derived one, and it is the road that still works where the layout
+    // does not exist at all.
+    let area = ops::new_node(&s, NewArgs::bare("area", "attribution-record")).unwrap();
+    let mut a = NewArgs::bare("item", "the unstamped arc");
+    a.status = Some("ready".into());
+    a.about = vec![area.front.id.clone()];
+    a.acceptance = vec!["the arc lands".into()];
+    let it = ops::new_node(&s, a).unwrap();
+    let d = ops::dispatch(
+        &s, &it.front.id, vec!["src/**".into()], false, false, None, Some("claude-haiku-5"),
+        "disp", "claude-fable-5",
+    )
+    .unwrap();
+    ops::join(&s, &d.token, Some("agent:ag-sub".into())).unwrap();
+    let stamped = hook(&sub);
+    assert!(
+        stamped.contains("QUARRY_ACTOR='claude-haiku-5'"),
+        "the stamp overrides the harness record: {}",
+        stamped
+    );
+    // …and when the badge is freed, the structural road answers again — where
+    // before it-6ekf the same shell fell all the way back to the chat's model.
+    quarry::coord::clear_dispatch(&s, &it.front.id);
+    let freed = hook(&sub);
+    assert!(
+        freed.contains("QUARRY_ACTOR='claude-opus-5'"),
+        "a cleared badge falls to the agent's own model, not the dispatcher's: {}",
+        freed
+    );
+    // A SUBAGENT THE RECORD CANNOT SPEAK FOR still inherits, which is the
+    // right answer for a spawn that genuinely inherits.
+    let unknown = format!(
+        r#"{{"session_id":"chat-chatty","agent_id":"ag-ghost","transcript_path":"{}","tool_name":"Bash","tool_input":{{"command":"q open it-x"}}}}"#,
+        esc
+    );
+    assert!(
+        hook(&unknown).contains("QUARRY_ACTOR='claude-fable-5'"),
+        "no record, no invention: the chat road answers"
+    );
+
+    // THE UNDOCUMENTED DEPENDENCY IS STATED WHERE IT IS READ. The guide's
+    // ENVIRONMENT section is the one place the injected actor is explained to
+    // an agent, so the second harness-internal dependency has to be readable
+    // there rather than inferable from behaviour.
+    let g = quarry::teach::GUIDE;
+    assert!(g.contains("subagents/agent-<id>.jsonl"), "the guide names the layout it reads");
+    assert!(
+        g.contains("UNDOCUMENTED AND HARNESS-INTERNAL"),
+        "the guide states the exposure plainly"
+    );
+    assert!(g.contains("OVERRIDE"), "the guide says --model is now an override");
+}

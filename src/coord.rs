@@ -1697,14 +1697,22 @@ pub const TRANSCRIPT_TAIL_BYTES: u64 = 512 * 1024;
 ///
 /// The transcript format is undocumented and harness-internal, so every
 /// judgment here is a filter rather than an assumption: an entry must be
-/// `type: assistant`, must not be a sidechain entry (a subagent's turn written
-/// into its parent's file, the shape older transcripts on this machine carry),
-/// and its `message.model` must be a real model name. `<synthetic>` is the
-/// measured counter-example — the harness writes it for assistant entries it
-/// composed itself — and any other angle-bracketed placeholder falls with it.
-/// Anything unrecognised is skipped, never guessed at; the walk simply
-/// continues to the entry before it.
-pub fn last_assistant_model(tail: &[u8], truncated: bool) -> Option<String> {
+/// `type: assistant` and its `message.model` must be a real model name.
+/// `<synthetic>` is the measured counter-example — the harness writes it for
+/// assistant entries it composed itself — and any other angle-bracketed
+/// placeholder falls with it. Anything unrecognised is skipped, never guessed
+/// at; the walk simply continues to the entry before it.
+///
+/// `skip_sidechain` is the ONE judgment that depends on whose file this is,
+/// which is why it is a parameter rather than a constant (it-6ekf). In a
+/// CHAT's own transcript a sidechain entry is a subagent's turn written into
+/// its parent's file, and adopting it would make a subagent's model the
+/// chat's. In a SUBAGENT's own transcript the mark is native, not foreign:
+/// measured across the 268 subagent transcripts on this machine, every one of
+/// the 261 that holds a readable assistant entry carries `isSidechain: true`
+/// on all of them, with not one non-sidechain entry among them — so the same
+/// filter there would answer nothing, ever.
+fn scan_last_assistant_model(tail: &[u8], truncated: bool, skip_sidechain: bool) -> Option<String> {
     let text = std::str::from_utf8(tail).ok()?;
     let mut lines: Vec<&str> = text.lines().collect();
     if truncated && !lines.is_empty() {
@@ -1721,7 +1729,7 @@ pub fn last_assistant_model(tail: &[u8], truncated: bool) -> Option<String> {
         if v.get("type").and_then(|t| t.as_str()) != Some("assistant") {
             continue;
         }
-        if v.get("isSidechain").and_then(|s| s.as_bool()) == Some(true) {
+        if skip_sidechain && v.get("isSidechain").and_then(|s| s.as_bool()) == Some(true) {
             continue;
         }
         let Some(m) = v.get("message").and_then(|m| m.get("model")).and_then(|m| m.as_str())
@@ -1737,11 +1745,23 @@ pub fn last_assistant_model(tail: &[u8], truncated: bool) -> Option<String> {
     None
 }
 
+/// The scan over a CHAT's own transcript, where a sidechain entry is a
+/// subagent's turn and never the chat's model.
+pub fn last_assistant_model(tail: &[u8], truncated: bool) -> Option<String> {
+    scan_last_assistant_model(tail, truncated, true)
+}
+
+/// The scan over a SUBAGENT's own transcript (it-6ekf), where every entry
+/// carries the sidechain mark because the whole file is one.
+pub fn last_agent_model(tail: &[u8], truncated: bool) -> Option<String> {
+    scan_last_assistant_model(tail, truncated, false)
+}
+
 /// The I/O half: the model currently producing a transcript's turns, read
 /// backwards from the end. Best-effort by construction — a missing, unreadable
 /// or unrecognisable transcript returns None and the caller keeps whatever it
 /// already had. A hook must never fail a shell over this.
-pub fn transcript_model(path: &std::path::Path) -> Option<String> {
+fn tail_model(path: &std::path::Path, skip_sidechain: bool) -> Option<String> {
     use std::io::{Read, Seek, SeekFrom};
     let mut f = fs::File::open(path).ok()?;
     let len = f.metadata().ok()?.len();
@@ -1750,7 +1770,19 @@ pub fn transcript_model(path: &std::path::Path) -> Option<String> {
     f.seek(SeekFrom::Start(len - take)).ok()?;
     let mut buf = Vec::with_capacity(take as usize);
     f.take(take).read_to_end(&mut buf).ok()?;
-    last_assistant_model(&buf, truncated)
+    scan_last_assistant_model(&buf, truncated, skip_sidechain)
+}
+
+/// A CHAT's live model, from the transcript the hook was handed.
+pub fn transcript_model(path: &std::path::Path) -> Option<String> {
+    tail_model(path, true)
+}
+
+/// A SUBAGENT's live model, from the subagent's own transcript (it-6ekf) —
+/// the same read one directory over, with the sidechain filter relaxed
+/// because there the mark is native.
+pub fn agent_transcript_model(path: &std::path::Path) -> Option<String> {
+    tail_model(path, false)
 }
 
 /// The chat's model as of THIS fire (it-j4tx) — the one derivation point for
@@ -1829,6 +1861,115 @@ pub fn badge_model(m: &DispatchMap, agent: &str) -> Option<String> {
 pub fn badge_actor(store: &Store, agent: Option<&str>) -> Option<String> {
     let agent = agent?;
     badge_model(&load_dispatches(store), agent).map(|m| safe_actor(&m))
+}
+
+/// Where the harness keeps its OWN record of a chat's subagents (it-6ekf) —
+/// beside the chat transcript, in a directory named for the chat, one pair of
+/// files per agent id:
+///
+/// ```text
+///   <projects>/<chat>.jsonl                        ← what the hook is handed
+///   <projects>/<chat>/subagents/agent-<id>.jsonl        the agent's turns
+///   <projects>/<chat>/subagents/agent-<id>.meta.json    the spawn record
+/// ```
+///
+/// The agent id is exactly what the session hook already injects as
+/// QUARRY_AGENT (cl-z6gc), so nothing has to arrive in a hook payload for
+/// this to be reachable — which is the whole reason the road exists, since a
+/// PreToolUse firing inside a subagent carries no model of any kind (cl-dqt4)
+/// and SessionStart, the one event that does, never fires for a subagent.
+///
+/// UNDOCUMENTED AND HARNESS-INTERNAL, stated plainly wherever it is read.
+/// This is the same class of dependency cl-cv92 took on knowingly for the
+/// chat transcript; taken a second time it is a real exposure, and the whole
+/// derivation is therefore best-effort — every miss degrades to the caller's
+/// existing answer rather than to an error.
+///
+/// The `.jsonl` suffix is stripped BY NAME rather than by `with_extension`,
+/// which would eat the tail of any chat id that ever carries a dot.
+pub fn subagent_records(
+    chat_transcript: &std::path::Path,
+    agent: &str,
+) -> Option<(std::path::PathBuf, std::path::PathBuf)> {
+    let name = chat_transcript.file_name()?.to_str()?;
+    let stem = name.strip_suffix(".jsonl").unwrap_or(name);
+    let dir = chat_transcript.parent()?.join(stem).join("subagents");
+    Some((
+        dir.join(format!("agent-{}.jsonl", agent)),
+        dir.join(format!("agent-{}.meta.json", agent)),
+    ))
+}
+
+/// The spawn model recorded in a subagent's metadata sidecar (it-6ekf).
+///
+/// This is the ALIAS the dispatcher typed — `opus`, `sonnet`, `fable` — never
+/// a resolved model id, and the two are not interchangeable: measured across
+/// the 268 sidecars on this machine, `opus` resolved to claude-opus-5 in 128
+/// arcs and to claude-opus-4-8 in 43 of them. So no table can map one to the
+/// other, and the sidecar is the FALLBACK rather than the source: it is read
+/// only when the agent's own transcript cannot answer yet, which is the
+/// window before the agent's first turn reaches disk.
+///
+/// A sidecar with no `model` key at all means the spawn named none (88 of the
+/// 268). That is NOT the same as "runs the parent chat's model" — see
+/// `agent_model`.
+pub fn sidecar_model(path: &std::path::Path) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(&fs::read_to_string(path).ok()?).ok()?;
+    let m = v.get("model")?.as_str()?.trim();
+    if m.is_empty() || m.starts_with('<') {
+        return None;
+    }
+    Some(m.to_string())
+}
+
+/// A SUBAGENT's own model, resolved from the harness's record of it and keyed
+/// on the injected agent id alone (it-6ekf) — the structural road cl-dqt4
+/// could not find and dc-zbxj's "identity is structural, never discipline"
+/// asks for. Nothing here depends on the dispatcher remembering `--model`.
+///
+/// THE AGENT'S OWN TRANSCRIPT LEADS, because it names the RESOLVED model —
+/// the same value the chat road produces, so an arc's attribution reads in
+/// one spelling — and because it covers models the sidecar never sees. The
+/// sidecar records only what the spawn CALL named; a model set in an agent
+/// type's own definition, or inherited by a nested spawn from its parent
+/// agent rather than from the chat, is invisible there. Measured on the 88
+/// sidecars carrying no model: 9 of them ran on a model their parent chat was
+/// not running (a claude-code-guide arc on haiku under a fable chat, four
+/// depth-2 Explore arcs on opus under fable chats, and four arcs whose chat
+/// changed model after the spawn). So the sidecar's silence is not evidence
+/// of inheritance, and gating on it would have missed one unstamped subagent
+/// in ten.
+///
+/// THE SIDECAR IS THE PRE-FIRST-TURN FALLBACK. The transcript is written
+/// incrementally and live (measured on this arc's own file, 423 KB of it
+/// mid-session), but the very first PreToolUse of an arc — the `q join` shell
+/// — can fire before that arc's first assistant entry is flushed, and there
+/// is no earlier entry to fall back on the way a chat has. The sidecar exists
+/// from the spawn, so it answers there; the cost is the coarse alias for that
+/// one shell, which is a family-correct answer where the alternative is the
+/// dispatcher's model, which is wrong outright.
+///
+/// NOTHING IS RECORDED. cl-dqt4 could not write a per-agent row because
+/// nothing at the agent's seat knew the answer; now something does, and a row
+/// still buys nothing — it would be empty in the one window where the read
+/// is hard, and it would need a lifecycle nobody owns. Derived at every fire,
+/// like `refreshed_chat_actor`, and the tail read keeps the cost flat.
+///
+/// None means "the harness record cannot answer": no transcript path in the
+/// payload to locate the directory from, no such agent recorded, or neither
+/// file readable. The caller keeps its existing resolution.
+pub fn agent_model(chat_transcript: Option<&str>, agent: &str) -> Option<String> {
+    let (jsonl, meta) = subagent_records(std::path::Path::new(chat_transcript?), agent)?;
+    agent_transcript_model(&jsonl).or_else(|| sidecar_model(&meta))
+}
+
+/// The actor half of `agent_model`, through `safe_actor` so a sidecar alias
+/// can never derive USER provenance — what the session hook injects as
+/// QUARRY_ACTOR for a subagent whose badge carries no stamp. None means the
+/// harness record answered nothing: the caller falls through to the chat row,
+/// which is the right answer for a genuinely inheriting spawn.
+pub fn agent_actor(chat_transcript: Option<&str>, agent: Option<&str>) -> Option<String> {
+    agent_model(chat_transcript, agent?).map(|m| safe_actor(&m))
 }
 
 /// Provenance derivation keys on "claude" in the actor string; a display

@@ -2337,3 +2337,35 @@
 {"op":"body","ts":"2026-08-21T13:20:27Z","node":"it-6ekf","v":2,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["title=the subagent model is already on disk: a sidecar keyed by the injected agent id names it","kind=slice"],"ts":"2026-08-21T13:20:37Z","node":"it-6ekf","v":3,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a dispatched agent's graph writes file under its own model with nothing for the dispatcher to remember: the model is resolved from the harness record keyed by the injected agent id, --model survives only as an override, and the undocumented-layout dependency is stated where it is read"],"ts":"2026-08-21T13:20:37Z","node":"it-6ekf","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:21:50Z","node":"it-6ekf","v":4,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:21:50Z","node":"it-6ekf","v":4,"op":"reserve","globs":["src/coord.rs","src/teach.rs","tests/**"],"shared":false,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T13:21:50Z","node":"it-6ekf","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:21:50Z","node":"it-6ekf","v":4,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/coord.rs","src/teach.rs","tests/**","docs/reports/2026-08-21-the-subagent-model-is-already-on-disk-a-it-6ekf.md"],"model":"claude-opus-5"}
+{"ts":"2026-08-21T13:22:02Z","node":"it-6ekf","v":5,"op":"join","actor":"claude-opus-5","dispatch":"it-6ekf","joined":"agent:a63385e55bdf536e2","session":"dispatcher"}
+{"ts":"2026-08-21T13:44:30Z","node":"cl-jp4q","v":1,"op":"create","type":"claim","title":"`subagent-model-record`: a subagent's model resolves from the harness's own record keyed by the injected agent id; --model becomes an override","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"source","to":"file:src/coord.rs","at":"6cf732b21cbf","ts":"2026-08-21T13:44:30Z","node":"cl-jp4q","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"ts":"2026-08-21T13:45:02Z","node":"cl-wjdb","v":1,"op":"create","type":"claim","title":"`structural-attribution`: a dispatched arc files under the model that wrote it with nothing for the dispatcher to remember","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"001106469205","ts":"2026-08-21T13:45:02Z","node":"cl-wjdb","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"supports","to":"it-6ekf","at":5,"ts":"2026-08-21T13:45:12Z","node":"cl-jp4q","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"supports","to":"it-6ekf","at":5,"ts":"2026-08-21T13:45:12Z","node":"cl-wjdb","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"about","to":"ar-xa38","at":1,"ts":"2026-08-21T13:45:12Z","node":"cl-jp4q","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"about","to":"ar-xa38","at":1,"ts":"2026-08-21T13:45:12Z","node":"cl-wjdb","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"ts":"2026-08-21T13:45:36Z","node":"it-xwpw","v":1,"op":"create","type":"item","title":"the fire and the join still describe the pre-it-6ekf world: two attribution statements now read as false","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"depends-on","to":"it-6ekf","at":5,"ts":"2026-08-21T13:45:45Z","node":"it-xwpw","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"about","to":"ar-xa38","at":1,"ts":"2026-08-21T13:45:45Z","node":"it-xwpw","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"ts":"2026-08-21T13:46:33Z","node":"th-t842","v":1,"op":"create","type":"thread","title":"the second undocumented harness dependency is now load-bearing: accept it as a watch with a named trigger, or hold attribution to what the payload documents","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"about","to":"ar-c7f5","at":1,"ts":"2026-08-21T13:46:42Z","node":"th-t842","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"depends-on","to":"it-6ekf","at":5,"ts":"2026-08-21T13:46:42Z","node":"th-t842","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"ts":"2026-08-21T13:48:13Z","node":"do-tzp4","v":1,"op":"create","type":"doc","title":"dispatch report: the subagent model is already on disk: a sidecar keyed by the injected agent id names it","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-6ekf"}
+{"op":"link","rel":"supports","to":"it-6ekf","at":5,"ts":"2026-08-21T13:48:13Z","node":"do-tzp4","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-6ekf"}
+{"ts":"2026-08-21T13:49:34Z","node":"it-6ekf","v":5,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T13:50:05Z","node":"cl-jp4q","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T13:50:05Z","node":"cl-wjdb","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T13:50:06Z","node":"it-6ekf","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:08Z","node":"it-6ekf","v":6,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:36Z","node":"it-xwpw","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:36Z","node":"th-t842","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:36Z","node":"cl-jp4q","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:36Z","node":"cl-wjdb","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T13:50:37Z","node":"do-tzp4","v":2,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-21T13:50:37Z","node":"th-t842","v":4,"actor":"claude-opus-5","session":"dispatcher"}

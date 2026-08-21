@@ -239,6 +239,20 @@ happened to see. A joined agent's badge stamp still outranks it
 payload, or none of its tail readable — the recorded row stands, and
 that row is SessionStart-grained: the model this session STARTED on,
 not necessarily the one writing now.
+A SUBAGENT's own model is resolved beneath that stamp from the
+HARNESS'S OWN RECORD of it (it-6ekf), keyed by the agent id the hook
+already injects — so a dispatched arc files under the model that wrote
+it with nothing for the dispatcher to remember, and q dispatch --model
+survives as an OVERRIDE rather than the only road. The harness writes
+each subagent's turns and a spawn sidecar beside the chat transcript,
+at <chat-transcript minus .jsonl>/subagents/agent-<id>.jsonl and
+.meta.json. The transcript leads (it names the RESOLVED model, and it
+sees models the spawn call never named — an agent type's own default,
+or a nested spawn's inheritance); the sidecar answers before the
+agent's first turn reaches disk, with the coarser alias the dispatcher
+typed. THAT LAYOUT IS UNDOCUMENTED AND HARNESS-INTERNAL: read
+best-effort, never depended on — when it answers nothing the chat row
+answers instead, which is right for a spawn that truly inherits.
 The dispatch badge is bound at q join, never exported by hand: the
 session hook injects QUARRY_AGENT (in subagents) and QUARRY_CHAT
 alongside SESSION/ACTOR, and q resolves badges from the machine-local
@@ -303,9 +317,19 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     // did not write it — the house commit convention names the model that
     // did the work, and the graph was the only record of it. The dispatcher
     // stamps what it spawned with into the badge at the fire; this is where
-    // that stamp is spent. Falls through to the chat model whenever nothing
-    // is stamped, so an inheriting spawn keeps the answer that is right for
-    // it.
+    // that stamp is spent.
+    //
+    // BENEATH THE STAMP, THE HARNESS'S OWN RECORD (it-6ekf). The stamp is
+    // discipline — a flag the dispatcher must remember on every fire, which
+    // is what dc-zbxj rules against and th-e5ez asks about — and it is no
+    // longer the only road: the harness writes each subagent's transcript
+    // and a spawn sidecar keyed by the very agent id this hook injects, so
+    // `coord::agent_actor` answers with the agent's OWN model without the
+    // dispatcher saying anything. The stamp keeps precedence, which is what
+    // makes `--model` an override rather than the mechanism. Only when
+    // neither answers does this fall through to the chat model, which is the
+    // right answer for a spawn that genuinely inherits it — measurably not
+    // all of them, which is why the harness record is consulted first.
     //
     // The chat's own half of that answer is refreshed at every fire (it-j4tx).
     // The row is written once, at SessionStart, and used to be read back
@@ -316,13 +340,17 @@ pub fn session_hook_output(store: &crate::store::Store, input: &str) -> Option<s
     let transcript = v.get("transcript_path").and_then(|x| x.as_str());
     let inject_actor = if env_actor.is_none() {
         Some(
-            crate::coord::badge_actor(store, agent_id.as_deref()).unwrap_or_else(|| {
-                crate::coord::safe_actor(
-                    &chat_id
-                        .and_then(|cid| crate::coord::refreshed_chat_actor(store, cid, transcript))
-                        .unwrap_or_else(|| "claude".into()),
-                )
-            }),
+            crate::coord::badge_actor(store, agent_id.as_deref())
+                .or_else(|| crate::coord::agent_actor(transcript, agent_id.as_deref()))
+                .unwrap_or_else(|| {
+                    crate::coord::safe_actor(
+                        &chat_id
+                            .and_then(|cid| {
+                                crate::coord::refreshed_chat_actor(store, cid, transcript)
+                            })
+                            .unwrap_or_else(|| "claude".into()),
+                    )
+                }),
         )
     } else {
         None
