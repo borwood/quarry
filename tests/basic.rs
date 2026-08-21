@@ -8788,3 +8788,224 @@ fn a_bare_fire_names_no_model_and_the_join_names_what_it_read() {
         ghost_join
     );
 }
+
+#[test]
+fn a_shell_eaten_register_name_never_lands_silently() {
+    // it-8k3p: the house shell eats the house style. PowerShell reads the
+    // backtick as its ESCAPE character inside a double-quoted argument, so
+    // the register form dc-qvtz demands is consumed before q is spawned.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let aid = area.front.id.clone();
+
+    // ── THE DEFECT, MEASURED ON THE DERIVATION ITSELF. This literal is the
+    // incident verbatim: Rust reads \r exactly as PowerShell does, so the
+    // string below is byte-for-byte the title cl-gy6q's create event
+    // recorded — a carriage return where the opening backtick and the r
+    // were, and no backtick anywhere. Slugified, it is the damaged filename
+    // that stood on disk at filing.
+    let eaten = "\replacement-clear: a fire that displaces a live arc releases the replaced agent at the upsert";
+    assert!(eaten.starts_with('\r') && !eaten.contains('`'), "the incident shape");
+    assert_eq!(
+        quarry::model::slugify(eaten),
+        "eplacement-clear-a-fire-that-displaces-a-live-ar",
+        "pre-fix, the eaten title derived exactly the filename cl-gy6q wore"
+    );
+
+    // ── THE MINT REFUSES, AND WRITES NOTHING. The claim road, --title and
+    // derived alike; the refusal names the mechanism and the single-quote
+    // road rather than only the symptom.
+    let before = s.load_all().unwrap().len();
+    let e = ops::claim(
+        &s, "a body", Some(eaten.into()), Some("vein".into()),
+        vec![aid.clone()], None, Some("m".into()), None, None,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        e.contains("control character") && e.contains("\\r") && e.contains("SINGLE quotes"),
+        "the refusal names the tell, shows it, and teaches the road: {}",
+        e
+    );
+    assert!(e.contains("eplacement-clear"), "and shows what actually arrived: {}", e);
+    let derived = ops::claim(
+        &s, eaten, None, None, vec![aid.clone()], None, Some("m".into()), None, None,
+    );
+    assert!(derived.is_err(), "the derived-title road refuses too (the trim would erase the evidence)");
+    assert_eq!(s.load_all().unwrap().len(), before, "a refused mint writes nothing");
+
+    // Every one of PowerShell's escape letters lands here: each produces a
+    // C0 control character exactly where the register name began.
+    for eaten in ["\rname: x", "\nname: x", "\tname: x", "\u{7}name: x", "\u{0}name: x"] {
+        let mut a = NewArgs::bare("item", eaten);
+        a.about = vec![aid.clone()];
+        assert!(ops::new_node(&s, a).is_err(), "escape-letter class: {:?}", eaten);
+    }
+
+    // ── THE OTHER TELL: an unpaired backtick is a segment whose other half
+    // was eaten or never typed.
+    let mut a = NewArgs::bare("item", "`half-eaten: what it provides");
+    a.about = vec![aid.clone()];
+    let e = ops::new_node(&s, a).unwrap_err().to_string();
+    assert!(
+        e.contains("unpaired backtick") && e.contains("dc-qvtz"),
+        "the parity refusal names the register form: {}",
+        e
+    );
+
+    // ── BOTH STATIONS, NOT ONLY THE MINT. A retitle is where a corrupted
+    // name gets repaired, so it is the one place the corruption must never
+    // enter a second time; acceptance lines carry register names too.
+    let mut a = NewArgs::bare("item", "a plain item");
+    a.about = vec![aid.clone()];
+    let it = ops::new_node(&s, a).unwrap();
+    let v_before = it.front.v;
+    assert!(ops::set(&s, &it.front.id, &[format!("title={}", eaten)], None).is_err());
+    assert!(ops::set(&s, &it.front.id, &["acceptance+=\rready-gate: it holds".to_string()], None).is_err());
+    let mut a = NewArgs::bare("item", "acceptance at mint");
+    a.about = vec![aid.clone()];
+    a.acceptance = vec!["\rready-gate: it holds".into()];
+    assert!(ops::new_node(&s, a).is_err(), "the mint's acceptance lines ride the same floor");
+    let all = s.load_all().unwrap();
+    let it2 = s.find(&all, &it.front.id).unwrap();
+    assert_eq!(it2.front.v, v_before, "a refused set bumps nothing");
+    assert!(it2.front.acceptance.is_empty(), "and writes nothing");
+
+    // ── POSITIVE CONTROL: the form the register actually demands passes,
+    // at both stations, and reaches the graph as it was written.
+    let good = "`replacement-clear`: a fire that displaces a live arc releases the replaced agent";
+    let c = ops::claim(
+        &s, "a body", Some(good.into()), Some("vein".into()),
+        vec![aid.clone()], None, Some("m".into()), None, None,
+    )
+    .unwrap();
+    assert_eq!(quarry::surface::title_raw(&c), good);
+    assert!(
+        quarry::queries::backtick_titled(quarry::surface::title_raw(&c)),
+        "and joins the register the eaten form never reaches"
+    );
+    ops::set(&s, &it.front.id, &["acceptance+=`ready-gate`: it holds".to_string()], None).unwrap();
+
+    // ── THE RESIDUE, STATED AND MEASURED. A name whose first letter is not
+    // an escape letter loses its backticks and NOTHING else: what arrives
+    // is a legal plain title, and no check at this end can tell it from one
+    // that was typed that way. The floor lets it through by construction —
+    // this assert is the boundary, not a gap in the instrument.
+    let silent = "slug-follows: what it provides";
+    let mut a = NewArgs::bare("item", silent);
+    a.about = vec![aid.clone()];
+    let lost = ops::new_node(&s, a).unwrap();
+    assert!(
+        !quarry::queries::backtick_titled(quarry::surface::title_raw(&lost)),
+        "the name is simply absent from the register, and only the authoring road cures it"
+    );
+}
+
+#[test]
+fn a_retitle_carries_the_nodes_file_with_it() {
+    // it-8k3p, the second fault: the slug was derived at mint and never
+    // re-derived, so a corrected title left the wrong name on disk forever
+    // and a mint-time typo could not be undone at all.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "cli")).unwrap();
+    let aid = area.front.id.clone();
+    let mut a = NewArgs::bare("item", "the wrogn title");
+    a.about = vec![aid.clone()];
+    let it = ops::new_node(&s, a).unwrap();
+    let old_file = it.file.clone();
+    assert!(old_file.exists());
+    assert_eq!(it.slug().unwrap(), "the-wrogn-title");
+
+    let o = ops::set(&s, &it.front.id, &["title=the right title".to_string()], None).unwrap();
+    let (from, to) = o.moved.clone().expect("the retitle moved the file");
+    assert!(from.ends_with("the-wrogn-title.md") && to.ends_with("the-right-title.md"), "{} -> {}", from, to);
+    assert!(!old_file.exists(), "the name it left is gone from disk");
+    assert!(o.node.file.exists() && o.node.slug().unwrap() == "the-right-title");
+    // Exactly one file wears this id — the state a rename must never reach.
+    let all = s.load_all().unwrap();
+    assert_eq!(all.iter().filter(|n| n.front.id == it.front.id).count(), 1);
+
+    // ── THE NAME IT LEFT STILL RESOLVES. Every retitle already recorded the
+    // old slug as an alias and nothing read it; moving the file is what
+    // makes that record load-bearing.
+    assert!(o.node.front.aliases.contains(&"the-wrogn-title".to_string()));
+    let by_old = s.find(&all, "the-wrogn-title").unwrap();
+    assert_eq!(by_old.front.id, it.front.id, "the old slug answers through the alias rung");
+    let by_new = s.find(&all, "the-right-title").unwrap();
+    assert_eq!(by_new.front.id, it.front.id, "and the live slug outranks it");
+
+    // ── THE REPAIR ROAD for a file left behind by a pre-fix retitle: the
+    // node whose title is already right and whose filename is not. Built
+    // here the way the store held it — the corrected title, the damaged
+    // file — and repaired by re-setting the title to the value it carries.
+    let mut a = NewArgs::bare("item", "the damaged mint");
+    a.about = vec![aid.clone()];
+    let dmg = ops::new_node(&s, a).unwrap();
+    let stale = dmg.file.with_file_name(format!("{}-he-damaged-mint.md", dmg.front.id));
+    std::fs::rename(&dmg.file, &stale).unwrap();
+    let all = s.load_all().unwrap();
+    let stale_node = s.find(&all, &dmg.front.id).unwrap();
+    assert_eq!(stale_node.slug().unwrap(), "he-damaged-mint", "the pre-fix state, on disk");
+    let o = ops::set(&s, &dmg.front.id, &["title=the damaged mint".to_string()], None).unwrap();
+    assert_eq!(
+        o.moved.clone().map(|m| m.1),
+        Some(format!("{}-the-damaged-mint.md", dmg.front.id)),
+        "re-setting the title it already carries moves the file onto its own name"
+    );
+    assert!(!stale.exists() && o.node.file.exists());
+
+    // ── A REFUSED ACT MOVES NOTHING. The move sits past the last refusal,
+    // the placement rule cl-gy6q states for itself.
+    let mut a = NewArgs::bare("item", "gated");
+    a.about = vec![aid.clone()];
+    let g = ops::new_node(&s, a).unwrap();
+    let before = g.file.clone();
+    assert!(ops::set(
+        &s,
+        &g.front.id,
+        &["title=renamed and refused".to_string(), "status=ready".to_string()],
+        None
+    )
+    .is_err(), "the acceptance gate refuses this act");
+    assert!(before.exists(), "and the file never moved: {}", before.display());
+    let all = s.load_all().unwrap();
+    assert_eq!(
+        s.find(&all, &g.front.id).unwrap().slug().unwrap(),
+        "gated",
+        "nor did the title"
+    );
+
+    // ── END TO END through the spawned binary: the move is echoed, never
+    // silent — the file the next reader greps for has a new name.
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        c.output().unwrap()
+    };
+    let out = run(&["set", &it.front.id, "title=the renamed title"]);
+    let text = String::from_utf8_lossy(&out.stdout).to_string();
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        text.contains("file moved:") && text.contains("the-renamed-title.md") && text.contains("alias"),
+        "the move is said out loud, with the name it left: {}",
+        text
+    );
+    // And the refusal reaches the operator through the real binary too.
+    let bad = run(&["set", &it.front.id, "title=\rname: eaten"]);
+    assert_ne!(bad.status.code(), Some(0), "{}", String::from_utf8_lossy(&bad.stdout));
+    assert!(
+        String::from_utf8_lossy(&bad.stderr).contains("control character")
+            || String::from_utf8_lossy(&bad.stdout).contains("control character"),
+        "out: {} err: {}",
+        String::from_utf8_lossy(&bad.stdout),
+        String::from_utf8_lossy(&bad.stderr)
+    );
+}

@@ -2,8 +2,8 @@
 id: it-8k3p
 type: item
 title: a backticked vein name is silently eaten by the house shell, and a title fix never re-slugs its file
-v: 4
-status: sketch
+v: 6
+status: done
 provenance: assistant
 created: 2026-08-21T14:43:21Z
 actor: claude-opus-5

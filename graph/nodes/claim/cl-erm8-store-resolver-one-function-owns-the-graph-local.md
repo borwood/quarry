@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/store.rs
-  at: e24261b0d016
+  at: 44d71b72d0f5
 - rel: supports
   to: cl-nzjs
   at: 3

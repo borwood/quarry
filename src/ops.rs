@@ -22,14 +22,98 @@ pub fn derive_provenance(actor: &str) -> String {
     }
 }
 
-fn truncate_title(text: &str, max: usize) -> String {
-    let one_line = text.lines().next().unwrap_or("").trim();
+fn truncate_title(text: &str, max: usize) -> Result<String> {
+    // The floor measures the RAW first line, before the trim and before the
+    // cut: a leading control character is exactly what the shell leaves
+    // behind, and `.trim()` would erase the evidence; a truncation can
+    // orphan a backtick that was paired when it was typed.
+    let raw = text.lines().next().unwrap_or("");
+    check_written_form("derived title (the first line of the text)", raw)?;
+    let one_line = raw.trim();
     if one_line.chars().count() <= max {
-        one_line.to_string()
+        Ok(one_line.to_string())
     } else {
         let cut: String = one_line.chars().take(max - 1).collect();
-        format!("{}…", cut.trim_end())
+        Ok(format!("{}…", cut.trim_end()))
     }
+}
+
+/// Render a value with its control characters visible, so a refusal can
+/// show what actually arrived. A control character is invisible in a
+/// terminal echo — which is the whole reason the corruption it names goes
+/// unnoticed — so the refusal must spell it.
+fn visible(value: &str) -> String {
+    let mut out = String::new();
+    for c in value.chars() {
+        match c {
+            '\r' => out.push_str("\\r"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => out.push_str(&format!("\\x{:02x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
+/// The written-form floor (it-8k3p): a deliberate name reaches the graph
+/// as it was typed, or the act refuses. One predicate, every station that
+/// writes a title or an acceptance line — the two surfaces the register
+/// form of dc-qvtz is written on.
+///
+/// MEASURED, 2026-08-21. PowerShell is this machine's shell and the
+/// backtick is its escape character inside a DOUBLE-quoted argument, so
+/// the house style eats itself: the register form dc-qvtz demands —
+/// `name`: what it provides — is consumed before q is spawned. Probed
+/// live, `"`replacement-clear`: a fire"` arrives as U+000D + "eplacement-
+/// clear: a fire" (25 chars against the 27 that were typed): BOTH
+/// backticks gone, the leading r gone with the first of them, and nothing
+/// syntactically wrong left in the string for a reader to notice. cl-gy6q
+/// was minted through exactly that hole — its create event carries the
+/// corrupted title verbatim — and its filename still carried the damage
+/// after the title was repaired.
+///
+/// Two tells, each with zero false positives across the whole store at
+/// filing (429 node titles, 147 acceptance lines, both swept):
+///   · a CONTROL CHARACTER. Every one of PowerShell's escape letters —
+///     r n t a b f v 0 e, the class the incident belongs to — produces a
+///     C0 control character exactly where the register name began. A
+///     title and an acceptance line are each one line of prose; a control
+///     character in one is never what anybody typed.
+///   · an ODD BACKTICK COUNT. The register form pairs, so a lone backtick
+///     is a segment whose other half was eaten or never typed.
+///
+/// THE RESIDUE IS STATED, NOT HIDDEN. A backticked name whose first
+/// letter is NOT one of the escape letters loses its backticks and
+/// nothing else: `"`slug-follows`: y"` arrives as "slug-follows: y",
+/// measured. What reaches q is then a legal plain title, and no check at
+/// this end can tell it from one that was typed that way — the name is
+/// simply absent from the register (dc-qvtz's backticked join never
+/// fires, and the vein prompt keyed on the same shape stays silent).
+/// The only cure there is the authoring road, which is why both refusals
+/// teach single quotes as the RULE and not as a fallback.
+pub fn check_written_form(what: &str, value: &str) -> Result<()> {
+    if let Some(c) = value.chars().find(|c| c.is_control()) {
+        bail!(
+            "the {} carries a control character ({}) — nothing was written. This is the house shell eating the house style (it-8k3p): PowerShell reads the backtick as its ESCAPE character inside a double-quoted argument, so a register name written `name` (dc-qvtz) loses its opening backtick and its first letter whenever that letter is one of r n t a b f v 0 e. Received: \"{}\". Write the value in SINGLE quotes — '`name`: what it provides' — where the backtick is literal, or pass it as a here-string (@'…'@ on its own lines). Double quotes are never safe for a backticked name: where the first letter is not an escape letter the backticks vanish with no trace at all, so single quotes are the rule, not the fallback.",
+            what,
+            match c {
+                '\r' => "\\r, a carriage return — the signature of a name beginning with r".to_string(),
+                '\n' => "\\n, a line feed — the signature of a name beginning with n".to_string(),
+                '\t' => "\\t, a tab — the signature of a name beginning with t".to_string(),
+                c => format!("\\x{:02x}", c as u32),
+            },
+            visible(value)
+        );
+    }
+    if value.matches('`').count() % 2 != 0 {
+        bail!(
+            "the {} carries an unpaired backtick — nothing was written. The register form pairs (dc-qvtz: `name`: what it provides), so a lone backtick is a segment whose other half was eaten or never typed. Received: \"{}\". If a shell ate it, write the value in SINGLE quotes — the backtick is literal there — or pass it as a here-string (@'…'@ on its own lines).",
+            what,
+            visible(value)
+        );
+    }
+    Ok(())
 }
 
 pub struct NewArgs {
@@ -200,6 +284,14 @@ pub fn witness_execution_check(
 pub fn new_node(store: &Store, a: NewArgs) -> Result<Node> {
     let all = store.load_all()?;
     prefix_of(&a.ty)?;
+    // The written-form floor (it-8k3p), ahead of everything that mutates:
+    // every mint road — q new, q claim (--title and derived alike), q rule,
+    // the dispatch report registration — funnels through here, so the title
+    // that reaches disk is the one that was typed or nothing is written.
+    check_written_form("title", &a.title)?;
+    for l in &a.acceptance {
+        check_written_form("acceptance line", l)?;
+    }
     let actor = Store::actor();
     let provenance = a
         .provenance
@@ -501,6 +593,10 @@ pub struct SetOutcome {
     pub demoted_from: Option<String>,
     /// Removal marks recorded (witness seat only; design seats mutate free).
     pub witness_removals: usize,
+    /// The file the node moved between when a retitle re-derived its slug
+    /// (it-8k3p), as (from, to) file names — the directory never changes.
+    /// None when the slug the new title derives is the one it already had.
+    pub moved: Option<(String, String)>,
 }
 
 /// Resolve one `acceptance-=` value to the line it removes (it-ds6b):
@@ -553,6 +649,9 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
     // The logged fields carry the FULL resolved line for every removal —
     // the log stores what was actually removed, never what was typed.
     let mut logged_fields: Vec<String> = Vec::new();
+    // Where a retitle sends the node's file (it-8k3p). Held until every
+    // gate below has passed: a refused act moves nothing.
+    let mut moving: Option<(std::path::PathBuf, std::path::PathBuf)> = None;
     for f in fields {
         let (k, v) = f
             .split_once('=')
@@ -572,17 +671,36 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
                 node.front.status = v.into();
             }
             "title" => {
+                check_written_form("title", v)?;
                 if let Some(old_slug) = node.slug() {
                     if !node.front.aliases.contains(&old_slug) {
                         node.front.aliases.push(old_slug);
                     }
                 }
                 crate::surface::retitle(&mut node, v.into());
+                // `slug-follows-title` (it-8k3p): the filename is derived at
+                // mint and used to be derived ONLY there, so a corrected
+                // title left the wrong slug on disk forever and a mint-time
+                // typo could not be undone at all. The slug now follows the
+                // title through the retitle that repairs it; the slug it
+                // leaves behind is the alias recorded just above, which is
+                // how the old name keeps resolving. Re-setting a title to
+                // the value it already carries is therefore the repair road
+                // for a file left behind by a pre-fix retitle.
+                let want = store
+                    .nodes_dir()
+                    .join(&node.front.ty)
+                    .join(format!("{}-{}.md", node.front.id, slugify(v)));
+                if want != node.file {
+                    moving = Some((node.file.clone(), want.clone()));
+                    node.file = want;
+                }
             }
             "kind" => node.front.kind = Some(v.into()),
             "method" => node.front.method = Some(v.into()),
             "path" => node.front.path = Some(v.into()),
             "acceptance+" => {
+                check_written_form("acceptance line", v)?;
                 node.front.acceptance.push(v.into());
                 new_acceptance.push(v.into());
             }
@@ -696,12 +814,32 @@ pub fn set(store: &Store, key: &str, fields: &[String], note: Option<String>) ->
             json!({"from": df, "to": "shaped", "cause": "acceptance gate (dc-p6z4): last acceptance line stripped"}),
         );
     }
+    // The move happens PAST the last refusal and BEFORE the save, the
+    // placement rule cl-gy6q states for itself: a refused act moves no
+    // file, and a save that fails after the rename leaves one file at the
+    // new name with the old content — never two files wearing one id,
+    // which is the state load_all cannot read straight.
+    let moved = match moving {
+        Some((from, to)) => {
+            store.move_node_file(&from, &to)?;
+            let name = |p: &std::path::Path| {
+                p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default()
+            };
+            let m = (name(&from), name(&to));
+            ev.as_object_mut()
+                .unwrap()
+                .insert("renamed".into(), json!({"from": m.0, "to": m.1}));
+            Some(m)
+        }
+        None => None,
+    };
     bump(store, &mut node, ev, note)?;
     Ok(SetOutcome {
         node,
         removed,
         demoted_from,
         witness_removals,
+        moved,
     })
 }
 
@@ -740,7 +878,10 @@ pub fn rule(
             crate::surface::atom_ref(&crate::surface::atom(&[], &thread))
         );
     }
-    let dtitle = title.unwrap_or_else(|| truncate_title(text, 64));
+    let dtitle = match title {
+        Some(t) => t,
+        None => truncate_title(text, 64)?,
+    };
     // The decision inherits the thread's subject attachments.
     let about: Vec<String> = thread
         .front
@@ -802,7 +943,10 @@ pub fn claim(
             "C2: an assistant claim needs grounding — --source <doc or file:path> (where it was extracted or read from), --method \"...\" (how it was measured), or user provenance. No free-floating assertions."
         );
     }
-    let title = title.unwrap_or_else(|| truncate_title(text, 72));
+    let title = match title {
+        Some(t) => t,
+        None => truncate_title(text, 72)?,
+    };
     let mut args = NewArgs::bare("claim", &title);
     args.body = text.to_string();
     args.about = about;

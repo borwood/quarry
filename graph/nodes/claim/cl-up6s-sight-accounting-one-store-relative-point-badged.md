@@ -20,7 +20,7 @@ edges:
   at: d15f00a82b95
 - rel: source
   to: file:src/store.rs
-  at: bcd701ef3890
+  at: 44d71b72d0f5
 - rel: source
   to: file:src/render.rs
   at: ceb6cf060a06

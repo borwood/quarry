@@ -293,7 +293,8 @@ impl Store {
         Ok(out)
     }
 
-    /// Resolve a node by exact id, exact slug, or unique case-insensitive title fragment.
+    /// Resolve a node by exact id, exact slug, a slug it used to live under,
+    /// or a unique case-insensitive title fragment.
     pub fn find<'a>(&self, all: &'a [Node], key: &str) -> Result<&'a Node> {
         if let Some(n) = all.iter().find(|n| n.front.id == key) {
             return Ok(n);
@@ -305,6 +306,23 @@ impl Store {
         match by_slug.len() {
             1 => return Ok(by_slug[0]),
             n if n > 1 => bail!("slug '{}' is ambiguous", key),
+            _ => {}
+        }
+        // The alias rung (it-8k3p): a retitle records the slug the node used
+        // to live under and now MOVES the file off it, so the old name would
+        // stop resolving with nothing to say why. The aliases field was
+        // written by every retitle and read by nobody; it is read here.
+        // Live slugs outrank it — an alias is a name the node has left.
+        let by_alias: Vec<&Node> = all
+            .iter()
+            .filter(|n| n.front.aliases.iter().any(|a| a == key))
+            .collect();
+        match by_alias.len() {
+            1 => return Ok(by_alias[0]),
+            n if n > 1 => bail!(
+                "'{}' is a slug more than one node has left behind — name one by id",
+                key
+            ),
             _ => {}
         }
         let kl = key.to_lowercase();
@@ -348,6 +366,30 @@ impl Store {
             }
         }
         bail!("could not mint a unique id");
+    }
+
+    /// Move a node's file to the name its current title derives (it-8k3p).
+    /// The rename runs BEFORE the save that follows it, so a failure at
+    /// either step leaves exactly one file wearing the node's id: two files
+    /// with one id is the state `load_all` cannot read straight, and it is
+    /// the only outcome this ordering forbids.
+    pub fn move_node_file(&self, from: &Path, to: &Path) -> Result<()> {
+        if from == to {
+            return Ok(());
+        }
+        if to.exists() {
+            bail!(
+                "cannot move {} to {} — a file already stands there. Nothing was written.",
+                from.display(),
+                to.display()
+            );
+        }
+        if let Some(dir) = to.parent() {
+            fs::create_dir_all(dir)?;
+        }
+        fs::rename(from, to)
+            .with_context(|| format!("renaming {} to {}", from.display(), to.display()))?;
+        Ok(())
     }
 
     pub fn save(&self, node: &Node) -> Result<()> {

@@ -2430,3 +2430,43 @@
 {"op":"body","ts":"2026-08-21T14:43:48Z","node":"it-8k3p","v":2,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a vein name reaches the graph as it was written or the mint refuses: a title whose backticked register segment is malformed never lands silently, and a corrected title either carries its filename with it or says plainly that it will not"],"ts":"2026-08-21T14:43:48Z","node":"it-8k3p","v":3,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T14:44:57Z","node":"it-8k3p","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:45:36Z","node":"it-8k3p","v":4,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:45:36Z","node":"it-8k3p","v":4,"op":"reserve","globs":["src/ops.rs","src/store.rs","src/main.rs","tests/**"],"shared":false,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T14:45:36Z","node":"it-8k3p","v":5,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:45:36Z","node":"it-8k3p","v":4,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/ops.rs","src/store.rs","src/main.rs","tests/**","docs/reports/2026-08-21-a-backticked-vein-name-is-silently-it-8k3p.md"],"model":null}
+{"ts":"2026-08-21T14:45:49Z","node":"it-8k3p","v":5,"op":"join","actor":"claude-opus-5","dispatch":"it-8k3p","joined":"agent:a5ab80f9b951475e8","session":"dispatcher"}
+{"op":"set","fields":["title=`replacement-clear`: a fire that displaces a live arc releases the replaced agent at the upsert — one clearing point, both arms, and a refused fire displaces nothing"],"renamed":{"from":"cl-gy6q-eplacement-clear-a-fire-that-displaces-a-live-ar.md","to":"cl-gy6q-replacement-clear-a-fire-that-displaces-a-live-a.md"},"ts":"2026-08-21T15:07:22Z","node":"cl-gy6q","v":8,"actor":"claude-opus-5","note":"the filename the house shell damaged at mint: the title was repaired the same day, the slug never was (it-8k3p)","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:08:36Z","node":"cl-j2pk","v":1,"op":"create","type":"claim","title":"`written-form`: a title or an acceptance line reaches the graph as it was typed — a control character or an unpaired backtick refuses at every station","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"2c2276685d23","ts":"2026-08-21T15:08:36Z","node":"cl-j2pk","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:09:05Z","node":"cl-h9d6","v":1,"op":"create","type":"claim","title":"`slug-follows-title`: a retitle carries the node file with it; the slug it leaves is an alias that still resolves","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"2c2276685d23","ts":"2026-08-21T15:09:05Z","node":"cl-h9d6","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"114a318cb5ef","ts":"2026-08-21T15:09:36Z","node":"cl-j2pk","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"75f4c2e53c44","ts":"2026-08-21T15:09:36Z","node":"cl-j2pk","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"supports","to":"dc-qvtz","at":3,"ts":"2026-08-21T15:09:37Z","node":"cl-j2pk","v":5,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:src/store.rs","at":"44d71b72d0f5","ts":"2026-08-21T15:09:41Z","node":"cl-h9d6","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"114a318cb5ef","ts":"2026-08-21T15:09:41Z","node":"cl-h9d6","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"75f4c2e53c44","ts":"2026-08-21T15:09:42Z","node":"cl-h9d6","v":5,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:20Z","node":"cl-erm8","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:20Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:26Z","node":"cl-2kxr","v":7,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:26Z","node":"cl-644e","v":9,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:26Z","node":"cl-b2z2","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:27Z","node":"cl-c34g","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:27Z","node":"cl-cv92","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:27Z","node":"cl-dqt4","v":10,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:28Z","node":"cl-en99","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:28Z","node":"cl-gy6q","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:28Z","node":"cl-qm6t","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:28Z","node":"cl-zj2c","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:11:57Z","node":"cl-gy6q","v":8,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:12:31Z","node":"it-d4bh","v":1,"op":"create","type":"item","title":"a vein name whose first letter is not a shell escape letter loses its backticks silently: nothing at the receiving end can see it","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:14:15Z","node":"do-2m5m","v":1,"op":"create","type":"doc","title":"dispatch report: a backticked vein name is silently eaten by the house shell, and a title fix never re-slugs its file","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-8k3p"}
+{"op":"link","rel":"supports","to":"it-8k3p","at":5,"ts":"2026-08-21T15:14:15Z","node":"do-2m5m","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:14:48Z","node":"do-2m5m","v":2,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-8k3p"}
+{"ts":"2026-08-21T15:16:32Z","node":"it-8k3p","v":5,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T15:16:43Z","node":"cl-j2pk","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T15:16:43Z","node":"cl-h9d6","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T15:16:43Z","node":"it-8k3p","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:16:46Z","node":"it-8k3p","v":6,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:17:09Z","node":"it-8vsm","v":1,"op":"create","type":"item","title":"the lease shape biases the instrument: a prompt costs a lease that a refusal does not","actor":"claude-opus-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T15:17:34Z","node":"it-8vsm","v":2,"actor":"claude-opus-5","session":"dispatcher"}

@@ -131,7 +131,22 @@ removed, never what was typed. Replace is both fields in one act:
 Stripping a readied item's last line loudly demotes it to shaped
 (dc-p6z4). From a non-design seat, subtraction is authoring: the removal
 rides the witness review channel until the user ratifies (dc-mpg8).
-Unlike unlink, the item BUMPS — the contract is content, not bookkeeping.")]
+Unlike unlink, the item BUMPS — the contract is content, not bookkeeping.
+
+title= CARRIES THE FILENAME WITH IT (it-8k3p): the node's file moves to
+the slug the new title derives, the slug it leaves is kept as an alias
+that still resolves, and the move is echoed and logged. So re-setting a
+title to the value it already carries is the repair road for a file left
+behind by a retitle that predates this — the id was always the anchor,
+but a wrong slug on disk is a wrong name the next reader greps for.
+
+QUOTE A BACKTICKED NAME IN SINGLE QUOTES — 'title=`name`: what it
+provides'. PowerShell reads the backtick as its escape character inside
+DOUBLE quotes, so a register name is eaten before q is spawned; where
+its first letter is r n t a b f v 0 e the value arrives carrying a
+control character and this verb refuses it, and where it is not, the
+backticks vanish with no trace at all. A here-string (@'…'@) carries a
+long value the same way.")]
     Set {
         node: String,
         #[arg(required = true)]
@@ -174,6 +189,16 @@ capability as a VEIN claim (--source file:<the code>), titled name-first
 in the project's register (`name`: what it provides) — systematic,
 intention-revealing names. Titles feed the relatedness lexicon, so a
 well-named vein surfaces itself to future work.
+
+QUOTE THE NAME IN SINGLE QUOTES (it-8k3p): '`body-graph`: what it
+provides'. PowerShell reads the backtick as its escape character inside
+DOUBLE quotes, so the register form is eaten before q is spawned — a
+name beginning with r n t a b f v 0 e arrives as a control character
+plus the rest of the word (the mint refuses it), and any other name
+arrives with its backticks silently gone and never joins the register.
+A here-string (@'…'@ on its own lines) carries a long --title or a long
+body the same way; --body-file on q new / q edit takes a body from a
+file when it is longer still.
 {}", quarry::framings::ASSAY_CLAIM_HELP))]
     Claim {
         text: String,
@@ -2972,6 +2997,19 @@ fn main() -> Result<()> {
             // reads wrong here, at the moment it is cheapest to catch.
             for l in &o.removed {
                 outln!("  acceptance removed: \"{}\"", l);
+            }
+            // The slug follows the title (it-8k3p), and never silently: the
+            // file the next reader greps for has a new name, and the name it
+            // left is recorded as an alias that still resolves.
+            if let Some((from, to)) = &o.moved {
+                outln!(
+                    "  file moved: {} → {} — the slug follows the title, and \"{}\" is kept as an alias that still resolves.",
+                    from,
+                    to,
+                    from.strip_prefix(&format!("{}-", n.front.id))
+                        .and_then(|s| s.strip_suffix(".md"))
+                        .unwrap_or(from)
+                );
             }
             if o.witness_removals > 0 {
                 outln!(
