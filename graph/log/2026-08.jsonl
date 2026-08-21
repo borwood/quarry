@@ -2028,3 +2028,31 @@
 {"ts":"2026-08-21T09:02:19Z","node":"it-xcvb","v":1,"op":"create","type":"item","title":"dispatched work is attributed to the dispatcher's model: a subagent's actor is inherited, never recorded","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T09:02:37Z","node":"it-xcvb","v":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a node's recorded actor names the model that actually wrote it: work done by a dispatched subagent whose model differs from its dispatcher's is never filed under the dispatcher's model, and the commit convention can be honoured from the graph alone"],"ts":"2026-08-21T09:02:46Z","node":"it-xcvb","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:04:04Z","node":"it-ap3x","v":2,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:04:04Z","node":"it-ap3x","v":2,"op":"reserve","globs":["src/teach.rs","tests/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-21T09:04:04Z","node":"it-ap3x","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:04:04Z","node":"it-ap3x","v":2,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/teach.rs","tests/**"]}
+{"ts":"2026-08-21T09:04:28Z","node":"it-ap3x","v":3,"op":"join","actor":"claude-fable-5","dispatch":"it-ap3x","joined":"agent:a230f82f5cd3b25aa","session":"dispatcher"}
+{"ts":"2026-08-21T09:15:42Z","node":"cl-up6s","v":9,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-ap3x"}
+{"ts":"2026-08-21T09:16:17Z","node":"cl-zj2c","v":1,"op":"create","type":"claim","title":"`parse-plausibility`: the write-shape parser swallows here-strings whole and refuses targets that cannot be filenames","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-ap3x"}
+{"op":"link","rel":"source","to":"file:src/teach.rs","at":"b4c33066b79b","ts":"2026-08-21T09:16:17Z","node":"cl-zj2c","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-ap3x"}
+{"op":"link","rel":"supports","to":"it-ap3x","at":3,"ts":"2026-08-21T09:16:27Z","node":"cl-zj2c","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-ap3x"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"8de5dd671593","ts":"2026-08-21T09:16:27Z","node":"cl-zj2c","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-ap3x"}
+{"ts":"2026-08-21T09:18:40Z","node":"dc-4fgc","v":1,"op":"create","type":"decision","title":"the channel back is protocol, not engine: no gap verb; field reports are process content","actor":"claude-fable-5","note":null,"session":"quarry"}
+{"op":"set","field":"status","from":"queued","to":"resolved","cause":"dc-4fgc","ts":"2026-08-21T09:18:40Z","node":"th-8sdq","v":3,"actor":"claude-fable-5","session":"quarry"}
+{"op":"link","rel":"settles","to":"th-8sdq","at":3,"ts":"2026-08-21T09:18:40Z","node":"dc-4fgc","v":2,"actor":"claude-fable-5","session":"quarry"}
+{"ts":"2026-08-21T09:19:22Z","node":"do-d8n8","v":1,"op":"create","type":"doc","title":"dispatch report: the write-shape parser accrues sigils","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-ap3x","at":3,"ts":"2026-08-21T09:19:22Z","node":"do-d8n8","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:19:23Z","node":"it-ap3x","v":3,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T09:19:45Z","node":"cl-zj2c","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T09:19:45Z","node":"it-ap3x","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:19:47Z","node":"it-ap3x","v":4,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:19:57Z","node":"cl-zj2c","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:19:57Z","node":"do-d8n8","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:20:15Z","node":"it-dt68","v":1,"op":"create","type":"item","title":"a bash heredoc body tokenizes as command text: prose inside it can mint a plausible false positive","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T09:20:30Z","node":"it-dt68","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=prose inside a bash heredoc never mints a touched path: the body is consumed whole to its line-initial terminator, in the quoted, bare, and tab-stripped forms alike, and a real write beside the heredoc still parses"],"ts":"2026-08-21T09:20:39Z","node":"it-dt68","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"link","rel":"supports","to":"it-dt68","at":3,"ts":"2026-08-21T09:20:39Z","node":"cl-zj2c","v":6,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:20:53Z","node":"it-3prx","v":1,"op":"create","type":"item","title":"the brief demands a report the lease forbids: docs/reports sits outside every dispatch write-set","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T09:21:12Z","node":"it-3prx","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a dispatched agent can register its own report from its own seat: the lease a dispatch takes covers the report path the RETURN spec demands, and harvest reconciles the declared user-owned calls without a dispatcher writing the doc node by hand"],"ts":"2026-08-21T09:21:21Z","node":"it-3prx","v":3,"actor":"claude-fable-5","session":"dispatcher"}

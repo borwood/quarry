@@ -918,6 +918,15 @@ pub fn observe_write(
 /// parens) and input redirects (`<`, heredocs) push None — a boundary; runs
 /// of `>` split into their own token even glued to a neighbor (`2>file`),
 /// so the scan can pair each redirect with the token that follows it.
+///
+/// A PowerShell here-string (`@'` … newline `'@`, or the `@"` form) is
+/// consumed WHOLE as one opaque token (it-ap3x). This is the repo's own
+/// documented way to hand a multi-line commit message to git, and its body is
+/// prose: an apostrophe in it ("main.rs's arm") would otherwise open a quote
+/// the tokenizer never closes, desyncing every token after it — the closing
+/// `'@` re-opens the quote instead, and the command's real tail (`2>&1 | tail
+/// -20`) arrives as one bogus word behind a `>` from an unrelated `<…>` in
+/// the prose. Swallowing the literal keeps the tail tokenizing correctly.
 fn shell_tokens(command: &str) -> Vec<Option<String>> {
     let mut out: Vec<Option<String>> = Vec::new();
     let mut cur = String::new();
@@ -938,6 +947,29 @@ fn shell_tokens(command: &str) -> Vec<Option<String>> {
             continue;
         }
         match c {
+            // Here-string opener at the start of a word: swallow the literal
+            // through its line-initial terminator (or to end of input when it
+            // has none) as a single token. Opaque by construction — it always
+            // carries the quote character it opened with, which no write
+            // target does.
+            '@' if cur.is_empty() && matches!(chars.peek(), Some('\'') | Some('"')) => {
+                let q = *chars.peek().expect("peeked");
+                chars.next();
+                let mut body = String::from("@");
+                body.push(q);
+                let mut after_newline = false;
+                while let Some(b) = chars.next() {
+                    if after_newline && b == q && chars.peek() == Some(&'@') {
+                        chars.next();
+                        body.push(b);
+                        body.push('@');
+                        break;
+                    }
+                    after_newline = b == '\n';
+                    body.push(b);
+                }
+                out.push(Some(body));
+            }
             '\'' | '"' => quote = Some(c),
             c if c.is_whitespace() => flush(&mut cur, &mut out),
             ';' | '|' | '&' | '(' | ')' | '<' => {
@@ -971,7 +1003,20 @@ fn cmd_word(tok: &str) -> String {
 }
 
 /// A parsed target the accrual should never chase: streams, devices,
-/// variables and substitutions the parse cannot resolve.
+/// variables and substitutions the parse cannot resolve — and, since
+/// it-ap3x, anything that cannot be a filename at all.
+///
+/// The parse is a guess made over text the tokenizer may have read wrong
+/// (prose in a quoted argument, an unterminated heredoc body), and a guess
+/// that lands in the observed set is debris at the judgment seat. Two shapes
+/// are refused outright, both impossible for a real write target: a token
+/// carrying a control character or a shell metacharacter the tokenizer would
+/// have split on had it been reading a command (`<>|;&`) or a quote it would
+/// have consumed — the tell that the token is a fragment of something else —
+/// and a sigil-only token with no name character in it at all (`@`, `--`,
+/// `{}`). Dropping is the cheap direction here: the shell channel is
+/// best-effort by construction and the sight boundary states its residue,
+/// while a false positive misreads as a real write nobody made.
 fn opaque_target(t: &str) -> bool {
     t.is_empty()
         || t == "-"
@@ -980,6 +1025,10 @@ fn opaque_target(t: &str) -> bool {
         || t.contains('`')
         || t.contains('*')
         || t.contains('?')
+        || t.chars().any(|c| {
+            c.is_control() || matches!(c, '<' | '>' | '|' | ';' | '&' | '\'' | '"')
+        })
+        || !t.chars().any(char::is_alphanumeric)
         || matches!(t.to_lowercase().as_str(), "/dev/null" | "nul" | "null")
 }
 

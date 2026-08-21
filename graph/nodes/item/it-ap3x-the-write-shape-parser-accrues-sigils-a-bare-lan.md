@@ -2,8 +2,8 @@
 id: it-ap3x
 type: item
 title: 'the write-shape parser accrues sigils: a bare @ lands in the observed set as a touched path'
-v: 2
-status: ready
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-20T09:52:46Z
 actor: claude

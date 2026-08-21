@@ -6119,6 +6119,67 @@ fn write_shapes_parses_the_common_write_shapes() {
     );
 }
 
+/// The it-ap3x defect: a bare `@` in the observed set, marked shell-parsed.
+/// The parse is a guess over text the tokenizer can read wrong, so debris
+/// that cannot be a filename must never accrue as a touched path.
+#[test]
+fn write_shapes_drops_parser_debris_and_sigils() {
+    use quarry::teach::write_shapes;
+    // THE INCIDENT, verbatim in shape: this repo hands git a multi-line
+    // commit message through a PowerShell here-string, and the message is
+    // prose. Before the fix the apostrophe in "main.rs's" closed the quote
+    // the `@'` opened, the closing `'@` re-opened it, and everything after
+    // arrived as ONE word — pushed as a redirect target by the `>` that
+    // closes the Co-Authored-By address. A literal "@ 2>&1 | tail -20"
+    // landed in the observed set at the judgment seat.
+    let incident = "git commit -m @'\n\
+        main.rs's Join arm carried its own pinned-store paragraph.\n\
+        \n\
+        Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\
+        '@ 2>&1 | tail -20";
+    assert!(
+        write_shapes(incident).is_empty(),
+        "a here-string commit message names no write target, got {:?}",
+        write_shapes(incident)
+    );
+    // Swallowing the here-string must not blind the parser to the real
+    // write beside it — the command's tail still tokenizes.
+    assert_eq!(
+        write_shapes("git commit -m @'\n\
+            prose with don't in it\n\
+            '@ && cargo build > build.log"),
+        vec!["build.log"]
+    );
+    // An unterminated here-string ends the parse quietly, never a panic and
+    // never a token of the leftover body.
+    assert!(write_shapes("git commit -m @'\nbody that never closes").is_empty());
+    // The double-quoted here-string form too — and swallowing it whole keeps
+    // the writer's own path arg readable, unclosed literal or not.
+    assert_eq!(
+        write_shapes("Set-Content notes.md -Value @\"\nunclosed"),
+        vec!["notes.md"]
+    );
+    assert_eq!(
+        write_shapes("Set-Content notes.md -Value @\"\nline one\n\"@"),
+        vec!["notes.md"]
+    );
+    // Sigil-only tokens are not paths, wherever the shape puts them.
+    assert!(write_shapes("echo x > @").is_empty());
+    assert!(write_shapes("touch @ -- {}").is_empty());
+    assert!(write_shapes("cp a.rs @").is_empty());
+    assert!(write_shapes("Out-File -FilePath @").is_empty());
+    // Nor is a token carrying a shell metacharacter or a control character:
+    // the tokenizer would have split on it in a command, so its presence is
+    // the tell that this token is a fragment of something else.
+    assert!(write_shapes("echo x > 'out > log'").is_empty());
+    assert!(write_shapes("echo x > 'two\nlines'").is_empty());
+    assert!(write_shapes("touch 'a | b'").is_empty());
+    // The plausible stay plausible: spaces and Windows separators are
+    // ordinary in a path and cost nothing to keep.
+    assert_eq!(write_shapes("echo x > 'docs/a file.md'"), vec!["docs/a file.md"]);
+    assert_eq!(write_shapes("touch src\\teach.rs"), vec!["src\\teach.rs"]);
+}
+
 #[test]
 fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
     let s = temp_store();
@@ -6165,6 +6226,23 @@ fn observe_shell_accrues_only_resolvable_targets_marked_shell() {
     let solo = quarry::coord::touches_for(&s, "session:solo-sh");
     assert_eq!(solo.len(), 1);
     assert_eq!(solo[0].path, "src/solo.rs");
+    // it-ap3x: parser debris resolves store-relative by mere path joining —
+    // nothing on disk answers for it — so the drop has to happen at the
+    // parse, not at resolution. The observed set stays paths.
+    quarry::teach::observe_shell(
+        &s,
+        Some("it-shell"),
+        Some("sess"),
+        "git commit -m @'\n\
+            main.rs's arm carried its own paragraph\n\
+            \n\
+            Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\
+            '@ 2>&1 | tail -20",
+        Some(&cwd),
+    );
+    let touches = quarry::coord::touches_for(&s, "item:it-shell");
+    let paths: Vec<&str> = touches.iter().map(|t| t.path.as_str()).collect();
+    assert_eq!(paths, vec!["tests/basic.rs", "src/lib.rs"], "the here-string commit accrued debris");
 }
 
 #[test]
