@@ -1107,8 +1107,16 @@ pub fn harvest(store: &Store, key: &str) -> Result<String> {
     // badge (M). Absence of the report's section is itself the flag; a
     // gap confronts, never verdicts — badge threads exist for other
     // reasons too, and the diff decides.
+    // The report join is bounded by the arc's own dispatch (it-p8rp): a
+    // supports-linked report older than this dispatch belongs to a prior
+    // arc — carried onto the item by a dispatcher for its caveat, and shown
+    // as evidence in the brief above — never this arc's return. Unbounded,
+    // the newest-wins pick let that carry stand in as the return and the
+    // reconcile parsed a stranger's prose; the await arm speaks instead,
+    // until this arc registers.
     let threads_filed = count_of("thread");
-    let report_text = crate::queries::latest_report_doc(&all, id).and_then(|doc| {
+    let dispatched_at = crate::queries::arc_dispatched_at(&log, id);
+    let report_text = crate::queries::latest_report_doc(&all, id, dispatched_at.as_deref()).and_then(|doc| {
         doc.front.path.as_deref().and_then(|p| {
             std::fs::read_to_string(store.work_root.join(p))
                 .or_else(|_| std::fs::read_to_string(store.root.join(p)))

@@ -2,8 +2,8 @@
 id: it-p8rp
 type: item
 title: 'the reconcile parses a carried report: a prior supports-linked doc stands in as the arc''s return before registration'
-v: 2
-status: ready
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-20T11:04:00Z
 actor: claude

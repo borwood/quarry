@@ -6443,3 +6443,121 @@ fn harvest_reconciles_declared_user_owned_calls_against_badge_threads() {
     );
     assert!(h.contains("a gap is a question"), "the gap confronts, never verdicts: {}", h);
 }
+
+/// it-p8rp: the reconcile's report join is bounded by the arc's own
+/// dispatch. A dispatcher carries a prior arc's report onto an item with a
+/// supports edge (the brief shows it as evidence, deliberately) — and
+/// unbounded, newest-wins picked that stranger's prose as this arc's
+/// return before the arc had registered anything. Both halves measured:
+/// the pure pick, and the harvest surface that consumes it.
+#[test]
+fn the_reconcile_never_parses_a_report_that_predates_the_arcs_dispatch() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mut it = NewArgs::bare("item", "geo pass");
+    it.status = Some("ready".into());
+    it.about = vec![area.front.id.clone()];
+    it.acceptance = vec!["the pass lands".into()];
+    let it = ops::new_node(&s, it).unwrap();
+
+    // A PRIOR arc's report, carried onto this item by a dispatcher for its
+    // caveat: registered, supports-linked, and older than any dispatch of
+    // this item. Its prose declares "none" — the tell if it is ever parsed.
+    std::fs::create_dir_all(s.root.join("docs/reports")).unwrap();
+    std::fs::write(
+        s.root.join("docs/reports/prior.md"),
+        "a prior arc's outcomes\n\nuser-owned calls: none\n\nREFLECTIONS: fine\n",
+    )
+    .unwrap();
+    let mut prior = NewArgs::bare("doc", "dispatch report: some other arc");
+    prior.kind = Some("report".into());
+    prior.path = Some("docs/reports/prior.md".into());
+    let prior = ops::new_node(&s, prior).unwrap();
+    ops::link(&s, &prior.front.id, "supports", &it.front.id, false, None).unwrap();
+    // Backdate on disk, after the link's rewrite: the clock is
+    // second-resolution, so a test-authored "prior" is otherwise the same
+    // instant as the dispatch it must predate.
+    let f = &prior.file;
+    let raw = std::fs::read_to_string(f).unwrap();
+    let raw = raw.replace(
+        &format!("created: {}", prior.front.created),
+        "created: 2020-01-01T00:00:00Z",
+    );
+    std::fs::write(&f, raw).unwrap();
+    let all = s.load_all().unwrap();
+    let prior_node = s.find(&all, &prior.front.id).unwrap();
+    assert_eq!(prior_node.front.created, "2020-01-01T00:00:00Z", "backdating held");
+
+    ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, "geo", "t")
+        .unwrap();
+
+    // THE PURE PICK: the carried report is visible unbounded (the old
+    // behaviour, and what the brief's evidence section still shows) and
+    // invisible once the arc's dispatch bounds it.
+    let all = s.load_all().unwrap();
+    let log = s.read_log().unwrap();
+    let since = queries::arc_dispatched_at(&log, &it.front.id).expect("the dispatch stamped the log");
+    assert!(
+        queries::latest_report_doc(&all, &it.front.id, None)
+            .map(|d| d.front.id.clone())
+            .as_deref()
+            == Some(prior.front.id.as_str()),
+        "unbounded, the carried report is the newest supports-linked report"
+    );
+    assert!(
+        queries::latest_report_doc(&all, &it.front.id, Some(&since)).is_none(),
+        "bounded by the arc's dispatch, a report that predates it is no return"
+    );
+
+    // THE SURFACE: the await arm speaks — the reconcile never parsed the
+    // stranger's "none".
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_await(0)),
+        "before this arc registers, the await arm speaks: {}",
+        h
+    );
+    assert!(
+        !h.contains(&quarry::framings::user_owned_reconcile(Some(0), 0)),
+        "the carried report's declaration never stands in as the arc's return: {}",
+        h
+    );
+
+    // This arc's own report registers: the reconcile is mechanical again,
+    // and it parses THIS report, not the carried one.
+    std::fs::write(
+        s.root.join("docs/reports/mine.md"),
+        "this arc's outcomes\n\nuser-owned calls:\n- the wording is the user's; filed as th-feed\n\nREFLECTIONS: fine\n",
+    )
+    .unwrap();
+    let mut mine = NewArgs::bare("doc", "dispatch report: geo pass");
+    mine.kind = Some("report".into());
+    mine.path = Some("docs/reports/mine.md".into());
+    let mine = ops::new_node(&s, mine).unwrap();
+    ops::link(&s, &mine.front.id, "supports", &it.front.id, false, None).unwrap();
+    let h = quarry::render::harvest(&s, &it.front.id).unwrap();
+    assert!(
+        h.contains(&quarry::framings::user_owned_reconcile(Some(1), 0)),
+        "the arc's own report is what the reconcile parses: {}",
+        h
+    );
+
+    // A RE-DISPATCH moves the bound forward: arc 1's report is a
+    // predecessor's from arc 2's seat. Measured on the pure pick, where the
+    // stamp is explicit and the second-resolution clock cannot blur it.
+    let all = s.load_all().unwrap();
+    let later = "2999-01-01T00:00:00Z";
+    assert!(
+        queries::latest_report_doc(&all, &it.front.id, Some(later)).is_none(),
+        "a later arc reconciles against its own report, never its predecessor's"
+    );
+    assert_eq!(
+        queries::latest_report_doc(&all, &it.front.id, Some("2020-01-01T00:00:00Z"))
+            .map(|d| d.front.id.clone()),
+        Some(mine.front.id.clone()),
+        "within the bound, newest-created still wins"
+    );
+    // Never dispatched: nothing to bound by, and the filter degrades to
+    // unfiltered rather than to empty.
+    assert!(queries::arc_dispatched_at(&log, "it-never").is_none());
+}

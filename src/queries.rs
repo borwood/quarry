@@ -607,15 +607,40 @@ pub fn kindless_backtick_mints<'a>(all: &'a [Node], mint_ids: &[String]) -> Vec<
     out
 }
 
-/// The latest registered report doc supporting an item — the report the
-/// harvest reconciliation parses (it-f6c2). The homework's registration
-/// shape (`q new doc ... --kind report --supports <item>`) is the join
-/// key; newest by created stamp wins, so a re-dispatch reconciles against
-/// the arc's own report, not its predecessor's.
-pub fn latest_report_doc<'a>(all: &'a [Node], item_id: &str) -> Option<&'a Node> {
+/// When an item's live arc was dispatched (it-p8rp): the stamp on the
+/// newest `dispatch` event the log carries for it. The log is the durable
+/// seat — the held entry's `since` says the same thing but dies at the
+/// clear, so a harvest re-run after landing still knows which arc it is
+/// reading. None means the item never flew as a dispatch, and every
+/// arc-scoped filter downstream degrades to unfiltered rather than to
+/// empty.
+pub fn arc_dispatched_at(log: &[serde_json::Value], item_id: &str) -> Option<String> {
+    log.iter()
+        .filter(|ev| ev.get("op").and_then(|v| v.as_str()) == Some("dispatch"))
+        .filter(|ev| ev.get("node").and_then(|v| v.as_str()) == Some(item_id))
+        .filter_map(|ev| ev.get("ts").and_then(|v| v.as_str()))
+        .max()
+        .map(String::from)
+}
+
+/// The report doc standing as an arc's RETURN — the report the harvest
+/// reconciliation parses (it-f6c2). The homework's registration shape
+/// (`q new doc ... --kind report --supports <item>`) is the join key, and
+/// `since` (the arc's dispatch stamp, `arc_dispatched_at`) bounds it in
+/// time: a supports-linked report that PREDATES the dispatch is never this
+/// arc's return, however it got linked (it-p8rp — a dispatcher carries a
+/// prior arc's report onto an item for its caveat, and the brief shows it
+/// as evidence; that carry must not masquerade as the return here). Of
+/// what remains, newest by created stamp wins, so a re-dispatch reconciles
+/// against its own report. `since` of None (never dispatched) filters
+/// nothing. RFC3339 UTC stamps compare lexicographically and the clock is
+/// second-resolution, so the bound is inclusive — a report registered
+/// inside the dispatch's own second can only be the arc's own.
+pub fn latest_report_doc<'a>(all: &'a [Node], item_id: &str, since: Option<&str>) -> Option<&'a Node> {
     all.iter()
         .filter(|n| n.front.ty == "doc" && n.front.kind.as_deref() == Some("report"))
         .filter(|n| n.front.edges.iter().any(|e| e.rel == "supports" && e.to == item_id))
+        .filter(|n| since.map_or(true, |s| n.front.created.as_str() >= s))
         .max_by(|a, b| a.front.created.cmp(&b.front.created))
 }
 

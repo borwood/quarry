@@ -2056,3 +2056,27 @@
 {"ts":"2026-08-21T09:20:53Z","node":"it-3prx","v":1,"op":"create","type":"item","title":"the brief demands a report the lease forbids: docs/reports sits outside every dispatch write-set","actor":"claude-fable-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T09:21:12Z","node":"it-3prx","v":2,"actor":"claude-fable-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a dispatched agent can register its own report from its own seat: the lease a dispatch takes covers the report path the RETURN spec demands, and harvest reconciles the declared user-owned calls without a dispatcher writing the doc node by hand"],"ts":"2026-08-21T09:21:21Z","node":"it-3prx","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:22:02Z","node":"it-p8rp","v":2,"op":"brief","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:22:02Z","node":"it-p8rp","v":2,"op":"reserve","globs":["src/queries.rs","src/render.rs","tests/**","docs/reports/**"],"shared":false,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"ready","ts":"2026-08-21T09:22:02Z","node":"it-p8rp","v":3,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:22:02Z","node":"it-p8rp","v":2,"op":"dispatch","actor":"claude-fable-5","session":"dispatcher","globs":["src/queries.rs","src/render.rs","tests/**","docs/reports/**"]}
+{"ts":"2026-08-21T09:22:26Z","node":"it-p8rp","v":3,"op":"join","actor":"claude-fable-5","dispatch":"it-p8rp","joined":"agent:add957ab60de6a1b3","session":"dispatcher"}
+{"ts":"2026-08-21T09:32:38Z","node":"cl-hct3","v":1,"op":"create","type":"claim","title":"`arc-bounded-return`: the harvest reconcile joins only reports registered after this dispatch; a carried prior report is evidence, never a return","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"link","rel":"source","to":"file:src/queries.rs","at":"dc4d3311848a","ts":"2026-08-21T09:32:39Z","node":"cl-hct3","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"body","ts":"2026-08-21T09:32:46Z","node":"cl-hct3","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"link","rel":"supports","to":"it-p8rp","at":3,"ts":"2026-08-21T09:32:53Z","node":"cl-hct3","v":4,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"ts":"2026-08-21T09:32:53Z","node":"cl-cjbb","v":3,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"ts":"2026-08-21T09:33:26Z","node":"th-t4j3","v":1,"op":"create","type":"thread","title":"the user-owned await line says \"no report file to parse yet\" while a carried prior report stands registered and visible in the brief — amend the ratified wording to name the arc?","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"set","fields":["status=queued"],"from_status":"open","ts":"2026-08-21T09:33:38Z","node":"th-t4j3","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"body","ts":"2026-08-21T09:33:57Z","node":"th-t4j3","v":3,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"ts":"2026-08-21T09:34:50Z","node":"do-yeum","v":1,"op":"create","type":"doc","title":"dispatch report: the reconcile parses a carried report — the arc bound on the report join","actor":"claude-fable-5","note":null,"session":"dispatcher","dispatch":"it-p8rp"}
+{"op":"link","rel":"supports","to":"it-p8rp","at":3,"ts":"2026-08-21T09:34:50Z","node":"do-yeum","v":2,"actor":"claude-fable-5","session":"dispatcher","dispatch":"it-p8rp"}
+{"ts":"2026-08-21T09:36:25Z","node":"it-p8rp","v":3,"op":"harvest","actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-fable-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T09:37:49Z","node":"cl-hct3","v":5,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T09:37:50Z","node":"it-p8rp","v":4,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:37:52Z","node":"it-p8rp","v":4,"op":"release","actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:38:03Z","node":"cl-hct3","v":5,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:38:03Z","node":"do-yeum","v":2,"op":"affirm","restamped":1,"actor":"claude-fable-5","session":"dispatcher"}
+{"ts":"2026-08-21T09:38:03Z","node":"it-drsu","v":1,"op":"create","type":"item","title":"a prose lead-in zeroes the user-owned count: declared calls read as none when a line stands between the head and the list","actor":"claude-fable-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T09:38:25Z","node":"it-drsu","v":2,"actor":"claude-fable-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a report's declared user-owned calls are counted whatever prose stands between the section head and its entries: a lead-in line never reads as a declaration of none, and the count still ends at the next heading"],"ts":"2026-08-21T09:38:33Z","node":"it-drsu","v":3,"actor":"claude-fable-5","session":"dispatcher"}
