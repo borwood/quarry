@@ -641,6 +641,24 @@ fn print_mint_surfaces(store: &Store, node: &Node) {
         // the two questions never stack.
         outln!("  species: {}", quarry::framings::VEIN_PROMPT);
         outln!("    settle it: q set {} kind=vein (or kind=feature)", node.front.id);
+    } else if node.front.ty == "claim"
+        && matches!(node.front.kind.as_deref(), Some("vein") | Some("feature"))
+        && !quarry::queries::backtick_titled(quarry::surface::title_raw(node))
+    {
+        // The register-form prompt (it-d4bh, dc-grrb shape): the inverse of
+        // the vein prompt above — the species is settled and the NAME is
+        // missing. cl-j2pk's residue is why this has to be asked rather
+        // than checked: a backticked name whose first letter is not one of
+        // PowerShell's escape letters arrives with both backticks silently
+        // gone, and what reaches q is then a legal plain title no check at
+        // this end can distinguish from one typed that way. Only the author
+        // knows, so the choke point asks. A prompt, never a gate: the mint
+        // already stands.
+        outln!("  register: {}", quarry::framings::REGISTER_FORM_PROMPT);
+        outln!(
+            "    name it: q set {} 'title=`name`: what it provides'",
+            node.front.id
+        );
     }
     let Ok(all) = store.load_all() else { return };
     let touches = quarry::queries::relatedness(&all, node);

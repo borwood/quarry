@@ -2470,3 +2470,27 @@
 {"ts":"2026-08-21T15:16:46Z","node":"it-8k3p","v":6,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
 {"ts":"2026-08-21T15:17:09Z","node":"it-8vsm","v":1,"op":"create","type":"item","title":"the lease shape biases the instrument: a prompt costs a lease that a refusal does not","actor":"claude-opus-5","note":null,"session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T15:17:34Z","node":"it-8vsm","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a vein or feature claim minted with no backticked register name in its title draws the register-form question at the same choke point that already carries the species and vein prompts, naming the form and the single-quote road, and prompting only — never a gate"],"ts":"2026-08-21T15:19:05Z","node":"it-d4bh","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:19:05Z","node":"it-d4bh","v":2,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:19:05Z","node":"it-d4bh","v":2,"op":"reserve","globs":["src/framings.rs","src/ops.rs","src/render.rs","src/main.rs","tests/**"],"shared":false,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T15:19:05Z","node":"it-d4bh","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:19:05Z","node":"it-d4bh","v":2,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/framings.rs","src/ops.rs","src/render.rs","src/main.rs","tests/**","docs/reports/2026-08-21-a-vein-name-whose-first-letter-is-not-a-it-d4bh.md"],"model":null}
+{"ts":"2026-08-21T15:19:27Z","node":"it-d4bh","v":3,"op":"join","actor":"claude-opus-5","dispatch":"it-d4bh","joined":"agent:a3bc1342778a8a483","session":"dispatcher"}
+{"ts":"2026-08-21T15:27:57Z","node":"cl-2dhg","v":1,"op":"create","type":"claim","title":"`register-form-prompt`: a vein or feature mint carrying no backticked name draws the form question at the same choke point — the inverse of the vein prompt, and the only cure for a silently eaten name","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-d4bh"}
+{"op":"link","rel":"source","to":"file:src/main.rs","at":"dfb475f7fdc2","ts":"2026-08-21T15:27:57Z","node":"cl-2dhg","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"op":"link","rel":"source","to":"file:src/framings.rs","at":"7db70d1f0f54","ts":"2026-08-21T15:28:07Z","node":"cl-2dhg","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"op":"link","rel":"supports","to":"cl-j2pk","at":6,"ts":"2026-08-21T15:28:17Z","node":"cl-2dhg","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"op":"link","rel":"supports","to":"cl-sv7z","at":3,"ts":"2026-08-21T15:28:17Z","node":"cl-2dhg","v":5,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"ts":"2026-08-21T15:28:22Z","node":"cl-j2pk","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"ts":"2026-08-21T15:28:22Z","node":"cl-j2pk","v":6,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"ts":"2026-08-21T15:28:23Z","node":"cl-sv7z","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"ts":"2026-08-21T15:29:43Z","node":"do-2wt5","v":1,"op":"create","type":"doc","title":"dispatch report: a vein name whose first letter is not a shell escape letter loses its backticks silently: nothing at the receiving end can see it","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-d4bh"}
+{"op":"link","rel":"supports","to":"it-d4bh","at":3,"ts":"2026-08-21T15:29:44Z","node":"do-2wt5","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-d4bh"}
+{"ts":"2026-08-21T15:31:09Z","node":"it-d4bh","v":3,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T15:31:20Z","node":"cl-2dhg","v":6,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T15:31:20Z","node":"it-d4bh","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:31:23Z","node":"it-d4bh","v":4,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T15:31:25Z","node":"it-jcnq","v":1,"op":"create","type":"item","title":"no land-time backstop for a nameless register species: a dismissed mint prompt ratifies unnamed","actor":"claude-opus-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T15:31:48Z","node":"it-jcnq","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a vein or feature mint carrying no backticked register name is asked again before a judge ratifies it: harvest lists it beside the kindless ones with the retitle settle command in hand, prompting only, and says plainly that a deliberately plain title is a fine answer"],"ts":"2026-08-21T15:31:49Z","node":"it-jcnq","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T15:32:29Z","node":"it-8vsm","v":3,"actor":"claude-opus-5","session":"dispatcher"}

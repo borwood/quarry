@@ -2,12 +2,20 @@
 id: it-d4bh
 type: item
 title: 'a vein name whose first letter is not a shell escape letter loses its backticks silently: nothing at the receiving end can see it'
-v: 1
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-21T15:12:31Z
 actor: claude-opus-5
 kind: bug
+acceptance:
+- a vein or feature claim minted with no backticked register name in its title draws the register-form question at the same choke point that already carries the species and vein prompts, naming the form and the single-quote road, and prompting only — never a gate
+witness:
+- line: a vein or feature claim minted with no backticked register name in its title draws the register-form question at the same choke point that already carries the species and vein prompts, naming the form and the single-quote road, and prompting only — never a gate
+  by: chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-21
 edges:
 - rel: about
   to: ar-c7f5

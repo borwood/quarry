@@ -5458,6 +5458,189 @@ fn harvest_asks_the_kindless_backtick_mints_before_ratification_passes_them_by()
     );
 }
 
+/// it-d4bh, the residue cl-j2pk states as open and cannot close from the
+/// receiving end. Where a backticked name's first letter is NOT one of
+/// PowerShell's escape letters the shell drops BOTH backticks and nothing
+/// else — "`slug-follows`: y" arrives as "slug-follows: y", measured — so
+/// what reaches q is a legal plain title indistinguishable from one typed
+/// that way. The cure is the exact inverse of cl-sv7z's prompt at the same
+/// choke point: a claim minted INTO a register species carrying no name to
+/// register draws the register-form question, naming the form and the
+/// single-quote road. A prompt, never a gate (dc-grrb).
+///
+/// End to end through the spawned binary because the choke point is
+/// main.rs's print_mint_surfaces: Command passes argv untouched, so the
+/// eaten shape has to be written as the literal the shell would have
+/// produced — exactly as the it-8k3p instrument does.
+#[test]
+fn a_register_species_mint_with_no_registered_name_draws_the_form_question() {
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let aid = area.front.id.clone();
+    // vein claims are grounded in code (C2), so the sources have to exist
+    std::fs::create_dir_all(s.root.join("src/geo")).unwrap();
+    for f in ["pass.rs", "cache.rs", "find.rs"] {
+        std::fs::write(s.root.join("src/geo").join(f), "// fixture\n").unwrap();
+    }
+    let q = env!("CARGO_BIN_EXE_q");
+    let run = |args: &[&str]| {
+        let mut c = std::process::Command::new(q);
+        c.current_dir(&s.root)
+            .env_remove("QUARRY_SESSION")
+            .env_remove("QUARRY_DISPATCH")
+            .env_remove("QUARRY_CHAT")
+            .env_remove("QUARRY_AGENT")
+            .env_remove("QUARRY_STORE")
+            .env("QUARRY_HOME", &s.root)
+            .args(args);
+        let o = c.output().unwrap();
+        (o.status, String::from_utf8_lossy(&o.stdout).to_string(), String::from_utf8_lossy(&o.stderr).to_string())
+    };
+
+    // ── THE INCIDENT SHAPE. This literal is what "`slug-follows`: what it
+    // provides" becomes after PowerShell eats it: both marks gone, nothing
+    // syntactically wrong left. cl-j2pk's floor passes it by construction —
+    // it is a legal plain title — and the mint into a register species is
+    // the only place left that can ask.
+    let eaten = "slug-follows: what it provides";
+    assert!(
+        !eaten.contains('`') && !quarry::queries::backtick_titled(eaten),
+        "the eaten shape is a legal plain title; no check at this end sees it"
+    );
+    let (st, text, err) = run(&[
+        "claim", eaten, "--kind", "vein", "--about", &aid, "--source", "file:src/geo/pass.rs",
+    ]);
+    assert!(st.success(), "a prompt, never a gate — the mint stands: {} / {}", text, err);
+    assert!(
+        text.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "the register-form question is asked at the mint: {}",
+        text
+    );
+    // the form and the single-quote road are both named — an eaten name and
+    // a deliberately plain one are indistinguishable, so the prompt has to
+    // carry the cure with it rather than only the symptom
+    assert!(
+        quarry::framings::REGISTER_FORM_PROMPT.contains("`name`: what it provides")
+            && quarry::framings::REGISTER_FORM_PROMPT.contains("SINGLE quotes"),
+        "the prompt names the register form and the authoring road"
+    );
+    // the settle command is in hand, and it is a RETITLE — the species is
+    // already settled here, unlike cl-sv7z's arm where the kind is what is
+    // missing
+    let all = s.load_all().unwrap();
+    let minted = all
+        .iter()
+        .find(|n| quarry::surface::title_raw(n) == eaten)
+        .expect("the mint landed: nothing was gated");
+    assert_eq!(minted.front.status, "asserted", "the mint stands on the asserted rung");
+    assert!(
+        text.contains(&format!(
+            "name it: q set {} 'title=`name`: what it provides'",
+            minted.front.id
+        )),
+        "the retitle road is in hand, in single quotes: {}",
+        text
+    );
+    // and the road it teaches actually cures it — the retitle station
+    // registers the name that never entered
+    ops::set(
+        &s,
+        &minted.front.id,
+        &["title=`geo-follows`: what it provides".to_string()],
+        None,
+    )
+    .unwrap();
+    let all = s.load_all().unwrap();
+    assert!(
+        quarry::queries::backtick_titled(quarry::surface::title_raw(
+            s.find(&all, &minted.front.id).unwrap()
+        )),
+        "the taught road lands the name in the register"
+    );
+
+    // ── THE RECEIPT HALF DRAWS IT TOO: feature is the other register
+    // species (dc-yd9s), and a receipt with no name registers nothing.
+    let (st, feat, err) = run(&[
+        "claim", "the strata cache landed", "--kind", "feature", "--about", &aid,
+        "--source", "file:src/geo/cache.rs",
+    ]);
+    assert!(st.success(), "{} / {}", feat, err);
+    assert!(
+        feat.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "a feature receipt with no registered name draws the same question: {}",
+        feat
+    );
+
+    // ── THE POSITIVE CONTROL: the register form passes silently. Command
+    // hands argv to the binary untouched, so the backticks survive here
+    // exactly as single quotes preserve them in the house shell.
+    let (st, ok, err) = run(&[
+        "claim", "`geo-pass`: emits layered strata", "--kind", "vein", "--about", &aid,
+        "--source", "file:src/geo/pass.rs",
+    ]);
+    assert!(st.success(), "{} / {}", ok, err);
+    assert!(
+        !ok.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "a named vein is asked nothing: {}",
+        ok
+    );
+
+    // ── THE LANES NEVER STACK. cl-sv7z's arm keys on kindless; this one
+    // keys on the species being settled. A kindless backtick-titled mint
+    // still draws the SPECIES question and not this one.
+    let (_, kindless, _) = run(&[
+        "claim", "`geo-tiers`: word hits lead", "--about", &aid, "--source", "file:src/geo/find.rs",
+    ]);
+    assert!(
+        kindless.contains(quarry::framings::VEIN_PROMPT)
+            && !kindless.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "the kindless arm keeps its lane: {}",
+        kindless
+    );
+
+    // ── SPECIES THAT REGISTER NO NAME ARE NEVER ASKED. measured and
+    // reading claims are prose-titled by design (dc-yd9s), and a kindless
+    // plain claim draws no question at all — silence stays the default.
+    let (_, measured, _) = run(&[
+        "claim", "the halo is 4-11 cells", "--kind", "measured", "--about", &aid,
+        "--method", "ring differencing",
+    ]);
+    assert!(
+        !measured.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "a measured claim registers no name: {}",
+        measured
+    );
+    let (_, plain, _) = run(&[
+        "claim", "strata scans read bottom-up", "--about", &aid, "--provenance", "user",
+    ]);
+    assert!(
+        !plain.contains(quarry::framings::REGISTER_FORM_PROMPT)
+            && !plain.contains(quarry::framings::VEIN_PROMPT)
+            && !plain.contains(quarry::framings::SPECIES_PROMPT),
+        "a kindless plain claim draws no question at all: {}",
+        plain
+    );
+
+    // ── EVERY MINT ROAD FUNNELS THROUGH THE ONE POINT (cl-sv7z): q new
+    // reaches print_mint_surfaces exactly as q claim does.
+    let (st, via_new, err) = run(&[
+        "new", "claim", "the cache landed", "--kind", "vein", "--about", &aid,
+        "--provenance", "user",
+    ]);
+    assert!(st.success(), "{} / {}", via_new, err);
+    assert!(
+        via_new.contains(quarry::framings::REGISTER_FORM_PROMPT),
+        "the q new road asks the same question: {}",
+        via_new
+    );
+
+    // the prompt's verbiage ships pinned (dc-dsdm: never invented silently)
+    assert_eq!(
+        quarry::framings::REGISTER_FORM_PROMPT,
+        "a vein or feature claim leads with the name it registers and this title carries none - the form is `name`: what it provides (dc-qvtz), and that mark is what relatedness and the intent delta join on. If you typed one, this machine's shell ate it: PowerShell reads the backtick as its ESCAPE character inside DOUBLE quotes, so re-title in SINGLE quotes - where the backtick is literal - or with a here-string (@'…'@ on its own lines). A deliberately plain title is a fine answer; nothing at this end can tell an eaten name from one that was never typed."
+    );
+}
+
 // ── the witness pen (dc-mpg8) ──────────────────────────────────────────────
 
 /// The line check: from a witness seat (a session whose REGISTERED kind is

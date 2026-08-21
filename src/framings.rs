@@ -48,6 +48,17 @@ pub const SPECIES_PROMPT: &str = "this claim carries a method - taken once to in
 /// rides, so a kindless vein never ratifies. A prompt, never a gate.
 pub const VEIN_PROMPT: &str = "this claim leads with a registered name - a mechanism or mandate read off landed code (--kind vein), or the receipt of a landed capability (--kind feature)? Kindless claims never ride the assay ladder.";
 
+/// The register-form prompt (dc-grrb shape; composed on it-d4bh, for
+/// ratification at its harvest): the exact inverse of VEIN_PROMPT above, at
+/// the same choke point — fires when a claim mints INTO a register species
+/// (vein, feature) carrying no backticked name to register. It is the only
+/// cure for cl-j2pk's stated residue: where a name's first letter is not one
+/// of PowerShell's escape letters the shell drops BOTH backticks and nothing
+/// else, so an eaten name and a deliberately plain one are indistinguishable
+/// at the receiving end and only the author knows which is which. Hence a
+/// question naming the form and the single-quote road, never a gate.
+pub const REGISTER_FORM_PROMPT: &str = "a vein or feature claim leads with the name it registers and this title carries none - the form is `name`: what it provides (dc-qvtz), and that mark is what relatedness and the intent delta join on. If you typed one, this machine's shell ate it: PowerShell reads the backtick as its ESCAPE character inside DOUBLE quotes, so re-title in SINGLE quotes - where the backtick is literal - or with a here-string (@'…'@ on its own lines). A deliberately plain title is a fine answer; nothing at this end can tell an eaten name from one that was never typed.";
+
 /// The harvest ask (composed on it-pgn9, for ratification at its harvest):
 /// kindless backtick-titled badge mints enumerate at the judgment seat with
 /// the settle command in hand — the silent-repair path dies loud, before
