@@ -2,12 +2,20 @@
 id: it-jsu5
 type: item
 title: 'stale acting row survives a same-chat re-dispatch: the replaced agent keeps stamping'
-v: 1
-status: sketch
+v: 4
+status: done
 provenance: assistant
 created: 2026-08-20T11:01:54Z
 actor: claude
 kind: bug
+acceptance:
+- 'a same-chat re-dispatch leaves no stale binding behind it: the replaced agent''s acting row is cleared with the replacement, so its later acts stamp into no arc and its identity is free to join other work, exactly as the steal arm already guarantees'
+witness:
+- line: 'a same-chat re-dispatch leaves no stale binding behind it: the replaced agent''s acting row is cleared with the replacement, so its later acts stamp into no arc and its identity is free to join other work, exactly as the steal arm already guarantees'
+  by: chat:b8214cb4-bf6e-42fa-9ceb-317d5660ca2d
+  session: dispatcher
+  kind: dispatch
+  date: 2026-08-21
 edges:
 - rel: about
   to: ar-c7f5

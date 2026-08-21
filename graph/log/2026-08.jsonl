@@ -2402,3 +2402,31 @@
 {"op":"body","ts":"2026-08-21T14:20:07Z","node":"it-8quv","v":2,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"set","fields":["acceptance+=a join whose stamp disagrees with the harness's own record says so, and never cries mismatch from the coarse road: the compare speaks only where the model was read resolved, and a disagreement confronts rather than verdicts"],"ts":"2026-08-21T14:20:07Z","node":"it-8quv","v":3,"actor":"claude-opus-5","session":"dispatcher"}
 {"op":"body","ts":"2026-08-21T14:21:12Z","node":"cl-dqt4","v":10,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a same-chat re-dispatch leaves no stale binding behind it: the replaced agent's acting row is cleared with the replacement, so its later acts stamp into no arc and its identity is free to join other work, exactly as the steal arm already guarantees"],"ts":"2026-08-21T14:22:05Z","node":"it-jsu5","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:22:05Z","node":"it-jsu5","v":2,"op":"brief","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:22:05Z","node":"it-jsu5","v":2,"op":"reserve","globs":["src/coord.rs","src/ops.rs","tests/**"],"shared":false,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=in-flight"],"from_status":"sketch","ts":"2026-08-21T14:22:05Z","node":"it-jsu5","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:22:05Z","node":"it-jsu5","v":2,"op":"dispatch","actor":"claude-opus-5","session":"dispatcher","globs":["src/coord.rs","src/ops.rs","tests/**","docs/reports/2026-08-21-stale-acting-row-survives-a-same-chat-it-jsu5.md"],"model":null}
+{"ts":"2026-08-21T14:22:20Z","node":"it-jsu5","v":3,"op":"join","actor":"claude-opus-5","dispatch":"it-jsu5","joined":"agent:ab3c81b3dc8f06162","session":"dispatcher"}
+{"ts":"2026-08-21T14:38:03Z","node":"cl-gy6q","v":1,"op":"create","type":"claim","title":"\replacement-clear: a fire that displaces a live arc releases the replaced agent at the upsert — one clearing point, both arms, and a refused fire displaces nothing","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"link","rel":"source","to":"file:src/ops.rs","at":"c4450abbbbd8","ts":"2026-08-21T14:38:03Z","node":"cl-gy6q","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"set","fields":["title=`replacement-clear`: a fire that displaces a live arc releases the replaced agent at the upsert — one clearing point, both arms, and a refused fire displaces nothing"],"ts":"2026-08-21T14:38:28Z","node":"cl-gy6q","v":3,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"link","rel":"source","to":"file:tests/basic.rs","at":"58723ed2b5af","ts":"2026-08-21T14:38:47Z","node":"cl-gy6q","v":4,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"link","rel":"supports","to":"cl-b2z2","at":3,"ts":"2026-08-21T14:38:47Z","node":"cl-gy6q","v":5,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"link","rel":"supports","to":"cl-kggw","at":3,"ts":"2026-08-21T14:38:59Z","node":"cl-gy6q","v":6,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:39:04Z","node":"cl-kggw","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:39:05Z","node":"cl-b2z2","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:39:05Z","node":"cl-s98g","v":5,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:39:09Z","node":"cl-aujk","v":3,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:39:09Z","node":"cl-6ctr","v":4,"op":"affirm","restamped":1,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:40:30Z","node":"it-mjk6","v":1,"op":"create","type":"item","title":"a same-chat re-dispatch releases the joined agent and says nothing: the fire announces only the steal","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:41:41Z","node":"do-h2q4","v":1,"op":"create","type":"doc","title":"dispatch report: stale acting row survives a same-chat re-dispatch: the replaced agent keeps stamping","actor":"claude-opus-5","note":null,"session":"dispatcher","dispatch":"it-jsu5"}
+{"op":"link","rel":"supports","to":"it-jsu5","at":3,"ts":"2026-08-21T14:41:41Z","node":"do-h2q4","v":2,"actor":"claude-opus-5","session":"dispatcher","dispatch":"it-jsu5"}
+{"ts":"2026-08-21T14:43:04Z","node":"it-jsu5","v":3,"op":"harvest","actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["ratified=claude-opus-5","status=ratified"],"from_status":"asserted","ts":"2026-08-21T14:43:16Z","node":"cl-gy6q","v":7,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["status=done"],"from_status":"in-flight","ts":"2026-08-21T14:43:16Z","node":"it-jsu5","v":4,"actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:43:18Z","node":"it-jsu5","v":4,"op":"release","actor":"claude-opus-5","session":"dispatcher"}
+{"ts":"2026-08-21T14:43:21Z","node":"it-8k3p","v":1,"op":"create","type":"item","title":"a backticked vein name is silently eaten by the house shell, and a title fix never re-slugs its file","actor":"claude-opus-5","note":null,"session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T14:43:48Z","node":"it-8k3p","v":2,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"set","fields":["acceptance+=a vein name reaches the graph as it was written or the mint refuses: a title whose backticked register segment is malformed never lands silently, and a corrected title either carries its filename with it or says plainly that it will not"],"ts":"2026-08-21T14:43:48Z","node":"it-8k3p","v":3,"actor":"claude-opus-5","session":"dispatcher"}
+{"op":"body","ts":"2026-08-21T14:44:57Z","node":"it-8k3p","v":4,"actor":"claude-opus-5","session":"dispatcher"}

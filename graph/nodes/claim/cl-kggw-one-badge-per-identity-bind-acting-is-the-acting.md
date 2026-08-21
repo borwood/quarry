@@ -17,7 +17,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 24df8ce05680
+  at: 8f43237f98b6
 - rel: supports
   to: cl-dqt4
   at: 8

@@ -1839,6 +1839,147 @@ fn dispatch_steal_takes_the_dispatch_whole() {
 }
 
 #[test]
+fn a_same_chat_re_dispatch_frees_the_replaced_agent_the_way_a_steal_does() {
+    // it-jsu5: the same-chat re-dispatch arm replaces the arc's agent — fresh
+    // token, `joined` reset — but left the REPLACED agent's acting row
+    // standing. A re-dispatch OVERWRITES the held entry rather than removing
+    // it, so that row stayed a LIVE binding (live_acting_badge honors any row
+    // whose badge is still held): the replaced agent kept stamping into an arc
+    // it no longer worked, and under one-badge-per-identity (cl-kggw) its
+    // identity stayed blocked from joining anything else until harvest. The
+    // steal arm has cleared exactly this since it was written; both
+    // replacement arms now run the same clear.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mk = |title: &str| {
+        let mut it = NewArgs::bare("item", title);
+        it.status = Some("ready".into());
+        it.about = vec![area.front.id.clone()];
+        it.acceptance = vec!["the pass lands".into()];
+        ops::new_node(&s, it).unwrap()
+    };
+    let it = mk("recovered pass");
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
+    ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap();
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-old"), None, None).as_deref(),
+        Some(it.front.id.as_str())
+    );
+    assert!(
+        quarry::coord::has_area_read(&s, &quarry::coord::badge_attention_key(&it.front.id), &area.front.id),
+        "the first join delivered the area record to the badge"
+    );
+    // the same-chat re-dispatch: the documented recovery flow — lease kept,
+    // holder unchanged, fresh token, a new agent expected at the join
+    let again = ops::dispatch(&s, &it.front.id, vec![], false, false, None, None, "geo", "t").unwrap();
+    assert!(again.reused_lease, "a same-chat re-dispatch keeps the lease");
+    assert!(again.stolen_from.is_none(), "…and is no steal");
+    assert_ne!(again.token, out.token, "a fresh token: a new hand-off");
+    let d = quarry::coord::dispatch_for_item(&s, &it.front.id).expect("the badge survives its own replacement");
+    assert_eq!(d.holder, "session:geo", "the holder is unchanged");
+    assert!(d.joined.is_none(), "joined reset — the next agent joins fresh");
+    // THE DEFECT: the replaced agent's binding dies with the replacement, so
+    // its stray acts stamp into no arc at all
+    assert!(
+        quarry::coord::badge_for(&s, Some("ag-old"), None, None).is_none(),
+        "the replaced agent stamps into no arc"
+    );
+    assert!(
+        quarry::coord::load_dispatches(&s).acting.is_empty(),
+        "no acting row survives the replacement"
+    );
+    // the badge's own residue goes with the binding it served: the next agent
+    // reads with its own eyes (cl-b2z2), as the steal already guaranteed
+    assert!(
+        !quarry::coord::has_area_read(&s, &quarry::coord::badge_attention_key(&it.front.id), &area.front.id),
+        "badge-scoped attention cleared with the replaced binding"
+    );
+    // …and the freed identity can join other work: pre-fix this refused with
+    // "one agent, one badge", the stale row reading as a live binding
+    let other = mk("second pass");
+    let d2 = ops::dispatch(&s, &other.front.id, vec!["src/two/**".into()], false, false, None, None, "geo", "t").unwrap();
+    let j = ops::join(&s, &d2.token, Some("agent:ag-old".into())).unwrap();
+    assert_eq!(j.bound.as_deref(), Some("agent:ag-old"), "a replaced identity is free to join");
+    assert_eq!(
+        quarry::coord::load_dispatches(&s).acting.get("agent:ag-old").map(|b| b.as_str()),
+        Some(other.front.id.as_str())
+    );
+    // the replacement agent takes the re-dispatched arc over alone
+    let j2 = ops::join(&s, &again.token, Some("agent:ag-new".into())).unwrap();
+    assert_eq!(j2.bound.as_deref(), Some("agent:ag-new"));
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-new"), None, None).as_deref(),
+        Some(it.front.id.as_str())
+    );
+    assert_eq!(
+        quarry::coord::load_dispatches(&s)
+            .acting
+            .values()
+            .filter(|b| b.as_str() == it.front.id)
+            .count(),
+        1,
+        "one agent wears the badge — never the replaced one and its replacement both"
+    );
+    assert!(
+        quarry::coord::has_area_read(&s, &quarry::coord::badge_attention_key(&it.front.id), &area.front.id),
+        "…and its own join re-delivered the area record"
+    );
+}
+
+#[test]
+fn a_refused_fire_leaves_the_live_dispatch_standing() {
+    // it-jsu5, the placement half: the replacement COMMITS at the upsert, not
+    // where it is decided — so a fire that has already decided it displaces a
+    // live arc, then refuses, leaves that arc whole. Pre-fix the steal cleared
+    // the victim's badge up front, and a C7 refusal on the re-reserve left the
+    // item with no dispatch at all: the arc lost by a command that failed.
+    let s = temp_store();
+    let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();
+    let mk = |title: &str| {
+        let mut it = NewArgs::bare("item", title);
+        it.status = Some("ready".into());
+        it.about = vec![area.front.id.clone()];
+        it.acceptance = vec!["the pass lands".into()];
+        ops::new_node(&s, it).unwrap()
+    };
+    let it = mk("contested pass");
+    let neighbour = mk("neighbouring pass");
+    let out = ops::dispatch(&s, &it.front.id, vec!["src/geo/**".into()], false, false, None, None, "geo", "t").unwrap();
+    ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap();
+    // the arc's lease is released mid-flight and a third session takes an
+    // overlapping one, so the steal's re-reserve refuses on C7
+    quarry::coord::release(&s, &it, "geo", "t").unwrap();
+    quarry::coord::reserve(&s, &neighbour, "bodies", "t", vec!["src/geo/**".into()], false, false, None).unwrap();
+    let err = ops::dispatch(
+        &s, &it.front.id, vec!["src/geo/**".into()], false, true, Some("holder went dark"), None, "ops", "t",
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("C7"), "the re-reserve refuses: {}", err);
+    // nothing moved: the held entry, its holder, the agent that joined it and
+    // that agent's binding all stand
+    let d = quarry::coord::dispatch_for_item(&s, &it.front.id).expect("a refused steal takes nothing");
+    assert_eq!(d.holder, "session:geo");
+    assert_eq!(d.session, "geo");
+    assert_eq!(d.joined.as_deref(), Some("agent:ag-old"));
+    assert_eq!(
+        quarry::coord::badge_for(&s, Some("ag-old"), None, None).as_deref(),
+        Some(it.front.id.as_str()),
+        "the joined agent keeps stamping the arc it still works"
+    );
+    // the hand-off never happened, so it is never announced: no steal event
+    assert!(
+        !s.read_log()
+            .unwrap()
+            .iter()
+            .any(|e| e.get("op").and_then(|v| v.as_str()) == Some("steal")),
+        "a refused steal logs no take-over"
+    );
+    // and the arc's own token still binds its own agent
+    let j = ops::join(&s, &out.token, Some("agent:ag-old".into())).unwrap();
+    assert!(j.rejoined, "the live token survived the refused steal");
+}
+
+#[test]
 fn join_consumes_token_binds_and_renders() {
     let s = temp_store();
     let area = ops::new_node(&s, NewArgs::bare("area", "geology")).unwrap();

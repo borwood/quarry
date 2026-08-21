@@ -14,7 +14,7 @@ edges:
   at: 1
 - rel: source
   to: file:src/coord.rs
-  at: 24df8ce05680
+  at: 8f43237f98b6
 - rel: supersedes
   to: cl-amza
   at: 5

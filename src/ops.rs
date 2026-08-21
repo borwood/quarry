@@ -1234,7 +1234,16 @@ pub fn dispatch(
     // dispatching an item ANOTHER chat already has live — or steals it
     // whole, loud and logged, with the required reason.
     let dkey = crate::coord::dispatch_key(session);
-    let stolen_from = match crate::coord::dispatch_for_item(store, &item.front.id) {
+    // A fire landing on an item some chat already holds REPLACES the live
+    // arc — same-chat re-dispatch and cross-chat steal alike. Both hand the
+    // work to a new agent (fresh token, `joined` reset), so both owe the
+    // replaced agent the same release; that release COMMITS below, at the
+    // upsert, through one clearing point (it-jsu5). Decided here, committed
+    // there: everything between can still refuse, and a refused fire must
+    // leave the live dispatch standing.
+    let live = crate::coord::dispatch_for_item(store, &item.front.id);
+    let steal_reason = match &live {
+        None => None,
         // Same-chat re-dispatch stays free: the documented recovery flow —
         // a fresh token is minted below and the old one dies with the
         // replaced entry.
@@ -1252,22 +1261,13 @@ pub fn dispatch(
                     d.holder, d.item_title, d.item
                 );
             };
-            // The steal takes the dispatch WHOLE (the lease steal pattern
-            // applied to dispatches): the held entry moves below, the old
-            // token dies, and the acting associations clear here so a
-            // stolen-from agent's later acts stop stamping into an arc it
-            // no longer works. Loud and logged, reason on the event.
-            store.log_event(json!({
-                "ts": Store::now(), "node": item.front.id, "v": item.front.v,
-                "op": "steal", "from_chat": d.holder, "from_session": d.session,
-                "from_joined": d.joined, "actor": actor, "session": session,
-                "reason": r
-            }))?;
-            crate::coord::clear_dispatch(store, &item.front.id);
-            Some((d.holder, d.session))
+            Some(r.to_string())
         }
-        None => None,
     };
+    let stolen_from = live
+        .as_ref()
+        .filter(|_| steal_reason.is_some())
+        .map(|d| (d.holder.clone(), d.session.clone()));
     // The brief act is logged up front (C8: the lease follows a brief); the
     // TEXT renders at q join, after the lease is taken, so the brief's
     // write-set section shows the contract the agent actually works under.
@@ -1332,6 +1332,48 @@ pub fn dispatch(
     }
     if item.front.status != "in-flight" {
         set(store, &item.front.id, &["status=in-flight".to_string()], None)?;
+    }
+    // ── the replacement commits here (it-jsu5) ─────────────────────────────
+    // Past this line nothing refuses, so this is where a fire that displaces
+    // a live arc stops being a proposal. The steal announces itself first —
+    // loud and logged, the reason on the event where the holder reads it —
+    // and then BOTH replacement arms release the agent they replaced through
+    // the one clearing point.
+    //
+    // Why the same clear on a same-chat re-dispatch: the acting row the
+    // replaced agent wears is a LIVE binding, because a re-dispatch replaces
+    // the held entry rather than removing it — `live_acting_badge` honors any
+    // row whose badge is still held, and the badge is (dc-qyr5: an item's
+    // entry is keyed by item, and the upsert below overwrites it). Left
+    // standing, that row is stale in both directions: the replaced agent's
+    // later acts keep stamping into an arc it no longer works, and under
+    // one-badge-per-identity (cl-kggw) its identity stays BLOCKED from
+    // joining any other work until someone harvests this badge. The steal arm
+    // has cleared exactly this since it was written, for exactly this reason;
+    // the two arms have the same replacement semantics, so they now run the
+    // same code rather than agreeing by discipline. Pins and badge-scoped
+    // attention ride along because they belong to the replaced BINDING too —
+    // cl-b2z2 already states that a re-dispatched item's next agent reads
+    // with its own eyes, and cl-aujk that the pin lives and dies with the
+    // badge it serves; the next join re-plants both for whoever takes over
+    // (a same-agent recovery re-binds at its own re-join by construction).
+    //
+    // LATE, not at the decision: a refused fire has no side effects — the
+    // same rule the --files shape check at the top of this function keeps.
+    // Every refusal between the decision and here (a lease held by another
+    // session, a C7 overlap on the re-reserve, an empty write-set) would
+    // otherwise leave the item with its dispatch destroyed and no
+    // replacement planted: the arc lost by a command that failed.
+    if let (Some(d), Some(r)) = (&live, &steal_reason) {
+        store.log_event(json!({
+            "ts": Store::now(), "node": item.front.id, "v": item.front.v,
+            "op": "steal", "from_chat": d.holder, "from_session": d.session,
+            "from_joined": d.joined, "actor": actor, "session": session,
+            "reason": r
+        }))?;
+    }
+    if live.is_some() {
+        crate::coord::clear_dispatch(store, &item.front.id);
     }
     let cursor = store.read_log().map(|l| l.len()).unwrap_or(0) as u64;
     let now = Store::now();

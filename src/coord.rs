@@ -942,8 +942,14 @@ pub fn note_acting(store: &Store) {
 }
 
 /// Clear every trace of an item's badge — the held entry, acting
-/// associations, and the store pins the badge planted (dc-g5x5) alike
-/// (harvest, land, and the steal's take-over all clear). Exact under
+/// associations, and the store pins the badge planted (dc-g5x5) alike.
+/// Four callers, all of them a badge's end: harvest, land, and BOTH arms
+/// that replace a live arc with a new agent — the steal's take-over and the
+/// same-chat re-dispatch (it-jsu5), which differ in who holds afterward and
+/// in nothing else. A replacement calls this at its upsert: the held entry
+/// it removes is planted again immediately, and what must not survive is the
+/// REPLACED agent's binding, which a bare upsert would leave live (the entry
+/// its acting row names is overwritten, never removed). Exact under
 /// multi-held: item-keyed removal never touches the same chat's other live
 /// dispatches.
 pub fn clear_dispatch(store: &Store, item_id: &str) {
