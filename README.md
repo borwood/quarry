@@ -16,4 +16,4 @@ overwritten decisions — is a graph invariant being enforced by prose and
 attention. Discipline-based invariants decay. quarry turns each one into
 **an edge, a query, or a denied write**.
 
-Status: design phase. See [docs/DESIGN.md](docs/DESIGN.md).
+Status: dogfooding + continuous improvement phase. See [docs/DESIGN.md](docs/DESIGN.md).
