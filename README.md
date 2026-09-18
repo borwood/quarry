@@ -1,6 +1,6 @@
 # quarry
 
-A standalone work-graph tool for AI-native development.
+A standalone work-graph RAG tool for AI-native development.
 
 quarry holds the knowledge a project accumulates — decisions, claims, open
 questions, work items, prose artifacts — as typed nodes with typed,
